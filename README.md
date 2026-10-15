@@ -14,6 +14,8 @@ Phase 3 (the selectable 3D island) is in place: the **island** at `/island`, dra
 
 Phase 4 (Blockly editing and the world-wide debugger) is in place on the island: an overview of every robot and building with the block it's at, the editor over the world with toolboxes for what each can do and Apply at the next step, **All programs** with everyone's markers, and **Next block**. Findings are in [docs/phase4.md](docs/phase4.md).
 
+Phase 5 (the bridge slice) is in place: the first mission, **Across the Stream**, at `/play` and first on the title page. Four programs (a wood collector, the sawmill, a plank courier and the construction site) have to work together to build the bridge; two of them need changing first. A mission card shows the goal, the planks arriving, three hints and the reward. Start again goes back to the mission's start, keeping the programs, and the mission is saved on the device as it's played, so a reload goes on where it was. *Start over…* on the title page forgets it, for the next player. Findings, and notes for the first playtest, are in [docs/phase5.md](docs/phase5.md).
+
 ## Development
 
 | Command | What it does |
@@ -22,12 +24,12 @@ Phase 4 (Blockly editing and the world-wide debugger) is in place on the island:
 | `npm run dev` | Development server |
 | `npm run build` / `npm run preview` | Production build in `dist/`, and serving it |
 | `npm test` | Node unit tests in `test/` |
-| `npm run golden` | Records the golden replays in `test/golden/` again, after a deliberate change to the simulation and a new `SIM_VERSION` |
+| `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, and the bridge slice), after a deliberate change to the simulation and a new `SIM_VERSION` |
 | `npx playwright install chromium webkit` | Once: the browsers for the browser tests |
 | `npm run e2e` | Browser tests in `e2e/` (Chromium, WebKit, WebKit as an iPad), against a fresh build |
-| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/` and `docs/phase4/`; `npm run shots -- languages` for some groups only |
+| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/`, `docs/phase4/` and `docs/phase5/`; `npm run shots -- play` for some groups only |
 
-Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
+Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`, which `/play` has too) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
 
 ## Languages
 
@@ -37,6 +39,7 @@ All text comes from catalogues in `src/i18n/`, one folder per language, listed i
 | --- | --- |
 | `ui.js` | The interface, with `{name}` placeholders and plural forms (`{ one, other }`) |
 | `blocks.js` | The game's blocks, toolbox categories and dropdown choices, for `Blockly.Msg` |
+| `missions.js` | Each mission's title, goal, progress, three hints and reward, keyed by mission |
 | `blockly.js` | Which of Blockly's catalogues to load, and the game's overrides of it |
 
 Blockly messages the game never shows (plugins it doesn't load, blocks no toolbox offers) are listed by feature in `src/i18n/blockly-unused.js` and may stay in English. Offering one of those blocks means taking its entry out and translating its messages.
@@ -48,7 +51,7 @@ Blockly messages the game never shows (plugins it doesn't load, blocks no toolbo
 3. Run `npm test`. It names missing and extra messages, placeholder mismatches, missing plural forms, and Blockly messages the game shows that are still in English, which go into `overrides` in the new `blockly.js`.
 4. Run `npm run e2e`, which opens the title page and the lab in every listed language and fails on cut-off text or a toolbox block too wide, and `npm run shots -- languages` to look at it.
 
-A regional variant (`de-CH`) names its `base` in `languages.js`, and its folder holds all three files with only the messages it changes. Languages written right to left need more than this (PLAN.md §8).
+A regional variant (`de-CH`) names its `base` in `languages.js`, and its folder holds all four files with only the messages it changes. Languages written right to left need more than this (PLAN.md §8).
 
 ## Versions
 

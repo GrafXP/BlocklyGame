@@ -1,5 +1,5 @@
 import "./style/base.css";
-import { LANGUAGE_EVENT, setLanguage, startLanguage, t } from "./i18n/index.js";
+import { LANGUAGE_EVENT, missionText, setLanguage, startLanguage, t } from "./i18n/index.js";
 import { liveCounts } from "./lifecycle.js";
 import { html, isDev } from "./ui/dom.js";
 import { home } from "./ui/home.js";
@@ -8,11 +8,14 @@ const view = document.getElementById("view");
 let cleanup = null;
 let shown = null; // the path and query of the page that's showing
 
-// A page is a function of the element to fill, returning its cleanup, and the
-// message that names it in the browser's tab. Pages other than the title page are
-// fetched when first shown, so it opens without Blockly, Three.js or the world.
+// A page is a function of the element to fill, returning its cleanup, and what
+// names it in the browser's tab: a message, or a function giving the words.
+// Pages other than the title page are fetched when first shown, so it opens
+// without Blockly, Three.js or the world. /play is the bridge slice, the mission
+// "slice" (src/ui/island.js).
 const routes = {
   "/": { page: home },
+  "/play": { page: lazy(() => import("./ui/island.js"), "play"), title: () => missionText("slice.title") },
   "/lab": { page: lazy(() => import("./ui/lab.js"), "lab"), title: "lab.title" },
   "/world": { page: lazy(() => import("./ui/world.js"), "world"), title: "world.title" },
   "/island": { page: lazy(() => import("./ui/island.js"), "island"), title: "island.title" },
@@ -48,7 +51,8 @@ function render() {
   cleanup = null;
   view.innerHTML = "";
   const route = routes[location.pathname] ?? { page: notFound, title: "notFound.title" };
-  document.title = route.title ? t("page.title", { page: t(route.title), app: t("app.name") }) : t("app.name");
+  const page = typeof route.title === "function" ? route.title() : route.title && t(route.title);
+  document.title = page ? t("page.title", { page, app: t("app.name") }) : t("app.name");
   cleanup = route.page(view) || null;
   shown = location.pathname + location.search;
 }

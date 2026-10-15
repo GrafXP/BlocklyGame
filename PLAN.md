@@ -212,7 +212,7 @@ In the first release, settings are a fixed set of named slots per entity kind: S
 - Editing saves a draft; it does not change published running code.
 - Apply validates and compiles a new published version.
 - The resulting update is queued as a world command and applied at the next global tick boundary. Until that tick, the monitor marks the program “Apply pending” and keeps showing the running version.
-- Affected runtime instances restart from their entry block with reset local variables; current inventories and completed world changes are retained.
+- Affected runtime instances restart from their entry block with reset local variables. An affected robot's basket is emptied, so a restarted program never begins with a load it didn't ask for (decided 15 October 2026, docs/phase5.md). Buildings' stock and completed world changes are retained.
 - Unfinished actions are cancelled through the reservation system. An interrupted move ends at whichever end of its current one-cell segment is nearer, with ties going to the cell it left; the renderer blends the visual position over a few frames.
 - Unaffected entities retain their runtime state.
 - Resume without Apply continues the existing published version.
@@ -662,11 +662,11 @@ Acceptance: one Step visibly updates all program panels. Step to Next Block stop
 
 ### Phase 5 — Complete bridge vertical slice
 
-- [ ] Make the bridge chain playable as one slice mission: the situation of mission 15 (“Across the Stream”) without the chapters that lead to it, with collector, sawmill, courier, and construction-site programs.
-- [ ] Add enough real resources, waits, visible stock, and construction progress to finish the bridge.
-- [ ] Connect bridge completion to navigation changes and a mission reward.
-- [ ] Add restart/checkpoint behaviour and basic local saving for this slice. Version the save envelope from the start; saves made before Phase 9 may be discarded rather than migrated.
-- [ ] Write a headless reference solution and a browser test exercising Pause/Step and highlighting.
+- [x] Make the bridge chain playable as one slice mission: the situation of mission 15 (“Across the Stream”) without the chapters that lead to it, with collector, sawmill, courier, and construction-site programs. (At `/play`: docs/phase5.md. The courier still takes its planks to the depot, and the site's Build Bridge lies beside its start block; Robo 3's program is parked, ready to edit. A mission card with the goal, pictures, progress and a fixed three-hint ladder, in each language's new `missions.js`.)
+- [x] Add enough real resources, waits, visible stock, and construction progress to finish the bridge. (The grove's twelve wood, growing back; the card's planks fill as they reach the site, then “Building the bridge” with its progress.)
+- [x] Connect bridge completion to navigation changes and a mission reward. (Goals are world data, checked in tick phase 6 against completed work: `src/sim/objectives.js`, `SIM_VERSION` 3. The reward, commands applied at the end of that tick, sends Robo 3 across the bridge to fetch stone.)
+- [x] Add restart/checkpoint behaviour and basic local saving for this slice. Version the save envelope from the start; saves made before Phase 9 may be discarded rather than migrated. (`src/storage/saves.js`, in localStorage until Phase 9; every part checked on load, and programs compiled again. Start again keeps applied programs and drafts; *Start over* on the title page forgets the save. A robot given a program starts with an empty basket, and after a change mid-run the card offers Start again.)
+- [x] Write a headless reference solution and a browser test exercising Pause/Step and highlighting. (`test/missions.test.js`: the bridge at step 241 of 600; `e2e/play.spec.js`, also reload, completion and Start over; a golden replay of the slice.)
 
 Acceptance: the bridge can be built entirely through Blockly-controlled work. A player can diagnose supply waits by observing all four programs and resume after reload. This slice is ready for an initial supervised playtest.
 

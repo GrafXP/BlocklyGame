@@ -6,6 +6,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { ISLAND } from "../src/content/island.js";
+import { SLICE } from "../src/content/missions/slice.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { compile } from "../src/programming/compiler.js";
 import { play } from "../src/sim/replay.js";
@@ -23,11 +24,18 @@ function published(id, revision, change = (json) => json) {
   return { type: "publish", program: { id, revision, ...compile(source).program } };
 }
 
-// The scenarios: the island left to its programs for five minutes of play, and
-// the island with the player stepping in: restarting robots and buildings in the
+// The slice's reference program `id` (src/content/missions/slice.js), compiled,
+// as revision 2.
+const reference = (id) => ({ type: "publish", program: { id, revision: 2, ...compile(SLICE.reference[id]).program } });
+
+// The scenarios: the island left to its programs for five minutes of play; the
+// island with the player stepping in: restarting robots and buildings in the
 // middle of their work, giving one a script, changing stores, publishing a new
 // revision of a program that's running and of one that isn't, and giving a robot
-// a program again.
+// a program again; and the bridge slice, run for a while before the player
+// changes the courier's program, while its basket is still empty, and later the
+// site's, after which the bridge is built, the mission done, and Robo 3 given its
+// reward.
 export const SCENARIOS = {
   island: { content: ISLAND, ticks: 3000, log: [] },
   commands: {
@@ -52,6 +60,11 @@ export const SCENARIOS = {
       command(1200, { type: "assign", entity: "r2", program: "courier" }),
       command(1500, { type: "restart", entity: "site" }),
     ],
+  },
+  slice: {
+    content: SLICE.content,
+    ticks: 1500,
+    log: [command(50, reference("courier")), command(120, reference("bridge"))],
   },
 };
 

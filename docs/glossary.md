@@ -51,5 +51,13 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | sees (what a block looked at) | sieht | Followed by values: “Holz bei Sägewerk 0”. |
 | round (of a repeat) | Runde | “Runde 1 von 2”. |
 | true, not true (a reading) | stimmt, stimmt nicht | As for conditions. |
+| mission | Auftrag | “Dein Auftrag”. Not “Mission”. |
+| stream | Bach | “Über den Bach”, mission 15's title. |
+| hint (Look, Think, Try) | Tipp (Schau, Überleg, Probier) | “Noch ein Tipp”. The three steps of the hint ladder. |
+| show me | zeig es mir | Chooses what a hint is about. |
+| done (a mission) | geschafft | “Geschafft!” |
+| start again (the mission, keeping programs) | neu anfangen | The clock's button. |
+| start over (forgetting the saved game) | ganz von vorn | On the title page only, and it asks first. Not “neu anfangen”. |
+| saved (at step …) | gespeichert (bei Schritt …) | |
 
 Open: whether the game's name is translated (*Robot Island*, *Roboterinsel*). Both catalogues say “Robot Island” until it's decided, before Phase 9 (PLAN.md §8).

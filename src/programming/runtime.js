@@ -9,7 +9,7 @@ import { evaluate, Fault } from "./expressions.js";
 // entity, entity.runtime:
 //
 //   { kind: "program", program, revision, compiler, at, loops: [{ at, count, times }],
-//     block, evaluated: { block, tick } | null, wait, ended }
+//     block, evaluated: { block, tick } | null, wait, ended, parked? }
 //
 // - `program` and `revision`: the compiled program it runs, in world.programs;
 //   `compiler` the COMPILER_VERSION that compiled it.
@@ -22,6 +22,11 @@ import { evaluate, Fault } from "./expressions.js";
 // - `evaluated`: the visible block it evaluated last, and in which tick.
 // - `wait`: why it's waiting at a Wait Until (wait.until), or null.
 // - `ended`: whether the program is over.
+// - `parked`: true for a program the entity has but hasn't started, such as a
+//   robot waiting for its job. It takes no steps, and counts as stopped, until
+//   it's assigned the program again: when the player applies the program, or a
+//   mission gives the job as its reward. Its program can still be edited. A
+//   runtime that isn't parked has no `parked`.
 //
 // The world calls it through the interface every runtime has (src/sim/runtimes.js).
 
@@ -33,8 +38,9 @@ export const MAX_OPS = 64;
 
 export const programOf = (world, id) => world.programs.find((p) => p.id === id) ?? null;
 
-// A runtime for `program`, an entry of world.programs, at its start.
-export const startProgram = (program) => ({
+// A runtime for `program`, an entry of world.programs, at its start; `parked`,
+// not started.
+export const startProgram = (program, { parked = false } = {}) => ({
   kind: "program",
   program: program.id,
   revision: program.revision,
@@ -45,6 +51,7 @@ export const startProgram = (program) => ({
   evaluated: null,
   wait: null,
   ended: false,
+  ...(parked && { parked: true }),
 });
 
 // Each visible instruction, evaluated: what the tick's trace records of it,
@@ -98,7 +105,7 @@ export const programRuntime = {
   // { block, intent?, error?, … } for the block evaluated.
   next(entity, world, now) {
     const run = entity.runtime;
-    if (run.ended) return null;
+    if (run.ended || run.parked) return null;
     const { code } = programOf(world, run.program);
     for (let ops = 0; ops < MAX_OPS; ops++) {
       const ins = code[run.at];
@@ -127,7 +134,7 @@ export const programRuntime = {
   restart(entity) {
     Object.assign(entity.runtime, { at: 0, loops: [], block: null, evaluated: null, wait: null, ended: false });
   },
-  finished: (entity) => entity.runtime.ended,
+  finished: (entity) => entity.runtime.ended || !!entity.runtime.parked,
   waiting: (entity) => entity.runtime.wait,
   active: (entity) => entity.runtime.block,
 };

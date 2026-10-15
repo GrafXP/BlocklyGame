@@ -142,20 +142,169 @@
   z-index: 1;
 }
 
-/* The overview (src/ui/overview.js): a row for every robot, building and
-   deposit, the chosen one open with its details (src/ui/inspector.js). */
-.overview {
+/* The column on the right: a mission's card (src/ui/mission.js), when there is
+   one, above the overview, which scrolls in the room left. */
+.island-side {
   position: absolute;
   top: 12px;
   right: max(12px, env(safe-area-inset-right));
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   width: min(320px, 42%);
-  max-height: calc(100% - 24px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.island-side > * {
+  pointer-events: auto;
+}
+
+/* The overview (src/ui/overview.js): a row for every robot, building and
+   deposit, the chosen one open with its details (src/ui/inspector.js). */
+.overview {
+  flex: 0 1 auto;
+  min-height: 0;
   overflow: auto;
   padding: 10px 12px;
   border-radius: var(--radius);
   background: rgb(255 255 255 / 0.94);
   box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
-  z-index: 1;
+}
+
+/* The mission's card: the goal with pictures, how far it has got, the hints,
+   and the reward when it's done. It keeps its height; the overview gives way. */
+.mission-card {
+  flex: none;
+  max-height: 55%;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 2px solid #f6b73c;
+  border-radius: var(--radius);
+  background: rgb(255 251 240 / 0.97);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
+}
+
+.mission-card.done {
+  border-color: #2f9e5b;
+  background: rgb(240 251 244 / 0.97);
+}
+
+.mission-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.mission-goal {
+  margin: 2px 0 6px;
+  font-weight: 600;
+}
+
+.mission-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.mission-progress .picture {
+  flex: none;
+}
+
+.mission-arrow {
+  margin: 0 4px;
+  color: var(--ink-soft);
+}
+
+.mission-building {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
+/* Kept in its place until the building starts, so the overview below doesn't
+   move when it does. */
+.mission-building.idle {
+  visibility: hidden;
+}
+
+.mission-building[hidden],
+.mission-again[hidden],
+.mission-notice[hidden],
+.mission-hint[hidden] {
+  display: none;
+}
+
+.mission-building progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 2px;
+}
+
+.mission-done {
+  margin: 0;
+}
+
+.mission-card.done .mission-done {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #d6f2df;
+  color: #134a29;
+}
+
+.mission-card.done .mission-done strong::before {
+  content: "✓ ";
+}
+
+.mission-hints {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mission-hints li {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+.mission-hints .button {
+  margin-top: 4px;
+}
+
+.mission-hint {
+  margin-top: 8px;
+}
+
+.mission-again {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #e3edfb;
+  color: #123d7d;
+  font-size: 0.85rem;
+}
+
+.mission-again p {
+  margin: 0 0 4px;
+}
+
+.mission-notice {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fff1cc;
+  color: #4d2f00;
+  font-size: 0.85rem;
+}
+
+.mission-notice p {
+  margin: 0 0 4px;
 }
 
 .overview .hint {
@@ -276,6 +425,43 @@
   margin: 2px 0 0;
   color: var(--ink-soft);
   font-size: 0.85rem;
+}
+
+/* A row holds still while the world runs (src/ui/overview.js): the block and
+   the reason keep their lines when empty, and a row that isn't chosen keeps
+   each line to one, the whole of it on hover. */
+.row-block {
+  min-height: 1.9em; /* a chip's line */
+  padding-inline: 4px; /* room for the outline of a block taken in this step */
+}
+
+.row .why {
+  min-height: 1.45em;
+}
+
+.row:not(.selected) :is(.row-block, .why, .row-has) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.row:not(.selected) .row-block {
+  height: 1.9em;
+}
+
+.row .state[hidden],
+.row-actions[hidden] {
+  display: none;
+}
+
+/* The chosen row's buttons, under its name. */
+.row-actions .details-actions {
+  margin-top: 4px;
+}
+
+/* Kept in its place while there's nothing to show progress of. */
+.details progress.idle {
+  visibility: hidden;
 }
 
 /* The chosen one's details. */

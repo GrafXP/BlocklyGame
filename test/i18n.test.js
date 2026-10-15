@@ -96,11 +96,13 @@ for (const { code, base } of others) {
 for (const { code } of LANGUAGES) {
   test(`${code}'s plural messages have the forms Intl.PluralRules gives ${code}`, async () => {
     const needed = new Intl.PluralRules(code).resolvedOptions().pluralCategories.sort();
-    const ui = code === SOURCE ? ENGLISH.ui : await own(code, "ui");
-    for (const [key, message] of Object.entries(ui)) {
-      if (typeof ENGLISH.ui[key] === "string" && typeof message === "string") continue;
-      assert.equal(typeof message, "object", `${code} ${key} needs plural forms`);
-      assert.deepEqual(Object.keys(message).sort(), needed, `${code} ${key}`);
+    for (const part of ["ui", "missions"]) {
+      const messages = code === SOURCE ? ENGLISH[part] : await own(code, part);
+      for (const [key, message] of Object.entries(messages)) {
+        if (typeof ENGLISH[part][key] === "string" && typeof message === "string") continue;
+        assert.equal(typeof message, "object", `${code} ${key} needs plural forms`);
+        assert.deepEqual(Object.keys(message).sort(), needed, `${code} ${key}`);
+      }
     }
   });
 }

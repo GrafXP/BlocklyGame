@@ -4,6 +4,7 @@ import { finish, progress, tryStart } from "./actions.js";
 import { applyCommand } from "./commands.js";
 import { TYPES } from "./entities.js";
 import { count, makeStore } from "./inventory.js";
+import { checkGoals, createMission } from "./objectives.js";
 import { runtimeOf } from "./runtimes.js";
 import { script } from "./script.js";
 import { cellAt, inside, parseTerrain } from "./terrain.js";
@@ -14,13 +15,14 @@ import { cellAt, inside, parseTerrain } from "./terrain.js";
 // objects, so it saves and loads exactly; robots, buildings and deposits are kept
 // in order of id, and nothing depends on the order of an object's keys.
 //
-//   { sim, content, tick, terrain, nav, serial, programs, entities, nodes, stall }
+//   { sim, content, tick, terrain, nav, serial, programs, entities, nodes, stall, mission }
 //
 // `nav` is the navigation revision, counted up whenever the ways change; `serial`
 // numbers waiting intents in the order they started waiting; `programs` are the
 // compiled programs entities run, { id, revision, …compiled } in order of id
 // (src/programming/compiler.js); `stall` is { since } while nothing can happen
-// (codes.js).
+// (codes.js); `mission` is the mission being played, with its goals
+// (objectives.js), or null.
 //
 // An entity (robot or building) is
 //
@@ -34,7 +36,9 @@ import { cellAt, inside, parseTerrain } from "./terrain.js";
 
 // Bumped whenever a deliberate change makes the same commands give a different
 // world; the golden replays (test/golden/) are then recorded again: npm run golden.
-export const SIM_VERSION = 2;
+// 3: worlds have a mission, whose goals are checked every tick.
+// 4: a robot given a program starts with an empty basket; programs can be parked.
+export const SIM_VERSION = 4;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -46,7 +50,9 @@ const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 // programs are compiled here, each as its `revision`, 1 unless said (a world
 // started again keeps the programs the player applied: src/programming/
 // programs.js), and an entity with a program starts at its start; one with a
-// script follows the script.
+// script follows the script; one with `parked` has its program without starting
+// it (src/programming/runtime.js). Content with a `mission`
+// (src/content/missions/) makes a world with that mission's goals to meet.
 export function createWorld(content) {
   const terrain = parseTerrain(content.terrain);
   const cell = ([x, z]) => {
@@ -67,7 +73,7 @@ export function createWorld(content) {
     if (!program) throw new Error(`${content.id}: ${e.id} runs program ${e.program}, which there isn't`);
     const missing = program.needs.filter((ability) => !TYPES[e.type].can?.includes(ability));
     if (missing.length) throw new Error(`${content.id}: ${e.id} can't run program ${e.program}: it can't ${missing.join(", ")}`);
-    return startProgram(program);
+    return startProgram(program, { parked: !!e.parked });
   };
   const runner = (e) => ({ action: null, pending: null, error: null, runtime: runtime(e) });
   const entities = content.entities.map((e) => {
@@ -108,6 +114,7 @@ export function createWorld(content) {
     entities: entities.sort(byId),
     nodes: nodes.sort(byId),
     stall: null,
+    mission: content.mission ? createMission(content.mission) : null,
   };
 }
 
@@ -115,7 +122,7 @@ export function createWorld(content) {
 // the tick's trace, the debugger's account of the tick (it isn't part of the
 // world):
 //
-//   { tick, commands, evaluated, started, ended, waiting, errors, states }
+//   { tick, commands, evaluated, started, ended, waiting, errors, goals, done, states }
 //
 // - commands: what each command did, { ok, reason? }.
 // - evaluated: each entity that evaluated a step, { entity, block?, … }: the
@@ -125,6 +132,8 @@ export function createWorld(content) {
 // - started, ended: actions, { entity, type }.
 // - waiting: intents that couldn't start, { entity, reason }.
 // - errors: entities whose program stopped, { entity, reason }.
+// - goals: the ids of the mission's goals met in this tick; done: whether the
+//   mission was done in it, and its reward given (objectives.js).
 // - states: every robot and building after the tick, { entity, state, block }:
 //   statusOf's word and the active block.
 //
@@ -142,8 +151,9 @@ export function createWorld(content) {
 //    ready for it, reserving what it needs, so an earlier one has first pick;
 //    otherwise it waits, with the reason, and is tried again next tick. A wait
 //    for a way somewhere is only tried again once the ways have changed.
-// 6. Whether the world has stalled; then the tick is done. (Objectives come with
-//    missions.)
+// 6. The mission's goals are checked, against work that has ended; when the
+//    last is met, the mission's reward is given (objectives.js). Then whether
+//    the world has stalled, and the tick is done.
 export function advanceWorld(world, commands = []) {
   const now = world.tick + 1;
   const trace = { tick: now, commands: [], evaluated: [], started: [], ended: [], waiting: [], errors: [] };
@@ -209,7 +219,10 @@ export function advanceWorld(world, commands = []) {
     }
   }
 
-  // 6. Stalled? Then the tick is done.
+  // 6. Goals, stalled? Then the tick is done.
+  const { met, done } = checkGoals(world, now);
+  trace.goals = met;
+  trace.done = done;
   world.stall = stalled(world) ? (world.stall ?? { since: now }) : null;
   world.tick = now;
   trace.states = world.entities.map((e) => ({ entity: e.id, state: statusOf(e), block: runtimeOf(e)?.active(e) ?? null }));

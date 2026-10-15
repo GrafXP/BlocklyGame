@@ -57,17 +57,23 @@ function readings(entry, words) {
 }
 
 // The details of thing `id` of `world`: its snapshot entry `entry` (null for a
-// deposit), with Blockly's `words` for its blocks.
+// deposit), with Blockly's `words` for its blocks. A robot or building always
+// has its Doing line, with its progress bar kept in place while idle, and a
+// robot its Where line, so the details hold still between one action and the
+// next.
 export function detailsHtml(world, id, entry, words) {
   const it = thing(world, id);
   if (!it) return "";
   const parts = [];
-  const doing = describeAction(world, it);
-  const done = progressOf(world, it);
-  if (doing) parts.push(row(t("world.doing"), `${esc(doing)}${done ? `<progress max="${done.total}" value="${done.done}"></progress>` : ""}`));
+  if (it.kind !== "node") {
+    const doing = describeAction(world, it);
+    const done = progressOf(world, it);
+    const bar = done ? `<progress max="${done.total}" value="${done.done}"></progress>` : `<progress class="idle" max="1" value="0"></progress>`;
+    parts.push(row(t("world.doing"), `${esc(doing || t("world.nothing"))}${bar}`));
+  }
   if (it.kind === "robot") {
     const at = thingAt(world, it.cell);
-    if (at) parts.push(row(t("world.where"), esc(display(at.name))));
+    parts.push(row(t("world.where"), at ? esc(display(at.name)) : "–"));
     const held = Object.values(it.store.items).reduce((a, b) => a + b, 0);
     parts.push(row(t("inspector.basket"), `<span class="basket"><span>${esc(amounts(it.store.items))}</span> <span class="count">${esc(t("inspector.of", { have: held, cap: it.store.total }))}</span></span>`));
   } else parts.push(row(t("world.has"), stock(it)));
@@ -75,13 +81,17 @@ export function detailsHtml(world, id, entry, words) {
     parts.push(row(t("inspector.reads"), readings(entry, words)));
     if (entry.round) parts.push(row(t("inspector.loop"), esc(t("inspector.round", { count: entry.round.count, times: entry.round.times }))));
   }
-  const actions = [
-    entry?.program ? `<button class="button small primary" data-act="edit">${esc(t("inspector.edit"))}</button>` : "",
-    `<button class="button small" data-act="close">${esc(t("inspector.close"))}</button>`,
-  ].join("");
   return `<div class="details">
       <p class="kind">${esc(t(KIND[it.kind]))}</p>
       <dl>${parts.join("")}</dl>
-      <div class="details-actions">${actions}</div>
     </div>`;
+}
+
+// The chosen thing's buttons, for its snapshot entry `entry` (null for a
+// deposit): Edit program for a robot or building that has a program, running,
+// stopped or parked, and Close. The overview puts them under the thing's name.
+export function detailsActions(entry) {
+  return `<div class="details-actions">${
+    entry?.program ? `<button class="button small primary" data-act="edit">${esc(t("inspector.edit"))}</button>` : ""
+  }<button class="button small" data-act="close">${esc(t("inspector.close"))}</button></div>`;
 }

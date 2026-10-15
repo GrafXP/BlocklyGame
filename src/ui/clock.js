@@ -4,9 +4,10 @@ import { esc } from "./dom.js";
 
 // The world clock's controls (PLAN.md §6, §8): Run and Pause, Step, Next block,
 // the speeds, the steps so far, and Start again, the same on every page that
-// shows the world.
+// shows the world. `resetTitle` says what Start again does, where it needs
+// saying.
 
-export const clockMarkup = () =>
+export const clockMarkup = ({ resetTitle = "" } = {}) =>
   `<div class="clock">
     <button class="button primary small" data-act="run"></button>
     <button class="button small" data-act="step">${t("clock.step")}</button>
@@ -15,7 +16,7 @@ export const clockMarkup = () =>
       ${SPEEDS.map((s) => `<button data-speed="${s}">${t("clock.speedValue", { speed: s })}</button>`).join("")}
     </div>
     <output class="ticks" aria-live="off"></output>
-    <button class="button small" data-act="reset">${t("world.reset")}</button>
+    <button class="button small" data-act="reset"${resetTitle ? ` title="${esc(resetTitle)}"` : ""}>${t("world.reset")}</button>
   </div>`;
 
 // Binds the controls in `el` to the game `game()` gives. Next block steps until

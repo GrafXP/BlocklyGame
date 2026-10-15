@@ -1,8 +1,8 @@
 import { display, t } from "../i18n/index.js";
-import { blockChip } from "./chips.js";
+import { blockChip, blockWords } from "./chips.js";
 import { amounts, describeReason } from "./describe.js";
 import { esc } from "./dom.js";
-import { detailsHtml, identityMark } from "./inspector.js";
+import { detailsActions, detailsHtml, identityMark } from "./inspector.js";
 import { blockOf, programName } from "./session.js";
 import { entryIn } from "./snapshot.js";
 
@@ -11,36 +11,45 @@ import { entryIn } from "./snapshot.js";
 // block it's at as a chip (outlined when it took that block in the latest
 // step), its state, and why it waits or stopped; then the deposits with what
 // they hold. The chosen one's row opens to show its details (inspector.js).
-// Rows are drawn from the tick's snapshot (snapshot.js), and only those whose
-// words changed are drawn again.
+// Rows are drawn from the tick's snapshot (snapshot.js).
+//
+// The list holds still while the world runs, so its buttons can be pressed:
+// - Each row is made once, and only the parts whose words changed are drawn
+//   again. A button is never replaced while it's there to be pressed: the
+//   rows' heads keep theirs, and the chosen row's buttons are drawn again only
+//   when the choice changes.
+// - A row that isn't chosen keeps one height: its lines are kept, empty or not,
+//   and each is one line, shortened with an ellipsis (the whole of it on hover).
+//   The chosen row's buttons come first, under its name, so its details
+//   changing below them doesn't move them.
 export function createOverview(el) {
   let shownWorld = null;
-  const drawn = new Map(); // id → the markup its row last had
+  const rows = new Map(); // id → { li, head state, actions, info, details, drawn: { part → markup } }
 
-  // Row `id`'s markup.
-  function rowHtml(world, snapshot, id, selected, words) {
-    const it = [...world.entities, ...world.nodes].find((e) => e.id === id);
-    const entry = entryIn(snapshot, id);
-    const chosen = id === selected;
-    const name = display(it.name);
-    const head =
-      `<button class="row-head" data-pick="${esc(id)}" aria-expanded="${chosen}">` +
-      `${identityMark(world, id)}<span class="row-name">${esc(name)}</span>` +
-      (entry ? `<span class="state ${entry.state}">${esc(t(`state.${entry.state}`))}</span>` : "") +
-      `</button>`;
-    const parts = [head];
-    if (entry?.program) {
-      const program = t("overview.program", { program: display(programName(entry.program)), revision: entry.revision });
-      const newest = snapshot.programs.find((p) => p.id === entry.program)?.newest;
-      const pending = newest > entry.revision ? t("overview.pending", { revision: newest }) : "";
-      parts.push(`<p class="row-program" title="${esc(program)}">${esc(program)}</p>`);
-      if (pending) parts.push(`<p class="row-pending">${esc(pending)}</p>`);
-    }
-    const node = entry?.block ? blockOf(entry.program, entry.revision, entry.block) : null;
-    if (node) parts.push(`<div class="row-block">${blockChip(node, words, entry.fresh ? { className: "fresh", title: t("world.evaluated") } : {})}</div>`);
-    if (entry?.reason) parts.push(`<p class="why">${esc(describeReason(world, entry.reason))}</p>`);
-    if (!entry) parts.push(`<p class="row-has">${esc(amounts(it.store.items))}</p>`);
-    if (chosen) parts.push(detailsHtml(world, id, entry, words));
+  // Draws `part` of row `row` as `markup`, if that's new.
+  function draw(row, part, markup) {
+    if (row.drawn[part] === markup) return;
+    row[part].innerHTML = markup;
+    row.drawn[part] = markup;
+  }
+
+  // The lines under the head: its program and version, a newer version waiting
+  // for the next step, its block, and why it waits or stopped; a deposit's
+  // stock. A robot or building with a program always has its block and reason
+  // lines, empty or not.
+  function infoHtml(world, snapshot, it, entry, words) {
+    if (!entry) return `<p class="row-has" title="${esc(amounts(it.store.items))}">${esc(amounts(it.store.items))}</p>`;
+    if (!entry.program) return "";
+    const parts = [];
+    const program = t("overview.program", { program: display(programName(entry.program)), revision: entry.revision });
+    parts.push(`<p class="row-program" title="${esc(program)}">${esc(program)}</p>`);
+    const newest = snapshot.programs.find((p) => p.id === entry.program)?.newest;
+    if (newest > entry.revision) parts.push(`<p class="row-pending">${esc(t("overview.pending", { revision: newest }))}</p>`);
+    const node = entry.block ? blockOf(entry.program, entry.revision, entry.block) : null;
+    const chip = node ? blockChip(node, words, entry.fresh ? { className: "fresh", title: t("world.evaluated") } : {}) : "";
+    parts.push(`<div class="row-block"${node ? ` title="${esc(blockWords(node, words))}"` : ""}>${chip}</div>`);
+    const why = entry.reason ? describeReason(world, entry.reason) : "";
+    parts.push(`<p class="why"${why ? ` title="${esc(why)}"` : ""}>${esc(why)}</p>`);
     return parts.join("");
   }
 
@@ -49,28 +58,50 @@ export function createOverview(el) {
     // worded with Blockly's `words`.
     show(world, snapshot, selected, words) {
       if (shownWorld !== world) {
-        const ids = [...world.entities, ...world.nodes].map((e) => e.id);
+        const things = [...world.entities, ...world.nodes];
         el.innerHTML =
           `<p class="hint">${esc(t("inspector.hint"))}</p>` +
           `<h2 class="everyone">${esc(t("inspector.everyone"))}</h2>` +
-          `<ul class="rows">${ids.map((id) => `<li class="row" data-row="${esc(id)}"></li>`).join("")}</ul>`;
-        drawn.clear();
+          `<ul class="rows">${things
+            .map(
+              (it) =>
+                `<li class="row" data-row="${esc(it.id)}">` +
+                `<button class="row-head" data-pick="${esc(it.id)}" aria-expanded="false">${identityMark(world, it.id)}<span class="row-name">${esc(display(it.name))}</span><span class="state" hidden></span></button>` +
+                `<div class="row-actions" hidden></div><div class="row-info"></div><div class="row-details"></div></li>`,
+            )
+            .join("")}</ul>`;
+        rows.clear();
+        for (const li of el.querySelectorAll(".row")) {
+          const $ = (sel) => li.querySelector(sel);
+          rows.set(li.dataset.row, { li, head: $(".row-head"), state: $(".state"), actions: $(".row-actions"), info: $(".row-info"), details: $(".row-details"), drawn: {} });
+        }
         shownWorld = world;
       }
       el.querySelector(".hint").hidden = !!selected;
-      for (const li of el.querySelectorAll(".row")) {
-        const id = li.dataset.row;
-        const markup = rowHtml(world, snapshot, id, selected, words);
-        if (drawn.get(id) === markup) continue;
+      for (const [id, row] of rows) {
+        const it = [...world.entities, ...world.nodes].find((e) => e.id === id);
         const entry = entryIn(snapshot, id);
-        li.className = `row ${entry ? entry.state : "node"}${id === selected ? " selected" : ""}`;
-        li.innerHTML = markup;
-        drawn.set(id, markup);
+        const chosen = id === selected;
+        const className = `row ${entry ? entry.state : "node"}${chosen ? " selected" : ""}`;
+        if (row.li.className !== className) row.li.className = className;
+        row.head.setAttribute("aria-expanded", String(chosen));
+        if (entry) {
+          const word = t(`state.${entry.state}`);
+          if (row.state.textContent !== word || row.state.hidden) {
+            row.state.hidden = false;
+            row.state.className = `state ${entry.state}`;
+            row.state.textContent = word;
+          }
+        }
+        row.actions.hidden = !chosen;
+        draw(row, "actions", chosen ? detailsActions(entry) : "");
+        draw(row, "info", infoHtml(world, snapshot, it, entry, words));
+        draw(row, "details", chosen ? detailsHtml(world, id, entry, words) : "");
       }
     },
     // Brings the chosen row into view.
     reveal(id) {
-      el.querySelector(`.row[data-row="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest" });
+      rows.get(id)?.li.scrollIntoView({ block: "nearest" });
     },
   };
 }

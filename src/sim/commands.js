@@ -15,14 +15,18 @@ import { thing } from "./things.js";
 //
 //   { type: "publish", program: { id, revision, compiler, start, code, needs } }
 //        a compiled program (src/programming/compiler.js), new or a new revision:
-//        every entity running it starts the new one from its start
+//        every entity running it starts the new one from its start, and one
+//        that has it parked keeps it parked (src/programming/runtime.js)
 //   { type: "assign", entity, program }       `entity` runs program `program` from its start
 //   { type: "script", entity, steps, loop }   give `entity` a script to run, from its start
 //   { type: "restart", entity }              start `entity`'s program or script again
 //   { type: "stock", at, item, count }       set a store's count (the sandbox's resource settings)
 //
 // Anything that starts an entity again cancels what it was doing: its holds are
-// let go and work it finished stays done (PLAN.md §5). Returns { ok: true }, or
+// let go and work it finished stays done (PLAN.md §5). A robot given a program to
+// run, a new one or a new revision, starts with an empty basket: what it carried
+// is gone, so its program starts as it would from the beginning, not stuck with
+// a load it never asked for. Returns { ok: true }, or
 // { ok: false, reason } for a command that doesn't fit the world, which changes
 // nothing.
 export function applyCommand(world, command) {
@@ -46,20 +50,37 @@ const copy = (value) => JSON.parse(JSON.stringify(value));
 // Program ids are the game's own; block ids are Blockly's, any characters.
 const isId = (value) => typeof value === "string" && /^[A-Za-z0-9_-]+$/.test(value);
 
+// A robot's basket emptied, once its action is stopped and its holds let go.
+function emptyBasket(entity) {
+  if (entity.kind === "robot") entity.store.items = {};
+}
+
+// Puts compiled program `program` into `world`, in place of any older revision of
+// it, and starts every entity running it again, from its start, on the new one;
+// an entity that has it parked keeps it parked. With `fresh`, as when the player
+// applies it, a robot started again begins with an empty basket; without, as
+// when a mission starts again from its checkpoint, what the checkpoint gave it
+// stays. The program must be sound (checkProgram).
+export function installProgram(world, program, { fresh = true } = {}) {
+  const { id, revision, compiler, start, code, needs } = copy(program);
+  const entry = { id, revision, compiler, start, code, needs };
+  const at = world.programs.findIndex((p) => p.id >= id);
+  if (world.programs[at]?.id === id) world.programs[at] = entry;
+  else world.programs.splice(at < 0 ? world.programs.length : at, 0, entry);
+  for (const e of world.entities) {
+    if (e.runtime?.kind !== "program" || e.runtime.program !== id) continue;
+    const parked = !!e.runtime.parked;
+    stop(world, e);
+    if (fresh && !parked) emptyBasket(e);
+    e.runtime = startProgram(entry, { parked });
+  }
+}
+
 const COMMANDS = {
   publish(world, { program }) {
     if (!isId(program?.id) || !Number.isInteger(program.revision) || program.compiler !== COMPILER_VERSION || typeof program.start !== "string" || !Array.isArray(program.needs)) return false;
     if (checkProgram(program).length) return false;
-    const { id, revision, compiler, start, code, needs } = copy(program);
-    const entry = { id, revision, compiler, start, code, needs };
-    const at = world.programs.findIndex((p) => p.id >= id);
-    if (world.programs[at]?.id === id) world.programs[at] = entry;
-    else world.programs.splice(at < 0 ? world.programs.length : at, 0, entry);
-    for (const e of world.entities) {
-      if (e.runtime?.kind !== "program" || e.runtime.program !== id) continue;
-      stop(world, e);
-      e.runtime = startProgram(entry);
-    }
+    installProgram(world, program);
     return true;
   },
   assign(world, { entity, program }) {
@@ -67,6 +88,7 @@ const COMMANDS = {
     const p = world.programs.find((it) => it.id === program);
     if (!e || !p || !p.needs.every((ability) => can(e, ability))) return false;
     stop(world, e);
+    emptyBasket(e);
     e.runtime = startProgram(p);
     return true;
   },

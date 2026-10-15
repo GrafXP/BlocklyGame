@@ -1,6 +1,6 @@
 import "../style/island.css";
 import "../style/editor.css";
-import { blocklyMessages, display, t } from "../i18n/index.js";
+import { blocklyMessages, display, missionText, t } from "../i18n/index.js";
 import { createBin } from "../lifecycle.js";
 import { createMarkers } from "../blockly/markers.js";
 import { surfaceAlphas, TREATMENTS, DEFAULT_TREATMENT } from "../blockly/treatments.js";
@@ -18,8 +18,9 @@ import { esc, html, isDev } from "./dom.js";
 import { openEditor } from "./editor.js";
 import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
+import { createMissionCard } from "./mission.js";
 import { createOverview } from "./overview.js";
-import { blockOf, currentGame, currentLibrary, libraryChanges, newGame } from "./session.js";
+import { blockOf, currentLibrary, dismissNotice, libraryChanges, newGame, savePlay, usePlay } from "./session.js";
 import { entryIn, takeSnapshot } from "./snapshot.js";
 import { declutter } from "./tags.js";
 import { createTogether } from "./together.js";
@@ -38,12 +39,17 @@ async function loadBlockly() {
 }
 
 // What the page hands on to itself when it's opened again during this visit, as
-// after a change of language: the camera, what's chosen, and the panel open on
-// the left, with its width.
-let kept = { camera: null, selected: null, panel: null, panelWidth: 0.42 };
+// after a change of language, for each play: the camera, what's chosen, the
+// panel open on the left, with its width, and how many hints show.
+const keptFor = new Map();
+const fresh = () => ({ camera: null, selected: null, panel: null, panelWidth: 0.42, hints: 0 });
 
 const MIN_PANEL = 320; // px
 const MIN_REST = 380; // px of world and overview kept beside the panel
+
+// While a mission runs, it's saved this often, in ms of the page's time; and
+// whenever the world pauses, its programs change, the page is hidden or left.
+const SAVE_EVERY = 2000;
 
 const loadQuality = () => {
   const q = loadLocal("display")?.quality;
@@ -60,29 +66,42 @@ const VIEW_BUTTONS = [
   ["reset", "view.reset", ICON(`<path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/>`)],
 ];
 
-// The island in 3D (PLAN.md §11, Phases 3 and 4): the visit's world
-// (session.js) on its clock, drawn from the world as it stands, with the
-// debugger round it. Robots and buildings can be looked at from any side and
-// chosen by tapping them, their labels, or their rows in the overview, which
-// lists every one with the block it's at and why it waits; the chosen one's
-// row says more. A robot or building's program opens in the editor on the
-// left, over the world; All programs shows every running program there
-// instead, with everyone's markers. Every view shows the same tick: one
-// snapshot (snapshot.js) is taken after the frame's ticks and drawn by all.
-export function island(el) {
+// The free island (PLAN.md §11, Phases 3 and 4), where every program runs from
+// the start, for this visit.
+export const island = (el) => islandPage(el, "island");
+
+// The bridge slice (PLAN.md §11, Phase 5), the mission of
+// src/content/missions/slice.js, saved on the device as it's played.
+export const play = (el) => islandPage(el, "slice");
+
+// The island in 3D: play `key`'s world (session.js) on its clock, drawn from
+// the world as it stands, with the debugger round it. Robots and buildings can
+// be looked at from any side and chosen by tapping them, their labels, or their
+// rows in the overview, which lists every one with the block it's at and why it
+// waits; the chosen one's row says more. A robot or building's program opens in
+// the editor on the left, over the world; All programs shows every running
+// program there instead, with everyone's markers. Every view shows the same
+// tick: one snapshot (snapshot.js) is taken after the frame's ticks and drawn by
+// all. A mission's card sits above the overview, and the mission is saved as
+// it's played, at tick boundaries.
+function islandPage(el, key) {
   const bin = createBin();
-  let game = currentGame();
+  const playing = usePlay(key);
+  const { mission } = playing;
+  if (!keptFor.has(key)) keptFor.set(key, fresh());
+  const kept = keptFor.get(key);
+  let game = playing.game;
   game.pause();
   let selected = null;
   let hoverAt; // undefined: nothing new; null: the pointer left; { x, y }
 
   const $ = html(
     el,
-    `<div class="island-page">
+    `<div class="island-page${mission ? " playing" : ""}">
       <header class="island-bar">
         <a class="button small" href="/${location.search}" data-link>${t("nav.home")}</a>
-        <h1>${t("island.title")}</h1>
-        ${clockMarkup()}
+        <h1>${esc(mission ? missionText(`${mission.id}.title`) : t("island.title"))}</h1>
+        ${clockMarkup(mission ? { resetTitle: t("clock.resetMission") } : {})}
         <button class="button small" data-panel="together" aria-pressed="false">${t("together.open")}</button>
         ${languageChoice({ group: "segmented language-choice" })}
       </header>
@@ -95,7 +114,10 @@ export function island(el) {
           <div class="panel-body"></div>
           <div class="panel-handle" role="separator" aria-orientation="vertical" aria-label="${esc(t("panel.resize"))}" tabindex="0"></div>
         </section>
-        <aside class="inspector overview" aria-label="${esc(t("inspector.everyone"))}"></aside>
+        <div class="island-side">
+          ${mission ? `<section class="mission-card"></section>` : ""}
+          <aside class="inspector overview" aria-label="${esc(t("inspector.everyone"))}"></aside>
+        </div>
         <div class="island-tools">
           <div class="view-controls" role="group" aria-label="${esc(t("view.controls"))}">
             ${VIEW_BUTTONS.map(([act, key, icon]) => `<button class="button icon" data-view="${act}" aria-label="${esc(t(key))}" title="${esc(t(key))}">${icon}</button>`).join("")}
@@ -217,8 +239,24 @@ export function island(el) {
     }
   }
 
-  // --- The overview ---------------------------------------------------------
+  // --- The overview, and the mission's card above it -------------------------
   const overview = createOverview($(".overview"));
+  const card = mission
+    ? createMissionCard($(".mission-card"), bin, {
+        mission,
+        hints: kept.hints,
+        onHints: (n) => (kept.hints = n),
+        onLook: (id) => select(id),
+        onRestart: () => {
+          game = newGame();
+          showWorld(false);
+        },
+        onDismiss: () => {
+          dismissNotice();
+          refresh();
+        },
+      })
+    : null;
 
   // --- The panel on the left: the editor, or every program together ---------
   const sidePanel = $(".side-panel");
@@ -327,6 +365,7 @@ export function island(el) {
       const stall = $(".stall");
       stall.hidden = !w.stall;
       stall.textContent = w.stall ? describeReason(w, { code: "stall" }) : "";
+      card?.show(w, { notice: playing.notice, changed: playing.changed });
       shown = { ...now, selected };
     }
     if (drew || resized) placeTags();
@@ -336,6 +375,29 @@ export function island(el) {
   const refresh = () => (shown = null);
 
   bindClock(bin, el, { game: () => game, reset: () => (game = newGame()), changed: () => showWorld(false), chosen: () => selected });
+
+  // --- Saving a mission ---------------------------------------------------------
+  // At a tick boundary, which is wherever this runs: ticks only happen within a
+  // frame. The editor's draft is saved into the library first, so an edit made
+  // just before the page goes isn't lost.
+  let saved = null; // { world, tick, changes, done, time } at the last save
+  function save(now = performance.now()) {
+    if (!mission) return;
+    panel?.view.flush?.();
+    savePlay();
+    saved = { world: game.world, tick: game.world.tick, changes: libraryChanges(), done: game.world.mission?.done ?? null, time: now };
+  }
+  // Saves when something has changed: every SAVE_EVERY ms while the world runs,
+  // at once when it's paused or the mission has just been done.
+  function saveIfChanged(now) {
+    const w = game.world;
+    if (saved && saved.world === w && saved.tick === w.tick && saved.changes === libraryChanges()) return;
+    if (!saved || !game.clock.running || saved.done !== (w.mission?.done ?? null) || now - saved.time >= SAVE_EVERY) save(now);
+  }
+  if (mission) {
+    bin.on(window, "pagehide", () => save());
+    bin.add(() => save());
+  }
 
   // --- The view's own controls ----------------------------------------------
   bin.on($(".view-controls"), "click", (e) => {
@@ -360,10 +422,14 @@ export function island(el) {
 
   // --- Every frame ------------------------------------------------------------
   const meter = createMeter();
-  bin.on(document, "visibilitychange", () => game.hidden(document.hidden));
+  bin.on(document, "visibilitychange", () => {
+    game.hidden(document.hidden);
+    if (document.hidden) save(); // iPadOS may discard a hidden tab without another word (PLAN.md §10)
+  });
   bin.frames((now) => {
     const began = performance.now();
     game.frame(now);
+    if (mission) saveIfChanged(now);
     if (hoverAt !== undefined) {
       const id = hoverAt ? view.pick(hoverAt.x, hoverAt.y) : null;
       view.hover(id);
@@ -383,7 +449,7 @@ export function island(el) {
   bin.add(() => game.pause());
 
   // Leaving: hand on the camera, the choice and the panel to the next opening.
-  bin.add(() => (kept = { ...kept, camera: view.camera, selected }));
+  bin.add(() => Object.assign(kept, { camera: view.camera, selected }));
 
   view.sync(game.world);
   showWorld(true);
@@ -426,6 +492,10 @@ export function island(el) {
       frames: () => meter.stats(),
       hash: () => stateHash(game.world),
       problems: () => checkWorld(game.world),
+      // The play shown: its key, the mission's state, and its notice; and
+      // saving it now, as the page does by itself.
+      play: () => ({ key, mission: game.world.mission, notice: playing.notice, progress: playing.progress }),
+      save: () => save(),
     };
     bin.add(() => delete window.islandPage);
   }

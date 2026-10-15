@@ -5,7 +5,7 @@ import { compile } from "./compiler.js";
 // edits it and as it was applied. The world keeps only what runs, compiled
 // (world.programs); the library keeps the blocks. Phase 4 has what the editor
 // and the debugger need; roles, type defaults, copies and the player's own names
-// come with Phase 6. It's plain data, so a save can hold it (Phase 5):
+// come with Phase 6. It's plain data, so a save holds it (src/storage/saves.js):
 //
 //   { programs: [{ id, name, starter, draft, published: [{ revision, source }, …] }, …] }
 //
@@ -47,6 +47,43 @@ export const sourceAt = (library, id, revision) => programDoc(library, id)?.publ
 // The newest revision of every program, for a world to start from
 // (createWorld's content.programs).
 export const newestPrograms = (library) => library.programs.map((doc) => ({ id: doc.id, revision: latest(doc).revision, source: latest(doc).source }));
+
+// `library` with only the revisions still needed: the newest of each program,
+// and those that `keep(id)` lists, such as the ones a world runs. Every other
+// revision is gone for good: nothing runs it, so no view shows it (a saved game
+// keeps no more, PLAN.md §10). Returns a new library.
+export function prunedLibrary(library, keep = () => []) {
+  return {
+    programs: library.programs.map((doc) => {
+      const wanted = new Set([...keep(doc.id), latest(doc).revision]);
+      return { ...copy(doc), published: copy(doc.published.filter((p) => wanted.has(p.revision))) };
+    }),
+  };
+}
+
+const isWorkspace = (json) => !!json && typeof json === "object" && !Array.isArray(json);
+
+// What's wrong with `library`'s shape, for a developer to read; [] when it's a
+// library: programs in order of id, each with a name (the player's words or a
+// message reference), a starter and a draft, and its revisions, oldest first.
+// What the blocks mean is the compiler's to check.
+export function checkLibrary(library) {
+  const problems = [];
+  if (!Array.isArray(library?.programs)) return ["no programs"];
+  library.programs.forEach((doc, i) => {
+    const at = `program ${i}`;
+    if (typeof doc?.id !== "string" || !/^[A-Za-z0-9_-]+$/.test(doc.id)) return problems.push(`${at} has id ${doc?.id}`);
+    if (i && !(library.programs[i - 1].id < doc.id)) problems.push(`programs out of id order at ${doc.id}`);
+    if (typeof doc.name !== "string" && typeof doc.name?.key !== "string") problems.push(`${doc.id} has no name`);
+    if (!isWorkspace(doc.starter) || !isWorkspace(doc.draft)) problems.push(`${doc.id} has no starter or draft`);
+    if (!Array.isArray(doc.published) || !doc.published.length) return problems.push(`${doc.id} has no revisions`);
+    doc.published.forEach((p, j) => {
+      if (!Number.isInteger(p?.revision) || p.revision < 1 || !isWorkspace(p.source)) problems.push(`${doc.id} has revision ${JSON.stringify(p?.revision)}`);
+      else if (j && !(doc.published[j - 1].revision < p.revision)) problems.push(`${doc.id}'s revisions out of order at ${p.revision}`);
+    });
+  });
+  return problems;
+}
 
 // A workspace without where its stacks lie: moving blocks about on the
 // workspace changes nothing a program does.

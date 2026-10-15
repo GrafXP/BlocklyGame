@@ -104,6 +104,38 @@ a {
   font-size: 0.9rem;
 }
 
+.home .saved {
+  color: #1d6b3a;
+}
+
+/* Starting the mission over, which asks first (src/ui/home.js). */
+.home .start-over {
+  margin: -0.25rem 0 1.5rem;
+}
+
+.home .start-over[hidden],
+.home .start-over .ask[hidden] {
+  display: none;
+}
+
+.home .start-over .ask {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 28rem;
+  margin: 0.75rem auto 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.home .start-over .ask p {
+  flex-basis: 100%;
+  margin: 0 0 0.25rem;
+}
+
 /* A pill of choices; with words too long for one line, a rounded box. */
 .segmented {
   display: inline-flex;

@@ -8,7 +8,7 @@ import { kindOf } from "../sim/terrain.js";
 import { robotPose } from "../render/pose.js";
 import { blockChip } from "./chips.js";
 import { bindClock, clockMarkup, showClock } from "./clock.js";
-import { activeBlock, currentGame, newGame } from "./session.js";
+import { activeBlock, currentGame, newGame, usePlay } from "./session.js";
 import { describeAction, describeReason, amounts, placeName, progressOf } from "./describe.js";
 import { esc, html, isDev } from "./dom.js";
 import { languageChoice } from "./language-choice.js";
@@ -33,6 +33,7 @@ export async function ready() {
 // (src/content/programs.js). The island page shows the same world in 3D.
 export function world(el) {
   const bin = createBin();
+  usePlay("island");
   let game = currentGame();
   game.pause();
 

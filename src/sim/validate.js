@@ -1,5 +1,6 @@
 import { checkProgram } from "../programming/runtime.js";
 import { walkable } from "./navigation.js";
+import { GOALS } from "./objectives.js";
 
 // The rules a world keeps after every tick (PLAN.md §12), for the tests and for
 // checking a loaded save later. Returns what's broken, for a developer to read;
@@ -76,9 +77,26 @@ export function checkWorld(world) {
       continue;
     }
     if (run.revision !== p.revision || run.compiler !== p.compiler) fail(`${e.id} runs revision ${run.revision} of ${p.id}, which is at ${p.revision}`);
+    if (run.parked !== undefined && (run.parked !== true || run.at !== 0 || run.block !== null || e.action || e.pending)) fail(`${e.id} has ${p.id} parked, but has begun it`);
     if (!(run.at >= 0 && run.at < p.code.length)) fail(`${e.id} is at instruction ${run.at} of ${p.code.length}`);
     for (const loop of run.loops) {
       if (p.code[loop.at]?.op !== "repeat" || !(loop.count >= 0 && loop.count <= Math.max(0, loop.times))) fail(`${e.id} has a loop at ${loop.at} that isn't a repeat's`);
+    }
+  }
+
+  // The mission: goals of known types, each met at a tick that has been, and
+  // the mission done when, and only when, its last goal was.
+  const { mission } = world;
+  if (mission !== null) {
+    const when = (t) => t === null || (Number.isInteger(t) && t >= 1 && t <= world.tick);
+    if (typeof mission?.id !== "string" || !Array.isArray(mission.goals) || !mission.goals.length || !Array.isArray(mission.reward)) fail("the mission isn't one");
+    else {
+      for (const goal of mission.goals) {
+        if (!GOALS[goal?.type] || typeof goal.id !== "string") fail(`the mission has a goal ${JSON.stringify(goal)}`);
+        else if (!when(goal.done)) fail(`goal ${goal.id} was met at tick ${goal.done}`);
+      }
+      const last = mission.goals.every((g) => g?.done !== null) ? Math.max(...mission.goals.map((g) => g.done)) : null;
+      if (mission.done !== last) fail(`the mission was done at ${mission.done}, its goals at ${last}`);
     }
   }
   return problems;

@@ -16,7 +16,7 @@ import { ISLAND_PROGRAMS } from "./programs.js";
 // site, which builds the bridge from four; the third wants stone from across the
 // stream, and waits for the bridge.
 // prettier-ignore
-const TERRAIN = [
+export const TERRAIN = [
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", // 0
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", // 1
   "~~~~~~~~~~~~~,,,,,,~~~~~~~~~~~~~", // 2

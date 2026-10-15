@@ -15,6 +15,17 @@ export default {
   "page.title": "{page} · {app}",
 
   "home.tagline": "Program robots and buildings to bring an island back to life.",
+  // Under the button of the first mission, whose title is the button's words.
+  "home.playNote": "Phase 5: the first mission. Four programs work together to build the bridge.",
+  // How far the mission got, when it's saved on this device.
+  "home.saved": "Saved at step {tick}.",
+  "home.completed": "Done!",
+  // Starting the mission over deletes the saved game and every change to its
+  // programs, for the next player. It asks first.
+  "home.startOver": "Start over…",
+  "home.startOverAsk": "Start the mission over? The saved game and every change to its programs will be gone.",
+  "home.startOverYes": "Start over",
+  "home.startOverNo": "Keep it",
   "home.island": "Island",
   "home.islandNote": "Phase 4 prototype: the island in 3D, its robots and buildings running programs you can watch, step through and change.",
   "home.lab": "Editor lab",
@@ -135,6 +146,10 @@ export default {
   "editor.changed": "Changed. Apply to run it; until then, version {revision} keeps running.",
   "editor.pending": "Version {revision} starts with the next step.",
   "editor.problems": "Put the marked blocks right, then apply.",
+  // A program a robot has been given but hasn't started yet, such as a robot
+  // waiting for its job. Applying it starts it.
+  "editor.parked": "Not started yet. Change it and apply, and it starts.",
+  "editor.parkedChanged": "Changed. Apply to start it.",
   // Every running program side by side, with where each robot is in it.
   "together.open": "All programs",
   "together.title": "All programs",
@@ -175,6 +190,30 @@ export default {
   // A playback speed, such as 0.5×, 1×, 2×.
   "clock.speedValue": "{speed}×",
   "clock.ticks": "Steps: {tick}",
+  // What “Start again” does in a mission.
+  "clock.resetMission": "Back to the start of the mission. Your programs stay as you applied them.",
+
+  // The mission card: the goal, how far it has got, hints, and the reward.
+  // For screen readers: what the card is.
+  "mission.label": "Mission",
+  "mission.hint": "Hint",
+  "mission.moreHint": "Another hint",
+  // The three hints, each in a word before it: look at something, think about
+  // a question, try a change.
+  "mission.look": "Look:",
+  "mission.think": "Think:",
+  "mission.try": "Try:",
+  // Chooses the thing the Look hint is about.
+  "mission.show": "Show me",
+  "mission.done": "Done!",
+  // After a program was applied: a robot keeps what it carries when its program
+  // starts again, so the change is best watched from the mission's start. The
+  // button under it is “Start again” (world.reset).
+  "mission.again": "You changed a program. Start again to watch the mission from the beginning with your change.",
+  // About saving, under the mission's goal.
+  "mission.discarded": "The saved game couldn't be used, so the mission starts from the beginning.",
+  "mission.unsaved": "This device won't keep the game: after a reload, it starts from the beginning.",
+  "mission.ok": "OK",
 
   // What a robot or building is doing, in a word.
   "state.ready": "Ready",

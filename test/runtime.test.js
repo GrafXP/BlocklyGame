@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { blockIndex, readWorkspace } from "../src/programming/adapter.js";
 import { compile } from "../src/programming/compiler.js";
 import { MAX_OPS } from "../src/programming/runtime.js";
+import { installProgram } from "../src/sim/commands.js";
+import { checkWorld } from "../src/sim/validate.js";
 import { ISLAND } from "../src/content/island.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { createWorld, reasonOf, statusOf } from "../src/sim/world.js";
@@ -168,7 +170,7 @@ test("robots sharing a program each have their own place in it, and their own lo
   );
 });
 
-test("publishing a new revision starts exactly the entities running it again; their holds go and finished work stays", () => {
+test("publishing a new revision starts exactly the entities running it again, baskets emptied; their holds go and finished work stays", () => {
   const fresh = () =>
     tinyWorld({
       entities: [bot("r1", [5, 1], "p"), bot("r2", [5, 1], "q")],
@@ -184,11 +186,63 @@ test("publishing a new revision starts exactly the entities running it again; th
   const revision = { id: "p", revision: 2, ...compile(program(wait("new", 1))).program };
   const [trace] = run(world, 1, { 9: [{ type: "publish", program: revision }] });
   assert.deepEqual(trace.commands, [{ ok: true }]);
-  assert.deepEqual([r1.store.items, byId(world, "pile").store.out], [{ wood: 1 }, {}], "the wood collected stays; the second's hold is gone");
+  assert.deepEqual([r1.store.items, byId(world, "pile").store.out], [{}, {}], "the basket is emptied; the second's hold is gone");
+  assert.deepEqual(byId(world, "pile").store.items, { wood: 8 }, "the wood collected left the pile for good");
   assert.equal(r1.runtime.revision, 2);
   assert.deepEqual(r1.runtime.evaluated, { block: "new", tick: 9 }, "from its start, in the same tick");
   assert.deepEqual(world.programs.map((p) => `${p.id} ${p.revision}`), ["p 2", "q 1"]);
   assert.deepEqual(byId(world, "r2"), byId(twin, "r2"), "r2 runs another program, and goes on as if nothing happened");
+});
+
+test("a robot given a program starts with an empty basket; a building keeps its stock; starting again from a checkpoint keeps what it gave", () => {
+  const fresh = () =>
+    tinyWorld({
+      entities: [bot("r1", [5, 1], "p", { items: { wood: 2 } }), mill("m", { wood: 3 })],
+      nodes: [pile(9)],
+      programs: { p: program(wait("w", 3)), q: program(collect("k")), m: program(make("mk")) },
+    });
+  const assigned = fresh();
+  run(assigned, 1, { 1: [{ type: "assign", entity: "r1", program: "q" }] });
+  assert.deepEqual(byId(assigned, "r1").store.items, {}, "assigned");
+
+  const published = fresh();
+  const mk = { id: "m", revision: 2, ...compile(program(make("mk2"))).program };
+  const p2 = { id: "p", revision: 2, ...compile(program(wait("w2", 3))).program };
+  run(published, 1, { 1: [{ type: "publish", program: p2 }, { type: "publish", program: mk }] });
+  assert.deepEqual(byId(published, "r1").store.items, {}, "a new revision of its program");
+  assert.deepEqual(byId(published, "mill").store.items, { wood: 3 }, "a building keeps its stock");
+
+  // Start again from a checkpoint puts the programs in without emptying.
+  const checkpoint = fresh();
+  installProgram(checkpoint, p2, { fresh: false });
+  assert.deepEqual(byId(checkpoint, "r1").store.items, { wood: 2 });
+  assert.equal(byId(checkpoint, "r1").runtime.revision, 2);
+  assert.deepEqual(checkWorld(checkpoint), []);
+});
+
+test("a parked program takes no steps and counts as stopped; a publish keeps it parked, an assign starts it", () => {
+  const world = createWorld({
+    id: "test",
+    version: 1,
+    terrain: ["~~~~~~~~~~", "~........~", "~........~", "~........~", "~~~~~~~~~~"],
+    entities: [{ ...bot("r1", [5, 1], "p", { items: { wood: 1 } }), parked: true }],
+    nodes: [pile(9)],
+    programs: [{ id: "p", source: program(collect("k")) }],
+  });
+  const r1 = byId(world, "r1");
+  assert.deepEqual([r1.runtime.parked, statusOf(r1)], [true, "stopped"]);
+  assert.deepEqual(run(world, 10).flatMap((t) => t.evaluated), []);
+  assert.equal(world.stall, null, "stopped, not waiting: nothing stalls");
+  const p2 = { id: "p", revision: 2, ...compile(program(collect("k2"))).program };
+  run(world, 1, { 11: [{ type: "publish", program: p2 }] });
+  assert.deepEqual([r1.runtime.revision, r1.runtime.parked, r1.store.items], [2, true, { wood: 1 }], "parked, at the new revision, its basket as it was");
+  const [trace] = run(world, 1, { 12: [{ type: "assign", entity: "r1", program: "p" }] });
+  assert.deepEqual([r1.runtime.parked, r1.store.items], [undefined, {}], "started, with an empty basket");
+  assert.deepEqual(trace.evaluated.map((e) => e.block), ["k2"]);
+  // A parked program that has begun is a broken world.
+  const broken = createWorld({ id: "test", version: 1, terrain: ["~~~~~~~~~~", "~........~", "~~~~~~~~~~"], entities: [{ ...bot("r1", [5, 1], "p"), parked: true }], nodes: [], programs: [{ id: "p", source: program(wait("w", 3)) }] });
+  byId(broken, "r1").runtime.at = 1;
+  assert.ok(checkWorld(broken).some((p) => /parked, but has begun/.test(p)));
 });
 
 test("a command that gives a program to what can't run it, or a program that isn't sound, changes nothing", () => {

@@ -1,5 +1,6 @@
 import ui from "./en/ui.js";
 import blocks from "./en/blocks.js";
+import missions from "./en/missions.js";
 import { LANGUAGES, SOURCE } from "./languages.js";
 import { loadLocal, saveLocal } from "../storage/local.js";
 import { isDev } from "../ui/dom.js";
@@ -10,7 +11,7 @@ import { isDev } from "../ui/dom.js";
 // first shown in it. Whatever a language doesn't have is said in English, never
 // shown as a key.
 
-export const ENGLISH = { ui, blocks };
+export const ENGLISH = { ui, blocks, missions };
 
 // Development only: English with every letter marked, to find text that isn't
 // from a catalogue (./pseudo.js). Not a listed language; ?dev offers it.
@@ -58,6 +59,9 @@ export const t = (key, params) => translate(current.messages.ui, current.locale,
 // Whether the interface has a message `key`.
 export const hasMessage = (key) => key in current.messages.ui;
 
+// Message `key` of the missions' words (missions.js) in the current language.
+export const missionText = (key, params) => translate(current.messages.missions, current.locale, key, params);
+
 // Number `n` written the current language's way: formatNumber(0.6, { style: "percent" }).
 export const formatNumber = (n, options) => cached(Intl.NumberFormat, current.locale, options).format(n);
 
@@ -96,7 +100,7 @@ export function chainOf(code, list = LANGUAGES) {
   return chain;
 }
 
-// One catalogue ({ ui, blocks }) from several, the first having the last word.
+// One catalogue ({ ui, blocks, missions }) from several, the first having the last word.
 export const mergeCatalogues = (catalogues) =>
   Object.fromEntries(Object.keys(ENGLISH).map((part) => [part, Object.assign({}, ...catalogues.map((c) => c[part] ?? {}).reverse())]));
 
@@ -106,8 +110,8 @@ export const mergeCatalogues = (catalogues) =>
 // language folder has every file; a variant's hold only what it changes.
 async function own(code) {
   if (code === SOURCE) return ENGLISH;
-  const [ui, blocks] = await Promise.all([import(`./${code}/ui.js`), import(`./${code}/blocks.js`)]);
-  return { ui: ui.default, blocks: blocks.default };
+  const [ui, blocks, missions] = await Promise.all([import(`./${code}/ui.js`), import(`./${code}/blocks.js`), import(`./${code}/missions.js`)]);
+  return { ui: ui.default, blocks: blocks.default, missions: missions.default };
 }
 
 // Everything the game says in language `code`, English filling any gaps.

@@ -4,18 +4,19 @@
 // without; the languages (docs/languages.md): German and the pseudo-language on
 // the title page and in the lab; programs (docs/phase2.md): the world lab's
 // robots and buildings at their blocks, and the editor marking a program's
-// problems; the island in 3D (docs/phase3.md); and the island's editor and
-// debugger (docs/phase4.md). Builds the app, serves it, and writes to
-// docs/phase0/, docs/languages/, docs/phase2/, docs/phase3/ and docs/phase4/. Run
-// it after changing how the editor or the island looks: npm run shots, or for
-// some groups only: npm run shots -- languages ipad.
+// problems; the island in 3D (docs/phase3.md); the island's editor and debugger
+// (docs/phase4.md); and the bridge slice at /play (docs/phase5.md). Builds the
+// app, serves it, and writes to docs/phase0/, docs/languages/, docs/phase2/,
+// docs/phase3/, docs/phase4/ and docs/phase5/. Run it after changing how the
+// editor or the island looks: npm run shots, or for some groups only: npm run
+// shots -- languages ipad.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { build, preview } from "vite";
 import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
 
-const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger"];
+const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger", "play"];
 const asked = process.argv.slice(2);
 for (const group of asked) if (!GROUPS.includes(group)) throw new Error(`No group "${group}"; there are ${GROUPS.join(", ")}.`);
 const want = (group) => !asked.length || asked.includes(group);
@@ -26,6 +27,7 @@ const LANGUAGES = new URL("../docs/languages/", import.meta.url);
 const PHASE2 = new URL("../docs/phase2/", import.meta.url);
 const PHASE3 = new URL("../docs/phase3/", import.meta.url);
 const PHASE4 = new URL("../docs/phase4/", import.meta.url);
+const PHASE5 = new URL("../docs/phase5/", import.meta.url);
 const PORT = 4178;
 const BEHIND = 3.6; // radians round its circuit: the test robot behind the editor, clear of the trees
 // The game follows the browser's language; the pictures choose theirs.
@@ -36,6 +38,7 @@ mkdirSync(LANGUAGES, { recursive: true });
 mkdirSync(PHASE2, { recursive: true });
 mkdirSync(PHASE3, { recursive: true });
 mkdirSync(PHASE4, { recursive: true });
+mkdirSync(PHASE5, { recursive: true });
 
 await build({ logLevel: "warn" });
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: "warn" });
@@ -256,7 +259,74 @@ if (want("debugger")) {
   await changed.waitForTimeout(300);
   await shot(changed, "editor-applied", PHASE4);
 }
+// The bridge slice at /play, from its start: with the courier's and the site's
+// programs fixed in the editor when `fixed`, `ticks` steps on, `chosen` selected,
+// `hints` of its hints showing, and `panel` open on the left.
+async function openPlay(browser, { context = DESKTOP, lang = "en", fixed = false, ticks = 0, chosen = null, hints = 0, panel = null } = {}) {
+  const page = await (await browser.newContext(context)).newPage();
+  await page.goto(`${base}/play?dev&lang=${lang}`);
+  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  if (fixed) await fixSlice(page);
+  for (let i = 0; i < hints; i++) await page.click(".mission-hint");
+  await page.evaluate(
+    ([n, id]) => {
+      for (let i = 0; i < n; i++) window.islandPage.game.step();
+      window.islandPage.select(id);
+    },
+    [ticks, chosen],
+  );
+  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
+  await page.waitForTimeout(900);
+  return page;
+}
+// The courier sends its planks to the construction site, and the site builds
+// the bridge: both changed in the editor and applied.
+async function fixSlice(page) {
+  const apply = async () => {
+    await page.waitForTimeout(400);
+    await page.click('[data-code="apply"]');
+  };
+  await page.evaluate(() => window.islandPage.open("editor", "courier"));
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await apply();
+  await page.evaluate(() => window.islandPage.open("editor", "bridge"));
+  await page.evaluate(() => {
+    const ws = window.islandPage.editor().workspace;
+    ws.getBlockById("bridge-start").nextConnection.connect(ws.getBlockById("bridge-build").previousConnection);
+  });
+  await apply();
+  await page.evaluate(() => window.islandPage.close());
+}
+if (want("play")) {
+  console.log("The bridge slice:");
+  await shot(await openPlay(browser), "play-start-en", PHASE5);
+  await shot(await openPlay(browser, { ticks: 200, chosen: "r2", panel: ["together"] }), "play-depot-en", PHASE5);
+  await shot(await openPlay(browser, { ticks: 20, hints: 3 }), "play-hints-en", PHASE5);
+  await shot(await openPlay(browser, { panel: ["editor", "bridge"] }), "play-site-editor-en", PHASE5);
+  await shot(await openPlay(browser, { fixed: true, ticks: 140, chosen: "site", panel: ["together"] }), "play-waiting-en", PHASE5);
+  await shot(await openPlay(browser, { fixed: true, ticks: 215, chosen: "site" }), "play-building-en", PHASE5);
+  for (const lang of ["en", "de"]) await shot(await openPlay(browser, { lang, fixed: true, ticks: 300, chosen: "r3" }), `play-done-${lang}`, PHASE5);
+  const again = await openPlay(browser, { ticks: 120 });
+  await again.evaluate(() => window.islandPage.open("editor", "courier"));
+  await again.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await again.waitForTimeout(400);
+  await again.click('[data-code="apply"]');
+  await again.waitForTimeout(400);
+  await shot(again, "play-again-en", PHASE5);
+  const home = await openPlay(browser, { ticks: 75 });
+  await home.evaluate(() => window.islandPage.save());
+  await home.click('a[href^="/?"], a[href="/"]');
+  await home.click('[data-home="ask"]');
+  await home.waitForTimeout(300);
+  await shot(home, "home-start-over-en", PHASE5);
+}
 await browser.close();
+
+if (want("play")) {
+  const safari = await webkit.launch();
+  await shot(await openPlay(safari, { context: IPAD, fixed: true, ticks: 140, chosen: "r2", panel: ["together"] }), "play-ipad", PHASE5);
+  await safari.close();
+}
 
 if (want("island") || want("debugger")) {
   const safari = await webkit.launch();

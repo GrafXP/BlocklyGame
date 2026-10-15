@@ -94,11 +94,14 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
     const running = programOf(world, programId)?.revision ?? latest(doc).revision;
     const newest = latest(doc).revision;
     const changed = isChanged(doc);
+    // Everyone who has it has it parked: it hasn't started (runtime.js).
+    const { runners } = programContext(programId);
+    const parked = runners.length > 0 && runners.every((e) => e.runtime.parked);
     let state;
     if (checked?.errors.length) state = t("editor.problems");
-    else if (changed) state = t("editor.changed", { revision: running });
+    else if (changed) state = parked ? t("editor.parkedChanged") : t("editor.changed", { revision: running });
     else if (newest > running) state = t("editor.pending", { revision: newest });
-    else state = t("editor.running", { revision: running });
+    else state = parked ? t("editor.parked") : t("editor.running", { revision: running });
     $(".code-state").textContent = state;
     $('[data-code="apply"]').disabled = !changed || !!checked?.errors.length;
     $('[data-code="undo"]').disabled = !changed;

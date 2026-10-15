@@ -11,12 +11,12 @@ import { block, chain, input, number, workspace } from "./build.js";
 // - planks: the sawmill makes a plank whenever it has wood.
 // - bridge: the construction site builds the bridge, once, from four planks.
 
-const start = (p) => block("island_when_started", `${p}-start`, { x: 20, y: 20 });
+export const start = (p) => block("island_when_started", `${p}-start`, { x: 20, y: 20 });
 const goTo = (p, place) => block("robot_go_to", `${p}-go-${place}`, { fields: { PLACE: place } });
 const unload = (p) => block("robot_unload", `${p}-unload`);
 
 // Fetches two of `item` from `from` to `to`, again and again.
-function carry(p, { from, item, take, to }) {
+export function carry(p, { from, item, take, to }) {
   return workspace(
     chain(
       start(p),

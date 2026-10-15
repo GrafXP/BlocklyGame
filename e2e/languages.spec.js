@@ -332,6 +332,63 @@ async function islandAt(page, query, ticks, id, panel = null) {
   await frames(page);
 }
 
+// The bridge slice at /play, from its start, as `state` asks: `broken`, a save
+// it can't use (the card says so); `fixed`, the courier and the site's programs
+// changed in the editor and applied; `ticks` steps on, or until the mission is
+// `done`; `changed`, the courier applied once more after that (the card offers
+// to start again); and `hints` of the hint ladder showing.
+async function playAt(page, query, { broken = false, fixed = false, ticks = 0, done = false, changed = false, hints = 0 } = {}) {
+  await page.goto(`/?dev${query}`);
+  await page.evaluate((b) => {
+    localStorage.removeItem("robot-island:save.slice");
+    if (b) localStorage.setItem("robot-island:save.slice", JSON.stringify({ format: "robot-island", schema: 0 }));
+  }, broken);
+  await page.goto(`/play?dev${query}`);
+  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  const apply = async () => {
+    await page.waitForTimeout(400); // the editor saves its draft
+    await page.locator('[data-code="apply"]').click();
+  };
+  if (fixed) {
+    await page.evaluate(() => window.islandPage.open("editor", "courier"));
+    await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+    await apply();
+    await page.evaluate(() => window.islandPage.open("editor", "bridge"));
+    await page.evaluate(() => {
+      const ws = window.islandPage.editor().workspace;
+      ws.getBlockById("bridge-start").nextConnection.connect(ws.getBlockById("bridge-build").previousConnection);
+    });
+    await apply();
+    await page.evaluate(() => window.islandPage.close());
+  }
+  await page.evaluate(
+    ([n, untilDone]) => {
+      const game = window.islandPage.game;
+      for (let i = 0; i < n || (untilDone && game.world.mission.done === null && i < 2000); i++) game.step();
+    },
+    [ticks, done],
+  );
+  if (changed) {
+    await page.evaluate(() => window.islandPage.open("editor", "courier"));
+    await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("depot"));
+    await apply();
+    await page.evaluate(() => window.islandPage.close());
+  }
+  for (let i = 0; i < hints; i++) await page.locator(".mission-hint").click();
+  await frames(page);
+}
+
+// What the play page shows in each test of its words.
+const PLAY_STATES = [{ hints: 3 }, { broken: true }, { fixed: true, ticks: 60, changed: true }, { fixed: true, done: true }];
+
+// The title page with the mission saved and Start over asking.
+async function homeAsking(page, query) {
+  await page.goto(`/?dev${query}`);
+  await expect(page.locator(".start-over")).toBeVisible();
+  await page.locator('[data-home="ask"]').click();
+  await frames(page);
+}
+
 // Every block in every category of the island editor's toolbox, with its width
 // on screen.
 const islandToolboxBlocks = (page) =>
@@ -386,6 +443,14 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
   await page.waitForTimeout(500);
   await page.locator('[data-code="apply"]').click();
   expect(await page.evaluate(unmarkedText), "an Apply waiting").toEqual([]);
+  // The mission: its card with every hint, a save it can't use, the offer to
+  // start again, and the reward; and the title page asking to start over.
+  for (const state of PLAY_STATES) {
+    await playAt(page, "&lang=pseudo", state);
+    expect(await page.evaluate(unmarkedText), `play ${JSON.stringify(state)}`).toEqual([]);
+  }
+  await homeAsking(page, "&lang=pseudo");
+  expect(await page.evaluate(unmarkedText), "the title page asking to start over").toEqual([]);
 });
 
 // Every listed language, and the pseudo-language, a third longer than English.
@@ -418,6 +483,12 @@ for (const [lang, query] of everyLanguage) {
       await islandAt(page, query, ticks, id, panel);
       expect(await page.evaluate(clippedText), `island at step ${ticks}, ${id} chosen, ${panel} open`).toEqual([]);
     }
+    for (const state of PLAY_STATES) {
+      await playAt(page, query, state);
+      expect(await page.evaluate(clippedText), `play ${JSON.stringify(state)}`).toEqual([]);
+    }
+    await homeAsking(page, query);
+    expect(await page.evaluate(clippedText), "the title page asking to start over").toEqual([]);
   });
 }
 

@@ -538,7 +538,7 @@ This plan was grounded in the [phase 2 findings](phase2.md), [phase 3 findings](
 | Variables, set/change/read, visible local values | 26–30 | Phase 8; values local to each entity, reset predictably on restart |
 | Non-recursive procedures and typed inputs | 31–35 | Phase 8; mission 33 needs a destination input, mission 34 a numeric input |
 | Send, matching Wait For Message, inbox display | 36–38 | Phase 8; explicit receive, next-step delivery, one entry thread, no payload/broadcast requirement for this campaign |
-| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | Phase 7; needed for these lessons even when individual blocks already exist |
+| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | Phase 7; needed for these lessons even when individual blocks already exist. Phase 5's bridge slice has the first of each: a completed-work goal in the world, a fixed hint ladder, a checkpoint with Start again, a saved game, and `missions.js` text ([phase 5 findings](phase5.md)) |
 
 No mission requires AND/OR, recursion, lists, return values, global variables, message payloads, broadcasts, or child-defined object types. These can become future expansion topics. Nested loops appear only in a small guided example and remain optional in later projects.
 

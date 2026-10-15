@@ -1,7 +1,8 @@
 // The languages the game is offered in (PLAN.md §8, Languages). Each has a folder
 // beside this file with the same files as en/: ui.js (the interface), blocks.js
-// (the game's blocks) and blockly.js (Blockly's own catalogue, and the game's
-// overrides of it). Adding a language is its folder and one line here.
+// (the game's blocks), missions.js (the missions' goals, hints and rewards) and
+// blockly.js (Blockly's own catalogue, and the game's overrides of it). Adding a
+// language is its folder and one line here.
 //
 // `code` is the folder's name and the language tag the browser and Intl know it
 // by; `name` is the language's name in itself, as the language choice shows it,
