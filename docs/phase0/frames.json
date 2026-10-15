@@ -1,0 +1,17 @@
+{
+  "note": "headless Chromium, software WebGL, 1440x900; for comparing blur with none only",
+  "frames": {
+    "none": {
+      "fps": 13.685651121170654,
+      "slowest": 83.40000000000055,
+      "work": 0.5357142856810242,
+      "calls": 76
+    },
+    "blur": {
+      "fps": 13,
+      "slowest": 83.39999999999964,
+      "work": 0.4928571428837521,
+      "calls": 76
+    }
+  }
+}

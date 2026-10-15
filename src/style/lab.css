@@ -1,0 +1,202 @@
+/* The editor lab: the world fills the window, the editor panel lies over its left
+   side, and the lab's controls float top right. */
+
+.lab {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0d1020;
+}
+
+.lab-world {
+  position: absolute;
+  inset: 0;
+}
+
+.lab-world canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* the world's own drag and pinch (src/render/input.js) */
+}
+
+/* The panel's colour and opacity come from the treatment and the lab's controls
+   (src/ui/lab.js); Blockly's own backgrounds are transparent over it
+   (src/style/editor.css). Only the backgrounds are see-through, never the blocks. */
+.editor-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 56vw;
+  min-width: 320px;
+  background: rgb(var(--panel-rgb) / var(--panel-alpha));
+  border-right: 1px solid rgb(var(--toolbox-rgb) / 0.9);
+  box-shadow: 4px 0 18px rgb(0 0 0 / 0.12);
+  touch-action: none;
+}
+
+.editor-panel[data-blur="true"] {
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
+  backdrop-filter: blur(6px) saturate(1.1);
+}
+
+.editor-host {
+  position: absolute;
+  inset: 0;
+}
+
+.panel-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -10px;
+  width: 20px;
+  cursor: ew-resize;
+  z-index: 80;
+  touch-action: none;
+}
+
+.panel-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 7px;
+  width: 6px;
+  height: 56px;
+  margin-top: -28px;
+  border-radius: 3px;
+  background: rgb(var(--toolbox-rgb));
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+.panel-handle:focus-visible::after {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lab-controls {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  width: min(330px, calc(100vw - 20px));
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.2);
+  font-size: 14px;
+  z-index: 90;
+}
+
+.lab-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lab-bar strong {
+  flex: 1;
+}
+
+.lab-body {
+  margin-top: 8px;
+}
+
+.lab-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.lab-row > span {
+  width: 80px;
+  flex: none;
+  color: var(--ink-soft);
+}
+
+.lab-row input[type="range"] {
+  flex: 1;
+}
+
+.lab-row output {
+  width: 3em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-row.checks {
+  gap: 16px;
+}
+
+.lab-row.buttons {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.segmented button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.lab-status,
+.lab-selected {
+  margin: 6px 0;
+  min-height: 1.2em;
+}
+
+.lab-fps {
+  margin: 6px 0 2px;
+  font: 12px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--ink-soft);
+}
+
+/* Execution markers (src/blockly/markers.js): over the workspace, never in the
+   way of it. */
+.execution-markers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 75;
+}
+
+.execution-markers .marker-halo {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 6;
+}
+
+.execution-markers .marker-outline {
+  fill: none;
+  stroke-width: 3;
+}
+
+.execution-markers .marker-pill rect {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.execution-markers text {
+  font: 700 12px var(--font);
+  dominant-baseline: central;
+}

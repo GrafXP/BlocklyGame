@@ -1,0 +1,75 @@
+/* Blockly over the world (PLAN.md §8): its backgrounds see-through, its blocks
+   and words solid. The variables come from the treatment and the lab's controls
+   (src/ui/lab.js sets them on <html>, because Blockly puts its dropdowns on
+   <body>, outside the panel). */
+
+/* Blockly paints a white sheet under the workspace, and a grey line round it;
+   the panel behind gives the colour instead. */
+.editor-panel .blocklySvg {
+  background-color: transparent;
+}
+
+.editor-panel .blocklyMainBackground {
+  stroke: none;
+}
+
+/* The toolbox: more solid than the workspace, at least TOOLBOX_MIN
+   (src/blockly/treatments.js), so category names stay readable. */
+.editor-panel .blocklyToolbox {
+  background-color: rgb(var(--toolbox-rgb) / var(--toolbox-alpha)) !important;
+  border-right: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.editor-panel .blocklyToolboxCategoryLabel {
+  color: var(--toolbox-ink);
+  font-family: var(--font);
+  font-weight: 600;
+}
+
+.editor-panel .blocklyToolboxSelected .blocklyToolboxCategoryLabel {
+  color: var(--toolbox-selected-ink);
+}
+
+.editor-panel .blocklyFlyoutBackground {
+  fill: rgb(var(--toolbox-rgb)) !important;
+  fill-opacity: var(--flyout-alpha) !important;
+}
+
+/* Words on blocks. Zelos makes them white (".zelos-renderer.<theme> .blocklyText",
+   and its dropdown words with !important), which the calm treatment's light
+   blocks can't carry. These selectors outrank Zelos's, which Blockly adds to the
+   page after ours. */
+html[data-treatment] .editor-panel .blocklyText {
+  fill: var(--block-ink);
+}
+
+html[data-treatment] .editor-panel .blocklyDropdownText {
+  fill: var(--block-ink) !important;
+}
+
+/* A dropdown field's arrow is a white picture; light blocks get it dark. */
+html[data-treatment="calm"] .editor-panel .blocklyDropdownField > image {
+  filter: brightness(0.15);
+}
+
+/* Number and text fields are a white field with dark words in every treatment,
+   as Zelos has them; this restores that over the rule above. */
+html[data-treatment] .editor-panel .blocklyEditableField > text,
+html[data-treatment] .editor-panel .blocklyEditableField > g > text {
+  fill: #1d2633;
+}
+
+/* Dropdown menus. Zelos colours the menu with the block's colour and white words
+   (".zelos-renderer.<theme>.blocklyDropDownDiv .blocklyMenuItemContent"); the calm
+   treatment's light blocks need dark ones, and a selector that outranks that. */
+html[data-treatment="calm"] .blocklyDropDownDiv .blocklyMenuItem .blocklyMenuItemContent {
+  color: var(--block-ink);
+}
+
+html[data-treatment] .blocklyDropDownDiv .blocklyMenuItem {
+  font-family: var(--font);
+  font-weight: 600;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}

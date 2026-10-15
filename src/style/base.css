@@ -1,0 +1,100 @@
+:root {
+  --ink: #1d2633;
+  --ink-soft: #4b5563;
+  --paper: #f6f3ec;
+  --card: #ffffff;
+  --line: #d9d3c6;
+  --accent: #2f6fd6;
+  --accent-ink: #ffffff;
+  --radius: 12px;
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.45 var(--font);
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+#view {
+  min-height: 100%;
+}
+
+a {
+  color: var(--accent);
+}
+
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: max(2rem, env(safe-area-inset-top)) 1rem 2rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  min-height: 44px;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.button.small {
+  min-height: 34px;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.button:focus-visible,
+.segmented button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.home {
+  text-align: center;
+  padding-top: max(4rem, env(safe-area-inset-top));
+}
+
+.home h1 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 2.4rem;
+}
+
+.home .tagline {
+  margin: 0 0 2rem;
+  color: var(--ink-soft);
+}
+
+.home .note {
+  margin-top: 1rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
