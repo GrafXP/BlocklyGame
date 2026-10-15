@@ -5,8 +5,14 @@ import { ICONS } from "./icons.js";
 // same in every language, and so are the stable ids its dropdowns store (grove,
 // wood): only their labels are translated. The compiler reads the dropdowns'
 // ids from here too (src/programming/compiler.js), so a program can hold only
-// what its blocks offer. Capability-filtered toolboxes and dropdowns of the
-// places really on the island come with the editor (PLAN.md §11, Phase 4).
+// what its blocks offer.
+//
+// A dropdown of type "field_choice" offers what makes sense where the block is
+// used (PLAN.md §7, valid-target dropdowns): the places on the island, what the
+// building being programmed can make. Its `choices` names the list
+// (src/blockly/choices.js); its `options` are every value it can hold, which the
+// compiler checks against, and what it offers where there's no island to ask,
+// as in the editor lab (src/blockly/fields.js).
 //
 // Styles name a colour family (src/blockly/treatments.js), not a colour, so each
 // visual treatment colours every block.
@@ -25,11 +31,11 @@ const RAW = [
   ["%{BKY_ITEM_WOOD}", "wood"],
   ["%{BKY_ITEM_STONE}", "stone"],
 ];
-const MADE = [
+export const MADE = [
   ["%{BKY_ITEM_PLANK}", "plank"],
   ["%{BKY_ITEM_KIT}", "kit"],
 ];
-const BLUEPRINTS = [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]];
+export const BLUEPRINTS = [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]];
 
 export const BLOCKS = [
   {
@@ -43,7 +49,7 @@ export const BLOCKS = [
   {
     type: "robot_go_to",
     message0: "%{BKY_ROBOT_GO_TO}",
-    args0: [icon("go"), { type: "field_dropdown", name: "PLACE", options: PLACES }],
+    args0: [icon("go"), { type: "field_choice", name: "PLACE", options: PLACES, choices: "places" }],
     previousStatement: null,
     nextStatement: null,
     style: "robot_blocks",
@@ -79,7 +85,7 @@ export const BLOCKS = [
   {
     type: "building_make",
     message0: "%{BKY_BUILDING_MAKE}",
-    args0: [icon("make"), { type: "field_dropdown", name: "ITEM", options: MADE }],
+    args0: [icon("make"), { type: "field_choice", name: "ITEM", options: MADE, choices: "makes" }],
     previousStatement: null,
     nextStatement: null,
     style: "building_blocks",
@@ -88,7 +94,7 @@ export const BLOCKS = [
   {
     type: "building_build",
     message0: "%{BKY_BUILDING_BUILD}",
-    args0: [icon("build"), { type: "field_dropdown", name: "BLUEPRINT", options: BLUEPRINTS }],
+    args0: [icon("build"), { type: "field_choice", name: "BLUEPRINT", options: BLUEPRINTS, choices: "builds" }],
     previousStatement: null,
     nextStatement: null,
     style: "building_blocks",
@@ -127,7 +133,7 @@ export const BLOCKS = [
     message0: "%{BKY_SENSE_STOCK}",
     args0: [
       { type: "field_dropdown", name: "ITEM", options: [...RAW, ...MADE] },
-      { type: "field_dropdown", name: "PLACE", options: PLACES },
+      { type: "field_choice", name: "PLACE", options: PLACES, choices: "places" },
     ],
     output: "Number",
     style: "sensing_blocks",

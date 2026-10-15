@@ -1,33 +1,49 @@
 import "../style/island.css";
+import "../style/editor.css";
 import { blocklyMessages, display, t } from "../i18n/index.js";
 import { createBin } from "../lifecycle.js";
+import { createMarkers } from "../blockly/markers.js";
+import { surfaceAlphas, TREATMENTS, DEFAULT_TREATMENT } from "../blockly/treatments.js";
 import { bindWorldInput } from "../render/input.js";
 import { createIslandView } from "../render/island-view.js";
 import { createMeter } from "../render/meter.js";
 import { QUALITIES } from "../render/stage.js";
 import { stateHash } from "../sim/replay.js";
 import { checkWorld } from "../sim/validate.js";
-import { reasonOf, statusOf } from "../sim/world.js";
 import { loadLocal, saveLocal } from "../storage/local.js";
 import { blockIcon } from "./chips.js";
 import { bindClock, clockMarkup, showClock } from "./clock.js";
 import { describeReason } from "./describe.js";
 import { esc, html, isDev } from "./dom.js";
-import { everyoneHtml, identityMark, inspectorHtml } from "./inspector.js";
+import { openEditor } from "./editor.js";
+import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
-import { activeBlock, currentGame, newGame } from "./session.js";
+import { createOverview } from "./overview.js";
+import { blockOf, currentGame, currentLibrary, libraryChanges, newGame } from "./session.js";
+import { entryIn, takeSnapshot } from "./snapshot.js";
 import { declutter } from "./tags.js";
+import { createTogether } from "./together.js";
 
 // Blockly's messages in the current language, to word blocks, without Blockly
-// itself (main.js awaits this before the page is shown).
+// itself (main.js awaits this before the page is shown). Blockly is fetched when
+// an editor or Programs Together first opens.
 let words = null;
 export async function ready() {
   words = (await blocklyMessages()).messages;
 }
+async function loadBlockly() {
+  const blockly = await import("../blockly/workspace.js");
+  await blockly.prepareBlockly();
+  return blockly;
+}
 
 // What the page hands on to itself when it's opened again during this visit, as
-// after a change of language: the camera, and what's selected.
-let kept = { camera: null, selected: null };
+// after a change of language: the camera, what's chosen, and the panel open on
+// the left, with its width.
+let kept = { camera: null, selected: null, panel: null, panelWidth: 0.42 };
+
+const MIN_PANEL = 320; // px
+const MIN_REST = 380; // px of world and overview kept beside the panel
 
 const loadQuality = () => {
   const q = loadLocal("display")?.quality;
@@ -44,12 +60,15 @@ const VIEW_BUTTONS = [
   ["reset", "view.reset", ICON(`<path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/>`)],
 ];
 
-// The island in 3D (PLAN.md §11, Phase 3): the visit's world (session.js) on its
-// clock, drawn from the world as it stands. Robots and buildings can be looked
-// at from any side, chosen by tapping them, their labels, or the list in the
-// inspector, which says what the chosen one is doing. Each robot and building
-// has a label with the picture of the block it's at, and a mark when it waits or
-// has stopped with an error, whose reason shows on hover.
+// The island in 3D (PLAN.md §11, Phases 3 and 4): the visit's world
+// (session.js) on its clock, drawn from the world as it stands, with the
+// debugger round it. Robots and buildings can be looked at from any side and
+// chosen by tapping them, their labels, or their rows in the overview, which
+// lists every one with the block it's at and why it waits; the chosen one's
+// row says more. A robot or building's program opens in the editor on the
+// left, over the world; All programs shows every running program there
+// instead, with everyone's markers. Every view shows the same tick: one
+// snapshot (snapshot.js) is taken after the frame's ticks and drawn by all.
 export function island(el) {
   const bin = createBin();
   let game = currentGame();
@@ -64,13 +83,19 @@ export function island(el) {
         <a class="button small" href="/${location.search}" data-link>${t("nav.home")}</a>
         <h1>${t("island.title")}</h1>
         ${clockMarkup()}
+        <button class="button small" data-panel="together" aria-pressed="false">${t("together.open")}</button>
         ${languageChoice({ group: "segmented language-choice" })}
       </header>
       <div class="island-main">
         <div class="island-stage"></div>
         <div class="tags"></div>
         <p class="stall" role="status" hidden></p>
-        <aside class="inspector" aria-label="${esc(t("inspector.label"))}"></aside>
+        <section class="editor-panel side-panel" hidden>
+          <button class="button small panel-close" data-panel="close">${t("inspector.close")}</button>
+          <div class="panel-body"></div>
+          <div class="panel-handle" role="separator" aria-orientation="vertical" aria-label="${esc(t("panel.resize"))}" tabindex="0"></div>
+        </section>
+        <aside class="inspector overview" aria-label="${esc(t("inspector.everyone"))}"></aside>
         <div class="island-tools">
           <div class="view-controls" role="group" aria-label="${esc(t("view.controls"))}">
             ${VIEW_BUTTONS.map(([act, key, icon]) => `<button class="button icon" data-view="${act}" aria-label="${esc(t(key))}" title="${esc(t(key))}">${icon}</button>`).join("")}
@@ -85,6 +110,7 @@ export function island(el) {
       </div>
     </div>`,
   );
+  const main = $(".island-main");
 
   // --- The world in 3D ------------------------------------------------------
   const view = createIslandView($(".island-stage"), { quality: loadQuality() });
@@ -96,20 +122,31 @@ export function island(el) {
   });
 
   // --- Choosing -------------------------------------------------------------
-  function select(id) {
+  // Chooses thing `id`, or nothing, and shows it at once unless `draw` is false.
+  function select(id, draw = true) {
     const exists = id && [...game.world.entities, ...game.world.nodes].some((e) => e.id === id);
     selected = exists ? id : null;
     view.select(selected);
     for (const tag of tagsEl.children) tag.classList.toggle("selected", tag.dataset.pick === selected);
-    showInspector();
+    refresh();
+    if (!draw) return;
+    showWorld(false);
+    if (selected) overview.reveal(selected);
   }
   bin.on(el, "click", (e) => {
     const pick = e.target.closest("[data-pick]");
-    if (pick) select(pick.dataset.pick);
-    else if (e.target.closest('[data-act="close"]')) select(null);
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    const panelAct = e.target.closest("[data-panel]")?.dataset.panel;
+    if (pick) select(pick.closest(".row-head") && pick.dataset.pick === selected ? null : pick.dataset.pick);
+    else if (act === "close") select(null);
+    else if (act === "edit") {
+      const program = entryIn(snapshot, selected)?.program;
+      if (program) openPanel({ kind: "editor", program });
+    } else if (panelAct === "close") closePanel();
+    else if (panelAct === "together") (panel?.kind === "together" ? closePanel() : openPanel({ kind: "together" }));
   });
   bin.on(document, "keydown", (e) => {
-    if (e.key === "Escape" && selected) select(null);
+    if (e.key === "Escape" && selected && !e.target.closest?.(".side-panel")) select(null);
   });
 
   // --- Labels ---------------------------------------------------------------
@@ -118,10 +155,11 @@ export function island(el) {
   const sizes = new Map(); // id → { w, h }, measured when a label's words change
   let tagsShown = null; // the world the labels are for
   const tagWords = new Map(); // id → what its label last said
-  function tagContent(w, e) {
-    const status = e.kind === "node" ? null : statusOf(e);
-    const why = e.kind === "node" ? null : reasonOf(e);
-    const block = activeBlock(e);
+  function tagContent(w, snap, e) {
+    const entry = entryIn(snap, e.id);
+    const status = entry?.state ?? null;
+    const why = entry?.reason ?? null;
+    const block = entry?.block ? blockOf(entry.program, entry.revision, entry.block) : null;
     const icon = block ? blockIcon(block.type) : null;
     const name = display(e.name);
     const stateWord = status ? t(`state.${status}`) : "";
@@ -137,7 +175,7 @@ export function island(el) {
         (status === "waiting" || status === "error" ? `<span class="badge ${status}" aria-hidden="true"></span>` : ""),
     };
   }
-  function showTags(w) {
+  function showTags(w, snap) {
     if (tagsShown !== w) {
       tagsEl.innerHTML = [...w.entities, ...w.nodes].map((e) => `<button class="tag" data-pick="${esc(e.id)}"></button>`).join("");
       tagWords.clear();
@@ -145,7 +183,7 @@ export function island(el) {
     }
     let resized = false;
     for (const e of [...w.entities, ...w.nodes]) {
-      const c = tagContent(w, e);
+      const c = tagContent(w, snap, e);
       if (tagWords.get(e.id) === c.key) continue;
       const tag = tagsEl.querySelector(`[data-pick="${CSS.escape(e.id)}"]`);
       tag.className = c.className;
@@ -158,15 +196,17 @@ export function island(el) {
     }
     return resized;
   }
-  // Puts each label over its thing, none covering another.
+  // Puts each label over its thing, none covering another, and none under the
+  // panel on the left.
   function placeTags() {
     const area = tagsEl.getBoundingClientRect();
+    const left = panel ? sidePanel.getBoundingClientRect().right : area.left;
     const labels = [];
     for (const tag of tagsEl.children) {
       const id = tag.dataset.pick;
       const at = view.anchorOf(id);
       const size = sizes.get(id);
-      const inside = at && size && at.x > area.left && at.x < area.right && at.y > area.top && at.y < area.bottom;
+      const inside = at && size && at.x > left && at.x < area.right && at.y > area.top && at.y < area.bottom;
       tag.hidden = !inside;
       if (inside) labels.push({ id, x: at.x - area.left, y: at.y - area.top - 4, ...size });
     }
@@ -177,32 +217,125 @@ export function island(el) {
     }
   }
 
-  // --- The inspector, the stall, the clock ----------------------------------
-  const inspector = $(".inspector");
-  function showInspector() {
-    const w = game.world;
-    inspector.innerHTML = selected ? inspectorHtml(w, selected, words) : everyoneHtml(w);
-    inspector.classList.toggle("open", !!selected);
+  // --- The overview ---------------------------------------------------------
+  const overview = createOverview($(".overview"));
+
+  // --- The panel on the left: the editor, or every program together ---------
+  const sidePanel = $(".side-panel");
+  const panelBody = $(".panel-body");
+  let panel = null; // { kind, program?, view }
+  let opening = 0; // the latest panel asked for, while Blockly is fetched
+  async function openPanel(want) {
+    const ticket = ++opening;
+    if (want.kind === "editor") game.pause(); // editing pauses the world (PLAN.md §5)
+    const blockly = await loadBlockly();
+    if (!bin.open || ticket !== opening) return;
+    closePanel(false);
+    sidePanel.hidden = false;
+    sidePanel.dataset.kind = want.kind;
+    const markers = { createMarkers };
+    const onPick = (id) => select(id);
+    const pane = want.kind === "editor" ? openEditor(panelBody, { blockly, markers, programId: want.program, onPick }) : createTogether(panelBody, { blockly, markers, onPick });
+    panel = { ...want, view: pane };
+    kept.panel = want;
+    showPanelState();
+    refresh();
+  }
+  function closePanel(forget = true) {
+    if (forget) opening++;
+    panel?.view.dispose();
+    panel = null;
+    if (forget) kept.panel = null;
+    sidePanel.hidden = true;
+    showPanelState();
+  }
+  bin.add(() => {
+    opening++;
+    panel?.view.dispose();
+  });
+  function showPanelState() {
+    $('[data-panel="together"]').setAttribute("aria-pressed", String(panel?.kind === "together"));
+    main.style.setProperty("--side", panel ? `${sidePanel.getBoundingClientRect().width}px` : "0px");
+    placeTags();
   }
 
-  let shown = null; // the world and tick the page shows
+  // The panel's look: the Calm treatment over the world at the background
+  // opacity Phase 0 settled on, as CSS variables on <html>, since Blockly puts
+  // its dropdowns on <body> (src/style/editor.css).
+  const root = document.documentElement;
+  const look = TREATMENTS[DEFAULT_TREATMENT];
+  const alphas = surfaceAlphas(0.6);
+  const vars = {
+    "--panel-rgb": look.panel.rgb.join(" "),
+    "--panel-ink": look.panel.ink,
+    "--panel-alpha": alphas.panel,
+    "--toolbox-rgb": look.toolbox.rgb.join(" "),
+    "--toolbox-ink": look.toolbox.ink,
+    "--toolbox-selected-ink": look.toolbox.selectedInk,
+    "--toolbox-alpha": alphas.toolbox,
+    "--flyout-alpha": alphas.flyout,
+    "--block-ink": look.blockInk,
+  };
+  for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
+  root.dataset.treatment = DEFAULT_TREATMENT;
+  bin.add(() => {
+    for (const k of Object.keys(vars)) root.style.removeProperty(k);
+    delete root.dataset.treatment;
+  });
+
+  // Dragging the panel's edge sets its width.
+  const handle = $(".panel-handle");
+  const setWidth = (px) => {
+    const room = main.getBoundingClientRect().width;
+    const width = Math.min(room - MIN_REST, Math.max(MIN_PANEL, px));
+    kept.panelWidth = width / room;
+    applyWidth();
+  };
+  const applyWidth = () => {
+    sidePanel.style.width = `max(${MIN_PANEL}px, ${kept.panelWidth * 100}%)`;
+    showPanelState();
+  };
+  let resizing = false;
+  bin.on(handle, "pointerdown", (e) => {
+    resizing = true;
+    handle.setPointerCapture(e.pointerId);
+  });
+  bin.on(handle, "pointermove", (e) => resizing && setWidth(e.clientX - sidePanel.getBoundingClientRect().left));
+  bin.on(handle, "pointerup", () => (resizing = false));
+  bin.on(handle, "pointercancel", () => (resizing = false));
+  bin.on(handle, "keydown", (e) => {
+    const step = { ArrowLeft: -24, ArrowRight: 24 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    setWidth(sidePanel.getBoundingClientRect().width + step);
+  });
+  applyWidth();
+
+  // --- Every view from one snapshot -----------------------------------------
+  let snapshot = null;
+  let shown = null; // what the views show: { world, tick, selected, changes }
   function showWorld(drew) {
     const w = game.world;
     let resized = false;
-    if (shown?.world !== w || shown.tick !== w.tick) {
-      if (shown?.world !== w) select(null);
-      resized = showTags(w);
-      if (selected || shown?.world !== w) showInspector();
+    const now = { world: w, tick: w.tick, selected, changes: libraryChanges() };
+    if (!shown || Object.keys(now).some((k) => now[k] !== shown[k])) {
+      if (shown && shown.world !== w) select(null, false);
+      snapshot = takeSnapshot(w, currentLibrary());
+      resized = showTags(w, snapshot);
+      overview.show(w, snapshot, selected, words);
+      panel?.view.show(w, snapshot, selected);
       const stall = $(".stall");
       stall.hidden = !w.stall;
       stall.textContent = w.stall ? describeReason(w, { code: "stall" }) : "";
-      shown = { world: w, tick: w.tick };
+      shown = { ...now, selected };
     }
     if (drew || resized) placeTags();
     showClock(el, game);
   }
+  // Draws the views again at the next frame.
+  const refresh = () => (shown = null);
 
-  bindClock(bin, el, { game: () => game, reset: () => (game = newGame()), changed: () => showWorld(false) });
+  bindClock(bin, el, { game: () => game, reset: () => (game = newGame()), changed: () => showWorld(false), chosen: () => selected });
 
   // --- The view's own controls ----------------------------------------------
   bin.on($(".view-controls"), "click", (e) => {
@@ -249,14 +382,15 @@ export function island(el) {
   }
   bin.add(() => game.pause());
 
-  // Leaving: hand on the camera and the selection to the next opening.
-  bin.add(() => (kept = { camera: view.camera, selected }));
+  // Leaving: hand on the camera, the choice and the panel to the next opening.
+  bin.add(() => (kept = { ...kept, camera: view.camera, selected }));
 
   view.sync(game.world);
   showWorld(true);
   select(kept.selected);
   view.frame(performance.now());
   placeTags();
+  if (kept.panel) openPanel(kept.panel);
 
   // The ?dev hooks, for the browser tests.
   if (isDev()) {
@@ -268,6 +402,20 @@ export function island(el) {
         return selected;
       },
       select,
+      library: () => currentLibrary(),
+      snapshot: () => snapshot,
+      // Opens the editor of program `program`, or All programs; resolves once
+      // it's open.
+      async open(kind, program) {
+        await openPanel({ kind, program });
+        showWorld(false);
+      },
+      close: () => closePanel(),
+      panel: () => (panel ? { kind: panel.kind, program: panel.program ?? null } : null),
+      editor: () => (panel?.kind === "editor" ? panel.view.editor : null),
+      markers: () => panel?.view.markerRects() ?? [],
+      badges: () => panel?.view.badges() ?? [],
+      panels: () => (panel?.kind === "together" ? panel.view.panels() : []),
       camera: () => view.camera,
       quality: () => view.quality,
       // Where thing `id` is drawn, in world units, and on screen, in client pixels.

@@ -1,6 +1,7 @@
 /* The island in 3D (src/ui/island.js): the clock along the top, and below it
-   the world filling the window, with labels over it, the inspector on the right
-   and the view's own controls at the bottom left. */
+   the world filling the window, with labels over it, the overview on the right,
+   the editor or every program on the left when open, and the view's own
+   controls at the bottom left. */
 
 .island-page {
   position: fixed;
@@ -72,6 +73,11 @@
   will-change: transform;
 }
 
+/* A label off screen, or under the panel on the left. */
+.tag[hidden] {
+  display: none;
+}
+
 .tag .identity {
   margin-inline-end: 0;
 }
@@ -136,117 +142,38 @@
   z-index: 1;
 }
 
-/* The inspector: what the selected thing is doing, or a list to choose from. */
-.inspector {
+/* The overview (src/ui/overview.js): a row for every robot, building and
+   deposit, the chosen one open with its details (src/ui/inspector.js). */
+.overview {
   position: absolute;
   top: 12px;
   right: max(12px, env(safe-area-inset-right));
   width: min(320px, 42%);
   max-height: calc(100% - 24px);
   overflow: auto;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: var(--radius);
   background: rgb(255 255 255 / 0.94);
   box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
   z-index: 1;
 }
 
-.inspector h2 {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  font-size: 1.15rem;
-  hyphens: auto;
+.overview .hint {
+  margin: 0 0 8px;
 }
 
-.inspector-head {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: start;
-  gap: 2px 8px;
+.overview .hint[hidden] {
+  display: none;
 }
 
-.inspector-head .kind {
-  grid-column: 1;
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-}
-
-.inspector-head .button {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-}
-
-.inspector dl {
-  margin: 10px 0 0;
-}
-
-.inspector-row {
-  padding: 6px 0;
-  border-top: 1px solid var(--line);
-}
-
-.inspector dt {
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-}
-
-.inspector dd {
-  margin: 2px 0 0;
-}
-
-.inspector .why {
-  display: block;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-}
-
-.inspector .state.waiting {
-  color: #8a5300;
-}
-
-.inspector .state.error {
-  color: #b42318;
-}
-
-.inspector progress {
-  display: block;
-  width: 100%;
-  height: 6px;
-  margin-top: 4px;
-}
-
-.inspector .count {
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-.inspector .stock {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.inspector .stock li,
-.inspector .basket {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.inspector .hint {
-  margin: 0 0 10px;
-}
-
-.inspector .everyone {
+.overview .everyone {
   margin: 0 0 6px;
   color: var(--ink-soft);
   font-size: 0.85rem;
   font-weight: 600;
 }
 
-.picks {
+.rows {
   display: grid;
   gap: 4px;
   margin: 0;
@@ -254,32 +181,371 @@
   list-style: none;
 }
 
-.picks .pick {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 36px;
-  padding: 4px 10px;
+.row {
+  padding: 4px 8px 6px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--card);
+}
+
+.row.selected {
+  border-color: #f6b73c;
+  box-shadow: 0 0 0 2px #f6b73c;
+}
+
+.row-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--ink);
   font: inherit;
+  font-weight: 600;
   text-align: start;
   cursor: pointer;
+}
+
+.row-head:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.row-head .identity {
+  margin-inline-end: 0;
+}
+
+.row-name {
+  flex: 1;
+  min-width: 0;
+  hyphens: auto;
+}
+
+.row .state {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef1f5;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.row .state.waiting {
+  background: #fff1cc;
+  color: #6b4100;
+}
+
+.row .state.error {
+  background: #fde2e0;
+  color: #8f1b12;
+}
+
+.row .state.moving,
+.row .state.working {
+  background: #dcebfb;
+  color: #123d7d;
+}
+
+.row-program {
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.row-pending {
+  margin: 2px 0 0;
+  color: #123d7d;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.row-block {
+  margin-top: 2px;
+  font-size: 0.85rem;
+}
+
+.row .why,
+.row-has {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+/* The chosen one's details. */
+.details {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.details .kind {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.details dl {
+  margin: 4px 0 0;
+}
+
+.inspector-row {
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+}
+
+.inspector-row:first-child {
+  border-top: 0;
+}
+
+.details dt {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.details dd {
+  margin: 2px 0 0;
+}
+
+.details progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 4px;
+}
+
+.details .count {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.details .stock,
+.details .readings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.details .stock li,
+.details .basket {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.details .readings li {
+  font-size: 0.85rem;
+}
+
+.details-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* The panel on the left (src/ui/island.js): the program editor
+   (src/ui/editor.js) or every program together (src/ui/together.js), over the
+   world, which shows through its background (src/style/editor.css). */
+.side-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  background: rgb(var(--panel-rgb) / var(--panel-alpha));
+  border-right: 1px solid rgb(var(--toolbox-rgb) / 0.9);
+  box-shadow: 4px 0 18px rgb(0 0 0 / 0.12);
+  z-index: 2;
+}
+
+.side-panel[hidden] {
+  display: none;
+}
+
+.panel-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-close {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  z-index: 3;
+}
+
+.side-panel .panel-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -10px;
+  width: 20px;
+  cursor: ew-resize;
+  z-index: 80;
+  touch-action: none;
+}
+
+.side-panel .panel-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 7px;
+  width: 6px;
+  height: 56px;
+  margin-top: -28px;
+  border-radius: 3px;
+  background: rgb(var(--toolbox-rgb));
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+.side-panel .panel-handle:focus-visible::after {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The editor's heading: the program, who runs it, its state and the actions. */
+.code-head,
+.together-head {
+  flex: none;
+  padding: 10px 14px 8px;
+  padding-inline-end: 96px; /* clear of the Close button */
+  background: rgb(var(--toolbox-rgb) / var(--toolbox-alpha));
+  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.code-head h2,
+.together-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  hyphens: auto;
+}
+
+.code-runners,
+.code-state,
+.code-problems {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+}
+
+.code-runners {
+  color: var(--ink-soft);
+}
+
+.code-runners .identity,
+.together-runners .identity {
+  margin-inline-end: 4px;
+}
+
+.code-runners .identity:last-of-type,
+.together-runners .identity:last-of-type {
+  margin-inline-end: 8px;
+}
+
+.code-state {
+  font-weight: 600;
+}
+
+.code-problems:empty {
+  display: none;
+}
+
+.code-problems {
+  color: #8f1b12;
+}
+
+.code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.code-actions .button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.code-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Every program together: a list of panels, each as tall as its blocks. */
+.together-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px 16px;
+}
+
+.together-empty {
+  margin: 12px 14px;
+}
+
+.together-panel {
+  margin-bottom: 10px;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+.together-panel-head {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.together-panel-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.together-version {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.together-runners {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.together-blocks {
+  position: relative;
+  min-height: 60px;
 }
 
 /* The view's controls, and the graphics setting. */
 .island-tools {
   position: absolute;
-  left: max(12px, env(safe-area-inset-left));
+  left: calc(var(--side, 0px) + max(12px, env(safe-area-inset-left)));
+  /* Between the panel on the left and the overview on the right. */
+  right: calc(min(320px, 42%) + 24px);
   bottom: max(12px, env(safe-area-inset-bottom));
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  max-width: calc(100% - 24px);
   z-index: 1;
+  pointer-events: none; /* the world between the controls can still be dragged */
+}
+
+.island-tools > * {
+  pointer-events: auto;
 }
 
 .view-controls {

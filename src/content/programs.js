@@ -1,7 +1,9 @@
+import { ref } from "../i18n/index.js";
 import { block, chain, input, number, workspace } from "./build.js";
 
 // The island's starter programs (PLAN.md §9), as Blockly workspaces. Block ids
-// are fixed and readable, so tests and the debugger can name them.
+// are fixed and readable, so tests and the debugger can name them. Their names
+// are messages, worded when shown, until the player renames them (PLAN.md §8).
 //
 // - collector: brings wood from the grove to the sawmill, two at a time.
 // - courier: carries planks from the sawmill to the construction site.
@@ -63,9 +65,9 @@ const planks = workspace(
 const bridge = workspace(chain(start("bridge"), block("building_build", "bridge-build", { fields: { BLUEPRINT: "bridge" } })));
 
 export const ISLAND_PROGRAMS = [
-  { id: "collector", source: carry("collector", { from: "grove", item: "wood", take: "robot_collect", to: "sawmill" }) },
-  { id: "courier", source: carry("courier", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "site" }) },
-  { id: "stones", source: carry("stones", { from: "quarry", item: "stone", take: "robot_collect", to: "depot" }) },
-  { id: "planks", source: planks },
-  { id: "bridge", source: bridge },
+  { id: "collector", name: ref("programName.collector"), source: carry("collector", { from: "grove", item: "wood", take: "robot_collect", to: "sawmill" }) },
+  { id: "courier", name: ref("programName.courier"), source: carry("courier", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "site" }) },
+  { id: "stones", name: ref("programName.stones"), source: carry("stones", { from: "quarry", item: "stone", take: "robot_collect", to: "depot" }) },
+  { id: "planks", name: ref("programName.planks"), source: planks },
+  { id: "bridge", name: ref("programName.bridge"), source: bridge },
 ];

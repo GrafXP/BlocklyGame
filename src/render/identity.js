@@ -11,8 +11,16 @@ export const IDENTITIES = [
   { colour: "#0f6b78", ink: "#ffffff", shape: "triangle" },
 ];
 
+// A building's marker: one look for every building, since each runs a program
+// of its own and is told apart by its name.
+export const BUILDING_MARK = { colour: "#475467", ink: "#ffffff", shape: "house" };
+
 export function identityOf(world, id) {
   const robots = world.entities.filter((e) => e.kind === "robot");
   const i = robots.findIndex((e) => e.id === id);
   return i < 0 ? null : IDENTITIES[i % IDENTITIES.length];
 }
+
+// What marks entity `id` on the editor's markers: a robot's identity, or the
+// building mark.
+export const markOf = (world, id) => identityOf(world, id) ?? BUILDING_MARK;

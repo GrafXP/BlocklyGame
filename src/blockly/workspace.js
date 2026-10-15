@@ -4,6 +4,7 @@ import { blocklyMessages, language } from "../i18n/index.js";
 import { count, probe } from "../lifecycle.js";
 import { isDev } from "../ui/dom.js";
 import { BLOCKS } from "./blocks.js";
+import { registerFields, setChoiceContext } from "./fields.js";
 import { registerRenderers, themeFor } from "./theme.js";
 import { TREATMENTS } from "./treatments.js";
 
@@ -15,6 +16,7 @@ let ready = false;
 function setUp() {
   if (ready) return;
   ready = true;
+  registerFields();
   Blockly.common.defineBlocksWithJsonArray(BLOCKS);
   registerRenderers();
   probe("blocklyWorkspaces", () => Blockly.Workspace.getAll().length);
@@ -70,20 +72,37 @@ function traceReads(Msg) {
 // The renderer can't change once a workspace is made, so a new treatment is a new
 // editor: save(), dispose(), and make one with the saved state. Call
 // prepareBlockly first.
-export function createEditor(host, { treatment, toolbox, state = null, onChange = null }) {
+//
+// - `context`: the island and the robot or building type the program is for,
+//   so its dropdowns offer what they have (fields.js).
+// - `readOnly`: a program to look at, not change, as Programs Together shows
+//   them: no toolbox, bin or zoom buttons, and the wheel scrolls the page.
+// - `scale`: the zoom to start at, else the treatment's.
+export function createEditor(host, { treatment, toolbox = null, state = null, onChange = null, context = null, readOnly = false, scale = null }) {
   if (worded !== language()) console.warn(`Blockly isn't worded in ${language()}; await prepareBlockly() first.`);
-  const { renderer, scale } = TREATMENTS[treatment];
+  const look = TREATMENTS[treatment];
+  const startScale = scale ?? look.scale;
   const workspace = Blockly.inject(host, {
-    renderer,
+    renderer: look.renderer,
     theme: themeFor(treatment),
-    toolbox,
     media: MEDIA,
-    trashcan: true,
-    sounds: true,
-    zoom: { controls: true, wheel: false, pinch: true, startScale: scale, maxScale: 2, minScale: 0.4, scaleSpeed: 1.15 },
-    move: { scrollbars: true, drag: true, wheel: true },
+    ...(readOnly
+      ? {
+          readOnly: true,
+          sounds: false,
+          zoom: { controls: false, wheel: false, pinch: false, startScale },
+          move: { scrollbars: false, drag: true, wheel: false },
+        }
+      : {
+          toolbox,
+          trashcan: true,
+          sounds: true,
+          zoom: { controls: true, wheel: false, pinch: true, startScale, maxScale: 2, minScale: 0.4, scaleSpeed: 1.15 },
+          move: { scrollbars: true, drag: true, wheel: true },
+        }),
   });
   count("editors", 1);
+  if (context) setChoiceContext(workspace, context);
   if (state) {
     try {
       Blockly.serialization.workspaces.load(state, workspace);
@@ -100,12 +119,26 @@ export function createEditor(host, { treatment, toolbox, state = null, onChange 
   const ro = new ResizeObserver(() => Blockly.svgResize(workspace));
   ro.observe(host);
 
+  // Where the blocks are, in pixels at the workspace's zoom.
+  const contentBox = () => {
+    const b = workspace.getBlocksBoundingBox();
+    const s = workspace.scale;
+    return { left: b.left * s, top: b.top * s, width: (b.right - b.left) * s, height: (b.bottom - b.top) * s };
+  };
+
   let disposed = false;
   return {
     workspace,
     save: () => Blockly.serialization.workspaces.save(workspace),
     load: (json) => Blockly.serialization.workspaces.load(json, workspace),
     blockCount: () => workspace.getAllBlocks(false).length,
+    contentBox,
+    // Scrolls the blocks' top left corner to `pad` pixels from the view's.
+    showTopLeft(pad = 12) {
+      Blockly.svgResize(workspace);
+      const box = contentBox();
+      workspace.scroll(pad - box.left, pad - box.top);
+    },
     dispose() {
       if (disposed) return;
       disposed = true;

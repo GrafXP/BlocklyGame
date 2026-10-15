@@ -11,10 +11,10 @@ import { LAB_TOOLBOX } from "../blockly/toolboxes.js";
 import { TREATMENTS, surfaceAlphas } from "../blockly/treatments.js";
 import { loadLocal, saveLocal } from "../storage/local.js";
 import { html, isDev } from "./dom.js";
-import { describeReason } from "./describe.js";
 import { languageChoice } from "./language-choice.js";
 import { normalizeLabSettings } from "./lab-settings.js";
 import { checkLabPrograms } from "./lab-check.js";
+import { createWarnings } from "./problems.js";
 import { demoMarkers, demoProgram } from "./lab-demo.js";
 
 const MIN_PANEL = 320; // px; narrower and the toolbox crowds the program out
@@ -142,21 +142,12 @@ export function lab(el) {
   };
 
   // What the compiler finds wrong, in the player's language: at its block as
-  // Blockly's warning, or, for a problem with no block, in the status line. A
-  // block's warning is only set when it changes, since setting one redraws it.
+  // Blockly's warning, or, for a problem with no block, in the status line.
   let problems = [];
-  let warned = new Map(); // block id → the warning it shows
+  let warnings = null;
   function check() {
     problems = checkLabPrograms(editor.save());
-    const lists = new Map();
-    for (const p of problems) if (p.block) lists.set(p.block, [...(lists.get(p.block) ?? []), describeReason(null, p)]);
-    const texts = new Map([...lists].map(([id, list]) => [id, list.join("\n")]));
-    for (const block of editor.workspace.getAllBlocks(false)) {
-      const text = texts.get(block.id) ?? null;
-      if ((warned.get(block.id) ?? null) !== text) block.setWarningText(text);
-    }
-    warned = texts;
-    const general = problems.filter((p) => !p.block).map((p) => describeReason(null, p));
+    const general = warnings.show(problems);
     if (general.length || status.dataset.problems) {
       status.textContent = general.join(" ");
       status.dataset.problems = general.length ? "1" : "";
@@ -172,7 +163,7 @@ export function lab(el) {
     }
     markers = createMarkers(host, editor, Blockly);
     showMarkers();
-    warned = new Map();
+    warnings = createWarnings(editor.workspace);
     check();
   }
   function unmount() {
@@ -329,7 +320,7 @@ export function lab(el) {
       save: () => editor.save(),
       load(json) {
         editor.load(json);
-        warned = new Map();
+        warnings.reset();
         check();
       },
       // The compiler's findings, as codes with block ids, and each block's warning.

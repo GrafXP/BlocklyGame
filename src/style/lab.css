@@ -22,8 +22,10 @@
 
 /* The panel's colour and opacity come from the treatment and the lab's controls
    (src/ui/lab.js); Blockly's own backgrounds are transparent over it
-   (src/style/editor.css). Only the backgrounds are see-through, never the blocks. */
-.editor-panel {
+   (src/style/editor.css). Only the backgrounds are see-through, never the blocks.
+   Scoped to the lab: a page's CSS stays in the document once loaded, and the
+   island has a panel of its own (src/style/island.css). */
+.lab .editor-panel {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -36,17 +38,17 @@
   touch-action: none;
 }
 
-.editor-panel[data-blur="true"] {
+.lab .editor-panel[data-blur="true"] {
   -webkit-backdrop-filter: blur(6px) saturate(1.1);
   backdrop-filter: blur(6px) saturate(1.1);
 }
 
-.editor-host {
+.lab .editor-host {
   position: absolute;
   inset: 0;
 }
 
-.panel-handle {
+.lab .panel-handle {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -57,7 +59,7 @@
   touch-action: none;
 }
 
-.panel-handle::after {
+.lab .panel-handle::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -70,7 +72,7 @@
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
 }
 
-.panel-handle:focus-visible::after {
+.lab .panel-handle:focus-visible::after {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
@@ -175,37 +177,4 @@
   margin: 0 0 2px;
   font: 12px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
   color: var(--ink-soft);
-}
-
-/* Execution markers (src/blockly/markers.js): over the workspace, never in the
-   way of it. */
-.execution-markers {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-  z-index: 75;
-}
-
-.execution-markers .marker-halo {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 6;
-}
-
-.execution-markers .marker-outline {
-  fill: none;
-  stroke-width: 3;
-}
-
-.execution-markers .marker-pill rect {
-  stroke: #fff;
-  stroke-width: 1.5;
-}
-
-.execution-markers text {
-  font: 700 12px var(--font);
-  dominant-baseline: central;
 }

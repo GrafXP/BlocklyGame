@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ENGLISH, loadBlocklyMessages, loadMessages } from "../src/i18n/index.js";
 import { BLOCKS } from "../src/blockly/blocks.js";
-import { LAB_TOOLBOX } from "../src/blockly/toolboxes.js";
+import { LAB_TOOLBOX, toolboxFor } from "../src/blockly/toolboxes.js";
 import { blockIndex, readWorkspace } from "../src/programming/adapter.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { blockChip, blockColour, blockWords } from "../src/ui/chips.js";
@@ -40,7 +40,8 @@ test("an empty gap shows as …, and a comparison in a comparison is in brackets
 });
 
 test("every block a program can hold has words for its chip, a colour and, for the game's blocks, a picture", () => {
-  const types = new Set([...BLOCKS.map((b) => b.type), ...[...JSON.stringify(LAB_TOOLBOX).matchAll(/"type":"(\w+)"/g)].map((m) => m[1])]);
+  const toolboxes = [LAB_TOOLBOX, toolboxFor(["helper"]), toolboxFor(["sawmill"]), toolboxFor(["site"])];
+  const types = new Set([...BLOCKS.map((b) => b.type), ...[...JSON.stringify(toolboxes).matchAll(/"type":"(\w+)"/g)].map((m) => m[1])]);
   for (const type of types) {
     const text = blockWords({ id: "x", type, fields: {}, inputs: {} }, english);
     assert.notEqual(text, type, `${type} has words`);

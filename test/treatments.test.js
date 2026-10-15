@@ -4,6 +4,7 @@ import { BLOCK_STYLES, FAMILIES, TOOLBOX_MIN, TREATMENTS, surfaceAlphas } from "
 import { BLOCKS } from "../src/blockly/blocks.js";
 import { LAB_TOOLBOX } from "../src/blockly/toolboxes.js";
 import { DEMO_ENTITIES } from "../src/ui/lab-demo.js";
+import { BUILDING_MARK, IDENTITIES } from "../src/render/identity.js";
 
 // WCAG 2 contrast. 4.5:1 is the level for ordinary text; block words are small
 // and read by children, so nothing less will do.
@@ -52,7 +53,7 @@ test("a selected category's label is readable on its colour", () => {
 });
 
 test("marker labels are readable on their own colour", () => {
-  for (const e of DEMO_ENTITIES) {
+  for (const e of [...DEMO_ENTITIES, ...IDENTITIES.map((it, i) => ({ ...it, id: `robot ${i}` })), { ...BUILDING_MARK, id: "a building" }]) {
     const ratio = contrast(e.ink, e.colour);
     assert.ok(ratio >= READABLE, `${e.id}: ${ratio.toFixed(2)}`);
   }

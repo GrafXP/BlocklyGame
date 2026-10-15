@@ -43,8 +43,10 @@ export const TICKS_PER_SECOND = 10;
 const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 // A world at tick 0 from `content` (src/content/island.js shows the shape). Its
-// programs are compiled here, each as revision 1, and an entity with a program
-// starts at its start; one with a script follows the script.
+// programs are compiled here, each as its `revision`, 1 unless said (a world
+// started again keeps the programs the player applied: src/programming/
+// programs.js), and an entity with a program starts at its start; one with a
+// script follows the script.
 export function createWorld(content) {
   const terrain = parseTerrain(content.terrain);
   const cell = ([x, z]) => {
@@ -52,10 +54,11 @@ export function createWorld(content) {
     return cellAt(terrain, x, z);
   };
   const places = [...content.entities, ...content.nodes].map((t) => t.id);
-  const programs = (content.programs ?? []).map(({ id, source }) => {
+  const programs = (content.programs ?? []).map(({ id, source, revision = 1 }) => {
     const { program, errors } = compile(source, { places });
     if (!program) throw new Error(`${content.id}: program ${id} doesn't compile: ${JSON.stringify(errors)}`);
-    return { id, revision: 1, ...program };
+    if (!Number.isInteger(revision) || revision < 1) throw new Error(`${content.id}: program ${id} has revision ${revision}`);
+    return { id, revision, ...program };
   });
   const runtime = (e) => {
     if (e.script) return script(e.script.steps.map((s) => ({ ...s })), { loop: !!e.script.loop });

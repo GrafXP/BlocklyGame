@@ -634,13 +634,13 @@ Acceptance: a player can inspect robots and buildings from different viewpoints 
 
 ### Phase 4 — Blockly editing and world-wide debugger
 
-- [ ] Define robot/building blocks, capability-filtered toolboxes, and stable target fields.
-- [ ] Implement workspace draft/published serialization, validation, and tick-boundary Apply.
-- [ ] Highlight the selected entity's active instruction and show relevant sensor values.
-- [ ] Implement overview rows for every running entity.
-- [ ] Implement read-only Programs Together panels and multi-entity block markers.
-- [ ] Update all execution views from the same post-tick snapshot.
-- [ ] Add Step to Next Block.
+- [x] Define robot/building blocks, capability-filtered toolboxes, and stable target fields. (The editor on the island: docs/phase4.md. Place dropdowns come from the island, Make and Build from the building's recipes.)
+- [x] Implement workspace draft/published serialization, validation, and tick-boundary Apply. (A program library of starters, drafts and applied versions, `src/programming/programs.js`; Start again keeps applied programs.)
+- [x] Highlight the selected entity's active instruction and show relevant sensor values. (The chosen one's marker is ringed; what its conditions read sits on their blocks and in its row.)
+- [x] Implement overview rows for every running entity. (The chosen one's row opens with its details.)
+- [x] Implement read-only Programs Together panels and multi-entity block markers. (“All programs”; a workspace is made only while its panel is near the view. Markers can be tapped to choose their robot.)
+- [x] Update all execution views from the same post-tick snapshot. (`src/ui/snapshot.js`; a browser test checks forty frames at 4×.)
+- [x] Add Step to Next Block. (“Next block”; a Wait Until still waiting doesn't count as a new block. It stops at a stall, and after 600 ticks.)
 
 Acceptance: one Step visibly updates all program panels. Step to Next Block stops when the selected entity evaluates a new block, with every other entity advanced by the same ticks. Robots sharing code can occupy distinct blocks with distinguishable labels. Long actions keep their source block active. Editing a draft cannot mislabel running code.
 

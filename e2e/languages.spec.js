@@ -116,6 +116,23 @@ async function exercise(page, check = async () => {}) {
   await page.keyboard.press("Escape");
 }
 
+// The same for the island's editor of the collector's program: every toolbox
+// category, and the place dropdown, which the island fills.
+async function exerciseIslandEditor(page, check) {
+  const categories = await page.evaluate(() => window.islandPage.editor().workspace.getToolbox().getToolboxItems().length);
+  for (let i = 0; i < categories; i++) {
+    await page.evaluate((n) => window.islandPage.editor().workspace.getToolbox().selectItemByPosition(n), i);
+    await frames(page);
+    await check(`island toolbox category ${i + 1}`);
+  }
+  await page.evaluate(() => window.islandPage.editor().workspace.getToolbox().clearSelection());
+  const r = await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-grove").getField("PLACE").getSvgRoot().getBoundingClientRect().toJSON());
+  await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
+  await expect(page.locator(".blocklyDropDownDiv .blocklyMenuItem").first()).toBeVisible();
+  await check("island place dropdown");
+  await page.keyboard.press("Escape");
+}
+
 // Text on the page with words in plain letters, outside anything marked with a
 // language of its own (the language choice: each language's name, in it).
 // Hidden text counts too: a screen reader still says it. A letter on its own is
@@ -298,9 +315,10 @@ async function worldAt(page, query, ticks) {
   await frames(page);
 }
 
-// The island in 3D, `ticks` steps on, with `id` chosen, so the inspector and the
-// labels' marks say what it's doing and why.
-async function islandAt(page, query, ticks, id) {
+// The island in 3D, `ticks` steps on, with `id` chosen, so the overview and the
+// labels' marks say what it's doing and why, and with `panel` open on the left:
+// ["editor", program] or ["together"].
+async function islandAt(page, query, ticks, id, panel = null) {
   await page.goto(`/island?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
   await page.evaluate(
@@ -310,8 +328,24 @@ async function islandAt(page, query, ticks, id) {
     },
     [ticks, id],
   );
+  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
   await frames(page);
 }
+
+// Every block in every category of the island editor's toolbox, with its width
+// on screen.
+const islandToolboxBlocks = (page) =>
+  page.evaluate(() => {
+    const toolbox = window.islandPage.editor().workspace.getToolbox();
+    const found = [];
+    for (const item of toolbox.getToolboxItems()) {
+      if (!item.isSelectable()) continue;
+      toolbox.setSelectedItem(item);
+      for (const block of toolbox.getFlyout().getWorkspace().getTopBlocks(false)) found.push({ type: block.type, width: block.getSvgRoot().getBoundingClientRect().width });
+    }
+    toolbox.clearSelection();
+    return found;
+  });
 
 test("the pseudo-language leaves no text unmarked, on the title page, in the editor or in the world", async ({ page }) => {
   await page.goto("/?dev&lang=pseudo");
@@ -327,15 +361,31 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
     expect(await page.evaluate(unmarkedText), `world at step ${ticks}`).toEqual([]);
   }
   await expect(page.locator(".stall")).toBeVisible();
-  for (const [ticks, id] of [
+  for (const [ticks, id, panel] of [
     [2, null],
     [2, "r1"],
     [60, "sawmill"],
     [1200, "site"],
+    [2, "sawmill", ["together"]],
+    [30, "r1", ["editor", "collector"]],
   ]) {
-    await islandAt(page, "&lang=pseudo", ticks, id);
-    expect(await page.evaluate(unmarkedText), `island at step ${ticks}, ${id} chosen`).toEqual([]);
+    await islandAt(page, "&lang=pseudo", ticks, id, panel);
+    expect(await page.evaluate(unmarkedText), `island at step ${ticks}, ${id} chosen, ${panel} open`).toEqual([]);
   }
+  // The editor's toolbox, a changed draft, a problem, and an Apply waiting for
+  // the next step.
+  await exerciseIslandEditor(page, async (what) => expect(await page.evaluate(unmarkedText), what).toEqual([]));
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("nowhere"));
+  await expect(page.locator(".code-problems, .code-state")).not.toHaveText(["", ""]);
+  await page.waitForTimeout(500);
+  // "nowhere" is the place the test typed, which the dropdown and the problem
+  // show by its id, as the program holds it: not words of the game's.
+  expect((await page.evaluate(unmarkedText)).filter((text) => !/^(aria-label=".*: )?nowhere"?$/.test(text)), "a problem").toEqual([]);
+  expect((await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getIcons()[0].getText())).replace("nowhere", "")).not.toMatch(/[A-Za-z]{2}/);
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("depot"));
+  await page.waitForTimeout(500);
+  await page.locator('[data-code="apply"]').click();
+  expect(await page.evaluate(unmarkedText), "an Apply waiting").toEqual([]);
 });
 
 // Every listed language, and the pseudo-language, a third longer than English.
@@ -358,13 +408,15 @@ for (const [lang, query] of everyLanguage) {
       await worldAt(page, query, ticks);
       expect(await page.evaluate(clippedText), `world at step ${ticks}`).toEqual([]);
     }
-    for (const [ticks, id] of [
+    for (const [ticks, id, panel] of [
       [2, null],
       [60, "sawmill"],
       [300, "r2"],
+      [2, "sawmill", ["together"]],
+      [30, "r1", ["editor", "collector"]],
     ]) {
-      await islandAt(page, query, ticks, id);
-      expect(await page.evaluate(clippedText), `island at step ${ticks}, ${id} chosen`).toEqual([]);
+      await islandAt(page, query, ticks, id, panel);
+      expect(await page.evaluate(clippedText), `island at step ${ticks}, ${id} chosen, ${panel} open`).toEqual([]);
     }
   });
 }
@@ -379,6 +431,14 @@ for (const [lang, query] of everyLanguage.slice(0, LANGUAGES.length)) {
       expect(blocks.length).toBeGreaterThan(10);
       const wide = blocks.filter((b) => b.width > MAX_BLOCK).map((b) => `${b.type}: ${Math.round(b.width)} px`);
       expect(wide, `${lang}, ${treatment}`).toEqual([]);
+    }
+    // And the island editor's, for a robot, the sawmill and the construction site.
+    for (const program of ["collector", "planks", "bridge"]) {
+      await islandAt(page, query, 0, null, ["editor", program]);
+      const blocks = await islandToolboxBlocks(page);
+      expect(blocks.length).toBeGreaterThan(8);
+      const wide = blocks.filter((b) => b.width > MAX_BLOCK).map((b) => `${b.type}: ${Math.round(b.width)} px`);
+      expect(wide, `${lang}, island editor for ${program}`).toEqual([]);
     }
   });
 }

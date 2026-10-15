@@ -8,7 +8,8 @@ import { LANGUAGES, SOURCE } from "../src/i18n/languages.js";
 import { NOT_WORDS, UNUSED_BLOCKLY, mayStayEnglish } from "../src/i18n/blockly-unused.js";
 import { pseudo, pseudoBlockly, pseudoCatalogue } from "../src/i18n/pseudo.js";
 import { BLOCKS } from "../src/blockly/blocks.js";
-import { LAB_TOOLBOX } from "../src/blockly/toolboxes.js";
+import { LAB_TOOLBOX, toolboxFor } from "../src/blockly/toolboxes.js";
+import { TYPES } from "../src/sim/entities.js";
 
 // The language checks of PLAN.md §12: every listed language has exactly
 // English's messages, with the same placeholders and the plural forms its rules
@@ -29,6 +30,9 @@ const forms = (message) => (typeof message === "string" ? [message] : Object.val
 const names = (message) => [...new Set(forms(message).flatMap((text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1])))].sort();
 const inputs = (text) => [...text.matchAll(/%(\d+)/g)].map((m) => Number(m[1])).sort((a, b) => a - b);
 const blocklyEnglish = { ...(await import("blockly/msg/en")) };
+// Every toolbox the game offers: the lab's, and the editor's for each robot and
+// building type.
+const TOOLBOXES = [LAB_TOOLBOX, ...Object.keys(TYPES).filter((type) => TYPES[type].kind !== "node").map((type) => toolboxFor([type]))];
 
 test("messages fill placeholders, choose plural forms and write numbers the language's way", async () => {
   const en = ENGLISH.ui;
@@ -111,7 +115,7 @@ test("every interface message the code uses is in the English catalogue", () => 
 });
 
 test("every block message the blocks and toolbox refer to is in the English catalogue", () => {
-  const refs = [...JSON.stringify([BLOCKS, LAB_TOOLBOX]).matchAll(/%\{BKY_(\w+)\}/g)].map((m) => m[1]);
+  const refs = [...JSON.stringify([BLOCKS, TOOLBOXES]).matchAll(/%\{BKY_(\w+)\}/g)].map((m) => m[1]);
   assert.ok(refs.length > 20);
   assert.deepEqual(refs.filter((key) => !(key in ENGLISH.blocks)), []);
 });
@@ -129,7 +133,7 @@ test("each block's message has one placeholder per input or field, in every lang
 
 test("block dropdowns store the same ids in every language; only their labels are words", () => {
   for (const def of BLOCKS) {
-    for (const arg of def.args0.filter((a) => a.type === "field_dropdown")) {
+    for (const arg of def.args0.filter((a) => a.type === "field_dropdown" || a.type === "field_choice")) {
       for (const [label, value] of arg.options) {
         assert.match(label, /^%\{BKY_\w+\}$/, `${def.type} ${arg.name}`);
         assert.match(value, /^[a-z]+$/, `${def.type} ${arg.name}`);
@@ -179,7 +183,7 @@ test("no code in Blockly reads the messages of plugins the game doesn't load", (
 });
 
 test("only Blockly's blocks read the messages of blocks the game doesn't offer, and the toolbox offers none of them", () => {
-  const offered = [...JSON.stringify(LAB_TOOLBOX).matchAll(/"type":"(\w+)"/g)].map((m) => m[1]).filter((type) => !BLOCKS.some((b) => b.type === type));
+  const offered = [...new Set([...JSON.stringify(TOOLBOXES).matchAll(/"type":"(\w+)"/g)].map((m) => m[1]))].filter((type) => !BLOCKS.some((b) => b.type === type));
   assert.ok(offered.includes("controls_if"));
   // Each offered block's JSON definition in Blockly's blocks, to the next block's.
   const theirMessages = offered.flatMap((type) => {

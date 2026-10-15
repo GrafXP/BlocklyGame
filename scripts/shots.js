@@ -4,17 +4,18 @@
 // without; the languages (docs/languages.md): German and the pseudo-language on
 // the title page and in the lab; programs (docs/phase2.md): the world lab's
 // robots and buildings at their blocks, and the editor marking a program's
-// problems; and the island in 3D (docs/phase3.md). Builds the app, serves it, and
-// writes to docs/phase0/, docs/languages/, docs/phase2/ and docs/phase3/. Run it
-// after changing how the editor or the island looks: npm run shots, or for some
-// groups only: npm run shots -- languages ipad.
+// problems; the island in 3D (docs/phase3.md); and the island's editor and
+// debugger (docs/phase4.md). Builds the app, serves it, and writes to
+// docs/phase0/, docs/languages/, docs/phase2/, docs/phase3/ and docs/phase4/. Run
+// it after changing how the editor or the island looks: npm run shots, or for
+// some groups only: npm run shots -- languages ipad.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { build, preview } from "vite";
 import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
 
-const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island"];
+const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger"];
 const asked = process.argv.slice(2);
 for (const group of asked) if (!GROUPS.includes(group)) throw new Error(`No group "${group}"; there are ${GROUPS.join(", ")}.`);
 const want = (group) => !asked.length || asked.includes(group);
@@ -24,6 +25,7 @@ const PHASE0 = new URL("../docs/phase0/", import.meta.url);
 const LANGUAGES = new URL("../docs/languages/", import.meta.url);
 const PHASE2 = new URL("../docs/phase2/", import.meta.url);
 const PHASE3 = new URL("../docs/phase3/", import.meta.url);
+const PHASE4 = new URL("../docs/phase4/", import.meta.url);
 const PORT = 4178;
 const BEHIND = 3.6; // radians round its circuit: the test robot behind the editor, clear of the trees
 // The game follows the browser's language; the pictures choose theirs.
@@ -33,6 +35,7 @@ mkdirSync(PHASE0, { recursive: true });
 mkdirSync(LANGUAGES, { recursive: true });
 mkdirSync(PHASE2, { recursive: true });
 mkdirSync(PHASE3, { recursive: true });
+mkdirSync(PHASE4, { recursive: true });
 
 await build({ logLevel: "warn" });
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: "warn" });
@@ -197,12 +200,13 @@ if (want("programs")) {
   }
 }
 // The island in 3D, `ticks` steps on, with `chosen` selected, turned `turn`
-// quarter turns, in graphics `quality`.
-async function openIsland(browser, { context = DESKTOP, lang = "en", ticks = 0, chosen = null, turn = 0, quality = "high" } = {}) {
+// quarter turns, in graphics `quality`, and `before(page)` done first.
+async function openIsland(browser, { context = DESKTOP, lang = "en", ticks = 0, chosen = null, turn = 0, quality = "high", panel = null, before = null } = {}) {
   const page = await (await browser.newContext(context)).newPage();
   await page.addInitScript((q) => localStorage.setItem("robot-island:display", JSON.stringify({ quality: q })), quality);
   await page.goto(`${base}/island?dev&lang=${lang}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  if (before) await before(page);
   await page.evaluate(
     ([n, id]) => {
       for (let i = 0; i < n; i++) window.islandPage.game.step();
@@ -211,8 +215,21 @@ async function openIsland(browser, { context = DESKTOP, lang = "en", ticks = 0, 
     [ticks, chosen],
   );
   for (let i = 0; i < turn; i++) await page.click('[data-view="right"]');
+  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
   await page.waitForTimeout(900);
   return page;
+}
+// Robo 3 joins Robo 1 on the collector's program.
+const share = (page) =>
+  page.evaluate(() => {
+    window.islandPage.game.queue({ type: "assign", entity: "r3", program: "collector" });
+    for (let i = 0; i < 20; i++) window.islandPage.game.step();
+  });
+// The collector's draft changed, its marks hidden, and the change applied, to
+// start at the next step.
+async function changeAndApply(page) {
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("depot"));
+  await page.waitForTimeout(500);
 }
 if (want("island")) {
   console.log("The island:");
@@ -223,11 +240,31 @@ if (want("island")) {
   await shot(await openIsland(browser, { ticks: 60, chosen: "sawmill", lang: "de" }), "island-de", PHASE3);
   await shot(await openIsland(browser, { ticks: 30, quality: "low" }), "island-simple", PHASE3);
 }
+if (want("debugger")) {
+  console.log("The debugger:");
+  for (const lang of ["en", "de"]) {
+    await shot(await openIsland(browser, { lang, ticks: 2, chosen: "sawmill", panel: ["together"] }), `together-${lang}`, PHASE4);
+    await shot(await openIsland(browser, { lang, ticks: 30, chosen: "r1", panel: ["editor", "collector"] }), `editor-${lang}`, PHASE4);
+  }
+  await shot(await openIsland(browser, { before: share, chosen: "r3", ticks: 8, panel: ["together"] }), "together-shared", PHASE4);
+  const changed = await openIsland(browser, { ticks: 30, chosen: "r1", panel: ["editor", "collector"] });
+  await changeAndApply(changed);
+  await changed.waitForTimeout(300);
+  await changed.screenshot({ path: fileURLToPath(new URL("editor-changed.jpg", PHASE4)), type: "jpeg", quality: 82 });
+  console.log("  editor-changed.jpg");
+  await changed.click('[data-code="apply"]');
+  await changed.waitForTimeout(300);
+  await shot(changed, "editor-applied", PHASE4);
+}
 await browser.close();
 
-if (want("island")) {
+if (want("island") || want("debugger")) {
   const safari = await webkit.launch();
-  await shot(await openIsland(safari, { context: IPAD, ticks: 30, chosen: "site" }), "island-ipad", PHASE3);
+  if (want("island")) await shot(await openIsland(safari, { context: IPAD, ticks: 30, chosen: "site" }), "island-ipad", PHASE3);
+  if (want("debugger")) {
+    await shot(await openIsland(safari, { context: IPAD, ticks: 2, chosen: "sawmill", panel: ["together"] }), "together-ipad", PHASE4);
+    await shot(await openIsland(safari, { context: IPAD, ticks: 30, chosen: "r1", panel: ["editor", "collector"] }), "editor-ipad", PHASE4);
+  }
   await safari.close();
 }
 

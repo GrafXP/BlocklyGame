@@ -55,7 +55,8 @@ export function blockWords(node, messages) {
     const arg = def.args0[n - 1];
     const value = node.fields[arg?.name];
     switch (arg?.type) {
-      case "field_dropdown": {
+      case "field_dropdown":
+      case "field_choice": {
         const option = arg.options.find(([, v]) => v === value);
         return option ? resolve(option[0], messages) : String(value ?? "");
       }

@@ -65,7 +65,8 @@ test("the island opens paused, with a label over every robot, building and depos
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await expect(page.locator(".tag")).toHaveCount(9);
   await expect(page.getByRole("button", { name: "Robo 1: Ready" })).toBeVisible();
-  await expect(page.locator(".inspector")).toContainText("Tap a robot or building");
+  await expect(page.locator(".overview")).toContainText("Tap a robot or building");
+  await expect(page.locator(".overview .row")).toHaveCount(9);
   expect(await island(page, () => window.islandPage.problems())).toEqual([]);
 });
 
@@ -83,36 +84,43 @@ test("tapping a robot or building in the world chooses it, and the inspector say
     await tap(page, spot, touch);
     expect(await selected(page)).toBe(spot.id);
     const name = await page.locator(`.tag[data-pick="${spot.id}"] .tag-name`).textContent();
-    await expect(page.locator(".inspector h2")).toHaveText(name);
+    await expect(page.locator(".row.selected .row-name")).toHaveText(name);
     await expect(page.locator(".tag.selected")).toHaveCount(1);
   }
-  await expect(page.locator(".inspector dl")).not.toBeEmpty();
+  await expect(page.locator(".row.selected .details dl")).not.toBeEmpty();
   const stage = await page.locator(".island-stage").boundingBox();
   await tap(page, { x: stage.x + 30, y: stage.y + 30 }, touch);
   expect(await selected(page)).toBe(null);
-  await expect(page.locator(".inspector")).toContainText("Tap a robot or building");
+  await expect(page.locator(".overview")).toContainText("Tap a robot or building");
+  await expect(page.locator(".details")).toHaveCount(0);
 });
 
-test("a label or the list chooses too; the inspector shows the block, what it's doing and what it holds; Escape lets go", async ({ page }) => {
+test("a label or a row chooses too; the chosen row shows the block, what it's doing and what it holds; Escape lets go", async ({ page }) => {
   await openIsland(page);
   await steps(page, 2);
   await page.getByRole("button", { name: "Robo 1: Moving" }).click();
   expect(await selected(page)).toBe("r1");
-  const inspector = page.locator(".inspector");
-  await expect(inspector.locator("h2")).toHaveText("Robo 1");
-  await expect(inspector).toContainText("Moving");
-  await expect(inspector.locator(".chip")).toHaveText("go to grove");
-  await expect(inspector).toContainText("On the way to Grove");
-  await expect(inspector).toContainText("0 of 2");
+  const row = page.locator(".row.selected");
+  await expect(row.locator(".row-name")).toHaveText("Robo 1");
+  await expect(row.locator(".state")).toHaveText("Moving");
+  await expect(row.locator(".row-program")).toHaveText("Wood collector, version 1");
+  await expect(row.locator(".chip")).toHaveText("go to grove");
+  await expect(row).toContainText("On the way to Grove");
+  await expect(row).toContainText("0 of 2");
   await page.keyboard.press("Escape");
   expect(await selected(page)).toBe(null);
-  await inspector.getByRole("button", { name: "Sawmill" }).click();
+  await page.locator('.row-head[data-pick="sawmill"]').click();
   expect(await selected(page)).toBe("sawmill");
-  await expect(inspector).toContainText("Waiting until its condition is true");
-  await expect(inspector).toContainText("Wood 0 of 4");
+  await expect(row).toContainText("Waiting until its condition is true");
+  await expect(row).toContainText("Wood 0 of 4");
   // A label's mark says why on hover.
   await expect(page.locator('.tag[data-pick="site"]')).toHaveAttribute("title", "Waiting: Needs 4 planks · Construction site has 0");
-  await inspector.getByRole("button", { name: "Close" }).click();
+  await row.getByRole("button", { name: "Close" }).click();
+  expect(await selected(page)).toBe(null);
+  // A chosen row's head lets go too.
+  await page.locator('.row-head[data-pick="r2"]').click();
+  expect(await selected(page)).toBe("r2");
+  await page.locator('.row-head[data-pick="r2"]').click();
   expect(await selected(page)).toBe(null);
 });
 
@@ -213,7 +221,7 @@ test("the island and the world lab show one world; a change of language keeps it
   expect(await island(page, () => window.islandPage.hash())).toBe(hash);
   expect(await selected(page)).toBe("r2");
   expect((await island(page, () => window.islandPage.camera())).turn).toBe(1);
-  await expect(page.locator(".inspector .kind")).toHaveText("Roboter");
+  await expect(page.locator(".row.selected .details .kind")).toHaveText("Roboter");
   await expect(page.locator('.tag[data-pick="sawmill"]')).toContainText("Sägewerk");
 
   await page.getByRole("link", { name: "Startseite" }).click();
@@ -242,10 +250,15 @@ test("the graphics counters say what the frames drew", async ({ page }) => {
   await expect(page.locator(".counters")).toContainText("draw calls");
 });
 
-test("leaving the island lets go of everything it made", async ({ page }) => {
+test("leaving the island lets go of everything it made, its editors too", async ({ page }) => {
   await openIsland(page);
   await page.getByRole("button", { name: "Run" }).click();
+  await island(page, () => window.islandPage.open("together"));
+  await island(page, () => window.islandPage.open("editor", "collector"));
   await page.getByRole("link", { name: "Home" }).click();
   await expect(page.locator(".home")).toBeVisible();
-  expect(await page.evaluate(() => ({ ...window.island.counts(), hooks: typeof window.islandPage }))).toEqual({ bins: 0, listeners: 0, views: 0, hooks: "undefined" });
+  const counts = await page.evaluate(() => window.island.counts());
+  expect(Object.keys(counts)).toEqual(expect.arrayContaining(["editors", "blocklyWorkspaces"]));
+  for (const [what, n] of Object.entries(counts)) expect(n, what).toBe(0);
+  expect(await page.evaluate(() => typeof window.islandPage)).toBe("undefined");
 });

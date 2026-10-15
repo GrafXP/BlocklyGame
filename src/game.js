@@ -1,3 +1,4 @@
+import { runtimeOf } from "./sim/runtimes.js";
 import { advanceWorld, TICKS_PER_SECOND } from "./sim/world.js";
 
 // The fixed-step driver (PLAN.md §6): the only caller of advanceWorld. A page
@@ -12,6 +13,24 @@ export const SPEEDS = [0.5, 1, 2, 4];
 // After a long frame (a stall, a breakpoint), at most this many ticks catch up
 // and the rest of the time is dropped, rather than freezing to catch up.
 export const MAX_TICKS_PER_FRAME = 8;
+
+// The most ticks Step to Next Block runs before it gives up and pauses: a
+// minute of play at 1×.
+export const NEXT_BLOCK_TICKS = 600;
+
+// Whether entity `id` took a new step in the tick of `trace`, having been at
+// block `before`: it evaluated a block, other than trying again the Wait Until
+// it was already waiting at and finding it still false; or its program stopped
+// with an error.
+export function tookNewStep(trace, id, before) {
+  if (trace.errors.some((e) => e.entity === id)) return true;
+  const seen = trace.evaluated.find((e) => e.entity === id);
+  return !!seen && !(seen.test === false && seen.block === before);
+}
+
+// Whether `entity` can take another step without the player: it has something
+// to run that hasn't stopped with an error or come to its end.
+const canGoOn = (entity) => !!runtimeOf(entity) && !entity.error && !runtimeOf(entity).finished(entity);
 
 // How many ticks each frame is due. Paused, none, and no time builds up.
 export function createClock({ rate = TICKS_PER_SECOND, maxPerFrame = MAX_TICKS_PER_FRAME } = {}) {
@@ -105,6 +124,23 @@ export function createGame(world, { clock = createClock() } = {}) {
     step() {
       clock.pause();
       tick();
+    },
+    // Step to Next Block (PLAN.md §6): ticks, then paused, until entity `id`
+    // takes a new step (tookNewStep), or, with no id, any entity does. Every
+    // entity moves on in the same ticks, as if Step were pressed that many times.
+    // An entity that can't go on by itself (stopped, or not a robot or building)
+    // counts as none chosen. Stops too when the whole world has stalled, and
+    // after NEXT_BLOCK_TICKS. Returns how many ticks it ran.
+    nextBlock(id = null, limit = NEXT_BLOCK_TICKS) {
+      clock.pause();
+      const chosen = world.entities.find((e) => e.id === id);
+      const watched = chosen && canGoOn(chosen) ? [chosen] : world.entities;
+      for (let n = 1; n <= limit; n++) {
+        const before = watched.map((e) => runtimeOf(e)?.active(e) ?? null);
+        tick();
+        if (world.stall || watched.some((e, i) => tookNewStep(trace, e.id, before[i]))) return n;
+      }
+      return limit;
     },
     // A hidden page pauses, and doesn't make up the time when it's shown again;
     // the world goes on if it was running.

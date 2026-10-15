@@ -16,7 +16,7 @@ export default {
 
   "home.tagline": "Program robots and buildings to bring an island back to life.",
   "home.island": "Island",
-  "home.islandNote": "Phase 3 prototype: the island in 3D, its robots and buildings running their programs.",
+  "home.islandNote": "Phase 4 prototype: the island in 3D, its robots and buildings running programs you can watch, step through and change.",
   "home.lab": "Editor lab",
   "home.labNote": "Phase 0 prototype: the editor over the 3D world.",
   "home.world": "World lab",
@@ -93,9 +93,6 @@ export default {
 
   // The island in 3D, with the world clock, labels and the inspector.
   "island.title": "Island",
-  // The panel that says what the selected robot or building is doing. For
-  // screen readers.
-  "inspector.label": "Details",
   "inspector.hint": "Tap a robot or building to see what it's doing.",
   // Heads the list of everything on the island, to choose from.
   "inspector.everyone": "Robots and buildings",
@@ -109,6 +106,42 @@ export default {
   "inspector.basket": "Basket",
   // How many there are of how many there's room for: "2 of 4".
   "inspector.of": "{have} of {cap}",
+  // Opens the chosen robot or building's program in the editor.
+  "inspector.edit": "Edit program",
+  // What the block a robot or building is at looked at in this step: each
+  // value, such as "wood at sawmill", and what it was.
+  "inspector.reads": "Sees",
+  // Which time round a Repeat block it is: "Round 1 of 2".
+  "inspector.loop": "Repeat",
+  "inspector.round": "Round {count} of {times}",
+  // Whether a condition, such as "wood at sawmill > 0", holds.
+  "reading.true": "true",
+  "reading.false": "not true",
+  // The program a robot or building runs, in the list of all of them, and
+  // which version of it: each Apply makes a new version.
+  "overview.program": "{program}, version {revision}",
+  // A new version was applied, and starts at the next step of the world.
+  "overview.pending": "Version {revision} starts with the next step",
+
+  // The program editor. A draft is changed blocks that don't run yet; Apply
+  // makes them the program the robot runs, from the next step.
+  // {names}: robots and buildings, as a list.
+  "editor.runners": "Run by {names}",
+  "editor.apply": "Apply",
+  "editor.undo": "Undo changes",
+  "editor.starter": "Starter program",
+  "editor.starterTitle": "Back to the program the game gave it. Apply to run it.",
+  "editor.running": "Version {revision} is running.",
+  "editor.changed": "Changed. Apply to run it; until then, version {revision} keeps running.",
+  "editor.pending": "Version {revision} starts with the next step.",
+  "editor.problems": "Put the marked blocks right, then apply.",
+  // Every running program side by side, with where each robot is in it.
+  "together.open": "All programs",
+  "together.title": "All programs",
+  "together.version": "version {revision}",
+  "together.empty": "Nothing is running a program.",
+  // For screen readers: the handle on the edge of the panel on the left.
+  "panel.resize": "Resize the panel",
   // Items, named on their own, in a list of what a building has.
   "item.wood": "Wood",
   "item.stone": "Stone",
@@ -135,6 +168,9 @@ export default {
   "clock.run": "Run",
   "clock.pause": "Pause",
   "clock.step": "Step",
+  // Steps until the chosen robot or building is at its next block.
+  "clock.next": "Next block",
+  "clock.nextTitle": "Step until the chosen robot or building takes its next block, or until anyone does when nothing is chosen.",
   "clock.speed": "Speed",
   // A playback speed, such as 0.5×, 1×, 2×.
   "clock.speedValue": "{speed}×",
@@ -235,6 +271,12 @@ export default {
   "entity.robot": "Robot",
   // A robot's default name, until the player gives it one.
   "entity.robo": "Robo {n}",
+  // The starter programs' names, until the player gives them others.
+  "programName.collector": "Wood collector",
+  "programName.courier": "Plank courier",
+  "programName.stones": "Stone carrier",
+  "programName.planks": "Plank maker",
+  "programName.bridge": "Bridge builder",
 
   "notFound.title": "Not found",
   "notFound.text": "There's no such page.",

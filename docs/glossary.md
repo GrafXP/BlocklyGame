@@ -42,5 +42,14 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | workspace | Arbeitsfläche | |
 | stack (of blocks) | Stapel | |
 | editor lab | Editor-Labor | Phase 0 prototype only. |
+| next block (step until a robot is at its next block) | nächster Baustein | The button beside Step. |
+| apply (make the changed program run) | übernehmen | “Übernimm es, damit es läuft.” |
+| undo changes | Änderungen verwerfen | Back to the version that runs. |
+| starter program | Startprogramm | What the game gave a program. Not “Start-Baustein”. |
+| version (of a program, one per Apply) | Version | “Version 2 beginnt mit dem nächsten Schritt.” |
+| all programs (every running program side by side) | alle Programme | |
+| sees (what a block looked at) | sieht | Followed by values: “Holz bei Sägewerk 0”. |
+| round (of a repeat) | Runde | “Runde 1 von 2”. |
+| true, not true (a reading) | stimmt, stimmt nicht | As for conditions. |
 
 Open: whether the game's name is translated (*Robot Island*, *Roboterinsel*). Both catalogues say “Robot Island” until it's decided, before Phase 9 (PLAN.md §8).
