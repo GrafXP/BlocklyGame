@@ -155,31 +155,6 @@
   gap: 6px;
 }
 
-/* A pill of choices; with words too long for one line, a rounded box. */
-.segmented {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-self: start;
-  border: 1px solid var(--line);
-  border-radius: 17px;
-  overflow: hidden;
-}
-
-.segmented button {
-  min-height: 32px;
-  padding: 0 12px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  cursor: pointer;
-}
-
-.segmented button[aria-pressed="true"] {
-  background: var(--ink);
-  color: #fff;
-}
-
 /* The labels and their controls set the width; the buttons and the lines that
    change as the lab is used take what that gives them, and wrap. */
 .lab-row.buttons,

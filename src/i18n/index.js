@@ -55,8 +55,14 @@ export function translate(ui, tag, key, params = {}) {
 // The interface's words for `key` in the current language.
 export const t = (key, params) => translate(current.messages.ui, current.locale, key, params);
 
+// Whether the interface has a message `key`.
+export const hasMessage = (key) => key in current.messages.ui;
+
 // Number `n` written the current language's way: formatNumber(0.6, { style: "percent" }).
 export const formatNumber = (n, options) => cached(Intl.NumberFormat, current.locale, options).format(n);
+
+// Phrases as a short list the current language's way: "2 wood, 1 plank".
+export const formatList = (parts) => cached(Intl.ListFormat, current.locale, { style: "short", type: "unit" }).format(parts);
 
 // A message to word later, in whatever language is current then. Names the game
 // gives things are kept this way, never as words (PLAN.md §8): ref("entity.robo",

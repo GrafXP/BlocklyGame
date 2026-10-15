@@ -1,0 +1,145 @@
+/* The world lab (src/ui/world.js): the clock along the top, the map and the
+   table of robots and buildings below, side by side when there's room. */
+
+.world-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) 16px 24px;
+}
+
+.world-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.world-bar h1 {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.clock .ticks {
+  min-width: 7.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stall {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border: 1px solid #e3bd4f;
+  border-radius: var(--radius);
+  background: #fff4d6;
+}
+
+.world-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* The map: the ground drawn on a canvas, buildings, deposits and robots laid
+   over it. One cell is 14 px (CELL in src/ui/world.js). */
+.world-map {
+  position: relative;
+  flex: none;
+  line-height: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
+}
+
+.world-map canvas {
+  display: block;
+}
+
+.world-map .thing {
+  position: absolute;
+  border: 1px solid rgb(29 38 51 / 0.45);
+  border-radius: 3px;
+}
+
+.thing.camp {
+  background: #f6cf74;
+}
+.thing.sawmill {
+  background: #f5b98f;
+}
+.thing.depot {
+  background: #c9b8f2;
+}
+.thing.site {
+  background: repeating-linear-gradient(45deg, #d8d2c4 0 4px, #b9b1a0 4px 8px);
+}
+.thing.grove {
+  background: #2f6b35;
+}
+.thing.quarry {
+  background: #8a9099;
+}
+
+.world-map .robot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 1.5px #fff;
+  color: #fff;
+  font: 700 9px/14px var(--font);
+  text-align: center;
+  will-change: transform;
+}
+
+.world-table {
+  flex: 1 1 30rem;
+  min-width: 0;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.world-table th,
+.world-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+
+.world-table thead th {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.world-table progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 4px;
+}
+
+.world-table .why {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.world-table tr.waiting .state {
+  color: #8a5300;
+}
+
+.world-table tr.error .state {
+  color: #b42318;
+}

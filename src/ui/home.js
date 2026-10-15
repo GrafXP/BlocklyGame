@@ -2,11 +2,13 @@ import { t } from "../i18n/index.js";
 import { html } from "./dom.js";
 import { languageChoice } from "./language-choice.js";
 
-// The title page. For now it leads to the Phase 0 editor lab; the campaign and the
-// sandbox come later (PLAN.md §11).
+// The title page. For now it leads to the prototypes of the phases so far, the
+// editor lab and the world lab; the campaign and the sandbox come later
+// (PLAN.md §11).
 export function home(el) {
-  // The ?dev flag goes along, so the lab's test hooks stay on.
+  // The ?dev flag goes along, so the labs' test hooks stay on.
   const lab = `/lab${location.search}`;
+  const world = `/world${location.search}`;
   html(
     el,
     `<div class="page home">
@@ -15,6 +17,8 @@ export function home(el) {
       <p class="tagline">${t("home.tagline")}</p>
       <a class="button primary" href="${lab}" data-link>${t("home.lab")}</a>
       <p class="note">${t("home.labNote")}</p>
+      <a class="button" href="${world}" data-link>${t("home.world")}</a>
+      <p class="note">${t("home.worldNote")}</p>
       ${languageChoice({ button: "button small" })}
     </div>`,
   );

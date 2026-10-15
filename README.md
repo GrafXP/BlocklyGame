@@ -6,6 +6,8 @@ Phase 0 (foundation and compatibility) is in place: the app shell and the **edit
 
 Phase 0.5 (languages) is in place: everything is in English and German, chosen from the browser's languages or by the player on the title page. Findings are in [docs/languages.md](docs/languages.md); the game's words in each language are in [docs/glossary.md](docs/glossary.md).
 
+Phase 1 (the fixed-step world) is in place: the simulation in `src/sim/`, its clock in `src/game.js`, and the **world lab** at `/world`, where robots and buildings follow fixed scripts on one clock with Run, Pause and Step. Findings are in [docs/phase1.md](docs/phase1.md).
+
 ## Development
 
 | Command | What it does |
@@ -14,11 +16,12 @@ Phase 0.5 (languages) is in place: everything is in English and German, chosen f
 | `npm run dev` | Development server |
 | `npm run build` / `npm run preview` | Production build in `dist/`, and serving it |
 | `npm test` | Node unit tests in `test/` |
+| `npm run golden` | Records the golden replays in `test/golden/` again, after a deliberate change to the simulation and a new `SIM_VERSION` |
 | `npx playwright install chromium webkit` | Once: the browsers for the browser tests |
 | `npm run e2e` | Browser tests in `e2e/` (Chromium, WebKit, WebKit as an iPad), against a fresh build |
 | `npm run shots` | Screenshots and frame times for `docs/phase0/` and `docs/languages/`; `npm run shots -- languages` for some groups only |
 
-Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`). With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
+Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`). With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
 
 ## Languages
 

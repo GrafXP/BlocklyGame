@@ -287,15 +287,31 @@ test("switching language in the lab keeps the program, markers, camera and selec
   expect(JSON.stringify(await lab(page, () => window.lab.save()))).toBe(before.program);
 });
 
-test("the pseudo-language leaves no text unmarked, on the title page or in the editor", async ({ page }) => {
+// The world lab, `ticks` steps on: robots under way, waiting, and in the end
+// the whole world stalled, each in words.
+async function worldAt(page, query, ticks) {
+  await page.goto(`/world?dev${query}`);
+  await page.waitForFunction(() => window.world);
+  await page.evaluate((n) => {
+    for (let i = 0; i < n; i++) window.world.game.step();
+  }, ticks);
+  await frames(page);
+}
+
+test("the pseudo-language leaves no text unmarked, on the title page, in the editor or in the world", async ({ page }) => {
   await page.goto("/?dev&lang=pseudo");
   await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
   expect(await page.evaluate(unmarkedText)).toEqual([]);
-  await page.locator(".home a.button").click();
+  await page.locator(".home a.button").first().click();
   await editorReady(page, "en-XA");
   expect(await page.evaluate(unmarkedText)).toEqual([]);
   await exercise(page, async (what) => expect(await page.evaluate(unmarkedText), what).toEqual([]));
   expect(await tooltip(page, "go-grove")).not.toMatch(/[A-Za-z]/);
+  for (const ticks of [1, 300, 1000]) {
+    await worldAt(page, "&lang=pseudo", ticks);
+    expect(await page.evaluate(unmarkedText), `world at step ${ticks}`).toEqual([]);
+  }
+  await expect(page.locator(".stall")).toBeVisible();
 });
 
 // Every listed language, and the pseudo-language, a third longer than English.
@@ -306,7 +322,7 @@ for (const [lang, query] of everyLanguage) {
     await page.goto(`/?dev${query}`);
     await expect(page.locator("html")).toHaveAttribute("lang", lang);
     expect(await page.evaluate(clippedText)).toEqual([]);
-    await page.locator(".home a.button").click();
+    await page.locator(".home a.button").first().click();
     await editorReady(page, lang);
     await lab(page, () => window.lab.roundTrip()); // the longest line the lab writes
     await page.waitForTimeout(600); // and the frame meter's
@@ -314,6 +330,10 @@ for (const [lang, query] of everyLanguage) {
     const controls = await page.locator(".lab-controls").boundingBox();
     expect(controls.x).toBeGreaterThanOrEqual(0);
     expect(controls.x + controls.width).toBeLessThanOrEqual(page.viewportSize().width);
+    for (const ticks of [300, 1000]) {
+      await worldAt(page, query, ticks);
+      expect(await page.evaluate(clippedText), `world at step ${ticks}`).toEqual([]);
+    }
   });
 }
 

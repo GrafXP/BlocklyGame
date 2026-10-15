@@ -8,6 +8,8 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | --- | --- | --- |
 | block | Baustein | As in Blockly's German catalogue (“Baustein löschen”). Plural Bausteine. |
 | program | Programm | |
+| stopped (nothing more to do) | angehalten | |
+| on the way to: … | unterwegs zu: … | With a colon, so any place fits without an article. |
 | step (one tick of the world clock) | Schritt | The Step button and the “warte %2 Schritte” block use the same word. |
 | robot | Roboter | Default robot names stay “Robo 1”, “Robo 2”. |
 | building | Gebäude | |
@@ -17,7 +19,9 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | sawmill | Sägewerk | |
 | depot | Lagerhaus | |
 | camp | Camp | Not “Lager” (see stock). |
-| construction site | Baustelle | From the bridge mission on. |
+| construction site | Baustelle | |
+| stone pit | Steinbruch | |
+| bridge | Brücke | |
 | wood | Holz | |
 | stone | Steine | Plural on blocks: “sammle Steine”. |
 | planks | Bretter | |

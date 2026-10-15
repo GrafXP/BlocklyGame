@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "node --test \"test/**/*.test.js\"",
     "e2e": "playwright test",
-    "shots": "node scripts/shots.js"
+    "shots": "node scripts/shots.js",
+    "golden": "node scripts/golden.js"
   },
   "dependencies": {
     "blockly": "13.4.0",

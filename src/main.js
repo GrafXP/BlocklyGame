@@ -9,11 +9,12 @@ let cleanup = null;
 let shown = null; // the path and query of the page that's showing
 
 // A page is a function of the element to fill, returning its cleanup, and the
-// message that names it in the browser's tab. Pages with Blockly or Three.js in
-// them are fetched when first shown, so the title page opens without them.
+// message that names it in the browser's tab. Pages other than the title page are
+// fetched when first shown, so it opens without Blockly, Three.js or the world.
 const routes = {
   "/": { page: home },
   "/lab": { page: lazy(() => import("./ui/lab.js"), "lab"), title: "lab.title" },
+  "/world": { page: lazy(() => import("./ui/world.js"), "world"), title: "world.title" },
 };
 
 // A page from a module fetched on demand. Its `ready()`, if it has one, fetches

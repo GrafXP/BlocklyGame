@@ -597,14 +597,14 @@ Acceptance: the title screen and the editor lab run entirely in English or Germa
 
 ### Phase 1 — Pure fixed-step world
 
-- [ ] Implement `createWorld` and `advanceWorld` with documented phase order and serializable state.
-- [ ] Add global Run/Pause/Step controls and an integer tick counter on a minimal DOM status view.
-- [ ] Implement the accumulator, bounded catch-up, speed control, and hidden-tab pause.
-- [ ] Implement navigation, tick-based movement, interaction cells, and navigation revisions.
-- [ ] Add inventories, collection, transfers, reservations, implicit action waits, stall reporting, and production action lifecycles.
-- [ ] Report waiting reasons and stalls as codes with values, never as text. Every code has a message in every listed language.
-- [ ] Add `SIM_VERSION` and golden command-log replays, following GyroRocket's replay tests.
-- [ ] Add initial tests for conservation, conflicting requests, action cancellation, and deterministic stepping.
+- [x] Implement `createWorld` and `advanceWorld` with documented phase order and serializable state. (Until Phase 2, entities follow fixed scripts through the same runtime interface programs will use: docs/phase1.md.)
+- [x] Add global Run/Pause/Step controls and an integer tick counter on a minimal DOM status view. (The world lab at `/world`, with a map and a table of every robot, building and deposit.)
+- [x] Implement the accumulator, bounded catch-up, speed control, and hidden-tab pause.
+- [x] Implement navigation, tick-based movement, interaction cells, and navigation revisions. (The construction site's bridge opens the east of the island.)
+- [x] Add inventories, collection, transfers, reservations, implicit action waits, stall reporting, and production action lifecycles.
+- [x] Report waiting reasons and stalls as codes with values, never as text. Every code has a message in every listed language.
+- [x] Add `SIM_VERSION` and golden command-log replays, following GyroRocket's replay tests. (`npm run golden`)
+- [x] Add initial tests for conservation, conflicting requests, action cancellation, and deterministic stepping.
 
 Acceptance: scripted headless actions move resources correctly. Step increments tick once and advances every entity; Pause changes no world state; outcomes match continuous execution after the same number of ticks.
 
