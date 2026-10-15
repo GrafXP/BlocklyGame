@@ -2,18 +2,19 @@
 // a bright and a dark world, a range of background opacities, blur, open
 // dropdowns, an iPad-sized screen, and how long frames take with blur and
 // without; the languages (docs/languages.md): German and the pseudo-language on
-// the title page and in the lab; and programs (docs/phase2.md): the world lab's
+// the title page and in the lab; programs (docs/phase2.md): the world lab's
 // robots and buildings at their blocks, and the editor marking a program's
-// problems. Builds the app, serves it, and writes to docs/phase0/,
-// docs/languages/ and docs/phase2/. Run it after changing how the editor looks:
-// npm run shots, or for some groups only: npm run shots -- languages ipad.
+// problems; and the island in 3D (docs/phase3.md). Builds the app, serves it, and
+// writes to docs/phase0/, docs/languages/, docs/phase2/ and docs/phase3/. Run it
+// after changing how the editor or the island looks: npm run shots, or for some
+// groups only: npm run shots -- languages ipad.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { build, preview } from "vite";
 import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
 
-const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs"];
+const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island"];
 const asked = process.argv.slice(2);
 for (const group of asked) if (!GROUPS.includes(group)) throw new Error(`No group "${group}"; there are ${GROUPS.join(", ")}.`);
 const want = (group) => !asked.length || asked.includes(group);
@@ -22,6 +23,7 @@ const TRANSLATED = LISTED.map((l) => l.code).filter((code) => code !== SOURCE);
 const PHASE0 = new URL("../docs/phase0/", import.meta.url);
 const LANGUAGES = new URL("../docs/languages/", import.meta.url);
 const PHASE2 = new URL("../docs/phase2/", import.meta.url);
+const PHASE3 = new URL("../docs/phase3/", import.meta.url);
 const PORT = 4178;
 const BEHIND = 3.6; // radians round its circuit: the test robot behind the editor, clear of the trees
 // The game follows the browser's language; the pictures choose theirs.
@@ -30,6 +32,7 @@ const IPAD = { ...devices["iPad Pro 11 landscape"], locale: "en-US" };
 mkdirSync(PHASE0, { recursive: true });
 mkdirSync(LANGUAGES, { recursive: true });
 mkdirSync(PHASE2, { recursive: true });
+mkdirSync(PHASE3, { recursive: true });
 
 await build({ logLevel: "warn" });
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: "warn" });
@@ -193,7 +196,40 @@ if (want("programs")) {
     await shot(page, `lab-problems-${lang}`, PHASE2);
   }
 }
+// The island in 3D, `ticks` steps on, with `chosen` selected, turned `turn`
+// quarter turns, in graphics `quality`.
+async function openIsland(browser, { context = DESKTOP, lang = "en", ticks = 0, chosen = null, turn = 0, quality = "high" } = {}) {
+  const page = await (await browser.newContext(context)).newPage();
+  await page.addInitScript((q) => localStorage.setItem("robot-island:display", JSON.stringify({ quality: q })), quality);
+  await page.goto(`${base}/island?dev&lang=${lang}`);
+  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  await page.evaluate(
+    ([n, id]) => {
+      for (let i = 0; i < n; i++) window.islandPage.game.step();
+      window.islandPage.select(id);
+    },
+    [ticks, chosen],
+  );
+  for (let i = 0; i < turn; i++) await page.click('[data-view="right"]');
+  await page.waitForTimeout(900);
+  return page;
+}
+if (want("island")) {
+  console.log("The island:");
+  await shot(await openIsland(browser), "island-start", PHASE3);
+  await shot(await openIsland(browser, { ticks: 30, chosen: "r1" }), "island-collecting", PHASE3);
+  await shot(await openIsland(browser, { ticks: 249, chosen: "r2" }), "island-bridge", PHASE3);
+  await shot(await openIsland(browser, { ticks: 60, chosen: "sawmill", turn: 1 }), "island-turned", PHASE3);
+  await shot(await openIsland(browser, { ticks: 60, chosen: "sawmill", lang: "de" }), "island-de", PHASE3);
+  await shot(await openIsland(browser, { ticks: 30, quality: "low" }), "island-simple", PHASE3);
+}
 await browser.close();
+
+if (want("island")) {
+  const safari = await webkit.launch();
+  await shot(await openIsland(safari, { context: IPAD, ticks: 30, chosen: "site" }), "island-ipad", PHASE3);
+  await safari.close();
+}
 
 if (want("ipad") || want("languages")) {
   console.log("iPad (WebKit, 1194x834 at 2x):");

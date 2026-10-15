@@ -8,6 +8,8 @@ Phase 0.5 (languages) is in place: everything is in English and German, chosen f
 
 Phase 1 (the fixed-step world) is in place: the simulation in `src/sim/`, its clock in `src/game.js`, and the **world lab** at `/world`, with Run, Pause and Step on one clock. Findings are in [docs/phase1.md](docs/phase1.md).
 
+Phase 3 (the selectable 3D island) is in place: the **island** at `/island`, drawn from the world, where robots and buildings running their programs can be watched from any side, chosen by tapping them or their labels, and inspected. It shares its world with the world lab. Findings are in [docs/phase3.md](docs/phase3.md).
+
 Phase 2 (the program compiler and runtime) is in place: Blockly's JSON compiled to the game's own instructions in `src/programming/`, without Blockly, and run one visible block a tick by every robot and building. The world lab's island runs starter programs and shows the block each entity is at; the editor lab marks what can't work in a program at its block. Findings are in [docs/phase2.md](docs/phase2.md).
 
 ## Development
@@ -21,9 +23,9 @@ Phase 2 (the program compiler and runtime) is in place: Blockly's JSON compiled 
 | `npm run golden` | Records the golden replays in `test/golden/` again, after a deliberate change to the simulation and a new `SIM_VERSION` |
 | `npx playwright install chromium webkit` | Once: the browsers for the browser tests |
 | `npm run e2e` | Browser tests in `e2e/` (Chromium, WebKit, WebKit as an iPad), against a fresh build |
-| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/` and `docs/phase2/`; `npm run shots -- languages` for some groups only |
+| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/` and `docs/phase3/`; `npm run shots -- languages` for some groups only |
 
-Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`). With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
+Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
 
 ## Languages
 

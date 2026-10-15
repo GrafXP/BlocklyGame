@@ -298,11 +298,26 @@ async function worldAt(page, query, ticks) {
   await frames(page);
 }
 
+// The island in 3D, `ticks` steps on, with `id` chosen, so the inspector and the
+// labels' marks say what it's doing and why.
+async function islandAt(page, query, ticks, id) {
+  await page.goto(`/island?dev${query}`);
+  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  await page.evaluate(
+    ([n, which]) => {
+      for (let i = 0; i < n; i++) window.islandPage.game.step();
+      window.islandPage.select(which);
+    },
+    [ticks, id],
+  );
+  await frames(page);
+}
+
 test("the pseudo-language leaves no text unmarked, on the title page, in the editor or in the world", async ({ page }) => {
   await page.goto("/?dev&lang=pseudo");
   await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
   expect(await page.evaluate(unmarkedText)).toEqual([]);
-  await page.locator(".home a.button").first().click();
+  await page.locator('.home a[href^="/lab"]').click();
   await editorReady(page, "en-XA");
   expect(await page.evaluate(unmarkedText)).toEqual([]);
   await exercise(page, async (what) => expect(await page.evaluate(unmarkedText), what).toEqual([]));
@@ -312,6 +327,15 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
     expect(await page.evaluate(unmarkedText), `world at step ${ticks}`).toEqual([]);
   }
   await expect(page.locator(".stall")).toBeVisible();
+  for (const [ticks, id] of [
+    [2, null],
+    [2, "r1"],
+    [60, "sawmill"],
+    [1200, "site"],
+  ]) {
+    await islandAt(page, "&lang=pseudo", ticks, id);
+    expect(await page.evaluate(unmarkedText), `island at step ${ticks}, ${id} chosen`).toEqual([]);
+  }
 });
 
 // Every listed language, and the pseudo-language, a third longer than English.
@@ -322,7 +346,7 @@ for (const [lang, query] of everyLanguage) {
     await page.goto(`/?dev${query}`);
     await expect(page.locator("html")).toHaveAttribute("lang", lang);
     expect(await page.evaluate(clippedText)).toEqual([]);
-    await page.locator(".home a.button").first().click();
+    await page.locator('.home a[href^="/lab"]').click();
     await editorReady(page, lang);
     await lab(page, () => window.lab.roundTrip()); // the longest line the lab writes
     await page.waitForTimeout(600); // and the frame meter's
@@ -333,6 +357,14 @@ for (const [lang, query] of everyLanguage) {
     for (const ticks of [300, 1200]) {
       await worldAt(page, query, ticks);
       expect(await page.evaluate(clippedText), `world at step ${ticks}`).toEqual([]);
+    }
+    for (const [ticks, id] of [
+      [2, null],
+      [60, "sawmill"],
+      [300, "r2"],
+    ]) {
+      await islandAt(page, query, ticks, id);
+      expect(await page.evaluate(clippedText), `island at step ${ticks}, ${id} chosen`).toEqual([]);
     }
   });
 }

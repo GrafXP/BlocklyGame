@@ -168,3 +168,45 @@ a {
   outline: 2px solid var(--ink);
   outline-offset: 1px;
 }
+
+/* The world clock's controls (src/ui/clock.js), and the notice that the whole
+   world is stuck. */
+.clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.clock .ticks {
+  min-width: 7.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stall {
+  padding: 8px 12px;
+  border: 1px solid #e3bd4f;
+  border-radius: var(--radius);
+  background: #fff4d6;
+}
+
+/* A robot's identity (src/render/identity.js): its colour, in its shape, for
+   those who can't tell the colours apart. */
+.identity {
+  display: inline-block;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  margin-inline-end: 6px;
+  background: var(--identity);
+  vertical-align: 0;
+}
+.identity.circle {
+  border-radius: 50%;
+}
+.identity.triangle {
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.identity.diamond {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}

@@ -1,10 +1,11 @@
 const TAP = 8; // px a pointer can wander and still tap rather than drag
 
 // The world's own pointer handling, on its canvas only: drag to pan, wheel or
-// pinch to zoom, tap to select. The editor lies over the canvas, so a gesture
-// that starts on the editor never reaches here (PLAN.md §8); listeners live in
-// `bin` and go when the page does.
-export function bindWorldInput(bin, canvas, view, { onSelect }) {
+// pinch to zoom, tap to select, and with a mouse, `onHover(x, y)` as it moves
+// over the world and `onHover(null)` as it leaves. The editor lies over the
+// canvas, so a gesture that starts on the editor never reaches here (PLAN.md
+// §8); listeners live in `bin` and go when the page does.
+export function bindWorldInput(bin, canvas, view, { onSelect, onHover = null }) {
   const pointers = new Map(); // id → { x, y, startX, startY }
   let dragged = false;
   let pinch = 0; // the distance between two pointers, while pinching
@@ -26,7 +27,10 @@ export function bindWorldInput(bin, canvas, view, { onSelect }) {
 
   bin.on(canvas, "pointermove", (e) => {
     const p = pointers.get(e.pointerId);
-    if (!p) return;
+    if (!p) {
+      if (!pointers.size && e.pointerType === "mouse") onHover?.(e.clientX, e.clientY);
+      return;
+    }
     const dx = e.clientX - p.x;
     const dy = e.clientY - p.y;
     p.x = e.clientX;
@@ -49,6 +53,7 @@ export function bindWorldInput(bin, canvas, view, { onSelect }) {
   };
   bin.on(canvas, "pointerup", end);
   bin.on(canvas, "pointercancel", end);
+  if (onHover) bin.on(canvas, "pointerleave", () => onHover(null));
 
   bin.on(
     canvas,

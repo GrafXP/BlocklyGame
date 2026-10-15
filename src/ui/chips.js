@@ -80,6 +80,9 @@ export function blockColour(type) {
   return TREATMENTS.calm.colours[family]?.primary ?? "#d9dee5";
 }
 
+// The picture of a block of type `type`, a data URI, or null for one with none.
+export const blockIcon = (type) => DEFINITIONS.get(type)?.args0.find((a) => a.type === "field_image")?.src ?? null;
+
 // Block `node` as a chip's markup, with its picture when it has one, and a
 // tooltip `title` if given.
 export function blockChip(node, messages, { className = "", title = "" } = {}) {

@@ -15,6 +15,7 @@ const routes = {
   "/": { page: home },
   "/lab": { page: lazy(() => import("./ui/lab.js"), "lab"), title: "lab.title" },
   "/world": { page: lazy(() => import("./ui/world.js"), "world"), title: "world.title" },
+  "/island": { page: lazy(() => import("./ui/island.js"), "island"), title: "island.title" },
 };
 
 // A page from a module fetched on demand. Its `ready()`, if it has one, fetches

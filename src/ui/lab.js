@@ -3,6 +3,7 @@ import "../style/editor.css";
 import { display, formatNumber, t } from "../i18n/index.js";
 import { createBin } from "../lifecycle.js";
 import { createView } from "../render/view.js";
+import { createMeter } from "../render/meter.js";
 import { bindWorldInput } from "../render/input.js";
 import { Blockly, createEditor, prepareBlockly } from "../blockly/workspace.js";
 import { createMarkers } from "../blockly/markers.js";
@@ -118,7 +119,7 @@ export function lab(el) {
   bin.frames((now) => {
     const began = performance.now();
     view.render(now);
-    meter.frame(now, performance.now() - began, view.info.render.calls);
+    meter.frame(now, performance.now() - began, view.info.render);
   });
   const fps = $(".lab-fps");
   const fpsTimer = setInterval(() => (fps.textContent = meter.text()), 500);
@@ -370,39 +371,4 @@ export function lab(el) {
   }
 
   return () => bin.dispose();
-}
-
-// Frames a second over the last second, the slowest frame, the time our own code
-// took a frame, and the draw calls: to compare blur with none, and treatments.
-function createMeter() {
-  const frames = []; // [time, interval, work]
-  let prev = 0;
-  let calls = 0;
-  const stats = () => {
-    const n = frames.length;
-    if (n < 2) return { fps: 0, slowest: 0, work: 0, calls };
-    const span = frames[n - 1][0] - frames[0][0];
-    return {
-      fps: span > 0 ? ((n - 1) * 1000) / span : 0,
-      slowest: Math.max(...frames.map((f) => f[1])),
-      work: frames.reduce((s, f) => s + f[2], 0) / n,
-      calls,
-    };
-  };
-  return {
-    frame(now, work, drawCalls) {
-      // A long gap (the page was hidden) starts the count again.
-      if (prev && now - prev > 1000) frames.length = 0;
-      frames.push([now, prev ? now - prev : 0, work]);
-      prev = now;
-      calls = drawCalls;
-      while (frames.length && now - frames[0][0] > 1000) frames.shift();
-    },
-    stats,
-    text() {
-      const s = stats();
-      const work = formatNumber(s.work, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-      return `${t("lab.frames", { fps: Math.round(s.fps), slowest: Math.round(s.slowest) })}\n${t("lab.work", { work, count: s.calls })}`;
-    },
-  };
 }

@@ -1,17 +1,40 @@
 import * as THREE from "three";
 import { ref } from "../i18n/index.js";
 
-// The Phase 0 island: a patch of land in the sea with trees, rocks, a depot and a
-// sawmill, and one robot. Simple shapes with flat shading and a small palette
-// (PLAN.md §4), enough to judge the editor over a real 3D scene. Pickable things
-// carry a userData.id, which never changes, and a userData.name, a message worded
-// in the player's language when shown. Geometry and materials are shared and
-// disposed with the view (src/render/view.js).
+// Models made of simple shapes with flat shading and a small palette (PLAN.md
+// §4): the materials every view shares, robots, trees and boulders, and the
+// Phase 0 island the editor lab is judged over. Pickable things carry a
+// userData.id, which never changes, and a userData.name, a message worded in the
+// player's language when shown. Geometry and materials are disposed with the view.
 
 const material = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.85, metalness: 0, ...extra });
 
+// A view's materials. tinted(colour) gives one more of the robots' shell
+// material in `colour`, once per colour.
+export function createMaterials() {
+  const tints = new Map();
+  return {
+    ...MATERIALS(),
+    tinted(colour) {
+      if (!tints.has(colour)) tints.set(colour, material(colour));
+      return tints.get(colour);
+    },
+  };
+}
+
 const MATERIALS = () => ({
+  ground: new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, metalness: 0 }),
+  blueprint: new THREE.MeshBasicMaterial({ color: 0xdff1ff, transparent: true, opacity: 0.45, depthWrite: false }),
+  dirt: material(0xb89a6e),
+  canvas: material(0xeee6d3),
+  plank: material(0xe0bb83),
+  log: material(0x9a6638),
+  stone: material(0xa3a9b0),
+  kit: material(0xf0a830),
+  scaffold: material(0xc28a52),
   water: material(0x3c8fd6, { roughness: 0.4 }),
+  // Matt, so it's the same blue from every side the camera turns to.
+  sea: material(0x3c8fd6, { roughness: 0.85 }),
   sand: material(0xe2c98f),
   cliff: material(0xc9a66b),
   grass: material(0x79b85a),
@@ -31,14 +54,14 @@ const MATERIALS = () => ({
 });
 
 // The scene's own meshes, shadows on, under one group.
-function mesh(geometry, mat, { cast = true, receive = false } = {}) {
+export function mesh(geometry, mat, { cast = true, receive = false } = {}) {
   const m = new THREE.Mesh(geometry, mat);
   m.castShadow = cast;
   m.receiveShadow = receive;
   return m;
 }
 
-function named(group, id, name) {
+export function named(group, id, name) {
   group.userData.id = id;
   group.userData.name = name;
   return group;
@@ -144,9 +167,44 @@ export function createIsland() {
   return { group, mill, materials: m };
 }
 
+// A tree, about 2.6 high at scale 1, standing on y = 0. `turn` varies its crown.
+export function createTree(m, turn = 0, light = false) {
+  const t = new THREE.Group();
+  const stem = mesh(SHARED.trunk(), m.trunk);
+  stem.position.y = 0.7;
+  const top = mesh(SHARED.crown(), light ? m.leavesLight : m.leaves);
+  top.position.y = 1.9;
+  top.rotation.y = turn;
+  t.add(stem, top);
+  return t;
+}
+
+// A boulder, flattened a little, standing on y = 0.
+export function createBoulder(m, turn = 0) {
+  const r = mesh(SHARED.boulder(), m.rock);
+  r.position.y = 0.45;
+  r.scale.set(1, 0.75, 1);
+  r.rotation.y = turn;
+  return r;
+}
+
+// Geometry many models share, made when first needed. A view's dispose()
+// frees its copy on the GPU; drawn again, three uploads it again.
+const shared = (make) => {
+  let g = null;
+  return () => (g ??= make());
+};
+const SHARED = {
+  trunk: shared(() => new THREE.CylinderGeometry(0.22, 0.3, 1.4, 6)),
+  crown: shared(() => new THREE.IcosahedronGeometry(1.1, 0)),
+  boulder: shared(() => new THREE.DodecahedronGeometry(0.8, 0)),
+};
+
 // A friendly helper robot: body, head with two eyes and an antenna, wheels, a
-// basket on its back and a role badge on its front. Faces +Z.
-export function createRobot(materials) {
+// basket on its back and a role badge on its front. Faces +Z. `colour`, when
+// given, is its own colour for its badge and antenna, so robots can be told
+// apart.
+export function createRobot(materials, { colour = null } = {}) {
   const m = materials;
   const group = named(new THREE.Group(), "robot", ref("entity.robot"));
   const body = mesh(new THREE.BoxGeometry(1.2, 0.9, 1), m.shell);
@@ -161,7 +219,7 @@ export function createRobot(materials) {
   });
   const stalk = mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), m.dark);
   stalk.position.y = 2.05;
-  const bulb = mesh(new THREE.SphereGeometry(0.12, 10, 8), m.accent);
+  const bulb = mesh(new THREE.SphereGeometry(0.12, 10, 8), colour ? m.tinted(colour) : m.accent);
   bulb.position.y = 2.3;
   const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 12);
   const wheels = [-0.68, 0.68].map((x) => {
@@ -172,11 +230,12 @@ export function createRobot(materials) {
   });
   const basket = mesh(new THREE.BoxGeometry(0.9, 0.55, 0.45), m.basket);
   basket.position.set(0, 0.95, -0.7);
-  const badge = mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), m.badge, { cast: false });
+  const badge = mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), colour ? m.tinted(colour) : m.badge, { cast: false });
   badge.rotation.x = Math.PI / 2;
   badge.position.set(0, 0.85, 0.52);
   group.add(body, head, ...eyes, stalk, bulb, ...wheels, basket, badge);
   group.userData.wheels = wheels;
   group.userData.bulb = bulb;
+  group.userData.basket = basket;
   return group;
 }

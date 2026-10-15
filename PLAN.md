@@ -623,12 +623,12 @@ Acceptance: several robot/building programs run concurrently on the same clock; 
 
 ### Phase 3 — Selectable 3D island
 
-- [ ] Build the first terrain grid, island mesh, shore/water, grove, camp, and building placeholders from `WorldState`.
-- [ ] Create procedural robot, tree, rock, depot, sawmill, and construction-site models.
-- [ ] Render robot poses from committed action data and the fractional tick.
-- [ ] Add orthographic camera pan/zoom/reset and quarter-turn rotation.
-- [ ] Add pointer/touch selection, outlines, labels, status bubbles, and a basic entity inspector.
-- [ ] Establish graphics counters and a simple quality setting.
+- [x] Build the first terrain grid, island mesh, shore/water, grove, camp, and building placeholders from `WorldState`. (The island at `/island`: docs/phase3.md. The bridge's gap shows a blueprint until it's built.)
+- [x] Create procedural robot, tree, rock, depot, sawmill, and construction-site models. (Every store's items are stacked beside it.)
+- [x] Render robot poses from committed action data and the fractional tick.
+- [x] Add orthographic camera pan/zoom/reset and quarter-turn rotation.
+- [x] Add pointer/touch selection, outlines, labels, status bubbles, and a basic entity inspector. (Labels are buttons; the inspector also lists everything to choose from.)
+- [x] Establish graphics counters and a simple quality setting. (With `?dev`; graphics Simple or Detailed, kept on the device.)
 
 Acceptance: a player can inspect robots and buildings from different viewpoints and select the intended entity on desktop and iPad-sized layouts. Robots driven by Phase 2 programs move smoothly during play and show the exact committed state when paused.
 

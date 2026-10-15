@@ -34,6 +34,10 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | kits | Bausätze | |
 | tree, rock | Baum, Felsen | Not “Stein”, which is the item. |
 | marker (which entity is at which block) | Markierung | |
+| details (the inspector) | Einzelheiten | For screen readers. |
+| resource (a grove, a stone pit) | Rohstoffquelle | |
+| graphics: simple, detailed | Grafik: einfach, detailliert | |
+| turn left, turn right (the view) | nach links drehen, nach rechts drehen | |
 | toolbox | Werkzeugkasten | Blockly's word. |
 | workspace | Arbeitsfläche | |
 | stack (of blocks) | Stapel | |

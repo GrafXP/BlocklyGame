@@ -1,15 +1,14 @@
 import "../style/world.css";
 import { blocklyMessages, display, t } from "../i18n/index.js";
 import { createBin } from "../lifecycle.js";
-import { createGame, SPEEDS } from "../game.js";
-import { ISLAND } from "../content/island.js";
-import { blockIndex, readWorkspace } from "../programming/adapter.js";
-import { createWorld, reasonOf, statusOf } from "../sim/world.js";
+import { reasonOf, statusOf } from "../sim/world.js";
 import { stateHash } from "../sim/replay.js";
 import { checkWorld } from "../sim/validate.js";
 import { kindOf } from "../sim/terrain.js";
 import { robotPose } from "../render/pose.js";
 import { blockChip } from "./chips.js";
+import { bindClock, clockMarkup, showClock } from "./clock.js";
+import { activeBlock, currentGame, newGame } from "./session.js";
 import { describeAction, describeReason, amounts, placeName, progressOf } from "./describe.js";
 import { esc, html, isDev } from "./dom.js";
 import { languageChoice } from "./language-choice.js";
@@ -17,20 +16,6 @@ import { languageChoice } from "./language-choice.js";
 const CELL = 14; // px a cell on the map
 
 const GROUND = { water: "#3c8fd6", sand: "#e2c98f", grass: "#79b85a", gap: "#2f74b8", bridge: "#a8713f" };
-
-// The game this page shows. It outlives the page: leaving and coming back, or a
-// change of language, which opens the page again, finds the world as it was, and
-// paused (PLAN.md §8).
-let game = null;
-const newGame = () => createGame(createWorld(ISLAND));
-
-// The island's programs, read once, to find the block each entity is at by its
-// id. (The world keeps only their compiled instructions.)
-let sources = null;
-const blockOf = (programId, blockId) => {
-  sources ??= new Map(ISLAND.programs.map(({ id, source }) => [id, blockIndex(readWorkspace(source).tree)]));
-  return sources.get(programId)?.get(blockId) ?? null;
-};
 
 // Blockly's messages in the current language, to word the blocks: Blockly's
 // catalogue and the game's blocks, without Blockly itself (main.js awaits this
@@ -40,15 +25,15 @@ export async function ready() {
   words = (await blocklyMessages()).messages;
 }
 
-// The world lab (PLAN.md §11, Phases 1 and 2): the island's world on its clock,
-// without the 3D island or the editor yet. Run, Pause and Step drive every robot
-// and building together; a map shows where they are, and a table what each is
+// The world lab (PLAN.md §11, Phases 1 and 2): the visit's world (session.js)
+// on its clock, as a map and a table. Run, Pause and Step drive every robot and
+// building together; the map shows where they are, and the table what each is
 // doing, holding and waiting for, and the block of its program it's at. The
 // robots and buildings run the island's starter programs
-// (src/content/programs.js).
+// (src/content/programs.js). The island page shows the same world in 3D.
 export function world(el) {
   const bin = createBin();
-  game ??= newGame();
+  let game = currentGame();
   game.pause();
 
   const $ = html(
@@ -57,15 +42,7 @@ export function world(el) {
       <header class="world-bar">
         <a class="button small" href="/${location.search}" data-link>${t("nav.home")}</a>
         <h1>${t("world.title")}</h1>
-        <div class="clock">
-          <button class="button primary small" data-act="run"></button>
-          <button class="button small" data-act="step">${t("clock.step")}</button>
-          <div class="segmented" role="group" aria-label="${esc(t("clock.speed"))}">
-            ${SPEEDS.map((s) => `<button data-speed="${s}">${t("clock.speedValue", { speed: s })}</button>`).join("")}
-          </div>
-          <output class="ticks" aria-live="off"></output>
-          <button class="button small" data-act="reset">${t("world.reset")}</button>
-        </div>
+        ${clockMarkup()}
         ${languageChoice({ group: "segmented language-choice" })}
       </header>
       <p class="stall" role="status" hidden></p>
@@ -135,7 +112,7 @@ export function world(el) {
   // the latest step.
   function block(w, e) {
     const run = e.runtime;
-    const node = run?.kind === "program" && run.block ? blockOf(run.program, run.block) : null;
+    const node = activeBlock(e);
     if (!node) return "";
     const fresh = run.evaluated?.tick === w.tick;
     return blockChip(node, words, fresh ? { className: "fresh", title: t("world.evaluated") } : {});
@@ -153,38 +130,22 @@ export function world(el) {
       <td>${status ? `<span class="state">${t(`state.${status}`)}</span>` : ""}${why ? `<span class="why">${esc(describeReason(w, why))}</span>` : ""}</td>
     </tr>`;
   }
-  let shownTick = -1;
+  let shown = null; // the world and tick the table shows
   function showWorld() {
     const w = game.world;
     if (drawn?.world !== w || drawn.nav !== w.nav) drawMap();
-    if (shownTick !== w.tick) {
+    if (shown?.world !== w || shown.tick !== w.tick) {
       tbody.innerHTML = [...w.entities, ...w.nodes].map((e) => row(w, e)).join("");
       const stall = $(".stall");
       stall.hidden = !w.stall;
       stall.textContent = w.stall ? describeReason(w, { code: "stall" }) : "";
-      shownTick = w.tick;
+      shown = { world: w, tick: w.tick };
     }
-    $(".ticks").textContent = t("clock.ticks", { tick: w.tick });
-    const run = $('[data-act="run"]');
-    run.textContent = game.clock.running ? t("clock.pause") : t("clock.run");
-    run.setAttribute("aria-pressed", String(game.clock.running));
-    for (const b of el.querySelectorAll("[data-speed]")) b.setAttribute("aria-pressed", String(Number(b.dataset.speed) === game.clock.speed));
+    showClock(el, game);
     placeRobots();
   }
 
-  bin.on($(".clock"), "click", (e) => {
-    const button = e.target.closest("button");
-    if (!button) return;
-    if (button.dataset.speed) game.clock.setSpeed(Number(button.dataset.speed));
-    else if (button.dataset.act === "run") (game.clock.running ? game.pause : game.run)();
-    else if (button.dataset.act === "step") game.step();
-    else if (button.dataset.act === "reset") {
-      const speed = game.clock.speed;
-      game = newGame();
-      game.clock.setSpeed(speed);
-    }
-    showWorld();
-  });
+  bindClock(bin, el, { game: () => game, reset: () => (game = newGame()), changed: showWorld });
   bin.on(document, "visibilitychange", () => game.hidden(document.hidden));
   bin.frames((now) => {
     game.frame(now);

@@ -15,6 +15,8 @@ export default {
   "page.title": "{page} · {app}",
 
   "home.tagline": "Program robots and buildings to bring an island back to life.",
+  "home.island": "Island",
+  "home.islandNote": "Phase 3 prototype: the island in 3D, its robots and buildings running their programs.",
   "home.lab": "Editor lab",
   "home.labNote": "Phase 0 prototype: the editor over the 3D world.",
   "home.world": "World lab",
@@ -58,11 +60,16 @@ export default {
   "lab.hide": "Hide controls",
   "lab.show": "Lab controls",
   // Measurements for developers: frames drawn per second, and the slowest frame.
-  "lab.frames": "{fps} fps · slowest {slowest} ms",
+  "meter.frames": "{fps} fps · slowest {slowest} ms",
   // The time the game's own code took per frame, and the number of draw calls.
-  "lab.work": {
+  "meter.work": {
     one: "code {work} ms · {count} draw call",
     other: "code {work} ms · {count} draw calls",
+  },
+  // How many triangles the last frame drew.
+  "meter.triangles": {
+    one: "{count} triangle",
+    other: "{count} triangles",
   },
 
   // The world lab: the world clock, and robots and buildings running their
@@ -83,6 +90,46 @@ export default {
   "world.cell": "{x}, {z}",
   // What an empty basket or store holds.
   "world.nothing": "nothing",
+
+  // The island in 3D, with the world clock, labels and the inspector.
+  "island.title": "Island",
+  // The panel that says what the selected robot or building is doing. For
+  // screen readers.
+  "inspector.label": "Details",
+  "inspector.hint": "Tap a robot or building to see what it's doing.",
+  // Heads the list of everything on the island, to choose from.
+  "inspector.everyone": "Robots and buildings",
+  "inspector.close": "Close",
+  // What a selected thing is.
+  "inspector.robot": "Robot",
+  "inspector.building": "Building",
+  // A grove or stone pit, where robots collect wood or stone.
+  "inspector.resource": "Resource",
+  // A robot's basket: what's in it, then how full it is.
+  "inspector.basket": "Basket",
+  // How many there are of how many there's room for: "2 of 4".
+  "inspector.of": "{have} of {cap}",
+  // Items, named on their own, in a list of what a building has.
+  "item.wood": "Wood",
+  "item.stone": "Stone",
+  "item.plank": "Planks",
+  "item.kit": "Kits",
+  // A label over a robot or building, for screen readers: its name and what
+  // it's doing in a word (state.*).
+  "tag.label": "{name}: {state}",
+  // A label's tooltip, when it waits or has stopped: the word, then why.
+  "tag.title": "{state}: {reason}",
+  // The buttons that move the view. They turn the island a quarter turn.
+  "view.controls": "View",
+  "view.turnLeft": "Turn left",
+  "view.turnRight": "Turn right",
+  "view.zoomIn": "Zoom in",
+  "view.zoomOut": "Zoom out",
+  "view.reset": "Reset view",
+  // How much the 3D view draws: simple for older tablets.
+  "quality.label": "Graphics",
+  "quality.low": "Simple",
+  "quality.high": "Detailed",
 
   // The world clock. One step is one tick of the world, as on the Step button.
   "clock.run": "Run",
