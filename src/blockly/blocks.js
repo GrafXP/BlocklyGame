@@ -3,9 +3,10 @@ import { ICONS } from "./icons.js";
 // The game's own blocks, as Blockly JSON definitions. Their words are message
 // references (%{BKY_…}, src/i18n/en/blocks.js), so a block's definition is the
 // same in every language, and so are the stable ids its dropdowns store (grove,
-// wood): only their labels are translated. This is the Phase 0 set, enough to
-// judge how blocks look; the real set and its rules come with the compiler
-// (PLAN.md §7).
+// wood): only their labels are translated. The compiler reads the dropdowns'
+// ids from here too (src/programming/compiler.js), so a program can hold only
+// what its blocks offer. Capability-filtered toolboxes and dropdowns of the
+// places really on the island come with the editor (PLAN.md §11, Phase 4).
 //
 // Styles name a colour family (src/blockly/treatments.js), not a colour, so each
 // visual treatment colours every block.
@@ -15,8 +16,10 @@ const icon = (name) => ({ type: "field_image", src: ICONS[name], width: 24, heig
 export const PLACES = [
   ["%{BKY_PLACE_GROVE}", "grove"],
   ["%{BKY_PLACE_SAWMILL}", "sawmill"],
+  ["%{BKY_PLACE_SITE}", "site"],
   ["%{BKY_PLACE_DEPOT}", "depot"],
   ["%{BKY_PLACE_CAMP}", "camp"],
+  ["%{BKY_PLACE_QUARRY}", "quarry"],
 ];
 const RAW = [
   ["%{BKY_ITEM_WOOD}", "wood"],
@@ -26,6 +29,7 @@ const MADE = [
   ["%{BKY_ITEM_PLANK}", "plank"],
   ["%{BKY_ITEM_KIT}", "kit"],
 ];
+const BLUEPRINTS = [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]];
 
 export const BLOCKS = [
   {
@@ -55,6 +59,15 @@ export const BLOCKS = [
     tooltip: "%{BKY_ROBOT_COLLECT_TOOLTIP}",
   },
   {
+    type: "robot_pick_up",
+    message0: "%{BKY_ROBOT_PICK_UP}",
+    args0: [icon("pickUp"), { type: "field_dropdown", name: "ITEM", options: [...MADE, ...RAW] }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "robot_blocks",
+    tooltip: "%{BKY_ROBOT_PICK_UP_TOOLTIP}",
+  },
+  {
     type: "robot_unload",
     message0: "%{BKY_ROBOT_UNLOAD}",
     args0: [icon("unload")],
@@ -73,6 +86,15 @@ export const BLOCKS = [
     tooltip: "%{BKY_BUILDING_MAKE_TOOLTIP}",
   },
   {
+    type: "building_build",
+    message0: "%{BKY_BUILDING_BUILD}",
+    args0: [icon("build"), { type: "field_dropdown", name: "BLUEPRINT", options: BLUEPRINTS }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "building_blocks",
+    tooltip: "%{BKY_BUILDING_BUILD_TOOLTIP}",
+  },
+  {
     type: "control_wait_steps",
     message0: "%{BKY_CONTROL_WAIT_STEPS}",
     args0: [icon("wait"), { type: "field_number", name: "STEPS", value: 5, min: 1, max: 999, precision: 1 }],
@@ -80,6 +102,15 @@ export const BLOCKS = [
     nextStatement: null,
     style: "loop_blocks",
     tooltip: "%{BKY_CONTROL_WAIT_STEPS_TOOLTIP}",
+  },
+  {
+    type: "control_wait_until",
+    message0: "%{BKY_CONTROL_WAIT_UNTIL}",
+    args0: [icon("until"), { type: "input_value", name: "UNTIL", check: "Boolean" }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "loop_blocks",
+    tooltip: "%{BKY_CONTROL_WAIT_UNTIL_TOOLTIP}",
   },
   {
     type: "control_forever",
@@ -101,5 +132,13 @@ export const BLOCKS = [
     output: "Number",
     style: "sensing_blocks",
     tooltip: "%{BKY_SENSE_STOCK_TOOLTIP}",
+  },
+  {
+    type: "sense_basket",
+    message0: "%{BKY_SENSE_BASKET}",
+    args0: [],
+    output: "Number",
+    style: "sensing_blocks",
+    tooltip: "%{BKY_SENSE_BASKET_TOOLTIP}",
   },
 ];

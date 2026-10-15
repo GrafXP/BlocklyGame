@@ -1,5 +1,6 @@
 // What each type of thing on the island is and can do (PLAN.md §4): its kind, the
-// actions it's capable of, and how many ticks they take. Capabilities are data,
+// actions it's capable of (and "basket": it has one that programs can count),
+// and how many ticks they take. Capabilities are data,
 // apart from looks, so a later chassis can do less without the runtime changing.
 // All durations are whole ticks (TICKS_PER_SECOND in world.js).
 //
@@ -13,7 +14,7 @@ export const ITEMS = ["wood", "stone", "plank", "kit"];
 export const TYPES = {
   helper: {
     kind: "robot",
-    can: ["goTo", "collect", "pickUp", "unload", "wait"],
+    can: ["goTo", "collect", "pickUp", "unload", "wait", "basket"],
     basket: 2, // items, of any kinds
     perCell: 3, // ticks to walk from a cell to its neighbour
     collectTicks: 5,

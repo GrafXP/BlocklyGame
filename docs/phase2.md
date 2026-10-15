@@ -1,0 +1,34 @@
+# Phase 2 findings: programs on the world clock
+
+Recorded 15 October 2026. Pictures are in [phase2/](phase2/), made by `npm run shots -- programs`.
+
+## What's in place
+
+- **The adapter** (`src/programming/adapter.js`) reads Blockly's JSON serialization into a normalized tree: stacks as chains of blocks, every input a chain, shadows where no block covers them, disabled blocks left out (the block after one still follows, as in Blockly's own generators). It checks the JSON's shape and refuses more than 400 blocks. Nothing in `src/programming/` needs Blockly, so programs compile in Node. Its fixture, `test/fixtures/blockly-workspace.json`, is a workspace Blockly itself built and saved; the browser tests check Blockly still loads it and saves it unchanged.
+- **The compiler** (`src/programming/compiler.js`, `COMPILER_VERSION` 1) turns the tree into plain-data instructions: `act`, `until`, `repeat`, `forever`, `if` (with else ifs and else) are visible, each with its block's id; `jump` and `end` are bookkeeping. Expressions (`number`, `stock`, `basket`, `compare`) are trees, typed number or boolean, each with its block's id. It reports everything that can't work as codes with block ids, all at once, and a stack under no start block as a warning. Given a robot or building type and the island's places, it also checks what the program asks of them.
+- **The runtime** (`src/programming/runtime.js`) runs one compiled program for one entity. Its state is plain data on the entity: the instruction it's at, its Repeat loops with their counts, the active block, the block last evaluated and when, why it waits at a Wait Until, and whether it's over. Each tick it goes through bookkeeping to one visible instruction at most, and evaluates it.
+- **The world** keeps compiled programs in `world.programs`, by id and revision. New commands: `publish` a compiled program (every entity running it starts the new revision from its start, its holds let go and finished work kept) and `assign` one to an entity, refused when the entity can't do what the program needs. Scripts stay, for tests. `SIM_VERSION` is 2: the island runs programs, and the golden replays include publishing and assigning.
+- **The island** runs five starter programs (`src/content/programs.js`), written as Blockly JSON with readable block ids: two robots carry wood and planks with Repeat inside Forever, a third waits for the bridge to reach the stone pit, the sawmill makes a plank whenever Wait Until sees wood, and the site builds the bridge.
+- **The trace** of a tick now has each evaluated block with what came of it (an action's intent, a Wait Until's test, an If's branch, a Repeat's round), errors with their block, and every entity's state and active block after the tick.
+- **New blocks**: pick up, build, wait until, and items in basket; the construction site and stone pit as places. All in English and German.
+- **In words**: every compiler and runtime code has a message in both languages (`src/ui/describe.js`). The editor lab compiles its programs as they're edited and shows each problem as Blockly's warning on its block, or beside the program when it has no block ([lab-problems-en](phase2/lab-problems-en.jpg), [lab-problems-de](phase2/lab-problems-de.jpg)). The world lab shows the block each robot and building is at as a chip: the block's colour, picture and words, outlined when evaluated in the latest step ([world-2-en](phase2/world-2-en.jpg), [world-2-de](phase2/world-2-de.jpg)). A chip's words come from the messages Blockly words blocks with, so it reads as the block does in the editor, without loading Blockly.
+
+## Decisions for later phases to know
+
+- **The start block takes no step.** A program's first tick evaluates the block under When Started, so pressing Step once moves a robot's marker straight to its first real block. Every other visible block takes a tick of its own: Forever, Repeat (on the way in and on each way back round), If, and Wait Until. A program that is only Forever therefore takes one block a tick for ever, and a Forever around an action costs one extra tick a round. This is the plan's §6, read strictly.
+- **A Repeat works out its count once**, as it begins (Blockly's own meaning), and a Wait Until tries its condition again every tick. When the condition holds, the next block runs the tick after.
+- **One If is one step**, however many else ifs it has: its conditions are inputs of one block, evaluated together in order.
+- **Sensing reads stores' counts**, what's there, not what's promised: a store about to lose an item to an action under way still counts it until the action ends. Every runtime reads the world as it stands after the tick's actions settle and before any intent starts, so what one program senses never depends on which ran first.
+- **Errors name their block.** An action's error from a program carries the id of the block whose action it was, and a sense's error the sense's block. A program that reaches no visible block within 64 instructions stops with `error.busy`; only a damaged program can, since every loop goes back through a visible block.
+- **Waiting at a Wait Until is waiting** for the stall report. A program going round loops and conditions without acting is *ready*, not waiting, so a world where one does that isn't reported stalled, though nothing changes.
+- **Limits**: 400 blocks, blocks inside blocks 10 deep, values inside values 8 deep, typed numbers from −99,999 to 99,999. Whole numbers only: a world holds no fractions.
+- **Programs hold block ids, which can be any characters.** Blockly's are random and full of punctuation; the island's are readable. Program ids are the game's own, letters, digits, `-` and `_`.
+- **Dropdowns are checked against their blocks' definitions** (`src/blockly/blocks.js`), places only for their shape: Phase 4's places will come from the island, so any id is a place, and the compiler checks it against the island when it knows the island.
+- **A published program replaces its revision for every entity running it.** The world keeps one revision of each program. Which entities a shared program reaches, and previews of that, come with the library in Phase 6.
+- **The editor lab holds two programs on one workspace**, a collector's and a sawmill's, under their own start blocks. It compiles each stack under a start block on its own (`src/ui/lab-check.js`); the game will have one program a workspace.
+
+## Not yet done
+
+- Step to Next Block, the overview of every entity, and markers driven by real runtimes come with the editor and debugger (Phase 4).
+- The library, role and type defaults, and settings blocks such as “my Source” (Phase 6); variables, procedures and messages (Phase 8). The instruction set has room for SET, CALL, RETURN and SEND.
+- And, Or, Not and True/False compile as unsupported for now. They're Blockly's own blocks, whose German words aren't yet checked; they come with mission 7's conditions.

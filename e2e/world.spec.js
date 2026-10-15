@@ -3,9 +3,10 @@ import { ISLAND } from "../src/content/island.js";
 import { advanceWorld, createWorld } from "../src/sim/world.js";
 import { stateHash } from "../src/sim/replay.js";
 
-// The Phase 1 acceptance in a browser (PLAN.md §11): the world lab's Run, Pause
-// and Step on the one world clock, the same world as Node's for the same ticks,
-// and a change of language that leaves the world as it was.
+// The Phase 1 and 2 acceptance in a browser (PLAN.md §11): the world lab's Run,
+// Pause and Step on the one world clock, the same world as Node's for the same
+// ticks, a change of language that leaves the world as it was, and every robot
+// and building showing the block of its program it's at.
 
 const world = (page, fn, arg) => page.evaluate(fn, arg);
 const tick = (page) => world(page, () => window.world.game.world.tick);
@@ -30,6 +31,8 @@ test("the world opens paused; Step advances it exactly one tick, every robot and
   await page.getByRole("button", { name: "Step", exact: true }).click();
   await expect(page.locator(".ticks")).toHaveText("Steps: 1");
   expect(await world(page, () => window.world.game.trace.evaluated.map((e) => e.entity))).toEqual(["r1", "r2", "r3", "sawmill", "site"]);
+  await page.getByRole("button", { name: "Step", exact: true }).click();
+  await expect(page.locator(".ticks")).toHaveText("Steps: 2");
   await expect(page.locator('tr[data-id="r1"]')).toContainText("On the way to Grove");
   await expect(page.locator('tr[data-id="r3"]')).toContainText("No way to Stone pit");
 
@@ -37,7 +40,34 @@ test("the world opens paused; Step advances it exactly one tick, every robot and
   const before = await hash(page);
   await page.waitForTimeout(600);
   expect(await hash(page)).toBe(before);
-  expect(await tick(page)).toBe(1);
+  expect(await tick(page)).toBe(2);
+});
+
+test("every robot and building shows the block it's at, in its words, marked when evaluated in the latest step", async ({ page }) => {
+  await openWorld(page);
+  const chip = (id) => page.locator(`tr[data-id="${id}"] .chip`);
+  const step = () => page.getByRole("button", { name: "Step", exact: true }).click();
+  await expect(chip("r1")).toHaveCount(0, { timeout: 1000 }); // not started yet
+  await step();
+  await expect(chip("r1")).toHaveText("forever");
+  await expect(chip("site")).toHaveText("build bridge");
+  await step();
+  await expect(chip("r1")).toHaveText("go to grove");
+  await expect(chip("r1")).toHaveClass(/fresh/);
+  await expect(chip("sawmill")).toHaveText("wait until wood at sawmill > 0");
+  await expect(page.locator('tr[data-id="sawmill"]')).toContainText("Waiting until its condition is true");
+  await expect(chip("site")).not.toHaveClass(/fresh/); // still waiting for planks, at the same block
+  await step();
+  await expect(chip("r1")).toHaveText("go to grove");
+  await expect(chip("r1")).not.toHaveClass(/fresh/); // on its way, the block still active
+  await expect(chip("sawmill")).toHaveClass(/fresh/); // its condition tried again
+  expect(await chip("r1").getAttribute("data-block")).toBe("collector-go-grove");
+  expect(await chip("r1").locator("img").count()).toBe(1);
+
+  await page.getByRole("group", { name: "Language" }).getByRole("button", { name: "Deutsch" }).click();
+  await page.waitForFunction(() => document.documentElement.lang === "de" && window.world);
+  await expect(chip("r1")).toHaveText("gehe zu Wäldchen");
+  await expect(chip("sawmill")).toHaveText("warte bis Holz bei Sägewerk > 0");
 });
 
 test("Run moves the clock at the chosen speed, Pause stops it, and the world is Node's for the same ticks", async ({ page }) => {

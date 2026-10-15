@@ -10,8 +10,10 @@ import { LAB_TOOLBOX } from "../blockly/toolboxes.js";
 import { TREATMENTS, surfaceAlphas } from "../blockly/treatments.js";
 import { loadLocal, saveLocal } from "../storage/local.js";
 import { html, isDev } from "./dom.js";
+import { describeReason } from "./describe.js";
 import { languageChoice } from "./language-choice.js";
 import { normalizeLabSettings } from "./lab-settings.js";
+import { checkLabPrograms } from "./lab-check.js";
 import { demoMarkers, demoProgram } from "./lab-demo.js";
 
 const MIN_PANEL = 320; // px; narrower and the toolbox crowds the program out
@@ -29,7 +31,9 @@ export const ready = prepareBlockly;
 // The Phase 0 editor lab (PLAN.md §11): the Blockly editor in a panel over the 3D
 // world, with controls to compare its visual treatments, how see-through it is
 // over a bright or dark world with a robot moving behind, blur, and sample
-// execution markers. The program and the controls are remembered on this device.
+// execution markers. Since Phase 2 the compiler checks its programs as they're
+// edited, and marks what can't work at its block. The program and the controls
+// are remembered on this device.
 export function lab(el) {
   const bin = createBin();
   let settings = normalizeLabSettings(loadLocal("lab"));
@@ -130,8 +134,33 @@ export function lab(el) {
   const onChange = (e) => {
     if (e.isUiEvent || !editor) return;
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveProgram, 400);
+    saveTimer = setTimeout(() => {
+      saveProgram();
+      check();
+    }, 400);
   };
+
+  // What the compiler finds wrong, in the player's language: at its block as
+  // Blockly's warning, or, for a problem with no block, in the status line. A
+  // block's warning is only set when it changes, since setting one redraws it.
+  let problems = [];
+  let warned = new Map(); // block id → the warning it shows
+  function check() {
+    problems = checkLabPrograms(editor.save());
+    const lists = new Map();
+    for (const p of problems) if (p.block) lists.set(p.block, [...(lists.get(p.block) ?? []), describeReason(null, p)]);
+    const texts = new Map([...lists].map(([id, list]) => [id, list.join("\n")]));
+    for (const block of editor.workspace.getAllBlocks(false)) {
+      const text = texts.get(block.id) ?? null;
+      if ((warned.get(block.id) ?? null) !== text) block.setWarningText(text);
+    }
+    warned = texts;
+    const general = problems.filter((p) => !p.block).map((p) => describeReason(null, p));
+    if (general.length || status.dataset.problems) {
+      status.textContent = general.join(" ");
+      status.dataset.problems = general.length ? "1" : "";
+    }
+  }
 
   function mount(state) {
     try {
@@ -142,6 +171,8 @@ export function lab(el) {
     }
     markers = createMarkers(host, editor, Blockly);
     showMarkers();
+    warned = new Map();
+    check();
   }
   function unmount() {
     markers?.dispose();
@@ -295,6 +326,17 @@ export function lab(el) {
       screenOf: (name) => view.screenOf(name),
       robotAt: (angle) => view.robotAt(angle),
       save: () => editor.save(),
+      load(json) {
+        editor.load(json);
+        warned = new Map();
+        check();
+      },
+      // The compiler's findings, as codes with block ids, and each block's warning.
+      problems: () => problems,
+      warning: (id) => {
+        const icon = editor.workspace.getBlockById(id)?.getIcons().find((i) => i.getType().toString() === "warning");
+        return icon ? icon.getText() : null;
+      },
       blockCount: () => editor.blockCount(),
       workspace: () => editor.workspace,
       // The block's own shape, without the blocks after or inside it, which its

@@ -9,7 +9,7 @@ export default {
   "home.lab": "Editor-Labor",
   "home.labNote": "Prototyp aus Phase 0: der Editor über der 3D-Welt.",
   "home.world": "Welt-Labor",
-  "home.worldNote": "Prototyp aus Phase 1: Roboter und Gebäude auf der Weltuhr, nach festen Plänen.",
+  "home.worldNote": "Prototyp aus Phase 2: Roboter und Gebäude führen ihre Programme auf der Weltuhr aus.",
   "nav.home": "Startseite",
   "language.choose": "Sprache",
 
@@ -53,6 +53,8 @@ export default {
   "world.doing": "Tut gerade",
   "world.has": "Hat",
   "world.state": "Zustand",
+  "world.block": "Baustein",
+  "world.evaluated": "In diesem Schritt ausgeführt",
   "world.cell": "{x}, {z}",
   "world.nothing": "nichts",
 
@@ -86,6 +88,7 @@ export default {
   "action.name.unload": "Abladen",
   "action.name.make": "Herstellen",
   "action.name.wait": "Warten",
+  "action.name.basket": "In den Korb schauen",
 
   "count.wood": {
     one: "{count} Holz",
@@ -107,9 +110,25 @@ export default {
   "wait.item": "Braucht {amount} · {place} hat {have}",
   "wait.space": "Kein Platz für {amount} · {place} hat Platz für {free}",
   "wait.route": "Kein Weg zu: {place}",
+  "wait.until": "Wartet, bis die Bedingung stimmt",
   "error.target": "Diesen Ort gibt es nicht: {target}",
   "error.cannot": "Geht nicht: {action}",
   "error.notHere": "Geht hier nicht: {action}",
+  "error.busy": "Dieses Programm hat in einem Schritt zu viel gemacht.",
+
+  "program.unreadable": "Dieses Programm kann nicht gelesen werden.",
+  "program.noStart": "Dieses Programm braucht einen „beim Start“-Baustein, an dem es beginnt.",
+  "program.twoStarts": "Ein Programm hat nur einen Start-Baustein. Nimm diesen weg oder hänge seine Bausteine unter den anderen.",
+  "program.unsupported": "Dieser Baustein geht hier nicht.",
+  "program.empty": "Hier fehlt etwas: Setze einen Baustein in die Lücke.",
+  "program.wantNumber": "In die Lücken dieses Bausteins gehören Zahlen.",
+  "program.wantTest": "In diese Lücke gehört etwas, das stimmt oder nicht stimmt.",
+  "program.whole": "Nimm eine ganze Zahl von {min} bis {max}.",
+  "program.target": "Diesen Ort gibt es nicht: {target}",
+  "program.cannot": "Geht nicht: {action}",
+  "program.tooBig": "Dieses Programm hat zu viele Bausteine: höchstens {limit}.",
+  "program.tooDeep": "Hier stecken zu viele Bausteine ineinander: höchstens {limit}.",
+  "program.unused": "Das hängt nicht unter dem Start-Baustein und läuft deshalb nicht.",
   stall: "Alles wartet: Nichts kann passieren, bis sich etwas ändert.",
   "command.invalid": "Ein Befehl passte nicht zu dieser Welt: {type}",
 

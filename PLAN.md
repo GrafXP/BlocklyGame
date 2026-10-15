@@ -610,14 +610,14 @@ Acceptance: scripted headless actions move resources correctly. Step increments 
 
 ### Phase 2 — Program compiler and runtime
 
-- [ ] Define normalized trees, expression types, compiled instructions, and runtime state contracts.
-- [ ] Implement the adapter from Blockly workspace JSON; test it with JSON fixtures in Node, without Blockly.
-- [ ] Implement entry, sequence, actions, finite repeat, waiting, conditionals, and Forever.
-- [ ] Retain Blockly source IDs through compilation and execution.
-- [ ] Enforce one new visible instruction per entity per tick and bounded internal work.
-- [ ] Integrate action intents with the world phase/reservation system.
-- [ ] Produce execution traces and test nested control flow and long-action continuation.
-- [ ] Report validation and runtime errors as codes with the block ID and values. The editor words them in the player's language.
+- [x] Define normalized trees, expression types, compiled instructions, and runtime state contracts. (`src/programming/`: docs/phase2.md.)
+- [x] Implement the adapter from Blockly workspace JSON; test it with JSON fixtures in Node, without Blockly. (The fixture is a workspace Blockly built and saved itself; a browser test checks it still loads and saves unchanged.)
+- [x] Implement entry, sequence, actions, finite repeat, waiting, conditionals, and Forever. (Wait N Steps and Wait Until; If with else ifs and else, on comparisons of numbers. The start block takes no step.)
+- [x] Retain Blockly source IDs through compilation and execution.
+- [x] Enforce one new visible instruction per entity per tick and bounded internal work. (64 instructions a tick at most; limits on blocks, nesting and expression depth.)
+- [x] Integrate action intents with the world phase/reservation system. (The island now runs starter programs; `publish` and `assign` commands; `SIM_VERSION` 2.)
+- [x] Produce execution traces and test nested control flow and long-action continuation.
+- [x] Report validation and runtime errors as codes with the block ID and values. The editor words them in the player's language. (The editor lab shows them as Blockly's warnings on their blocks; the world lab shows each entity's block as a chip.)
 
 Acceptance: several robot/building programs run concurrently on the same clock; a pure loop cannot freeze the app; each visible instruction and wait has the correct source mapping.
 

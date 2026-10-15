@@ -206,7 +206,7 @@ test.describe("with a German browser", () => {
     expect(await page.locator(".execution-markers text").allTextContents()).toEqual(expect.arrayContaining(["Robo 1", "Robo 2", "Sägewerk"]));
 
     await openDropdown(page, "go-grove", "PLACE");
-    expect(await menuTexts(page, ".blocklyDropDownDiv")).toEqual(["Wäldchen", "Sägewerk", "Lagerhaus", "Camp"]);
+    expect(await menuTexts(page, ".blocklyDropDownDiv")).toEqual(["Wäldchen", "Sägewerk", "Baustelle", "Lagerhaus", "Camp", "Steinbruch"]);
     await page.locator(".blocklyDropDownDiv .blocklyMenuItem", { hasText: "Lagerhaus" }).click();
     expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.fields.PLACE)).toBe("depot");
 
@@ -307,7 +307,7 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
   expect(await page.evaluate(unmarkedText)).toEqual([]);
   await exercise(page, async (what) => expect(await page.evaluate(unmarkedText), what).toEqual([]));
   expect(await tooltip(page, "go-grove")).not.toMatch(/[A-Za-z]/);
-  for (const ticks of [1, 300, 1000]) {
+  for (const ticks of [2, 300, 1200]) {
     await worldAt(page, "&lang=pseudo", ticks);
     expect(await page.evaluate(unmarkedText), `world at step ${ticks}`).toEqual([]);
   }
@@ -330,7 +330,7 @@ for (const [lang, query] of everyLanguage) {
     const controls = await page.locator(".lab-controls").boundingBox();
     expect(controls.x).toBeGreaterThanOrEqual(0);
     expect(controls.x + controls.width).toBeLessThanOrEqual(page.viewportSize().width);
-    for (const ticks of [300, 1000]) {
+    for (const ticks of [300, 1200]) {
       await worldAt(page, query, ticks);
       expect(await page.evaluate(clippedText), `world at step ${ticks}`).toEqual([]);
     }

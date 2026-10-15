@@ -77,14 +77,17 @@ test("Step advances the world exactly one tick and leaves it paused; Pause chang
 
 test("commands wait for the next tick, and are logged with it", () => {
   const game = createGame(createWorld(ISLAND));
+  const r1 = game.world.entities.find((e) => e.id === "r1");
+  game.step();
   game.step();
   game.queue({ type: "restart", entity: "r1" });
   assert.equal(game.queued, 1);
-  assert.equal(game.world.entities.find((e) => e.id === "r1").action.start, 1, "not yet");
+  assert.equal(r1.action.start, 2, "not yet");
   game.step();
   assert.equal(game.queued, 0);
-  assert.deepEqual(game.log, [{ tick: 2, command: { type: "restart", entity: "r1" } }]);
-  assert.equal(game.world.entities.find((e) => e.id === "r1").action.start, 2);
+  assert.deepEqual(game.log, [{ tick: 3, command: { type: "restart", entity: "r1" } }]);
+  assert.equal(r1.action, null, "its walk was cancelled");
+  assert.deepEqual(r1.runtime.evaluated, { block: "collector-forever", tick: 3 }, "and its program began again");
   assert.deepEqual(game.trace.commands, [{ ok: true }]);
 });
 

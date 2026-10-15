@@ -24,7 +24,8 @@ export function placeName(world, id) {
 
 const actionName = (action) => (hasMessage(`action.name.${action}`) ? t(`action.name.${action}`) : action);
 
-// A reason (codes.js) in words.
+// A reason (codes.js) in words. The compiler's codes (program.*) need no world:
+// describeReason(null, problem).
 export function describeReason(world, reason) {
   switch (reason.code) {
     case "wait.item":
@@ -33,15 +34,14 @@ export function describeReason(world, reason) {
       return t("wait.space", { amount: amount(reason.item, reason.need), place: placeName(world, reason.at), free: reason.free });
     case "wait.route":
       return t("wait.route", { place: placeName(world, reason.target) });
-    case "error.target":
-      return t("error.target", { target: reason.target });
     case "error.cannot":
     case "error.notHere":
+    case "program.cannot":
       return t(reason.code, { action: actionName(reason.action) });
-    case "command.invalid":
-      return t("command.invalid", { type: reason.type });
     default:
-      return t(reason.code);
+      // Every other code's values go into its message as they are: ids,
+      // numbers and limits. Its `block` is where the editor shows it.
+      return t(reason.code, reason);
   }
 }
 

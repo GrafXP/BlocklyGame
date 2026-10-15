@@ -1,0 +1,219 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "island_when_started",
+        "id": "2QhwKSEShebHXj^@D`Lv",
+        "x": 64,
+        "y": 17,
+        "next": {
+          "block": {
+            "type": "control_forever",
+            "id": "au]D`X$c[mxO?K[X;Tqx",
+            "inputs": {
+              "DO": {
+                "block": {
+                  "type": "robot_go_to",
+                  "id": "S*^8uI{T7mksUpUt.[xw",
+                  "fields": {
+                    "PLACE": "grove"
+                  },
+                  "next": {
+                    "block": {
+                      "type": "controls_repeat_ext",
+                      "id": "!k409zeQ#,ZaHGc~FXim",
+                      "inputs": {
+                        "TIMES": {
+                          "shadow": {
+                            "type": "math_number",
+                            "id": "-ZmNV,Ip3svy,w6/n2Ex",
+                            "fields": {
+                              "NUM": 2
+                            }
+                          }
+                        },
+                        "DO": {
+                          "block": {
+                            "type": "robot_collect",
+                            "id": "!xd5/uuSqKu0zl2@!;(G",
+                            "fields": {
+                              "ITEM": "wood"
+                            },
+                            "next": {
+                              "block": {
+                                "type": "control_wait_steps",
+                                "id": "368FRMdz;mEaRqEf@3=O",
+                                "disabledReasons": [
+                                  "MANUALLY_DISABLED"
+                                ],
+                                "fields": {
+                                  "STEPS": 5
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "robot_collect",
+                                    "id": "Ashfz.6FEDElVYTZg:Q7",
+                                    "fields": {
+                                      "ITEM": "wood"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "robot_go_to",
+                          "id": "5KATDRS.dX{]JU]7wUB{",
+                          "fields": {
+                            "PLACE": "sawmill"
+                          },
+                          "next": {
+                            "block": {
+                              "type": "controls_if",
+                              "id": ".S5xonx[+C/rN}j5lZO}",
+                              "extraState": {
+                                "elseIfCount": 1,
+                                "hasElse": true
+                              },
+                              "inputs": {
+                                "IF0": {
+                                  "block": {
+                                    "type": "logic_compare",
+                                    "id": "BVb-l8m$~IgpU(Hd2R]L",
+                                    "fields": {
+                                      "OP": "LT"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "sense_stock",
+                                          "id": "m^{e%N|R!ohoHpNaf?$S",
+                                          "fields": {
+                                            "ITEM": "plank",
+                                            "PLACE": "sawmill"
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "shadow": {
+                                          "type": "math_number",
+                                          "id": "rYciw@Cl|HSiH*.K9;zb",
+                                          "fields": {
+                                            "NUM": 1
+                                          }
+                                        },
+                                        "block": {
+                                          "type": "math_number",
+                                          "id": "u.QYIgR^)4lA,Nbc%ImG",
+                                          "fields": {
+                                            "NUM": 4
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "DO0": {
+                                  "block": {
+                                    "type": "robot_unload",
+                                    "id": "ufsH|[Ir(^6H1YFXHiiH"
+                                  }
+                                },
+                                "IF1": {
+                                  "block": {
+                                    "type": "logic_compare",
+                                    "id": "L4S{GWmKPY5+x/ZMs;F)",
+                                    "fields": {
+                                      "OP": "GT"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "sense_basket",
+                                          "id": "UGT)_4[#6tP]=;cIy.l9"
+                                        }
+                                      },
+                                      "B": {
+                                        "shadow": {
+                                          "type": "math_number",
+                                          "id": "fF=NKNNv`}=caoiH?sP(",
+                                          "fields": {
+                                            "NUM": 0
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "DO1": {
+                                  "block": {
+                                    "type": "control_wait_steps",
+                                    "id": "sgIb(HGdoz@l|w8co{ol",
+                                    "fields": {
+                                      "STEPS": 3
+                                    }
+                                  }
+                                },
+                                "ELSE": {
+                                  "block": {
+                                    "type": "control_wait_until",
+                                    "id": "oL8?VhXSo^aG_^sBI[Ce",
+                                    "inputs": {
+                                      "UNTIL": {
+                                        "block": {
+                                          "type": "logic_compare",
+                                          "id": "823;(1SA;iCt_%3sPDD.",
+                                          "fields": {
+                                            "OP": "EQ"
+                                          },
+                                          "inputs": {
+                                            "A": {
+                                              "block": {
+                                                "type": "sense_basket",
+                                                "id": "t/YS@{8;,{4tK{aJRsD("
+                                              }
+                                            },
+                                            "B": {
+                                              "shadow": {
+                                                "type": "math_number",
+                                                "id": "W{+?rasbA@JoD_V_H4bJ",
+                                                "fields": {
+                                                  "NUM": 2
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "robot_pick_up",
+        "id": "pM*kJ6;LV1f,MW#SLayn",
+        "x": 400,
+        "y": 40,
+        "fields": {
+          "ITEM": "plank"
+        }
+      }
+    ]
+  }
+}

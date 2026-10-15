@@ -1,3 +1,4 @@
+import { checkProgram } from "../programming/runtime.js";
 import { walkable } from "./navigation.js";
 
 // The rules a world keeps after every tick (PLAN.md §12), for the tests and for
@@ -58,6 +59,27 @@ export function checkWorld(world) {
   for (const e of world.entities) {
     if ([e.action, e.pending, e.error].filter(Boolean).length > 1) fail(`${e.id} is doing, waiting or failed at once`);
     if (e.kind === "robot" && !walk[e.cell]) fail(`${e.id} stands on cell ${e.cell}, which can't be walked on`);
+  }
+
+  // Programs, and where each program's runtimes are in them.
+  for (let i = 0; i < world.programs.length; i++) {
+    const p = world.programs[i];
+    if (i && !(world.programs[i - 1].id < p.id)) fail(`programs out of id order at ${p.id}`);
+    for (const problem of checkProgram(p)) fail(`program ${p.id}: ${problem}`);
+  }
+  for (const e of world.entities) {
+    const run = e.runtime;
+    if (run?.kind !== "program") continue;
+    const p = world.programs.find((it) => it.id === run.program);
+    if (!p) {
+      fail(`${e.id} runs program ${run.program}, which there isn't`);
+      continue;
+    }
+    if (run.revision !== p.revision || run.compiler !== p.compiler) fail(`${e.id} runs revision ${run.revision} of ${p.id}, which is at ${p.revision}`);
+    if (!(run.at >= 0 && run.at < p.code.length)) fail(`${e.id} is at instruction ${run.at} of ${p.code.length}`);
+    for (const loop of run.loops) {
+      if (p.code[loop.at]?.op !== "repeat" || !(loop.count >= 0 && loop.count <= Math.max(0, loop.times))) fail(`${e.id} has a loop at ${loop.at} that isn't a repeat's`);
+    }
   }
   return problems;
 }

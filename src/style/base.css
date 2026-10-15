@@ -144,3 +144,27 @@ a {
   border-color: var(--ink);
   color: #fff;
 }
+
+/* A block as a chip outside Blockly (src/ui/chips.js): its colour, picture and
+   words. Inline, so a long one wraps like text rather than being cut off. */
+.chip {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--chip);
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.9;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.chip img {
+  margin-inline-end: 4px;
+  vertical-align: -3px;
+}
+
+/* The block evaluated in the latest step. */
+.chip.fresh {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}

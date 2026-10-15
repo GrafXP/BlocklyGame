@@ -28,7 +28,7 @@ import { thing, thingAt } from "./things.js";
 const action = (type, now, ticks, data) => ({ type, ...data, start: now, end: now + Math.max(1, ticks) });
 
 // Starts `intent` for `entity` in tick `now`: { action }, { wait: reason } or
-// { error: reason }.
+// { error: reason }. ACTIONS lists the intents there are.
 export function tryStart(world, entity, intent, now) {
   const start = STARTS[intent.type];
   if (!start || !can(entity, intent.type)) return { error: reason("error.cannot", { action: intent.type }) };
@@ -96,6 +96,8 @@ const STARTS = {
     return { action: action("wait", now, Math.trunc(steps) || 1, {}) };
   },
 };
+
+export const ACTIONS = Object.keys(STARTS);
 
 // One `item` from `from` into the robot's basket.
 function take(world, robot, from, item, now, type, ticks) {

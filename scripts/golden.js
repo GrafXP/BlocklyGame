@@ -6,6 +6,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { ISLAND } from "../src/content/island.js";
+import { ISLAND_PROGRAMS } from "../src/content/programs.js";
+import { compile } from "../src/programming/compiler.js";
 import { play } from "../src/sim/replay.js";
 import { SIM_VERSION } from "../src/sim/world.js";
 
@@ -14,9 +16,18 @@ export const EVERY = 100;
 
 const command = (tick, c) => ({ tick, command: c });
 
-// The scenarios: the island left to its scripts for five minutes of play, and
-// the island with the player stepping in, restarting robots and buildings in the
-// middle of their work, giving one a new script and changing stores.
+// Island program `id`, compiled, as revision `revision`; `change` edits its
+// workspace's JSON first.
+function published(id, revision, change = (json) => json) {
+  const source = JSON.parse(change(JSON.stringify(ISLAND_PROGRAMS.find((p) => p.id === id).source)));
+  return { type: "publish", program: { id, revision, ...compile(source).program } };
+}
+
+// The scenarios: the island left to its programs for five minutes of play, and
+// the island with the player stepping in: restarting robots and buildings in the
+// middle of their work, giving one a script, changing stores, publishing a new
+// revision of a program that's running and of one that isn't, and giving a robot
+// a program again.
 export const SCENARIOS = {
   island: { content: ISLAND, ticks: 3000, log: [] },
   commands: {
@@ -36,6 +47,9 @@ export const SCENARIOS = {
       }),
       command(900, { type: "restart", entity: "r3" }),
       command(900, { type: "stock", at: "quarry", item: "stone", count: 8 }),
+      command(1050, published("planks", 2)),
+      command(1100, published("courier", 2, (json) => json.replace('"PLACE":"site"', '"PLACE":"depot"'))),
+      command(1200, { type: "assign", entity: "r2", program: "courier" }),
       command(1500, { type: "restart", entity: "site" }),
     ],
   },

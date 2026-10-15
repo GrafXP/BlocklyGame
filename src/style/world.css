@@ -143,3 +143,8 @@
 .world-table tr.error .state {
   color: #b42318;
 }
+
+/* The block each entity is at: room for most chips on one line. */
+.world-table td.block {
+  min-width: 14em;
+}

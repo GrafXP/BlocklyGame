@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { SIM_VERSION } from "../src/sim/world.js";
-import { canonicalJson, play, stateHash } from "../src/sim/replay.js";
+import { canonicalJson, play } from "../src/sim/replay.js";
 import { EVERY, GOLDEN_FORMAT, SCENARIOS } from "../scripts/golden.js";
 
 // The golden replays (PLAN.md §12): recorded command logs played into a fresh
@@ -34,9 +34,11 @@ for (const file of files) {
   });
 }
 
-test("a replay with one command left out gives another world", () => {
+test("a replay with any one command left out gives another world on the way", () => {
   const { content, ticks, log } = SCENARIOS.commands;
   const g = golden("commands.json");
-  const { world } = play(content, log.slice(1), ticks);
-  assert.notEqual(stateHash(world), g.hashes.at(-1)[1]);
+  for (let i = 0; i < log.length; i++) {
+    const { hashes } = play(content, log.toSpliced(i, 1), ticks, { every: EVERY });
+    assert.notDeepEqual(hashes, g.hashes, `without ${JSON.stringify(log[i]).slice(0, 80)}`);
+  }
 });

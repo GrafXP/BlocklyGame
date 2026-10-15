@@ -8,12 +8,18 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | --- | --- | --- |
 | block | Baustein | As in Blockly's German catalogue (“Baustein löschen”). Plural Bausteine. |
 | program | Programm | |
+| start block (“when started”) | Start-Baustein (“beim Start”) | |
+| gap (where a block plugs into another) | Lücke | |
+| condition (true or false) | Bedingung; stimmt, stimmt nicht | “Wartet, bis die Bedingung stimmt”. Children say *stimmt* more than *wahr*. |
+| wait until … | warte bis … | Like Blockly's “wiederhole bis”. |
+| pick up (from a building) | nimm | “nimm Bretter”. Collecting (from a grove, a stone pit) is *sammle*. |
+| build | baue | “baue Brücke”. |
 | stopped (nothing more to do) | angehalten | |
 | on the way to: … | unterwegs zu: … | With a colon, so any place fits without an article. |
 | step (one tick of the world clock) | Schritt | The Step button and the “warte %2 Schritte” block use the same word. |
 | robot | Roboter | Default robot names stay “Robo 1”, “Robo 2”. |
 | building | Gebäude | |
-| basket (what a robot carries) | Korb | |
+| basket (what a robot carries) | Korb | “Stück im Korb”: how many items, of any kind. |
 | in store, stock | Vorrat, vorrätig | Not “Lager”, which German also uses for a camp. |
 | grove | Wäldchen | |
 | sawmill | Sägewerk | |

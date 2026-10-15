@@ -1,3 +1,5 @@
+import { compile } from "../programming/compiler.js";
+import { startProgram } from "../programming/runtime.js";
 import { finish, progress, tryStart } from "./actions.js";
 import { applyCommand } from "./commands.js";
 import { TYPES } from "./entities.js";
@@ -12,11 +14,13 @@ import { cellAt, inside, parseTerrain } from "./terrain.js";
 // objects, so it saves and loads exactly; robots, buildings and deposits are kept
 // in order of id, and nothing depends on the order of an object's keys.
 //
-//   { sim, content, tick, terrain, nav, serial, entities, nodes, stall }
+//   { sim, content, tick, terrain, nav, serial, programs, entities, nodes, stall }
 //
 // `nav` is the navigation revision, counted up whenever the ways change; `serial`
-// numbers waiting intents in the order they started waiting; `stall` is
-// { since } while nothing can happen (codes.js).
+// numbers waiting intents in the order they started waiting; `programs` are the
+// compiled programs entities run, { id, revision, …compiled } in order of id
+// (src/programming/compiler.js); `stall` is { since } while nothing can happen
+// (codes.js).
 //
 // An entity (robot or building) is
 //
@@ -24,12 +28,13 @@ import { cellAt, inside, parseTerrain } from "./terrain.js";
 //
 // with `action` what it's doing (actions.js), `pending` an intent that's waiting
 // to start { intent, order, since, reason, nav }, `error` the reason its program
-// stopped, and `runtime` what decides its next intent (runtimes.js). `name` is a
-// message reference, worded only when shown (PLAN.md §8).
+// stopped, and `runtime` what decides its next intent: a program's runtime state
+// (src/programming/runtime.js), or a script (runtimes.js). `name` is a message
+// reference, worded only when shown (PLAN.md §8).
 
 // Bumped whenever a deliberate change makes the same commands give a different
 // world; the golden replays (test/golden/) are then recorded again: npm run golden.
-export const SIM_VERSION = 1;
+export const SIM_VERSION = 2;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -37,14 +42,31 @@ export const TICKS_PER_SECOND = 10;
 
 const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-// A world at tick 0 from `content` (src/content/island.js shows the shape).
+// A world at tick 0 from `content` (src/content/island.js shows the shape). Its
+// programs are compiled here, each as revision 1, and an entity with a program
+// starts at its start; one with a script follows the script.
 export function createWorld(content) {
   const terrain = parseTerrain(content.terrain);
   const cell = ([x, z]) => {
     if (!inside(terrain, x, z)) throw new Error(`${content.id}: cell ${x}, ${z} is off the map`);
     return cellAt(terrain, x, z);
   };
-  const runner = (e) => ({ action: null, pending: null, error: null, runtime: e.script ? script(e.script.steps.map((s) => ({ ...s })), { loop: !!e.script.loop }) : null });
+  const places = [...content.entities, ...content.nodes].map((t) => t.id);
+  const programs = (content.programs ?? []).map(({ id, source }) => {
+    const { program, errors } = compile(source, { places });
+    if (!program) throw new Error(`${content.id}: program ${id} doesn't compile: ${JSON.stringify(errors)}`);
+    return { id, revision: 1, ...program };
+  });
+  const runtime = (e) => {
+    if (e.script) return script(e.script.steps.map((s) => ({ ...s })), { loop: !!e.script.loop });
+    if (!e.program) return null;
+    const program = programs.find((p) => p.id === e.program);
+    if (!program) throw new Error(`${content.id}: ${e.id} runs program ${e.program}, which there isn't`);
+    const missing = program.needs.filter((ability) => !TYPES[e.type].can?.includes(ability));
+    if (missing.length) throw new Error(`${content.id}: ${e.id} can't run program ${e.program}: it can't ${missing.join(", ")}`);
+    return startProgram(program);
+  };
+  const runner = (e) => ({ action: null, pending: null, error: null, runtime: runtime(e) });
   const entities = content.entities.map((e) => {
     const type = TYPES[e.type];
     if (!type || type.kind === "node") throw new Error(`${content.id}: ${e.id} has no robot or building type "${e.type}"`);
@@ -79,6 +101,7 @@ export function createWorld(content) {
     terrain,
     nav: 0,
     serial: 0,
+    programs: programs.sort(byId),
     entities: entities.sort(byId),
     nodes: nodes.sort(byId),
     stall: null,
@@ -86,9 +109,21 @@ export function createWorld(content) {
 }
 
 // Moves `world` on by one tick, applying the player's `commands` first. Returns
-// the tick's trace: what the commands did, which entities tried an intent, and
-// which actions started, ended and waited. The trace is the debugger's account
-// of the tick; it isn't part of the world.
+// the tick's trace, the debugger's account of the tick (it isn't part of the
+// world):
+//
+//   { tick, commands, evaluated, started, ended, waiting, errors, states }
+//
+// - commands: what each command did, { ok, reason? }.
+// - evaluated: each entity that evaluated a step, { entity, block?, … }: the
+//   block, and what came of it: an action's `intent`, a Wait Until's `test`, an
+//   If's `branch` (its index, or -1 for none), a Repeat's `round` (from 1, or 0
+//   when it's over). A script's step has an intent and no block.
+// - started, ended: actions, { entity, type }.
+// - waiting: intents that couldn't start, { entity, reason }.
+// - errors: entities whose program stopped, { entity, reason }.
+// - states: every robot and building after the tick, { entity, state, block }:
+//   statusOf's word and the active block.
 //
 // The phases, in order (PLAN.md §6):
 // 1. The player's commands.
@@ -96,8 +131,9 @@ export function createWorld(content) {
 //    entity id. Then deposits grow back.
 // 3. Messages are delivered (from Phase 8). From here to phase 5 the world is
 //    read, not changed: runtimes see it as it stands after phase 2.
-// 4. Each entity that's free, in order of id, tries its runtime's next intent,
-//    one at most. Intents are only noted here.
+// 4. Each entity that's free, in order of id, evaluates its runtime's next
+//    visible step, one at most: an action's block gives an intent, which is only
+//    noted here; a loop, a condition or a Wait Until only moves the runtime on.
 // 5. Intents are settled: first those already waiting, in the order they began
 //    to, then this tick's, in order of entity id. Each starts if the world is
 //    ready for it, reserving what it needs, so an earlier one has first pick;
@@ -135,10 +171,14 @@ export function advanceWorld(world, commands = []) {
   const intents = [];
   for (const entity of world.entities) {
     if (entity.action || entity.pending || entity.error) continue;
-    const intent = runtimeOf(entity)?.next(entity, now);
-    if (!intent) continue;
-    intents.push({ entity, intent });
-    trace.evaluated.push({ entity: entity.id, intent });
+    const step = runtimeOf(entity)?.next(entity, world, now);
+    if (!step) continue;
+    const { intent, error, ...seen } = step;
+    trace.evaluated.push({ entity: entity.id, ...seen, ...(intent && { intent }) });
+    if (error) {
+      entity.error = error;
+      trace.errors.push({ entity: entity.id, reason: error });
+    } else if (intent) intents.push({ entity, intent });
   }
 
   // 5. Settling intents.
@@ -161,23 +201,32 @@ export function advanceWorld(world, commands = []) {
       trace.waiting.push({ entity: entity.id, reason: result.wait });
     } else {
       entity.pending = null;
-      entity.error = result.error;
-      trace.errors.push({ entity: entity.id, reason: result.error });
+      entity.error = blame(entity, result.error);
+      trace.errors.push({ entity: entity.id, reason: entity.error });
     }
   }
 
   // 6. Stalled? Then the tick is done.
   world.stall = stalled(world) ? (world.stall ?? { since: now }) : null;
   world.tick = now;
+  trace.states = world.entities.map((e) => ({ entity: e.id, state: statusOf(e), block: runtimeOf(e)?.active(e) ?? null }));
   return trace;
 }
 
-// Nothing under way, nothing growing back, and somebody waiting: everyone else
-// has stopped or failed (anyone free tried an intent in phase 4 and is now busy,
-// waiting or failed), so nothing can change until the player does something.
+// An action's error, from a program, names the block whose action it was.
+function blame(entity, problem) {
+  const block = runtimeOf(entity)?.active(entity);
+  return block ? { ...problem, block } : problem;
+}
+
+// Nothing under way, nothing growing back, somebody waiting, and nobody ready to
+// go on: everyone else has stopped or failed, so nothing can change until the
+// player does something. (A program going round a loop of conditions without
+// acting is ready, not waiting: it isn't stalled, though it changes nothing.)
 function stalled(world) {
   if (world.entities.some((e) => e.action) || world.nodes.some(growing)) return false;
-  return world.entities.some((e) => e.pending);
+  const states = world.entities.map(statusOf);
+  return states.includes("waiting") && !states.includes("ready");
 }
 
 // A deposit that grows back, one item every regrow.every ticks, up to its cap.
@@ -187,13 +236,17 @@ function growing(node) {
 }
 
 // What an entity is doing, in the plan's terms (PLAN.md §8): "error", "waiting"
-// (for the world, or on purpose with Wait N Steps), "moving", "working", "ready"
-// (it has more to do and starts next tick) or "stopped" (nothing more to do).
+// (for the world, on purpose with Wait N Steps, or at a Wait Until), "moving",
+// "working", "ready" (it has more to do, and goes on next tick) or "stopped"
+// (nothing more to do).
 export function statusOf(entity) {
   if (entity.error) return "error";
-  if (entity.pending || entity.action?.type === "wait") return "waiting";
+  const runtime = runtimeOf(entity);
+  if (entity.pending || entity.action?.type === "wait" || runtime?.waiting(entity)) return "waiting";
   if (entity.action?.type === "move") return "moving";
   if (entity.action) return "working";
-  const runtime = runtimeOf(entity);
   return runtime && !runtime.finished(entity) ? "ready" : "stopped";
 }
+
+// Why `entity` stopped or waits, a code with values (codes.js), or null.
+export const reasonOf = (entity) => entity.error ?? entity.pending?.reason ?? runtimeOf(entity)?.waiting(entity) ?? null;

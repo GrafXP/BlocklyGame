@@ -1,13 +1,15 @@
 import "../style/world.css";
-import { display, t } from "../i18n/index.js";
+import { blocklyMessages, display, t } from "../i18n/index.js";
 import { createBin } from "../lifecycle.js";
 import { createGame, SPEEDS } from "../game.js";
 import { ISLAND } from "../content/island.js";
-import { createWorld, statusOf } from "../sim/world.js";
+import { blockIndex, readWorkspace } from "../programming/adapter.js";
+import { createWorld, reasonOf, statusOf } from "../sim/world.js";
 import { stateHash } from "../sim/replay.js";
 import { checkWorld } from "../sim/validate.js";
 import { kindOf } from "../sim/terrain.js";
 import { robotPose } from "../render/pose.js";
+import { blockChip } from "./chips.js";
 import { describeAction, describeReason, amounts, placeName, progressOf } from "./describe.js";
 import { esc, html, isDev } from "./dom.js";
 import { languageChoice } from "./language-choice.js";
@@ -22,10 +24,28 @@ const GROUND = { water: "#3c8fd6", sand: "#e2c98f", grass: "#79b85a", gap: "#2f7
 let game = null;
 const newGame = () => createGame(createWorld(ISLAND));
 
-// The Phase 1 world lab (PLAN.md §11): the island's world on its clock, without
-// Blockly or 3D yet. Run, Pause and Step drive every robot and building together;
-// a map shows where they are, and a table what each is doing, holding and waiting
-// for. The robots and buildings follow fixed scripts (src/content/island.js).
+// The island's programs, read once, to find the block each entity is at by its
+// id. (The world keeps only their compiled instructions.)
+let sources = null;
+const blockOf = (programId, blockId) => {
+  sources ??= new Map(ISLAND.programs.map(({ id, source }) => [id, blockIndex(readWorkspace(source).tree)]));
+  return sources.get(programId)?.get(blockId) ?? null;
+};
+
+// Blockly's messages in the current language, to word the blocks: Blockly's
+// catalogue and the game's blocks, without Blockly itself (main.js awaits this
+// before the page is shown).
+let words = null;
+export async function ready() {
+  words = (await blocklyMessages()).messages;
+}
+
+// The world lab (PLAN.md §11, Phases 1 and 2): the island's world on its clock,
+// without the 3D island or the editor yet. Run, Pause and Step drive every robot
+// and building together; a map shows where they are, and a table what each is
+// doing, holding and waiting for, and the block of its program it's at. The
+// robots and buildings run the island's starter programs
+// (src/content/programs.js).
 export function world(el) {
   const bin = createBin();
   game ??= newGame();
@@ -52,7 +72,7 @@ export function world(el) {
       <div class="world-main">
         <div class="world-map" aria-hidden="true"><canvas></canvas><div class="things"></div><div class="robots"></div></div>
         <table class="world-table">
-          <thead><tr><th>${t("world.name")}</th><th>${t("world.where")}</th><th>${t("world.doing")}</th><th>${t("world.has")}</th><th>${t("world.state")}</th></tr></thead>
+          <thead><tr><th>${t("world.name")}</th><th>${t("world.where")}</th><th>${t("world.block")}</th><th>${t("world.doing")}</th><th>${t("world.has")}</th><th>${t("world.state")}</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -111,13 +131,23 @@ export function world(el) {
     const here = [...w.entities, ...w.nodes].find((it) => it.access?.includes(e.cell));
     return here ? display(here.name) : t("world.cell", { x: e.cell % w.terrain.width, z: Math.floor(e.cell / w.terrain.width) });
   }
+  // The block `e`'s program is at, as a chip; marked when it was evaluated in
+  // the latest step.
+  function block(w, e) {
+    const run = e.runtime;
+    const node = run?.kind === "program" && run.block ? blockOf(run.program, run.block) : null;
+    if (!node) return "";
+    const fresh = run.evaluated?.tick === w.tick;
+    return blockChip(node, words, fresh ? { className: "fresh", title: t("world.evaluated") } : {});
+  }
   function row(w, e) {
     const status = e.kind === "node" ? null : statusOf(e);
-    const why = e.error ?? e.pending?.reason;
+    const why = e.kind === "node" ? null : reasonOf(e);
     const done = progressOf(w, e);
     return `<tr data-id="${e.id}" class="${status ?? "node"}">
       <th scope="row">${esc(display(e.name))}</th>
       <td>${esc(where(w, e))}</td>
+      <td class="block">${block(w, e)}</td>
       <td>${esc(describeAction(w, e))}${done ? `<progress max="${done.total}" value="${done.done}"></progress>` : ""}</td>
       <td>${esc(amounts(e.store.items))}</td>
       <td>${status ? `<span class="state">${t(`state.${status}`)}</span>` : ""}${why ? `<span class="why">${esc(describeReason(w, why))}</span>` : ""}</td>

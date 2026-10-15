@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { PLACES } from "../src/blockly/blocks.js";
 
 // The Phase 0 acceptance checks (PLAN.md §11): the editor over the 3D world, its
 // treatments, transparency, gestures, serialization, resizing and cleanup. Each
@@ -206,7 +207,7 @@ test("taps open dropdowns in the editor and select things in the world", async (
   await openLab(page);
   const field = await lab(page, () => window.lab.fieldRect("go-grove", "PLACE"));
   await page.touchscreen.tap(...Object.values(centre(field)));
-  await expect(page.locator(".blocklyDropDownDiv .blocklyMenuItem")).toHaveCount(4);
+  await expect(page.locator(".blocklyDropDownDiv .blocklyMenuItem")).toHaveCount(PLACES.length);
   await page.locator(".blocklyDropDownDiv .blocklyMenuItem", { hasText: "depot" }).tap();
   expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.fields.PLACE)).toBe("depot");
 
@@ -224,7 +225,7 @@ test("dropdowns open over the editor with readable choices in every treatment", 
     await page.mouse.click(field.x + field.width / 2, field.y + field.height / 2);
     const menu = page.locator(".blocklyDropDownDiv");
     await expect(menu).toBeVisible();
-    await expect(menu.locator(".blocklyMenuItem")).toHaveCount(4);
+    await expect(menu.locator(".blocklyMenuItem")).toHaveCount(PLACES.length);
     if (treatment !== "classic") {
       // classic is Blockly's own colouring, the baseline
       const colours = await page.evaluate(() => ({

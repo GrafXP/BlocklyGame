@@ -24,24 +24,43 @@ test("a new world is at tick 0, keeps its rules, and lists things in order of id
   assert.ok(world.entities.every((e) => statusOf(e) === (e.runtime ? "ready" : "stopped")));
 });
 
-test("each tick advances the world by exactly one, and every free entity tries its next step in it", () => {
+test("each tick advances the world by exactly one, and every free entity takes its next step in it", () => {
   const world = createWorld(ISLAND);
-  const trace = advanceWorld(world);
+  const first = advanceWorld(world);
   assert.equal(world.tick, 1);
-  assert.equal(trace.tick, 1);
+  assert.equal(first.tick, 1);
+  // The start block takes no step: the robots' and the sawmill's first block is
+  // a Forever, a step of its own, and the site's is Build.
   assert.deepEqual(
-    trace.evaluated.map((e) => e.entity),
-    ["r1", "r2", "r3", "sawmill", "site"],
+    first.evaluated.map((e) => `${e.entity} ${e.block}`),
+    ["r1 collector-forever", "r2 courier-forever", "r3 stones-forever", "sawmill planks-forever", "site bridge-build"],
+  );
+  assert.deepEqual(first.started, []);
+  assert.deepEqual(
+    first.waiting.map((w) => `${w.entity} ${w.reason.code}`),
+    ["site wait.item"],
+  );
+
+  const second = advanceWorld(world);
+  assert.equal(world.tick, 2);
+  assert.deepEqual(
+    second.evaluated.map((e) => `${e.entity} ${e.block}`),
+    ["r1 collector-go-grove", "r2 courier-go-sawmill", "r3 stones-go-quarry", "sawmill planks-until"],
   );
   assert.deepEqual(
-    trace.started.map((s) => `${s.entity} ${s.type}`),
+    second.started.map((s) => `${s.entity} ${s.type}`),
     ["r1 move", "r2 move"],
   );
-  // The sawmill has no wood and the site no planks, and the stone pit is across
-  // the stream: they wait, with their reasons.
+  // The site has no planks, and the stone pit is across the stream: they wait,
+  // with their reasons, the site first, as it began to wait first. The sawmill
+  // waits for wood at its Wait Until.
   assert.deepEqual(
-    trace.waiting.map((w) => `${w.entity} ${w.reason.code}`),
-    ["r3 wait.route", "sawmill wait.item", "site wait.item"],
+    second.waiting.map((w) => `${w.entity} ${w.reason.code}`),
+    ["site wait.item", "r3 wait.route"],
+  );
+  assert.deepEqual(
+    second.states.map((s) => `${s.entity} ${s.state} ${s.block}`),
+    ["camp stopped null", "depot stopped null", "r1 moving collector-go-grove", "r2 moving courier-go-sawmill", "r3 waiting stones-go-quarry", "sawmill waiting planks-until", "site waiting bridge-build"],
   );
 });
 

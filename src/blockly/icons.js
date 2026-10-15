@@ -12,8 +12,11 @@ const SHAPES = {
   go: `<path d="M8.5 5.5v13" fill="none"/><path d="M9 6h7.5l-2 3 2 3H9z"/>`,
   collect: `<path d="M9 11.5l3-4 3 4" fill="none"/><path d="M6 11.5h12l-1.6 6.5H7.6z"/>`,
   unload: `<path d="M12 5v6.5M9.5 9l2.5 2.5L14.5 9" fill="none"/><rect x="6.5" y="13.5" width="11" height="5" rx="1"/>`,
+  pickUp: `<rect x="6.5" y="5.5" width="11" height="5" rx="1"/><path d="M12 19v-5.5M9.5 16l2.5 2.5 2.5-2.5" fill="none"/>`,
   make: `<circle cx="12" cy="12" r="4.2" fill="none" stroke-width="2.6" stroke-dasharray="2.2 1.1"/><circle cx="12" cy="12" r="1.3" stroke="none"/>`,
+  build: `<path d="M5 15.5h14M6.5 15.5V12M17.5 15.5V12M6.5 12q5.5-5 11 0" fill="none"/>`,
   wait: `<path d="M8.5 6h7l-3.5 6 3.5 6h-7l3.5-6z" stroke-width="1.4"/>`,
+  until: `<path d="M8.5 6h7l-3.5 6 3.5 6h-7l3.5-6z" stroke-width="1.4"/><path d="M15.5 16.5l1.8 1.8 3.2-3.6" fill="none" stroke-width="1.6"/>`,
   forever: `<path d="M16.8 13.2A5 5 0 1 1 15.6 8.4" fill="none"/><path d="M17.2 5.6v3.8h-3.8z" stroke-width="1"/>`,
 };
 

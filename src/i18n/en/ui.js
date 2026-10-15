@@ -18,7 +18,7 @@ export default {
   "home.lab": "Editor lab",
   "home.labNote": "Phase 0 prototype: the editor over the 3D world.",
   "home.world": "World lab",
-  "home.worldNote": "Phase 1 prototype: robots and buildings on the world clock, following fixed plans.",
+  "home.worldNote": "Phase 2 prototype: robots and buildings running their programs on the world clock.",
   "nav.home": "Home",
   // Labels the list of languages, each shown in its own language.
   "language.choose": "Language",
@@ -65,7 +65,8 @@ export default {
     other: "code {work} ms · {count} draw calls",
   },
 
-  // The world lab: the world clock, robots and buildings, without programs yet.
+  // The world lab: the world clock, and robots and buildings running their
+  // programs, without the 3D island or the editor yet.
   "world.title": "World lab",
   "world.reset": "Start again",
   // Columns of the table of robots, buildings and deposits.
@@ -74,6 +75,10 @@ export default {
   "world.doing": "Doing",
   "world.has": "Has",
   "world.state": "State",
+  // The block of its program a robot or building is at.
+  "world.block": "Block",
+  // Marks the block evaluated in the latest step, for screen readers.
+  "world.evaluated": "Evaluated in this step",
   // A cell on the island's grid: {x} east, {z} south.
   "world.cell": "{x}, {z}",
   // What an empty basket or store holds.
@@ -115,6 +120,8 @@ export default {
   "action.name.unload": "Unload",
   "action.name.make": "Make",
   "action.name.wait": "Wait",
+  // Counting what's in its basket, which only a robot has.
+  "action.name.basket": "Look in the basket",
 
   // Counts of items.
   "count.wood": {
@@ -139,10 +146,31 @@ export default {
   "wait.item": "Needs {amount} · {place} has {have}",
   "wait.space": "No room for {amount} · {place} has room for {free}",
   "wait.route": "No way to {place}",
+  // At a "wait until" block whose condition is false.
+  "wait.until": "Waiting until its condition is true",
   // Why a program stopped. {target} is an id, as written in the program.
   "error.target": "No such place: {target}",
   "error.cannot": "Can't do this: {action}",
   "error.notHere": "Not in the right place for this: {action}",
+  // Can't happen with programs made of blocks; a damaged program.
+  "error.busy": "This program did too much in one step.",
+
+  // What's wrong with a program, shown at the block it's about. "When started"
+  // is the start block's words (ISLAND_WHEN_STARTED in blocks.js); a gap is
+  // where a block plugs into another.
+  "program.unreadable": "This program can't be read.",
+  "program.noStart": "This program needs a “when started” block to start from.",
+  "program.twoStarts": "A program has one start block. Take this one away, or move its blocks under the other.",
+  "program.unsupported": "This block can't be used here.",
+  "program.empty": "Something is missing: put a block in this block's gap.",
+  "program.wantNumber": "This block's gaps need numbers.",
+  "program.wantTest": "This block's gap needs something that is true or false.",
+  "program.whole": "Use a whole number from {min} to {max}.",
+  "program.target": "No such place: {target}",
+  "program.cannot": "Can't do this: {action}",
+  "program.tooBig": "This program has too many blocks: at most {limit}.",
+  "program.tooDeep": "Too many blocks inside each other here: at most {limit}.",
+  "program.unused": "This isn't under the start block, so it won't run.",
   // The whole world is stuck.
   stall: "Everything is waiting: nothing can happen until something changes.",
   // {type} is a command's name, for developers.

@@ -1,17 +1,10 @@
 import { ref } from "../i18n/index.js";
+import { block, chain, input, number } from "../content/build.js";
 
 // The editor lab's sample: a collector robot's program and a sawmill's, as
 // Blockly's JSON serialization, with fixed block ids so the sample markers can
 // point at them. Two robots share the first program, as robots sharing a role
 // will (PLAN.md §5); the sawmill runs the second.
-
-const block = (type, id, extra = {}) => ({ type, id, ...extra });
-const next = (b) => ({ block: b });
-const chain = (...blocks) => {
-  for (let i = blocks.length - 1; i > 0; i--) blocks[i - 1].next = next(blocks[i]);
-  return blocks[0];
-};
-const number = (n, id) => ({ shadow: { type: "math_number", id, fields: { NUM: n } } });
 
 export function demoProgram() {
   const collector = chain(
@@ -19,13 +12,11 @@ export function demoProgram() {
     block("controls_repeat_ext", "repeat", {
       inputs: {
         TIMES: number(3, "times"),
-        DO: next(
-          chain(
-            block("robot_go_to", "go-grove", { fields: { PLACE: "grove" } }),
-            block("robot_collect", "collect", { fields: { ITEM: "wood" } }),
-            block("robot_go_to", "go-mill", { fields: { PLACE: "sawmill" } }),
-            block("robot_unload", "unload"),
-          ),
+        DO: input(
+          block("robot_go_to", "go-grove", { fields: { PLACE: "grove" } }),
+          block("robot_collect", "collect", { fields: { ITEM: "wood" } }),
+          block("robot_go_to", "go-mill", { fields: { PLACE: "sawmill" } }),
+          block("robot_unload", "unload"),
         ),
       },
     }),
@@ -34,21 +25,21 @@ export function demoProgram() {
     block("island_when_started", "mill-start", { x: 30, y: 470 }),
     block("control_forever", "forever", {
       inputs: {
-        DO: next(
+        DO: input(
           block("controls_if", "if", {
             extraState: { hasElse: true },
             inputs: {
-              IF0: next(
+              IF0: input(
                 block("logic_compare", "compare", {
                   fields: { OP: "LT" },
                   inputs: {
-                    A: next(block("sense_stock", "stock", { fields: { ITEM: "plank", PLACE: "sawmill" } })),
+                    A: input(block("sense_stock", "stock", { fields: { ITEM: "plank", PLACE: "sawmill" } })),
                     B: number(4, "four"),
                   },
                 }),
               ),
-              DO0: next(block("building_make", "make", { fields: { ITEM: "plank" } })),
-              ELSE: next(block("control_wait_steps", "wait", { fields: { STEPS: 5 } })),
+              DO0: input(block("building_make", "make", { fields: { ITEM: "plank" } })),
+              ELSE: input(block("control_wait_steps", "wait", { fields: { STEPS: 5 } })),
             },
           }),
         ),

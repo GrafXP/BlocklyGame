@@ -1,9 +1,11 @@
 // Pictures of the editor lab: the Phase 0 treatments (docs/phase0.md), each over
 // a bright and a dark world, a range of background opacities, blur, open
 // dropdowns, an iPad-sized screen, and how long frames take with blur and
-// without; and the languages (docs/languages.md): German and the pseudo-language
-// on the title page and in the lab. Builds the app, serves it, and writes to
-// docs/phase0/ and docs/languages/. Run it after changing how the editor looks:
+// without; the languages (docs/languages.md): German and the pseudo-language on
+// the title page and in the lab; and programs (docs/phase2.md): the world lab's
+// robots and buildings at their blocks, and the editor marking a program's
+// problems. Builds the app, serves it, and writes to docs/phase0/,
+// docs/languages/ and docs/phase2/. Run it after changing how the editor looks:
 // npm run shots, or for some groups only: npm run shots -- languages ipad.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -11,7 +13,7 @@ import { build, preview } from "vite";
 import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
 
-const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages"];
+const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs"];
 const asked = process.argv.slice(2);
 for (const group of asked) if (!GROUPS.includes(group)) throw new Error(`No group "${group}"; there are ${GROUPS.join(", ")}.`);
 const want = (group) => !asked.length || asked.includes(group);
@@ -19,6 +21,7 @@ const want = (group) => !asked.length || asked.includes(group);
 const TRANSLATED = LISTED.map((l) => l.code).filter((code) => code !== SOURCE);
 const PHASE0 = new URL("../docs/phase0/", import.meta.url);
 const LANGUAGES = new URL("../docs/languages/", import.meta.url);
+const PHASE2 = new URL("../docs/phase2/", import.meta.url);
 const PORT = 4178;
 const BEHIND = 3.6; // radians round its circuit: the test robot behind the editor, clear of the trees
 // The game follows the browser's language; the pictures choose theirs.
@@ -26,6 +29,7 @@ const DESKTOP = { viewport: { width: 1440, height: 900 }, locale: "en-US" };
 const IPAD = { ...devices["iPad Pro 11 landscape"], locale: "en-US" };
 mkdirSync(PHASE0, { recursive: true });
 mkdirSync(LANGUAGES, { recursive: true });
+mkdirSync(PHASE2, { recursive: true });
 
 await build({ logLevel: "warn" });
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: "warn" });
@@ -146,6 +150,47 @@ if (want("languages")) {
     const page = await openLab(browser, { treatment: "calm", world: "day", opacity: 0.6 }, { lang });
     await openDropdown(page);
     await shot(page, `calm-dropdown-${lang}`, LANGUAGES);
+  }
+}
+// The world lab `ticks` steps on, each robot and building at its block; and the
+// editor with a broken program, its warnings worded at their blocks.
+if (want("programs")) {
+  console.log("Programs:");
+  for (const [lang, ticks] of [
+    ["en", 2],
+    ["de", 2],
+    ["en", 300],
+  ]) {
+    const page = await (await browser.newContext(DESKTOP)).newPage();
+    await page.goto(`${base}/world?dev&lang=${lang}`);
+    await page.waitForFunction(() => window.world && document.querySelector(".world-table tbody tr"));
+    await page.evaluate((n) => {
+      for (let i = 0; i < n; i++) window.world.game.step();
+    }, ticks);
+    await page.waitForTimeout(300);
+    await shot(page, `world-${ticks}-${lang}`, PHASE2);
+  }
+  for (const lang of ["en", "de"]) {
+    const page = await openLab(browser, { treatment: "calm", world: "day", opacity: 0.6, markers: false }, { lang });
+    await page.evaluate(() => {
+      window.lab.load({
+        blocks: {
+          languageVersion: 0,
+          blocks: [
+            { type: "island_when_started", id: "start", x: 40, y: 90, next: { block: { type: "controls_repeat_ext", id: "repeat", inputs: { DO: { block: { type: "robot_collect", id: "collect", fields: { ITEM: "wood" } } } } } } },
+            { type: "robot_unload", id: "stray", x: 70, y: 300 },
+          ],
+        },
+      });
+    });
+    await page.waitForTimeout(300);
+    await page.evaluate(() => {
+      for (const id of ["repeat", "stray"]) {
+        window.lab.workspace().getBlockById(id).getIcons().find((i) => i.getType().toString() === "warning").setBubbleVisible(true);
+      }
+    });
+    await page.waitForTimeout(300);
+    await shot(page, `lab-problems-${lang}`, PHASE2);
   }
 }
 await browser.close();

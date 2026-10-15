@@ -164,11 +164,11 @@ test("a robot stopped between cells ends on the nearer one, or on the one it lef
 test("a robot with no way waits, is tried again only when the ways change, and goes when the bridge is built", () => {
   const world = createWorld(ISLAND);
   const r3 = byId(world, "r3");
-  run(world, 1);
+  run(world, 2); // its Forever, then its Go To
   assert.deepEqual(r3.pending.reason, { code: "wait.route", target: "quarry" });
   const order = r3.pending.order;
-  run(world, 20);
-  assert.deepEqual([r3.pending.order, r3.pending.since, r3.pending.nav, world.nav], [order, 1, 0, 0]);
+  run(world, 19);
+  assert.deepEqual([r3.pending.order, r3.pending.since, r3.pending.nav, world.nav], [order, 2, 0, 0]);
   // Four planks at the site: it builds the bridge in 40 ticks, the ways change,
   // and r3 sets off in that same tick.
   run(world, 1, { 22: [{ type: "stock", at: "site", item: "plank", count: 4 }] });

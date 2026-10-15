@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LAB_DEFAULTS, normalizeLabSettings } from "../src/ui/lab-settings.js";
 import { DEMO_ENTITIES, demoMarkers, demoProgram } from "../src/ui/lab-demo.js";
+import { checkLabPrograms } from "../src/ui/lab-check.js";
 
 test("lab settings: nothing saved gives the defaults", () => {
   assert.deepEqual(normalizeLabSettings(null), LAB_DEFAULTS);
@@ -43,4 +44,20 @@ test("the sample markers move along their paths, and two robots meet at one bloc
   assert.equal(at(1).r1, "collect", "Robo 1 is on a long action");
   assert.equal(at(1).r2, "collect", "and Robo 2 catches up with it");
   assert.equal(at(2).r1, "go-mill");
+});
+
+test("the lab's two programs, each under its own start block, compile without a problem; a stack taken out is unused", () => {
+  assert.deepEqual(checkLabPrograms(demoProgram()), []);
+  // "unload" taken out of the collector's Repeat, and left lying beside it.
+  const state = demoProgram();
+  const unload = blocksIn(state).find((b) => b.id === "unload");
+  delete blocksIn(state).find((b) => b.next?.block === unload).next;
+  state.blocks.blocks.push(unload);
+  // And the sawmill's comparison taken out of its If.
+  delete blocksIn(state).find((b) => b.id === "if").inputs.IF0;
+  assert.deepEqual(checkLabPrograms(state), [
+    { code: "program.empty", block: "if" },
+    { code: "program.unused", block: "unload" },
+  ]);
+  assert.deepEqual(checkLabPrograms({}), [{ code: "program.noStart" }]);
 });
