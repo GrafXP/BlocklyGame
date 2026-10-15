@@ -54,7 +54,7 @@ test("a selected category's label is readable on its colour", () => {
 test("marker labels are readable on their own colour", () => {
   for (const e of DEMO_ENTITIES) {
     const ratio = contrast(e.ink, e.colour);
-    assert.ok(ratio >= READABLE, `${e.name}: ${ratio.toFixed(2)}`);
+    assert.ok(ratio >= READABLE, `${e.id}: ${ratio.toFixed(2)}`);
   }
 });
 

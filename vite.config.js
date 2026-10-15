@@ -44,5 +44,14 @@ export default defineConfig({
     // Blockly alone is about 0.7 MB before compression; the lab page loads it on
     // demand, so the warning says nothing new.
     chunkSizeWarningLimit: 1500,
+    rolldownOptions: {
+      // English is bundled (src/i18n/index.js), and its files also match the
+      // pattern that fetches other languages' on demand; that fetch never runs
+      // for English, which is what the warning is about.
+      onwarn(warning, warn) {
+        if (warning.code === "INEFFECTIVE_DYNAMIC_IMPORT" && /src[\\/]i18n[\\/]en[\\/]/.test(warning.message)) return;
+        warn(warning);
+      },
+    },
   },
 });

@@ -27,6 +27,11 @@ body {
   font: 16px/1.45 var(--font);
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
+  /* German runs longer than English, with long compounds (Sägewerk,
+     Lagerbestand): words break where the language allows, by <html lang>. */
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 #view {
@@ -97,4 +102,20 @@ a {
   margin-top: 1rem;
   color: var(--ink-soft);
   font-size: 0.9rem;
+}
+
+/* The choice of language on the title page (src/ui/language-choice.js): a row
+   that wraps, however many languages there are. */
+.home .language-choice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2rem;
+}
+
+.home .language-choice .button[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
 }

@@ -48,8 +48,8 @@ export function createView(container, { world = "day", moving = true } = {}) {
   ring.visible = false;
   scene.add(ring);
 
-  const pickable = [robot, ...island.group.children.filter((c) => c.userData.name)];
-  const byName = new Map(pickable.map((o) => [o.userData.name, o]));
+  const pickable = [robot, ...island.group.children.filter((c) => c.userData.id)];
+  const byId = new Map(pickable.map((o) => [o.userData.id, o]));
 
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 200);
   const cam = { x: 0, z: 0, zoom: 1 };
@@ -115,7 +115,7 @@ export function createView(container, { world = "day", moving = true } = {}) {
       robot.userData.bulb.position.y = 2.3 + (moving ? Math.sin(now / 180) * 0.04 : 0);
       if (selected) {
         const at = new THREE.Vector3();
-        byName.get(selected).getWorldPosition(at);
+        byId.get(selected).getWorldPosition(at);
         ring.position.set(at.x, 1.52, at.z);
       }
       renderer.render(scene, camera);
@@ -137,22 +137,24 @@ export function createView(container, { world = "day", moving = true } = {}) {
       cam.zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, cam.zoom * factor));
       place();
     },
-    // The name of the thing under the screen point, or null.
+    // The id of the thing under the screen point, or null.
     pick(clientX, clientY) {
       raycaster.setFromCamera(toNdc(clientX, clientY), camera);
       for (const hit of raycaster.intersectObjects(pickable, true)) {
-        for (let o = hit.object; o; o = o.parent) if (o.userData.name) return o.userData.name;
+        for (let o = hit.object; o; o = o.parent) if (o.userData.id) return o.userData.id;
       }
       return null;
     },
-    select(name) {
-      selected = byName.has(name) ? name : null;
+    select(id) {
+      selected = byId.has(id) ? id : null;
       ring.visible = !!selected;
     },
-    // Where thing `name` is on screen, in client pixels.
-    screenOf(name) {
+    // The name of thing `id`, a message (src/i18n/index.js, display).
+    nameOf: (id) => byId.get(id)?.userData.name ?? null,
+    // Where thing `id` is on screen, in client pixels.
+    screenOf(id) {
       const at = new THREE.Vector3();
-      byName.get(name).getWorldPosition(at);
+      byId.get(id).getWorldPosition(at);
       at.y += 0.6;
       at.project(camera);
       const rect = renderer.domElement.getBoundingClientRect();
@@ -160,6 +162,12 @@ export function createView(container, { world = "day", moving = true } = {}) {
     },
     get state() {
       return { x: cam.x, z: cam.z, zoom: cam.zoom, selected };
+    },
+    // Puts the camera back where `state` says, and selects what it had selected.
+    restore({ x = 0, z = 0, zoom = 1, selected: id = null }) {
+      Object.assign(cam, { x, z, zoom: Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom)) });
+      place();
+      this.select(id);
     },
     setWorld,
     setMoving(on) {

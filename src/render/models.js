@@ -1,10 +1,12 @@
 import * as THREE from "three";
+import { ref } from "../i18n/index.js";
 
 // The Phase 0 island: a patch of land in the sea with trees, rocks, a depot and a
 // sawmill, and one robot. Simple shapes with flat shading and a small palette
 // (PLAN.md §4), enough to judge the editor over a real 3D scene. Pickable things
-// carry a userData.name; geometry and materials are shared and disposed with the
-// view (src/render/view.js).
+// carry a userData.id, which never changes, and a userData.name, a message worded
+// in the player's language when shown. Geometry and materials are shared and
+// disposed with the view (src/render/view.js).
 
 const material = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.85, metalness: 0, ...extra });
 
@@ -36,7 +38,8 @@ function mesh(geometry, mat, { cast = true, receive = false } = {}) {
   return m;
 }
 
-function named(group, name) {
+function named(group, id, name) {
+  group.userData.id = id;
   group.userData.name = name;
   return group;
 }
@@ -63,7 +66,7 @@ export function createIsland() {
   const trunk = new THREE.CylinderGeometry(0.22, 0.3, 1.4, 6);
   const crown = new THREE.IcosahedronGeometry(1.1, 0);
   const tree = (x, z, s, i) => {
-    const t = named(new THREE.Group(), `Tree ${i}`);
+    const t = named(new THREE.Group(), `tree-${i}`, ref("entity.tree", { n: i }));
     const stem = mesh(trunk, m.trunk);
     stem.position.y = 0.7;
     const top = mesh(crown, i % 2 ? m.leaves : m.leavesLight);
@@ -89,7 +92,7 @@ export function createIsland() {
     [7.6, -4.5, 0.8],
     [5, -7.8, 0.7],
   ].forEach(([x, z, s], i) => {
-    const r = named(mesh(stone, m.rock), `Rock ${i + 1}`);
+    const r = named(mesh(stone, m.rock), `rock-${i + 1}`, ref("entity.rock", { n: i + 1 }));
     r.position.set(x, ground + 0.3 * s, z);
     r.scale.set(s, 0.75 * s, s);
     r.rotation.y = i * 1.3;
@@ -97,7 +100,7 @@ export function createIsland() {
   });
 
   // The depot: a platform with crates on it and a sign.
-  const depot = named(new THREE.Group(), "Depot");
+  const depot = named(new THREE.Group(), "depot", ref("entity.depot"));
   const platform = mesh(new THREE.BoxGeometry(3.4, 0.3, 2.6), m.wood, { receive: true });
   platform.position.y = 0.15;
   const crate = new THREE.BoxGeometry(0.8, 0.8, 0.8);
@@ -120,7 +123,7 @@ export function createIsland() {
   group.add(depot);
 
   // The sawmill: a hut with a roof, a log at its door and a saw blade.
-  const mill = named(new THREE.Group(), "Sawmill");
+  const mill = named(new THREE.Group(), "sawmill", ref("entity.sawmill"));
   const hut = mesh(new THREE.BoxGeometry(3, 2, 2.4), m.shell, { receive: true });
   hut.position.y = 1;
   const roof = mesh(new THREE.ConeGeometry(2.4, 1.3, 4), m.roof);
@@ -145,7 +148,7 @@ export function createIsland() {
 // basket on its back and a role badge on its front. Faces +Z.
 export function createRobot(materials) {
   const m = materials;
-  const group = named(new THREE.Group(), "Robot");
+  const group = named(new THREE.Group(), "robot", ref("entity.robot"));
   const body = mesh(new THREE.BoxGeometry(1.2, 0.9, 1), m.shell);
   body.position.y = 0.75;
   const head = mesh(new THREE.BoxGeometry(0.95, 0.62, 0.82), m.shell);

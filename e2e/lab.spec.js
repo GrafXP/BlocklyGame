@@ -139,7 +139,7 @@ test("gestures on the editor stay in the editor; the world takes its own", async
   expect(await camera()).toEqual(still);
 
   // A click on the editor where the depot is, underneath, doesn't select it.
-  const depot = await lab(page, () => window.lab.screenOf("Depot"));
+  const depot = await lab(page, () => window.lab.screenOf("depot"));
   const panel = await page.locator(".editor-panel").boundingBox();
   expect(depot.x).toBeLessThan(panel.x + panel.width);
   await page.mouse.click(depot.x, depot.y);
@@ -147,10 +147,10 @@ test("gestures on the editor stay in the editor; the world takes its own", async
 
   // Beside the editor, the world answers: a click selects, a drag pans, the
   // wheel zooms.
-  const rock = await lab(page, () => window.lab.screenOf("Rock 1"));
+  const rock = await lab(page, () => window.lab.screenOf("rock-1"));
   expect(rock.x).toBeGreaterThan(panel.x + panel.width);
   await page.mouse.click(rock.x, rock.y);
-  expect((await camera()).selected).toBe("Rock 1");
+  expect((await camera()).selected).toBe("rock-1");
   await drag(page, { x: rock.x, y: rock.y + 120 }, { x: rock.x - 100, y: rock.y + 160 });
   const panned = await camera();
   expect(panned.x !== still.x || panned.z !== still.z).toBe(true);
@@ -188,7 +188,7 @@ test("a finger drags blocks in the editor and pans and pinches the world", async
   expect(after.x - unload.x).toBeGreaterThan(150);
   expect(await camera()).toEqual(still);
 
-  const rock = await lab(page, () => window.lab.screenOf("Rock 1"));
+  const rock = await lab(page, () => window.lab.screenOf("rock-1"));
   await swipe([[[rock.x, rock.y + 100], [rock.x - 120, rock.y + 140]]]);
   const panned = await camera();
   expect(panned.x !== still.x || panned.z !== still.z).toBe(true);
@@ -210,9 +210,9 @@ test("taps open dropdowns in the editor and select things in the world", async (
   await page.locator(".blocklyDropDownDiv .blocklyMenuItem", { hasText: "depot" }).tap();
   expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.fields.PLACE)).toBe("depot");
 
-  const rock = await lab(page, () => window.lab.screenOf("Rock 1"));
+  const rock = await lab(page, () => window.lab.screenOf("rock-1"));
   await page.touchscreen.tap(rock.x, rock.y);
-  expect((await lab(page, () => window.lab.camera())).selected).toBe("Rock 1");
+  expect((await lab(page, () => window.lab.camera())).selected).toBe("rock-1");
 });
 
 test("dropdowns open over the editor with readable choices in every treatment", async ({ page }) => {

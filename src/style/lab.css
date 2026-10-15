@@ -79,7 +79,10 @@
   position: absolute;
   top: max(10px, env(safe-area-inset-top));
   right: max(10px, env(safe-area-inset-right));
-  width: min(330px, calc(100vw - 20px));
+  /* As wide as the longest words in the current language need, up to a limit;
+     past it, rows wrap. */
+  width: max-content;
+  max-width: min(420px, calc(100vw - 20px));
   padding: 8px 12px;
   border-radius: var(--radius);
   background: rgb(255 255 255 / 0.94);
@@ -98,46 +101,67 @@
   flex: 1;
 }
 
+/* Rows of a label and its control, on a grid: the labels' column is as wide as
+   the longest label in the current language, never a fixed width. */
 .lab-body {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
   margin-top: 8px;
 }
 
-.lab-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 6px 0;
+.lab-body[hidden] {
+  display: none;
 }
 
-.lab-row > span {
-  width: 80px;
-  flex: none;
+.lab-row {
+  display: contents;
+}
+
+.lab-row > span:first-child {
   color: var(--ink-soft);
 }
 
-.lab-row input[type="range"] {
-  flex: 1;
+.lab-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.lab-row output {
-  width: 3em;
+.lab-range input[type="range"] {
+  flex: 1;
+  min-width: 80px;
+}
+
+.lab-range output {
+  min-width: 3.5em;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
+.lab-row.checks,
+.lab-row.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
 .lab-row.checks {
-  gap: 16px;
+  gap: 6px 16px;
 }
 
 .lab-row.buttons {
-  flex-wrap: wrap;
   gap: 6px;
 }
 
+/* A pill of choices; with words too long for one line, a rounded box. */
 .segmented {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-self: start;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 17px;
   overflow: hidden;
 }
 
@@ -156,14 +180,24 @@
   color: #fff;
 }
 
+/* The labels and their controls set the width; the buttons and the lines that
+   change as the lab is used take what that gives them, and wrap. */
+.lab-row.buttons,
+.lab-status,
+.lab-selected,
+.lab-fps {
+  grid-column: 1 / -1;
+  contain: inline-size;
+}
+
 .lab-status,
 .lab-selected {
-  margin: 6px 0;
+  margin: 0;
   min-height: 1.2em;
 }
 
 .lab-fps {
-  margin: 6px 0 2px;
+  margin: 0 0 2px;
   font: 12px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
   color: var(--ink-soft);
 }

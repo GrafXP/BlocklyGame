@@ -1,3 +1,5 @@
+import { ref } from "../i18n/index.js";
+
 // The Phase 0 visual treatments of the editor, to compare (PLAN.md §8, Phase 0).
 // All three use Blockly's Zelos renderer, whose large rounded blocks suit touch:
 //
@@ -9,6 +11,7 @@
 //
 // Plain data, so node can check it (test/treatments.test.js): every block and
 // toolbox text must stay readable, whatever the world shows through the panel.
+// Each treatment's label is a message, worded in the player's language.
 
 // The colour families, and which family each block style takes. Built-in blocks
 // keep their style names (controls_if is logic_blocks, repeat is loop_blocks).
@@ -27,7 +30,7 @@ const ROUNDED = 'ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI Variable Disp
 
 export const TREATMENTS = {
   classic: {
-    label: "Blockly",
+    label: ref("lab.style.classic"),
     renderer: "zelos",
     // Blockly's hues, which it turns into colours itself. Its white text on them
     // is the baseline being improved on, so the contrast test leaves it out.
@@ -45,7 +48,7 @@ export const TREATMENTS = {
     scale: 0.9,
   },
   calm: {
-    label: "Calm",
+    label: ref("lab.style.calm"),
     renderer: "zelos",
     font: { family: ROUNDED, weight: "600", size: 12 },
     colours: {
@@ -62,7 +65,7 @@ export const TREATMENTS = {
     scale: 0.9,
   },
   bold: {
-    label: "Bold",
+    label: ref("lab.style.bold"),
     renderer: "island-roomy",
     font: { family: ROUNDED, weight: "700", size: 12 },
     colours: {

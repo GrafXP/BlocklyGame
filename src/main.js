@@ -1,5 +1,5 @@
 import "./style/base.css";
-import { t } from "./i18n/index.js";
+import { LANGUAGE_EVENT, setLanguage, startLanguage, t } from "./i18n/index.js";
 import { liveCounts } from "./lifecycle.js";
 import { html, isDev } from "./ui/dom.js";
 import { home } from "./ui/home.js";
@@ -8,19 +8,22 @@ const view = document.getElementById("view");
 let cleanup = null;
 let shown = null; // the path and query of the page that's showing
 
-// A page is a function of the element to fill, returning its cleanup. Pages with
-// Blockly or Three.js in them are fetched when first shown, so the title page
-// opens without them.
+// A page is a function of the element to fill, returning its cleanup, and the
+// message that names it in the browser's tab. Pages with Blockly or Three.js in
+// them are fetched when first shown, so the title page opens without them.
 const routes = {
-  "/": home,
-  "/lab": lazy(() => import("./ui/lab.js"), "lab"),
+  "/": { page: home },
+  "/lab": { page: lazy(() => import("./ui/lab.js"), "lab"), title: "lab.title" },
 };
 
+// A page from a module fetched on demand. Its `ready()`, if it has one, fetches
+// what it needs before it's shown, such as Blockly's words in this language.
 function lazy(load, name) {
   return (el) => {
     let gone = false;
     let stop = null;
-    load().then((m) => {
+    load().then(async (m) => {
+      await m.ready?.();
       if (!gone) stop = m[name](el);
     });
     return () => {
@@ -42,7 +45,9 @@ function render() {
   }
   cleanup = null;
   view.innerHTML = "";
-  cleanup = (routes[location.pathname] ?? notFound)(view) || null;
+  const route = routes[location.pathname] ?? { page: notFound, title: "notFound.title" };
+  document.title = route.title ? t("page.title", { page: t(route.title), app: t("app.name") }) : t("app.name");
+  cleanup = route.page(view) || null;
   shown = location.pathname + location.search;
 }
 
@@ -59,6 +64,11 @@ function navigate(path, how = "") {
 }
 
 document.addEventListener("click", (e) => {
+  const choice = e.target.closest("[data-language]");
+  if (choice) {
+    setLanguage(choice.dataset.language);
+    return;
+  }
   const link = e.target.closest("a[data-link]");
   if (!link || e.ctrlKey || e.metaKey || e.shiftKey) return;
   e.preventDefault();
@@ -69,7 +79,18 @@ window.addEventListener("popstate", () => {
   if (location.pathname + location.search !== shown) render();
 });
 
-// The test hooks: what's still live, to check that leaving a page lets it all go.
-if (isDev()) window.island = { counts: liveCounts };
+// A new language opens the page that's showing again, in it (PLAN.md §8). An
+// address that asked for a language (?dev&lang=…) would ask again on reload, so
+// it stops asking.
+window.addEventListener(LANGUAGE_EVENT, () => {
+  const query = location.search.slice(1).split("&").filter((p) => p && !p.startsWith("lang="));
+  if (query.length !== location.search.slice(1).split("&").filter(Boolean).length) {
+    history.replaceState(null, "", location.pathname + (query.length ? `?${query.join("&")}` : "") + location.hash);
+  }
+  render();
+});
 
-render();
+// The test hooks: what's still live, to check that leaving a page lets it all go.
+if (isDev()) window.island = { ...window.island, counts: liveCounts };
+
+startLanguage().then(render);

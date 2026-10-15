@@ -401,7 +401,7 @@ Everything the player reads or hears is translated: the shell and settings, insp
 - A block's words cannot change with the number typed into it, because Blockly draws them once. Choose wording that reads acceptably with any number.
 - English entries carry short notes for translators where the meaning is not obvious, such as which `%n` is the icon.
 
-**German.** Use the informal du and short imperatives, matching Blockly's own German blocks (“wiederhole %1-mal:”, “setze %1 auf %2”, “falls”, “sonst”), for example “gehe zu %2”, “sammle %2”, “warte %2 Schritte”. A step is a “Schritt”, as on the Step button. Keep a glossary of game terms (step, basket, program, sawmill, construction site…) for each language, so the interface, blocks, and missions use the same words. Blockly 13.4.0's German catalogue leaves 285 of its 629 strings in English. Most are screen-reader announcements and accessibility labels, but some can be seen or heard, such as “Move Block” and “Zoom in”. `de/blockly.js` translates every Blockly string the game shows or announces. Strings belonging to Blockly features the game doesn't enable go on an explicit allowlist. A fluent speaker reviews German text before each playtest.
+**German.** Use the informal du and short imperatives, matching Blockly's own German blocks (“wiederhole %1-mal:”, “setze %1 auf %2”, “falls”, “sonst”), for example “gehe zu %2”, “sammle %2”, “warte %2 Schritte”. A step is a “Schritt”, as on the Step button. Keep a glossary of game terms (step, basket, program, sawmill, construction site…) for each language, so the interface, blocks, and missions use the same words. Blockly 13.4.0's German catalogue leaves 344 of its 701 strings identical to English. Most are screen-reader announcements and accessibility labels, but some can be seen or heard, such as “Zoom in” (docs/languages.md). `de/blockly.js` translates every Blockly string the game shows or announces. Strings belonging to Blockly features the game doesn't enable go on an explicit allowlist. A fluent speaker reviews German text before each playtest.
 
 **Layout.** German text runs about a third longer than English and has long compound words (Baustelle, Sägewerk, Lagerbestand). Text containers have no fixed widths. Buttons and rows wrap or shorten with an ellipsis, with the full text available on hover or tap, and `hyphens: auto` breaks long words. Blockly never wraps block text, so block words stay short in every language, and the width of the widest toolbox block is checked for each language. German serves as the long-text language in screenshots and layout tests.
 
@@ -583,15 +583,15 @@ Acceptance: the app builds and opens with a simple 3D scene visible behind a par
 
 This phase comes before Phase 1 so that the simulation's waiting reasons and the compiler's errors have English and German catalogues to go into from the start. While there are about 60 strings, adding the language system is cheap.
 
-- [ ] Restructure `src/i18n/` into `languages.js` and one folder per language (Section 8, Languages). Bundle English; load other languages and their Blockly catalogues on demand.
-- [ ] Extend `t()` with plural forms through `Intl.PluralRules` and number formatting through `Intl.NumberFormat`. A key missing in a production build shows the English text, never the key.
-- [ ] Translate everything Phase 0 shows into German: the shell, the lab, the game's blocks and tooltips, toolbox categories, dropdown options, and the sample entity names.
-- [ ] Add `de/blockly.js` overrides for the Blockly strings the game shows or announces that Blockly 13.4.0 leaves in English, with an allowlist for features the game doesn't enable.
-- [ ] Choose the language from the stored setting, otherwise from the browser's languages, otherwise English. Add a language selector to the title screen. Set `<html lang>` and the document title.
-- [ ] Make switching reopen the current screen and recreate editors from their JSON, leaving programs unchanged.
-- [ ] Add the development-only pseudo-language.
-- [ ] Extend the Node tests and the browser tests with the language checks in Section 12. Add German screenshots to `npm run shots`, and check that the Calm treatment still fits German block words.
-- [ ] Start the English and German glossary of game terms. Document “Adding a language” in the README.
+- [x] Restructure `src/i18n/` into `languages.js` and one folder per language (Section 8, Languages). Bundle English; load other languages and their Blockly catalogues on demand. (`missions.js` joins each folder with the first mission.)
+- [x] Extend `t()` with plural forms through `Intl.PluralRules` and number formatting through `Intl.NumberFormat`. A key missing in a production build shows the English text, never the key.
+- [x] Translate everything Phase 0 shows into German: the shell, the lab, the game's blocks and tooltips, toolbox categories, dropdown options, and the sample entity names. (Awaiting a fluent speaker's review; the game's name stays “Robot Island” until that decision.)
+- [x] Add `de/blockly.js` overrides for the Blockly strings the game shows or announces that Blockly 13.4.0 leaves in English, with an allowlist for features the game doesn't enable. (157 overrides; `src/i18n/blockly-unused.js`. Blockly fixes the modifier-key names in shortcut hints when it loads, so “Control”, “Alt” and “Shift” stay English: docs/languages.md.)
+- [x] Choose the language from the stored setting, otherwise from the browser's languages, otherwise English. Add a language selector to the title screen. Set `<html lang>` and the document title. (The lab has the selector too.)
+- [x] Make switching reopen the current screen and recreate editors from their JSON, leaving programs unchanged. (The lab also keeps its markers, camera and selection.)
+- [x] Add the development-only pseudo-language. (`?dev&lang=pseudo`; lazily loaded, so it costs players nothing.)
+- [x] Extend the Node tests and the browser tests with the language checks in Section 12. Add German screenshots to `npm run shots`, and check that the Calm treatment still fits German block words. (Widest German toolbox block 217 px against 191 px in English; the limit is 240 px.)
+- [x] Start the English and German glossary of game terms. Document “Adding a language” in the README. (docs/glossary.md)
 
 Acceptance: the title screen and the editor lab run entirely in English or German, chosen automatically or by the player. Switching keeps the program exactly as it was. The pseudo-language shows no hard-coded text. Adding a language needs only a folder and one line in the language list, and the tests name everything still missing.
 
@@ -853,5 +853,5 @@ Applied in: 1 (requirement), 3 (first release), 8 (Languages), 9 (mission text),
 Checked against the installed `blockly@13.4.0`:
 
 - It ships `msg/de` among its catalogues for more than 120 languages.
-- Its German catalogue has every key, but 285 of its 629 strings are identical to English. Most are screen-reader announcements and accessibility labels; some can be seen or heard, such as “Move Block” and “Zoom in”.
+- Its German catalogue has every key, but 344 of its 701 strings are identical to English (corrected in Phase 0.5 from 285 of 629, which could not be reproduced). Most are screen-reader announcements and accessibility labels; some can be seen or heard, such as “Zoom in”. (“Move Block”, named here before, belongs to the keyboard-navigation plugin; Blockly's core doesn't read it.)
 - Its German blocks use short informal imperatives: “wiederhole %1-mal:”, “setze %1 auf %2”, “falls”, “sonst”.

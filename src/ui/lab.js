@@ -1,20 +1,30 @@
 import "../style/lab.css";
 import "../style/editor.css";
-import { t } from "../i18n/index.js";
+import { display, formatNumber, t } from "../i18n/index.js";
 import { createBin } from "../lifecycle.js";
 import { createView } from "../render/view.js";
 import { bindWorldInput } from "../render/input.js";
-import { Blockly, createEditor } from "../blockly/workspace.js";
+import { Blockly, createEditor, prepareBlockly } from "../blockly/workspace.js";
 import { createMarkers } from "../blockly/markers.js";
 import { LAB_TOOLBOX } from "../blockly/toolboxes.js";
 import { TREATMENTS, surfaceAlphas } from "../blockly/treatments.js";
 import { loadLocal, saveLocal } from "../storage/local.js";
 import { html, isDev } from "./dom.js";
+import { languageChoice } from "./language-choice.js";
 import { normalizeLabSettings } from "./lab-settings.js";
 import { demoMarkers, demoProgram } from "./lab-demo.js";
 
 const MIN_PANEL = 320; // px; narrower and the toolbox crowds the program out
 const MIN_WORLD = 160; // px of world kept beside the editor
+
+// What the lab hands on to itself when it's left and opened again during this
+// visit, as it is when the language changes (PLAN.md §8): the program, how far
+// the markers have stepped, and the camera and what it has selected. The program
+// is also saved on this device.
+let kept = { program: null, markerStep: 0, camera: null };
+
+// Blockly's words in the current language, before the lab is shown (main.js).
+export const ready = prepareBlockly;
 
 // The Phase 0 editor lab (PLAN.md §11): the Blockly editor in a panel over the 3D
 // world, with controls to compare its visual treatments, how see-through it is
@@ -23,7 +33,7 @@ const MIN_WORLD = 160; // px of world kept beside the editor
 export function lab(el) {
   const bin = createBin();
   let settings = normalizeLabSettings(loadLocal("lab"));
-  let markerStep = 0;
+  let markerStep = kept.markerStep;
   let editor = null;
   let markers = null;
 
@@ -44,12 +54,11 @@ export function lab(el) {
         <div class="lab-body">
           <div class="lab-row"><span>${t("lab.treatment")}</span>
             <div class="segmented" role="group" aria-label="${t("lab.treatment")}" data-control="treatment">
-              ${Object.entries(TREATMENTS).map(([name, { label }]) => `<button data-value="${name}">${label}</button>`).join("")}
+              ${Object.entries(TREATMENTS).map(([name, { label }]) => `<button data-value="${name}">${display(label)}</button>`).join("")}
             </div>
           </div>
           <label class="lab-row"><span>${t("lab.transparency")}</span>
-            <input type="range" min="0" max="100" step="5" data-control="opacity" />
-            <output data-out="opacity"></output>
+            <span class="lab-range"><input type="range" min="0" max="100" step="5" data-control="opacity" /><output data-out="opacity"></output></span>
           </label>
           <div class="lab-row"><span>${t("lab.blur")}</span>
             <div class="segmented" role="group" aria-label="${t("lab.blur")}" data-control="blur">
@@ -60,6 +69,9 @@ export function lab(el) {
             <div class="segmented" role="group" aria-label="${t("lab.world")}" data-control="world">
               <button data-value="day">${t("lab.day")}</button><button data-value="dusk">${t("lab.dusk")}</button>
             </div>
+          </div>
+          <div class="lab-row"><span>${t("language.choose")}</span>
+            ${languageChoice({ group: "segmented language-choice" })}
           </div>
           <div class="lab-row checks">
             <label><input type="checkbox" data-control="moving" /> ${t("lab.moving")}</label>
@@ -85,11 +97,19 @@ export function lab(el) {
   const view = createView($(".lab-world"), { world: settings.world, moving: settings.moving });
   bin.add(() => view.dispose());
   bindWorldInput(bin, view.canvas, view, {
-    onSelect(name) {
-      view.select(name);
-      $(".lab-selected").textContent = name ? t("lab.selected", { name }) : t("lab.nothingSelected");
+    onSelect(id) {
+      view.select(id);
+      showSelected();
     },
   });
+  const showSelected = () => {
+    const name = view.nameOf(view.state.selected);
+    $(".lab-selected").textContent = name ? t("lab.selected", { name: display(name) }) : t("lab.nothingSelected");
+  };
+  if (kept.camera) {
+    view.restore(kept.camera);
+    showSelected();
+  }
   const meter = createMeter();
   bin.frames((now) => {
     const began = performance.now();
@@ -102,11 +122,15 @@ export function lab(el) {
 
   // --- The editor over it -------------------------------------------------
   let saveTimer = 0;
-  bin.add(() => clearTimeout(saveTimer));
+  const saveProgram = () => {
+    clearTimeout(saveTimer);
+    kept.program = editor.save();
+    saveLocal("lab-program", kept.program);
+  };
   const onChange = (e) => {
     if (e.isUiEvent || !editor) return;
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveLocal("lab-program", editor.save()), 400);
+    saveTimer = setTimeout(saveProgram, 400);
   };
 
   function mount(state) {
@@ -126,7 +150,8 @@ export function lab(el) {
   }
   bin.add(unmount);
 
-  const showMarkers = () => markers?.show(settings.markers ? demoMarkers(markerStep) : []);
+  const showMarkers = () =>
+    markers?.show(settings.markers ? demoMarkers(markerStep).map(({ entity, blockId }) => ({ entity: { ...entity, name: display(entity.name) }, blockId })) : []);
 
   // The look: the treatment's colours and the surfaces' opacities, as CSS
   // variables on <html>, since Blockly puts its dropdowns on <body>, outside the
@@ -166,7 +191,7 @@ export function lab(el) {
       for (const b of group.querySelectorAll("button")) b.setAttribute("aria-pressed", String(settings[group.dataset.control]) === b.dataset.value);
     }
     $('[data-control="opacity"]').value = Math.round(settings.opacity * 100);
-    $('[data-out="opacity"]').textContent = `${Math.round(settings.opacity * 100)}%`;
+    $('[data-out="opacity"]').textContent = formatNumber(Math.round(settings.opacity * 100) / 100, { style: "percent" });
     $('[data-control="moving"]').checked = settings.moving;
     $('[data-control="markers"]').checked = settings.markers;
   }
@@ -223,7 +248,7 @@ export function lab(el) {
     const again = JSON.stringify(editor.save());
     const ok = again === saved;
     const blocks = editor.blockCount();
-    status.textContent = ok ? t("lab.roundTripOk", { blocks, bytes: saved.length }) : t("lab.roundTripBad");
+    status.textContent = ok ? t("lab.roundTripOk", { count: blocks, bytes: saved.length }) : t("lab.roundTripBad");
     showMarkers();
     return { ok, blocks, bytes: saved.length };
   }
@@ -249,7 +274,15 @@ export function lab(el) {
 
   applyLook();
   syncControls();
-  mount(loadLocal("lab-program") ?? demoProgram());
+  mount(kept.program ?? loadLocal("lab-program") ?? demoProgram());
+
+  // Leaving: save the program now rather than when its timer would have, and hand
+  // on what the lab opens with next. Added after the editor and the view, so it
+  // runs before they're let go.
+  bin.add(() => {
+    if (editor) saveProgram();
+    kept = { ...kept, markerStep, camera: view.state };
+  });
 
   // The ?dev hooks, for the browser tests (e2e/) and the screenshots (scripts/).
   if (isDev()) {
@@ -263,11 +296,27 @@ export function lab(el) {
       robotAt: (angle) => view.robotAt(angle),
       save: () => editor.save(),
       blockCount: () => editor.blockCount(),
+      workspace: () => editor.workspace,
       // The block's own shape, without the blocks after or inside it, which its
       // SVG group also holds.
       blockRect: (id) => editor.workspace.getBlockById(id)?.pathObject.svgPath.getBoundingClientRect().toJSON() ?? null,
       fieldRect: (blockId, field) => editor.workspace.getBlockById(blockId)?.getField(field)?.getSvgRoot().getBoundingClientRect().toJSON() ?? null,
       markerRects: () => markers.rects(),
+      // Every block in every toolbox category, with its width on screen: longer
+      // words make wider blocks, and Blockly never wraps them (PLAN.md §8).
+      toolboxBlocks() {
+        const toolbox = editor.workspace.getToolbox();
+        const found = [];
+        for (const item of toolbox.getToolboxItems()) {
+          if (!item.isSelectable()) continue;
+          toolbox.setSelectedItem(item);
+          for (const block of toolbox.getFlyout().getWorkspace().getTopBlocks(false)) {
+            found.push({ category: item.getName(), type: block.type, width: block.getSvgRoot().getBoundingClientRect().width });
+          }
+        }
+        toolbox.clearSelection();
+        return found;
+      },
       step: () => {
         markerStep++;
         showMarkers();
@@ -310,7 +359,8 @@ function createMeter() {
     stats,
     text() {
       const s = stats();
-      return `${Math.round(s.fps)} fps · slowest ${Math.round(s.slowest)} ms\ncode ${s.work.toFixed(1)} ms · ${s.calls} draws`;
+      const work = formatNumber(s.work, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      return `${t("lab.frames", { fps: Math.round(s.fps), slowest: Math.round(s.slowest) })}\n${t("lab.work", { work, count: s.calls })}`;
     },
   };
 }

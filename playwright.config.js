@@ -18,6 +18,9 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
+    // The game follows the browser's language (PLAN.md §8); the tests choose
+    // theirs, whatever this machine's is.
+    locale: "en-US",
   },
   webServer: {
     command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
