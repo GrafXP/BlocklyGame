@@ -6,7 +6,7 @@ Build a browser game for children aged 7–9 in which Blockly programs bring a r
 
 This document defines the first release, the architecture, and the implementation order. It incorporates the requirement that every program runs on one fixed world clock: the player can pause the entire world, advance exactly one step, and see the executing block in every program.
 
-Section 15 lists the corrections made in the review of 14 October 2026. Section 16 records later amendments.
+Section 15 lists the corrections made in the review of 14 October 2026. Section 16 records later amendments, including the 40-mission campaign of [docs/campaign-plan.md](docs/campaign-plan.md), which replaced the original 12 missions.
 
 ## 1. Confirmed requirements and working decisions
 
@@ -28,7 +28,7 @@ Section 15 lists the corrections made in the review of 14 October 2026. Section 
 
 - Use a ground-based island with an elevated camera, pan/zoom, and optional quarter-turn rotation.
 - Start with three general-purpose robots whose programs define their jobs.
-- Use a small resource economy and a campaign on one growing island.
+- Use a small resource economy and a campaign of 40 short missions on one growing island (Section 9, [docs/campaign-plan.md](docs/campaign-plan.md)).
 - Support a program library, type defaults, individual overrides, and settings per entity.
 - Execute a small game instruction language compiled from Blockly, with explicit serializable runtime state.
 - Use ten simulation ticks per second initially. This is a tuning value; all gameplay durations are integer tick counts. Fix the rate before authoring mission content in Phase 7: content durations, reference solutions, and saves all depend on it, so it is part of the simulation version.
@@ -91,8 +91,8 @@ The player directly selects entities, assigns programs, and places building blue
 - Robot roles such as collector and courier created by assigning programs.
 - Four building categories: depot, sawmill, workshop, and construction site.
 - Four initial item types: wood, stone, plank, and construction kit.
-- Twelve missions: an eight-mission introductory campaign followed by four advanced missions.
-- A sandbox unlocked after the introductory campaign, with a configurable starting layout.
+- Forty short missions in eight chapters (Section 9): a main journey of missions 1–25, from a first sequence to shared programs and the workshop's first kits, then an advanced continuation of missions 26–40 with memory, routines, and messages.
+- Free play that opens after mission 15 with the blocks learned so far, and grows after mission 25 into a sandbox with a configurable starting layout.
 - Shared program library, default programs by type/role, settings per entity, and individual copies.
 - Global Run, Pause, Step, Step to Next Block, Restart Mission, and playback speed controls.
 - A complete execution overview, an individual Blockly editor, and a view of several programs together.
@@ -102,9 +102,9 @@ The player directly selects entities, assigns programs, and places building blue
 
 Garden systems, batteries, charging stations, conveyors, weather, additional robot chassis, multiplayer, and cloud accounts are later extensions. Their concepts should fit the architecture, but the initial implementation is driven by the resource chain above.
 
-### A complete bridge mission
+### The bridge chain (mission 15)
 
-The first substantial automation challenge has four independently running entities:
+The first substantial automation challenge, mission 15 (“Across the Stream”), joins four independently running entities, whose programs the child has met one at a time in missions 11–14:
 
 ```mermaid
 flowchart LR
@@ -121,7 +121,7 @@ flowchart LR
 - The construction site waits for four planks and assembles the bridge.
 - Completing construction changes navigation and opens the next part of the island.
 
-The bridge is the result of the construction site's program. Mission completion observes that result and awards progress.
+The bridge is the result of the construction site's program, which builds it once, outside any Forever. Mission completion observes that result and awards progress.
 
 ## 4. World, navigation, resources, and simple 3D models
 
@@ -157,7 +157,7 @@ Production reserves inputs and output capacity when it starts, then consumes inp
 
 Multiple actors requesting the same resource are handled by deterministic FIFO reservation queues, with entity ID as a final tie-breaker. A waiting actor does not retain unrelated reservations. Retry state is explicit and visible.
 
-Action blocks wait rather than fail when the world is not ready. Collect at an empty source, Pick Up with nothing available, Unload into full storage, Make Item without inputs or output space, and Assemble without every part all keep their block active in a visible waiting state, with the missing item or space as the reason. A rejected intent joins the FIFO queue and is retried in each tick's resolution phase; a block is never skipped silently. Missions 3–6 depend on this implicit waiting because Wait Until is not yet available. Program errors are reserved for code that cannot work as written, such as a missing or incompatible target.
+Action blocks wait rather than fail when the world is not ready. Collect at an empty source, Pick Up with nothing available, Unload into full storage, Make Item without inputs or output space, and Assemble without every part all keep their block active in a visible waiting state, with the missing item or space as the reason. A rejected intent joins the FIFO queue and is retried in each tick's resolution phase; a block is never skipped silently. The campaign depends on this implicit waiting: Wait Until arrives only in mission 19, and mission 8 teaches the basket's limit by letting a third Collect wait visibly. Program errors are reserved for code that cannot work as written, such as a missing or incompatible target.
 
 When no action is in progress, no message is pending, and every entity is waiting, the world reports a stall. The clock keeps running, and mission hints can point to the waiting entities and their reasons.
 
@@ -204,7 +204,7 @@ For buildings, default programs are keyed by building type. For robots, one help
 
 An entity's program resolves in this order: individual override, then role default, then building-type or chassis default. A robot belongs to at most one role.
 
-In the first release, settings are a fixed set of named slots per entity kind: Source, Destination, and Item for robots; Target Stock for buildings. Programs read them with value blocks such as “my Source”, so one shared program can serve robots with different settings. Children do not define program parameters; procedure inputs in Phase 8 cover parameterised reuse. Mission 8 depends on these setting blocks.
+In the first release, settings are a fixed set of named slots per entity kind: Source, Destination, and Item for robots; Target Stock for buildings. Programs read them with value blocks such as “my Source”, so one shared program can serve robots with different settings. Children do not define program parameters; procedure inputs in Phase 8 cover parameterised reuse. Mission 22 depends on these setting blocks, which must plug into action inputs (Go To my Destination, Collect my Item), not merely be stored on the entity.
 
 ### Editing and applying
 
@@ -279,23 +279,25 @@ Given an initial state and a tick-indexed command sequence, continuous play and 
 
 ## 7. Blockly blocks, compiler, and runtime
 
-### Initial block families
+### Block families
 
-| Family | Initial blocks | Later additions within the first release |
+| Family | In place (Phases 2–4) | Added for the campaign (the mission that first needs it) |
 | --- | --- | --- |
-| Entry | When Started | Message waiting and message checks |
-| Robot actions | Go To, Collect, Pick Up, Unload | Amount inputs and parameterised destinations |
-| Building actions | Make Item, Assemble Blueprint | Recipe choice and target stock |
-| Control | Repeat N, Wait N Steps | Forever, If/Else, Wait Until |
-| Sensing | Item count, basket count, stock available | Capacity, distance, compound comparisons |
-| Values | Number, resource, entity/location selection | My Source/Destination/Item/Target Stock settings, arithmetic, comparisons, AND/OR |
-| Memory | — | Set Variable, Change Variable, Get Variable |
-| Reuse | — | Define Procedure, Call Procedure, inputs |
-| Coordination | — | Send Message, Wait For Message, Has Message |
+| Entry | When Started | — |
+| Robot actions | Go To, Collect, Pick Up, Unload, with places and items chosen in dropdowns | Place and item inputs that take setting values, such as Go To my Destination (22) |
+| Building actions | Make Item, Build Blueprint | The workshop's kit (25) |
+| Control | Repeat N, Forever, If/Else, Wait N Steps, Wait Until | — (taught from missions 6, 14, 17, 18, and 19; Wait N Steps only in optional experiments) |
+| Sensing | Stock of an item at a place, items in the basket | — (stock counts are taught from mission 16) |
+| Values | Number, comparisons, places and items | My Source, My Item, and My Destination settings (22); Target Stock only if a mission needs it |
+| Memory | — | Set, Change, and Get Variable, with live values (26–27) |
+| Reuse | — | Define and Call Procedure (31), with one input each: a place (33) or a number (34) |
+| Coordination | — | Send Message to one named recipient, Wait For Message, and inbox display (36) |
+
+No mission needs AND/OR, arithmetic, Has Message, message broadcasts or payloads, return values, recursion, lists, or global variables (docs/campaign-plan.md, Implementation dependencies). They stay out of the first release unless free play or playtests call for them.
 
 Use familiar text plus icons, editable numbers, and valid-target dropdowns. Children see “steps”, not “ticks”: one step is one tick, matching the Step button. Provide robot and building toolboxes filtered by capability and mission unlocks. Loading an older program preserves its blocks even when they are absent from the current toolbox. Blockly cannot load a block type that is no longer registered, so retired block definitions stay registered and hidden from toolboxes until a migration replaces them.
 
-Messages use a bounded inbox per entity and explicit receive/wait blocks. The first release has one entry thread per entity; a message never creates another independently running thread. Waiting consumes the matching message. Broadcast destinations expand to a stable recipient list and deliveries occur on the next tick. When a recipient's inbox is full, Send stays active in a visible waiting state (“Workshop's mailbox is full”) and retries each tick. Messages are never dropped silently.
+Messages use a bounded inbox per entity and explicit receive/wait blocks. The first release has one entry thread per entity; a message never creates another independently running thread. Waiting consumes the matching message. Deliveries occur on the next tick. The campaign sends each message to one named recipient; broadcasts, if they are ever added, expand to a stable recipient list. When a recipient's inbox is full, Send stays active in a visible waiting state (“Workshop's mailbox is full”) and retries each tick. Messages are never dropped silently.
 
 ### Compilation
 
@@ -324,7 +326,7 @@ Define ordinary game blocks with Blockly JSON definitions and small extensions f
 ### Main layout
 
 - World view with selection outlines, entity labels, inventory indicators, and destination markers.
-- Top mission card with objective progress and a short hint.
+- Top mission card with the goal in one short sentence and pictures, objective progress, and the hint ladder (Beginner support).
 - Global Run/Pause, Step, Step to Next Block, speed, tick counter, and Restart Mission controls.
 - Entity inspector with program assignment, stock/basket contents, settings, and current status.
 - Blockly editor in a partially transparent overlay panel, with the 3D world still visible behind it on larger screens. Editing pauses the world (Section 5); the camera still moves, and while the world is paused the renderer draws only when the view changes.
@@ -359,13 +361,16 @@ Resize Blockly when panel dimensions or orientation change, using `Blockly.svgRe
 
 ### Beginner support
 
-- Introduce one new concept at a time.
+The campaign plan's teaching support (docs/campaign-plan.md, Teaching support and progression) applies to every mission:
+
+- Introduce one new concept at a time, with room to practise it before the next.
 - Start with a toolbox containing only a few useful blocks.
-- Provide visible starter programs and fill-in-the-gap missions.
+- Provide visible starter programs. Alternate completing a starter, changing a working example, repairing a mistake, and making a small program independently; scaffolds fade across a chapter, and “Show me a start” stays available in projects.
 - Use short labels and optionally spoken mission instructions after a user gesture, in the player's language.
-- Use progressive hints: show the symptom, identify the related entity, then suggest the relevant block.
-- Support several valid solutions and unlimited retries.
-- Offer optional efficiency challenges after completing the main objective.
+- Offer the same three-level hint ladder in every mission: Look (point to the evidence), Think (one concrete question), Try (a partial arrangement, then a worked example). Hints respond to the observed problem and cost nothing.
+- Offer an optional prediction before Run and an explanation after success, by speaking, pointing, or skipping; reading and writing never become the programming test.
+- Support several valid solutions and unlimited retries. World outcomes decide completion, never one exact block arrangement.
+- Offer optional experiments and variations after the main goal. There are no countdowns, lost lives, hint penalties, or required speed or block-count scores.
 - Keep drag interactions away from camera gestures; include accessible DOM controls for selection and execution.
 
 ### Languages
@@ -420,26 +425,37 @@ Open decision: whether the game's name is translated (Robot Island, Roboterinsel
 
 ## 9. Campaign and sandbox
 
-Campaign missions operate on one settlement state, adding authored terrain access, entities, and unlocks at mission boundaries. Store a checkpoint at the start of each mission. Restart restores that mission's world while preserving edited programs, so a corrected solution can be retried; each program also offers “Back to starter program”. Replaying an earlier mission uses an isolated checkpoint and awards progress without overwriting the current settlement. A replay uses the program library saved with that checkpoint, because current programs may reference entities or blocks that do not yet exist in the earlier mission.
+The campaign is specified in [docs/campaign-plan.md](docs/campaign-plan.md): 40 short missions in eight chapters on one growing island. Each mission card gives the child-facing goal, what it teaches, its setup and support, the player's task, its success condition, and a hint. That document is the content specification; this section says what the game must provide for it, and Section 11 says when.
 
-| Mission | Concrete goal | New concept |
-| --- | --- | --- |
-| 1. Wake Up Helper | Go to the marked crate and bring wood to camp | Sequence, selection, global Step, active blocks |
-| 2. Enough for a Shelter | Deliver three pieces of wood | Repeat and basket contents |
-| 3. Start the Sawmill | Program the sawmill to produce planks | Building programs and timed actions |
-| 4. Keep It Supplied | Run collector and sawmill together | Independent programs, Forever, and observing waits |
-| 5. Deliver the Planks | Supply the construction site | Courier program and inventory transfers |
-| 6. Across the Stream | Program the site to assemble the bridge | Four-program cooperation and navigation changes |
-| 7. Keep a Reserve | Produce only while plank stock is low | Conditions: If/Else with a comparison; Wait Until as an alternative solution |
-| 8. Two Collectors | Assign one program to two robots with different sources | Shared programs, settings, overrides |
-| 9. Count the Order | Complete an order for a chosen quantity | Local variables and arithmetic |
-| 10. A Useful Routine | Reuse delivery behaviour for several materials | Procedures and inputs |
-| 11. Ask for Supplies | Have the workshop request wood/stone | Queued messages and explicit receive blocks |
-| 12. Restore the Workshop District | Maintain a working production network | Combine sensing, reuse, and coordination |
+| Chapter | Missions | What the child learns | Visible milestone | Built in |
+| --- | --- | --- | --- | --- |
+| 1. Hello, Helper! | 1–5 | Instructions, order, testing, fixing one mistake | Camp has its first supplies | Phase 7 |
+| 2. Do It Again | 6–10 | Repeat, loop bodies, basket limits, small nested loops | Regular deliveries reach camp | Phase 7 |
+| 3. A Working Island | 11–15 | Building programs, transfers, simultaneous programs, Forever | The bridge opens | Phase 7 |
+| 4. Look Before You Act | 16–20 | Reading counts, If, Else, Wait Until, controlled production | The island keeps a useful reserve | Phase 7 |
+| 5. Give Everyone a Job | 21–25 | Shared programs, settings, individual copies, a production recipe | The workshop makes its first kits | Phase 7 |
+| 6. Remember the Job | 26–30 | Variables, changing values, countdowns, separate memories | The team fulfils counted orders | Phase 8 |
+| 7. Make Your Own Blocks | 31–35 | Procedures, reuse, inputs, breaking a job into parts | A reusable kit-delivery plan works | Phase 8 |
+| 8. Talk and Work Together | 36–40 | Messages, request/reply, diagnosing a stalled team, system design | The island is ready to welcome visitors | Phase 8 |
 
-Each mission definition contains its starting additions, block unlocks, objective predicates, hints, checkpoint policy, and reference solution programs. Objectives inspect actual world outcomes and do not require one exact block arrangement. A mission's text lives in each language's `missions.js`, and its definition refers to that text by key.
+Missions 1–25 are the main learning journey and a complete achievement in themselves. Missions 26–40 continue into memory, routines, and messages, which younger children may play with an adult or later. The pacing targets (3–6 minutes for the first five missions, 5–10 for ordinary missions, 10–15 for chapter projects) are to be tested with children, not enforced. Free play opens after mission 15 with the blocks learned so far, and grows after mission 25; the advanced chapters are never a condition for it.
 
-Run each reference solution headlessly to prove the mission can be completed with its allowed toolbox and resources. Keep the campaign and sandbox on the same simulation and runtime. Sandbox adds blueprint placement, robot creation, and resource settings through normal tick-boundary commands.
+The campaign keeps to the game's own rules (docs/campaign-plan.md, World rules): Go To chooses a named place, never a grid direction; a basket holds two items; the sawmill turns one wood into one plank; the bridge takes four planks; a kit takes two planks and one stone. A change to any of these changes the missions too.
+
+**Settlement and checkpoints.** Missions operate on one settlement state, adding authored terrain access, entities, and unlocks at mission boundaries. Store a checkpoint at the start of each mission. Restart restores that mission's world while preserving edited programs and unapplied drafts, so a corrected solution can be retried; each program also offers “Back to starter program”. Replaying an earlier mission uses an isolated checkpoint and the program library saved with it, because current programs may reference entities or blocks that do not yet exist in the earlier mission. A replay awards progress without overwriting the current settlement.
+
+**Reliable lessons.** The campaign's rules for checkpoints, resources, and goals are requirements on mission definitions:
+
+- Setup changes are visible: staged stock, supplied orders, parked helpers. A mission never silently drains the player's unrelated stores.
+- Where a race for reservations would muddle a lesson, only the entities it is about have active jobs (missions 16–19). There are still no separate clocks or individual Pause controls.
+- Every mission budgets its whole chain and its storage: materials, preloaded amounts, capacities, and output room, without counting a material twice or relying on unknown leftovers. Baskets stay at two items.
+- Objectives judge completed actions, not started ones. An exact order also checks deliveries still under way, so an imminent extra delivery cannot pass unnoticed.
+- A mission can have several trials, each from its own starting variation, such as one plank and then two (missions 16–19). The child sees what changed between them; there are no hidden test cases.
+- Missions that test steady behaviour (20 and 40) observe a settled cycle, not the instant a count is reached.
+
+**Mission definitions.** Each mission definition contains its starting additions, the narrow new unlock on top of earlier blocks (filtered per robot or building, Section 7), its trials, objective predicates, three hints, starter programs, reference programs for every participating entity, a resource budget, a step bound for completion, and its reward and transition. Objectives inspect actual world outcomes and never require one exact block arrangement, fixed block IDs, variable names, or workspace positions. A mission's text (goal, hints, reward, prediction and explanation prompts, and accessible goal descriptions) lives in each language's `missions.js`, and its definition refers to that text by key.
+
+**Verification.** Run each reference solution headlessly with the mission's actual toolbox and resources, for every trial and within its step bound, both alone from its checkpoint and as part of the whole sequence, so leftover stock, shared edits, and unlocks cannot break the next lesson. Keep the campaign and sandbox on the same simulation and runtime. Sandbox adds blueprint placement, robot creation, and resource settings through normal tick-boundary commands.
 
 ## 10. Data, persistence, and project layout
 
@@ -450,7 +466,7 @@ Run each reference solution headlessly to prove the mission can be completed wit
 - `ProgramDocument`: ID, name, compatible capabilities, settings read, draft JSON, published workspace JSON, and published revision.
 - `RuntimeState`: entity/program/revision IDs, compiler version, instruction position, local variables, call/loop stacks, active block, last evaluated block, waiting reason (a code with values), inbox, and action continuation.
 - `ExecutionTrace`: tick, entity IDs, evaluated/active block IDs, evaluated conditions, accepted/rejected intents, and resulting statuses.
-- `MissionDefinition`: additions, unlocks, predicates, hint keys, reference programs, and progression rewards.
+- `MissionDefinition`: additions, unlocks, trials, predicates, hint keys, starter and reference programs, resource budget, step bound, and progression rewards.
 - `SaveEnvelope`: schema version, content/simulation versions, world, program library, progress, settings, and mission checkpoints.
 
 The simulation stores plain serializable data. DOM nodes, Blockly workspace objects, Three.js objects, functions, and unresolved promises stay outside it. Stable IDs and source versions make reloads and debugger mapping reliable. None of these contracts holds display text. Names are either the player's own text or a catalogue key for an authored name (Section 8, Languages).
@@ -526,7 +542,7 @@ src/
     dom.js                 common DOM helpers
   content/
     island.js              authored terrain and entity placement
-    missions/              one module per mission
+    missions/              one module per mission, a folder per chapter
     programs/              visible starter and reference workspaces
     catalog.js             resources, entities, recipes, unlocks
   storage/
@@ -646,7 +662,7 @@ Acceptance: one Step visibly updates all program panels. Step to Next Block stop
 
 ### Phase 5 — Complete bridge vertical slice
 
-- [ ] Make a small playable mission with collector, sawmill, courier, and construction-site programs.
+- [ ] Make the bridge chain playable as one slice mission: the situation of mission 15 (“Across the Stream”) without the chapters that lead to it, with collector, sawmill, courier, and construction-site programs.
 - [ ] Add enough real resources, waits, visible stock, and construction progress to finish the bridge.
 - [ ] Connect bridge completion to navigation changes and a mission reward.
 - [ ] Add restart/checkpoint behaviour and basic local saving for this slice. Version the save envelope from the start; saves made before Phase 9 may be discarded rather than migrated.
@@ -654,36 +670,40 @@ Acceptance: one Step visibly updates all program panels. Step to Next Block stop
 
 Acceptance: the bridge can be built entirely through Blockly-controlled work. A player can diagnose supply waits by observing all four programs and resume after reload. This slice is ready for an initial supervised playtest.
 
+The slice is an implementation milestone. In the campaign, chapters 1–3 (Phase 7) reach the same bridge through fifteen shorter missions.
+
 ### Phase 6 — Shared roles, type defaults, and placement
 
 - [ ] Implement the program library, robot role defaults, and building-type defaults.
-- [ ] Add individual overrides, parameter settings, assignment previews, and copy/return-to-default actions.
+- [ ] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs.
 - [ ] Keep authored robot and program names as catalogue keys until the player renames them. Name the variables and procedures in copied starter programs in the current language.
 - [ ] Add deterministic program revision application and cancellation of affected unfinished actions.
 - [ ] Add blueprint placement with footprint/path validation and visible starter construction programs.
-- [ ] Add the workshop and construction-kit recipe.
+- [ ] Add the workshop with its recipe of two planks and one stone for one construction kit, and kit stores and models, as mission 25 needs.
 
-Acceptance: two collectors share code but keep separate runtime state/settings. A personal copy can be edited independently. Shared Apply affects precisely the listed entities on the next tick. Invalid placements cannot cut off required interaction cells.
+Acceptance: two collectors share code but keep separate runtime state/settings. A personal copy can be edited independently. Shared Apply affects precisely the listed entities on the next tick. Invalid placements cannot cut off required interaction cells. These are the tools chapter 5 (missions 21–25) teaches.
 
-### Phase 7 — Introductory campaign and sandbox
+### Phase 7 — Main campaign (chapters 1–5) and free play
 
-- [ ] Implement data-driven objectives, unlocks, hints, checkpoints, and mission transitions.
-- [ ] Author missions 1–8 with visible starter programs and reference solutions, with their text in English and German.
+- [ ] Implement data-driven objectives (completed actions; exact orders that check deliveries under way), unlocks, trials, three-level hints, checkpoints, rewards, and mission transitions.
+- [ ] Add the teaching interface the mission cards rely on: a persistent goal card with pictures, an optional prediction before Run and explanation after success, “Show me a start”, and the choice of a blank workspace.
+- [ ] Author chapters 1–3 (missions 1–15) as the campaign plan's authoring package describes, with their text in English and German. Hold the playtest gates after missions 5, 10, and 15 (docs/campaign-plan.md, Playtest gates).
+- [ ] Open free play after mission 15, with the blocks learned so far and an unlocked program library.
+- [ ] Author chapters 4–5 (missions 16–25), including the paired trials of missions 16–19 and the workshop project of mission 25. Hold the playtest gates after missions 20 and 25, and grow free play into the sandbox after mission 25.
 - [ ] Preserve settlement changes between missions and isolate earlier-mission replay.
-- [ ] Add the sandbox using the same commands/simulation and an unlocked program library.
-- [ ] Add `verify:missions` and check each mission's solvability, resources, toolbox, and text keys in every listed language.
+- [ ] Add `verify:missions`: every mission's reference solutions, for each trial and within its step bound, alone and in sequence, with its toolbox, resource and storage budget, and text keys in every listed language.
 
-Acceptance: a fresh player can complete the eight missions in sequence, restarting without losing edited code. The settlement expands visibly, and shared roles become useful before sandbox opens.
+Acceptance: a fresh player can complete missions 1–25 in sequence, restarting without losing edited code. The settlement expands visibly: supplies at camp, the bridge at mission 15, and the workshop's first kits at mission 25. Free play opens after mission 15 and grows after mission 25. `verify:missions` passes for every mission alone and for the whole sequence.
 
-### Phase 8 — Variables, reusable routines, and coordination
+### Phase 8 — Variables, reusable routines, coordination, and chapters 6–8
 
-- [ ] Add local variables, arithmetic/comparisons, and live value inspection.
-- [ ] Add non-recursive procedures with inputs, explicit call frames, and block-level tracing.
-- [ ] Add bounded next-tick messages, role/group recipients, receive/wait blocks, and inbox inspection.
-- [ ] Author missions 9–12 in English and German and extend the reference solution runner.
+- [ ] Add local variables with Set, Change, and Get, and live value inspection beside each entity. Values belong to one entity's runtime and reset predictably on restart.
+- [ ] Add non-recursive procedures with one input each, a place or a number, explicit call frames, and block-level tracing into and out of a routine.
+- [ ] Add bounded next-tick messages to one named recipient, matching Wait For Message blocks, and inbox inspection.
+- [ ] Author chapters 6–8 (missions 26–40) in English and German, and extend the reference solution runner, including the finale's normal and slower-courier conditions. Hold the playtest gates after missions 30, 35, and 40.
 - [ ] Exercise shared routines and resource competition with several active entities.
 
-Acceptance: children can express reusable delivery routines and supply requests. Variable scopes remain local to an entity. Messages arrive at the documented tick and never create hidden concurrent threads.
+Acceptance: children can express reusable delivery routines and supply requests. Variable scopes remain local to an entity. Messages arrive at the documented tick and never create hidden concurrent threads. A fresh player can continue from mission 25 to the end of the campaign.
 
 ### Phase 9 — Robust saves and offline shell
 
@@ -701,9 +721,9 @@ Acceptance: a world saved mid-action continues identically after reload with the
 
 - [ ] Refine desktop/iPad layouts, portrait tabs, split-panel sizing, and touch targets.
 - [ ] Verify Blockly drag, dropdowns, zoom, marker overlays, camera gesture isolation, and the readability/performance of the Phase 0 styling and transparent backgrounds on actual devices.
-- [ ] Add readable mission presentation, progressive hints, optional speech, and short action/reward sounds. Offer speech only when the device has a voice for the current language.
+- [ ] Add readable mission presentation, the hint ladder's wording and timing, optional speech, and short action/reward sounds. Offer speech only when the device has a voice for the current language.
 - [ ] Add tick-driven movement/processing/construction animation and reduced-motion settings.
-- [ ] Playtest progression, waiting explanations, and the usefulness of global stepping with children, in English and in German.
+- [ ] Playtest progression across the campaign's gates, waiting explanations, and the usefulness of global stepping with children, in English and in German.
 - [ ] Have a fluent speaker review all German text against the glossary, with block words, waiting reasons, and hints read the way children read them.
 - [ ] Revise confusing blocks or missions based on observed behaviour.
 
@@ -737,7 +757,8 @@ Use Node tests for behaviour that must be independent of the browser:
 - Shared code preserves separate counters, call stacks, destinations, and instruction positions.
 - Save/load mid-action or mid-procedure preserves future execution.
 - Published/draft revisions and source IDs remain coherent after edits/imports/migrations.
-- Every authored mission completes with its reference solution and allowed resources.
+- Every authored mission completes with its reference solutions, toolbox, and budgeted resources, for every trial and within its step bound, alone and as part of the whole campaign sequence.
+- Objectives count completed actions only, and an exact order fails while an extra delivery is under way.
 - No-op loops, missing targets, blocked routes, and full message queues yield readable states.
 - Every listed language has exactly English's keys (interface, blocks, missions), the same `{name}` placeholders, the same `%n` inputs in each block message, and the plural forms `Intl.PluralRules` reports for that language.
 - Every code the simulation, compiler, and missions can produce has a message in every language. World state, traces, saves, and golden files contain no display text.
@@ -760,7 +781,7 @@ These are development targets, not measured claims. Select and record a specific
 
 - [ ] The world uses selectable 3D models, useful camera controls, and readable stock/action indicators.
 - [ ] Robots and buildings are controlled by Blockly programs with shared defaults and individual overrides.
-- [ ] Twelve missions and sandbox demonstrate a progression from sequences to cooperating systems.
+- [ ] The 40 missions in eight chapters (docs/campaign-plan.md) and free play demonstrate a progression from sequences to cooperating systems.
 - [ ] Run, Pause, Step, and speed controls obey the same fixed-clock contract.
 - [ ] Every running entity appears in the execution overview, with its active block and waiting reason.
 - [ ] Programs Together correctly displays simultaneous positions within shared code.
@@ -774,7 +795,9 @@ These are development targets, not measured claims. Select and record a specific
 
 | Risk | Control |
 | --- | --- |
-| Deep game features arrive before an understandable core | Complete the bridge slice and playtest before adding the advanced campaign |
+| Deep game features arrive before an understandable core | Complete the bridge slice and playtest before authoring the campaign |
+| Forty missions are too much content to author and keep working | One authoring package per mission; `verify:missions` over every mission alone and in sequence; chapters 6–8 can follow the first release if scope must shrink |
+| A lesson depends on leftover stock, a reservation race, or a hidden test | Visible staging, budgeted chains and storage, active jobs only for the entities a lesson is about, and visible trials (Section 9) |
 | Several programs compete for one stock item | Atomic reservations, deterministic queues, conservation tests |
 | Single stepping disagrees with live play | One advanceWorld function; tick-based actions; equivalent-state tests |
 | Runtime markers refer to edited source | Published revisions and separate drafts; block-ID/version mapping |
@@ -788,7 +811,7 @@ These are development targets, not measured claims. Select and record a specific
 | Safari deletes local saves | Persistent-storage request, Home Screen installation, export reminders |
 | An app update changes compiled code under a saved runtime | Versioned simulation/compiler; clean runtime restart on mismatch |
 | Single-tick stepping is too slow to follow a program | Step to Next Block on the same global clock |
-| The first release is too large to validate with children | Treat the Phase 5 playtest as a go/no-go point for the remaining scope; portrait layout, speech, and sandbox placement are the first candidates to defer |
+| The first release is too large to validate with children | Treat the Phase 5 playtest as a go/no-go point for the remaining scope; portrait layout, speech, sandbox placement, and chapters 6–8 (missions 26–40) are the first candidates to defer |
 | Text is hard-coded, or assembled from fragments, and can't be translated | All text comes from catalogues as whole messages; the simulation and compiler emit codes; a pseudo-language browser check catches hard-coded text |
 | German words break layouts or make blocks too wide | German is the long-text test language; overflow and block-width checks and screenshots run in every language |
 | A translation falls behind English | New text is translated in the same change; completeness tests fail the build |
@@ -798,11 +821,11 @@ These are development targets, not measured claims. Select and record a specific
 
 The first milestone is a thin cut through phases 0–4, not their completion: a deliberately small demonstrator with only the blocks, models, and views it needs. It has a 3D patch of island, one robot, one programmable sawmill, a Blockly editor, a global clock, and execution panels for both entities. Complete the remaining phase 0–4 items after the demonstrator works.
 
-The robot delivers wood; the sawmill waits and makes a plank. The player pauses, presses Step, and sees exactly which block each program evaluated and which action is still active. This demonstrates the essential technical and learning experience before the island grows into the complete bridge mission.
+The robot delivers wood; the sawmill waits and makes a plank. The player pauses, presses Step, and sees exactly which block each program evaluated and which action is still active. This demonstrates the essential technical and learning experience before the island grows into the complete bridge chain of mission 15.
 
 ## 15. Review corrections (14 October 2026)
 
-The plan was checked against GyroRocket's source and lockfile and against the published `blockly@13.4.0` package. The corrections below have been applied in the sections named.
+The plan was checked against GyroRocket's source and lockfile and against the published `blockly@13.4.0` package. The corrections below have been applied in the sections named. Mission numbers in this table are those of the original 12-mission campaign, which the 40-mission campaign has since replaced (Section 16, Campaign).
 
 ### Verified as stated
 
@@ -855,3 +878,17 @@ Checked against the installed `blockly@13.4.0`:
 - It ships `msg/de` among its catalogues for more than 120 languages.
 - Its German catalogue has every key, but 344 of its 701 strings are identical to English (corrected in Phase 0.5 from 285 of 629, which could not be reproduced). Most are screen-reader announcements and accessibility labels; some can be seen or heard, such as “Zoom in”. (“Move Block”, named here before, belongs to the keyboard-navigation plugin; Blockly's core doesn't read it.)
 - Its German blocks use short informal imperatives: “wiederhole %1-mal:”, “setze %1 auf %2”, “falls”, “sonst”.
+
+### Campaign (15 October 2026)
+
+The 12-mission campaign is replaced by the 40-mission campaign in [docs/campaign-plan.md](docs/campaign-plan.md): eight chapters of five short missions, each introducing one idea and leaving room to practise it before the next. The campaign plan is the content specification; this plan says what the game provides for it and when.
+
+- The main journey is missions 1–25; missions 26–40 continue with memory, routines, and messages. The bridge chain, which the old campaign reached in its sixth mission, is now mission 15.
+- Free play opens after mission 15 and grows into the sandbox after mission 25. It replaces the sandbox that opened after the old eight-mission introduction.
+- Phase 7 builds the mission infrastructure and chapters 1–5; Phase 8 adds variables, procedures, and messages with chapters 6–8. Phase 5's bridge slice stays as an implementation milestone and the first supervised playtest. Phases 9–11 are unchanged.
+- No mission needs AND/OR, arithmetic, message broadcasts or payloads, Has Message, return values, recursion, lists, or global variables, so they leave the first release's block families. Procedures take one input, a place or a number; messages go to one named recipient.
+- Settings must plug into action inputs (mission 22), and mission 25 needs the workshop and its kit recipe; both are in Phase 6.
+- Missions gain trials, resource and storage budgets, step bounds, completed-action objectives, three-level hints, and a “Show me a start” option. `verify:missions` checks the whole sequence as well as each mission.
+- The campaign's playtest gates, after missions 5, 10, 15, 20, 25, 30, 35, and 40, join the Phase 5 playtest.
+
+Applied in: the introduction, 1 (working decisions), 3 (first release, the bridge chain), 4 (resource rules), 5 (settings), 7 (block families, messages), 8 (main layout, beginner support), 9 (campaign and sandbox), 10 (data contracts, layout), 11 (Phases 5, 6, 7, 8, and 10), 12 (checks and completion), 13 (risks), 14, and 15 (a note on its mission numbers).

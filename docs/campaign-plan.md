@@ -1,8 +1,8 @@
 # Robot Island: a 40-mission campaign
 
-Campaign proposal · 15 October 2026 · Ages 7–9
+Campaign plan · 15 October 2026 · Ages 7–9 · Adopted in PLAN.md the same day
 
-This is a new campaign design for the game described in [PLAN.md](../PLAN.md). It expands the earlier 12-mission outline into **40 short missions in eight chapters**, with room to practise before another idea arrives. It is a planning document only; it does not change the implementation plan, game code, or mission content.
+This is a new campaign design for the game described in [PLAN.md](../PLAN.md). It expands the earlier 12-mission outline into **40 short missions in eight chapters**, with room to practise before another idea arrives. PLAN.md has adopted it in place of its original 12 missions (PLAN.md §9 and §16, Campaign). This document is the content specification: what each mission teaches and asks of the child. PLAN.md says what the game provides for it and in which phase.
 
 The campaign follows one growing island: make camp, learn to carry materials, open the sawmill, build the bridge, and restore the workshop district. The final project is to prepare the island for a welcome celebration by running a small, dependable production network.
 
@@ -503,7 +503,7 @@ World outcomes decide mission completion. Never require the reference solution's
 
 - Keep the main instruction to one short sentence, supported by source, item, quantity, and destination pictures.
 - Use consistent terms from [the glossary](glossary.md): basket, stock, Collect, Pick Up, program, and step. Explain a new word through an action before relying on the label alone.
-- Provide English and German mission text, hints, rewards, and accessible descriptions when content is implemented. The English lines in this proposal are source drafts, not completed localization.
+- Provide English and German mission text, hints, rewards, and accessible descriptions when content is implemented. The English lines in this plan are source drafts, not completed localization.
 - Use shapes/icons alongside robot colors and condition colors. Make quantity visible without needing to distinguish red from green.
 - Offer optional read-aloud, repeatable demonstrations, large touch targets, and a persistent objective card. Text, speech, and pictures should describe the same task.
 - Never require a child to calculate simulation timing. Wait N Steps, if exposed for optional experiments, is not a substitute for sensing or messages.
@@ -524,21 +524,21 @@ The island grows across chapters, but each lesson needs a clear, recoverable sta
 
 ## Implementation dependencies and handoff
 
-This proposal was grounded in the current [phase 2 findings](phase2.md), [phase 3 findings](phase3.md), [block labels](../src/i18n/en/blocks.js), [entity rules](../src/sim/entities.js), and [recipes](../src/sim/recipes.js). Another agent is implementing the game; the status below is a planning snapshot, not a claim that the campaign is playable now.
+This plan was grounded in the [phase 2 findings](phase2.md), [phase 3 findings](phase3.md), [block labels](../src/i18n/en/blocks.js), [entity rules](../src/sim/entities.js), and [recipes](../src/sim/recipes.js). The status column names the phase of PLAN.md §11 that provides each capability, as of 15 October 2026, when Phase 4 was complete. It is not a claim that the campaign is playable now.
 
 | Needed capability | First mission | Status / authoring requirement |
 | --- | --- | --- |
-| Sequence, movement, collection, unloading, Repeat | 1–7 | Present in the current simulation/compiler; still need mission layouts, starters, and teaching UI |
-| Pause, active-block inspection, Step to Next Block, editor Apply | 4 | Basic clock/inspection exist; full editor/debugger work is underway. Verify the finished interaction before writing tutorial prompts |
-| Nested Repeat, basket capacity, readable waiting reasons | 8–10 | Existing mechanics; author deliberately small loops and valid recovery paths |
-| Building Make, Pick Up, Forever, bridge construction | 11–15 | Existing core mechanics; mission gating and boundary transitions still need campaign support |
-| Stock sensing, comparisons, If/Else, Wait Until | 16–20 | Existing compiler/runtime support; need tightly controlled trials and objective observation |
-| Library assignment, shared-edit preview, per-entity settings, individual copies | 21–24 | Planned in the original Phase 6. Settings must be usable as action inputs, not merely stored metadata |
-| Workshop entity, kit recipe, kit rendering and valid stores | 25 | Planned in PLAN.md; the inspected recipe file currently defines only planks and the bridge. Add the planned workshop chain before authoring these missions |
-| Variables, set/change/read, visible local values | 26–30 | Planned in the original Phase 8; keep values local to each entity and reset predictably on restart |
-| Non-recursive procedures and typed inputs | 31–35 | Planned in the original Phase 8; mission 33 needs a destination input, mission 34 a numeric input |
-| Send, matching Wait For Message, inbox display | 36–38 | Planned in the original Phase 8; explicit receive, next-step delivery, one entry thread, no payload/broadcast requirement for this campaign |
-| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | Required campaign infrastructure, originally Phase 7; needed for these lessons even when individual blocks already exist |
+| Sequence, movement, collection, unloading, Repeat | 1–7 | In place (Phases 1–2); mission layouts, starters, and teaching UI come with Phase 7 |
+| Pause, active-block inspection, Step to Next Block, editor Apply | 4 | In place (Phase 4, [phase 4 findings](phase4.md)); tutorial prompts can describe the finished interaction |
+| Nested Repeat, basket capacity, readable waiting reasons | 8–10 | In place; author deliberately small loops and valid recovery paths (Phase 7) |
+| Building Make, Pick Up, Forever, bridge construction | 11–15 | In place; mission gating and boundary transitions come with Phase 7 |
+| Stock sensing, comparisons, If/Else, Wait Until | 16–20 | In place (Phase 2); tightly controlled trials and objective observation come with Phase 7 |
+| Library assignment, shared-edit preview, per-entity settings, individual copies | 21–24 | Phase 6. Settings must be usable as action inputs, not merely stored metadata |
+| Workshop entity, kit recipe, kit rendering and valid stores | 25 | Phase 6; the recipe file defines only planks and the bridge so far |
+| Variables, set/change/read, visible local values | 26–30 | Phase 8; values local to each entity, reset predictably on restart |
+| Non-recursive procedures and typed inputs | 31–35 | Phase 8; mission 33 needs a destination input, mission 34 a numeric input |
+| Send, matching Wait For Message, inbox display | 36–38 | Phase 8; explicit receive, next-step delivery, one entry thread, no payload/broadcast requirement for this campaign |
+| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | Phase 7; needed for these lessons even when individual blocks already exist |
 
 No mission requires AND/OR, recursion, lists, return values, global variables, message payloads, broadcasts, or child-defined object types. These can become future expansion topics. Nested loops appear only in a small guided example and remain optional in later projects.
 
@@ -559,7 +559,7 @@ Reference programs should be run using the real simulation and the mission's act
 
 The existing Phase 5 bridge slice remains a useful implementation milestone. In this teaching sequence, the child reaches that complete bridge after 15 shorter missions instead of six compressed ones. The original introductory concepts extend through mission 25; the original advanced concepts occupy missions 26–40.
 
-If this proposal is adopted, the implementation owner should update the original Phase 7/8 mission counts, sandbox milestone, and release checklist together. This document leaves PLAN.md unchanged to avoid conflicting with the ongoing implementation.
+PLAN.md has been updated to match: Phase 7 builds the mission infrastructure and chapters 1–5 with free play, Phase 8 the advanced features with chapters 6–8, and its checks, release checklist, and risks follow the 40 missions (PLAN.md §16, Campaign).
 
 ### Playtest gates
 
