@@ -533,8 +533,8 @@ This plan was grounded in the [phase 2 findings](phase2.md), [phase 3 findings](
 | Nested Repeat, basket capacity, readable waiting reasons | 8–10 | In place; author deliberately small loops and valid recovery paths (Phase 7) |
 | Building Make, Pick Up, Forever, bridge construction | 11–15 | In place; mission gating and boundary transitions come with Phase 7 |
 | Stock sensing, comparisons, If/Else, Wait Until | 16–20 | In place (Phase 2); tightly controlled trials and objective observation come with Phase 7 |
-| Library assignment, shared-edit preview, per-entity settings, individual copies | 21–24 | Phase 6. Settings must be usable as action inputs, not merely stored metadata |
-| Workshop entity, kit recipe, kit rendering and valid stores | 25 | Phase 6; the recipe file defines only planks and the bridge so far |
+| Library assignment, shared-edit preview, per-entity settings, individual copies | 21–24 | In place (Phase 6, [phase 6 findings](phase6.md)): teams, type defaults and own programs, settings in action inputs, previews naming every robot a change starts again, own copies and back to the shared program; mission unlocks come with Phase 7 |
+| Workshop entity, kit recipe, kit rendering and valid stores | 25 | In place (Phase 6): the workshop, two planks and a stone to a kit, kit stores, and placing it on a construction site |
 | Variables, set/change/read, visible local values | 26–30 | Phase 8; values local to each entity, reset predictably on restart |
 | Non-recursive procedures and typed inputs | 31–35 | Phase 8; mission 33 needs a destination input, mission 34 a numeric input |
 | Send, matching Wait For Message, inbox display | 36–38 | Phase 8; explicit receive, next-step delivery, one entry thread, no payload/broadcast requirement for this campaign |

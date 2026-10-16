@@ -16,6 +16,13 @@ import { ICONS } from "./icons.js";
 //
 // Styles name a colour family (src/blockly/treatments.js), not a colour, so each
 // visual treatment colours every block.
+//
+// A robot action's place or item is an input, not a dropdown of its own (PLAN.md
+// §5, §7): it holds a value block. Its shadow, a place or an item chosen from a
+// dropdown, is there from the start, like the number in a new Repeat, and a
+// setting such as “my destination” plugs in over it, so one program can do each
+// robot's own job. Values have a type, as Blockly checks them: "Place" or
+// "Item".
 
 const icon = (name) => ({ type: "field_image", src: ICONS[name], width: 24, height: 24, alt: "" });
 
@@ -26,8 +33,9 @@ export const PLACES = [
   ["%{BKY_PLACE_DEPOT}", "depot"],
   ["%{BKY_PLACE_CAMP}", "camp"],
   ["%{BKY_PLACE_QUARRY}", "quarry"],
+  ["%{BKY_PLACE_WORKSHOP}", "workshop"],
 ];
-const RAW = [
+export const RAW = [
   ["%{BKY_ITEM_WOOD}", "wood"],
   ["%{BKY_ITEM_STONE}", "stone"],
 ];
@@ -35,7 +43,26 @@ export const MADE = [
   ["%{BKY_ITEM_PLANK}", "plank"],
   ["%{BKY_ITEM_KIT}", "kit"],
 ];
-export const BLUEPRINTS = [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]];
+export const BLUEPRINTS = [
+  ["%{BKY_BLUEPRINT_BRIDGE}", "bridge"],
+  ["%{BKY_BLUEPRINT_WORKSHOP}", "workshop"],
+];
+
+// The value block each action's input starts with, as its shadow: the input's
+// name, the block's type, and its field.
+export const SHADOWS = {
+  robot_go_to: { input: "PLACE", type: "value_place", field: "PLACE" },
+  robot_collect: { input: "ITEM", type: "value_raw", field: "ITEM" },
+  robot_pick_up: { input: "ITEM", type: "value_item", field: "ITEM" },
+};
+
+// The setting blocks, each reading one of a robot's settings (src/sim/
+// entities.js, SETTINGS), and the type of value it gives.
+export const SETTING_BLOCKS = {
+  setting_source: { slot: "source", output: "Place" },
+  setting_item: { slot: "item", output: "Item" },
+  setting_destination: { slot: "destination", output: "Place" },
+};
 
 export const BLOCKS = [
   {
@@ -49,7 +76,8 @@ export const BLOCKS = [
   {
     type: "robot_go_to",
     message0: "%{BKY_ROBOT_GO_TO}",
-    args0: [icon("go"), { type: "field_choice", name: "PLACE", options: PLACES, choices: "places" }],
+    args0: [icon("go"), { type: "input_value", name: "PLACE", check: "Place" }],
+    inputsInline: true,
     previousStatement: null,
     nextStatement: null,
     style: "robot_blocks",
@@ -58,7 +86,8 @@ export const BLOCKS = [
   {
     type: "robot_collect",
     message0: "%{BKY_ROBOT_COLLECT}",
-    args0: [icon("collect"), { type: "field_dropdown", name: "ITEM", options: RAW }],
+    args0: [icon("collect"), { type: "input_value", name: "ITEM", check: "Item" }],
+    inputsInline: true,
     previousStatement: null,
     nextStatement: null,
     style: "robot_blocks",
@@ -67,7 +96,8 @@ export const BLOCKS = [
   {
     type: "robot_pick_up",
     message0: "%{BKY_ROBOT_PICK_UP}",
-    args0: [icon("pickUp"), { type: "field_dropdown", name: "ITEM", options: [...MADE, ...RAW] }],
+    args0: [icon("pickUp"), { type: "input_value", name: "ITEM", check: "Item" }],
+    inputsInline: true,
     previousStatement: null,
     nextStatement: null,
     style: "robot_blocks",
@@ -147,4 +177,39 @@ export const BLOCKS = [
     style: "sensing_blocks",
     tooltip: "%{BKY_SENSE_BASKET_TOOLTIP}",
   },
+  // The values an action's input starts with: a place, an item to collect, an
+  // item to pick up. They're the robot's colour, a lighter part of its block.
+  {
+    type: "value_place",
+    message0: "%1",
+    args0: [{ type: "field_choice", name: "PLACE", options: PLACES, choices: "places" }],
+    output: "Place",
+    style: "robot_blocks",
+    tooltip: "%{BKY_VALUE_PLACE_TOOLTIP}",
+  },
+  {
+    type: "value_raw",
+    message0: "%1",
+    args0: [{ type: "field_dropdown", name: "ITEM", options: RAW }],
+    output: "Item",
+    style: "robot_blocks",
+    tooltip: "%{BKY_VALUE_ITEM_TOOLTIP}",
+  },
+  {
+    type: "value_item",
+    message0: "%1",
+    args0: [{ type: "field_dropdown", name: "ITEM", options: [...MADE, ...RAW] }],
+    output: "Item",
+    style: "robot_blocks",
+    tooltip: "%{BKY_VALUE_ITEM_TOOLTIP}",
+  },
+  // A robot's settings, read where its program uses them.
+  ...Object.entries(SETTING_BLOCKS).map(([type, { output }]) => ({
+    type,
+    message0: `%{BKY_${type.toUpperCase()}}`,
+    args0: [],
+    output,
+    style: "math_blocks",
+    tooltip: `%{BKY_${type.toUpperCase()}_TOOLTIP}`,
+  })),
 ];

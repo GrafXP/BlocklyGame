@@ -65,6 +65,9 @@
 .thing.site {
   background: repeating-linear-gradient(45deg, #d8d2c4 0 4px, #b9b1a0 4px 8px);
 }
+.thing.workshop {
+  background: #f0a830;
+}
 .thing.grove {
   background: #2f6b35;
 }

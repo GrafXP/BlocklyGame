@@ -1,7 +1,8 @@
 import { reason } from "./codes.js";
-import { ITEMS, TYPES, can, typeOf } from "./entities.js";
+import { ITEMS, RAW, TYPES, can, typeOf } from "./entities.js";
 import { available, reserve, release, room, settle } from "./inventory.js";
 import { findPath } from "./navigation.js";
+import { BLUEPRINTS, placedName } from "./placement.js";
 import { RECIPES } from "./recipes.js";
 import { setKind } from "./terrain.js";
 import { thing, thingAt } from "./things.js";
@@ -46,6 +47,7 @@ const STARTS = {
   },
 
   collect(world, robot, { item }, now) {
+    if (!RAW.includes(item)) return { error: reason("error.collect", { item }) };
     const node = thingAt(world, robot.cell, (t) => t.kind === "node" && TYPES[t.type].yields === item);
     if (!node) return { error: reason("error.notHere", { action: "collect" }) };
     return take(world, robot, node, item, now, "collect", typeOf(robot).collectTicks);
@@ -76,7 +78,8 @@ const STARTS = {
 
   make(world, building, { recipe }, now) {
     const r = RECIPES[recipe];
-    if (!r || !typeOf(building).recipes?.includes(recipe) || (r.builds && building.built)) return { error: reason("error.cannot", { action: "make" }) };
+    const wrong = r?.builds && (building.blueprint !== r.builds || building.built);
+    if (!r || !typeOf(building).recipes?.includes(recipe) || wrong) return { error: reason("error.cannot", { action: "make" }) };
     for (const [item, need] of Object.entries(r.inputs)) {
       const have = available(building.store, item);
       if (have < need) return { wait: reason("wait.item", { item, at: building.id, need, have }) };
@@ -134,20 +137,44 @@ export function progress(world, entity, now) {
   return now >= a.end ? "done" : "going";
 }
 
-// Ends `entity`'s action: what it promised happens, all at once.
+// Ends `entity`'s action: what it promised happens, all at once. Returns
+// whether the entity has become another thing, as a construction site becomes
+// the building it was for: then its program is over, and it needs the one its
+// new type runs (bindings.js).
 export function finish(world, entity) {
   const a = entity.action;
   if (a.holds) settle(world, a.holds);
-  if (a.type === "make" && RECIPES[a.recipe].builds) build(world, entity);
   entity.action = null;
+  const builds = a.type === "make" ? RECIPES[a.recipe].builds : null;
+  if (!builds) return false;
+  if (builds === "bridge") {
+    bridge(world, entity);
+    return false;
+  }
+  become(entity, builds);
+  return true;
 }
 
-// A construction site's work is done: its gap becomes walkable, and every way
-// is found again (PLAN.md §4: a bridge is a walkable connection).
-function build(world, site) {
+// A bridge's construction site has built it: its gap becomes walkable, and
+// every way is found again (PLAN.md §4: a bridge is a walkable connection).
+function bridge(world, site) {
   setKind(world.terrain, site.gap, "+");
   site.built = true;
   world.nav++;
+}
+
+// A building's construction site has built it: the site is the building now,
+// with the same id, footprint and front, and the building's store, empty since
+// the work took everything the site held. Its own program, the one that built
+// it, is over. Nothing about the ways changes.
+function become(site, what) {
+  const n = site.id === what ? 1 : Number(site.id.slice(what.length + 1)) || 1;
+  site.type = what;
+  if (typeof site.name !== "string") site.name = placedName(what, n, false);
+  site.store.caps = { ...BLUEPRINTS[what].caps };
+  delete site.blueprint;
+  delete site.built;
+  site.own = null;
 }
 
 // Stops `entity`'s action before it ends, at the tick boundary after tick

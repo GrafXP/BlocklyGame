@@ -6,8 +6,10 @@ import { thing } from "../sim/things.js";
 // Evaluating a compiled expression (compiler.js) for `entity`, against the world
 // as it stands in the runtimes' phase of a tick (PLAN.md §6, phase 4): every
 // runtime reads the same world, and none changes it, so what one program sees
-// never depends on which ran first. Values are whole numbers and booleans. An
-// expression is at most LIMITS.expression deep, so evaluating one is bounded.
+// never depends on which ran first. Values are whole numbers, booleans, and
+// ids: of places and of items. A setting is the entity's own, so robots sharing
+// a program read their own (PLAN.md §5). An expression is at most
+// LIMITS.expression deep, so evaluating one is bounded.
 
 // What can't be worked out as written: the program stops with `reason`.
 export class Fault extends Error {
@@ -41,6 +43,15 @@ export function evaluate(expr, entity, world) {
     }
     case "compare":
       return COMPARE[expr.cmp](evaluate(expr.a, entity, world), evaluate(expr.b, entity, world));
+    case "place":
+    case "item":
+      return expr.value;
+    case "setting": {
+      if (!can(entity, "settings")) throw new Fault(reason("error.cannot", { action: "settings", block: expr.block }));
+      const value = entity.settings[expr.slot];
+      if (value == null) throw new Fault(reason("error.setting", { setting: expr.slot, block: expr.block }));
+      return value;
+    }
     default:
       throw new Error(`no expression ${expr.op}`);
   }

@@ -1,5 +1,6 @@
 import { ACTIONS } from "../sim/actions.js";
 import { reason } from "../sim/codes.js";
+import { SETTINGS } from "../sim/entities.js";
 import { LIMITS } from "./compiler.js";
 import { evaluate, Fault } from "./expressions.js";
 
@@ -57,8 +58,13 @@ export const startProgram = (program, { parked = false } = {}) => ({
 // Each visible instruction, evaluated: what the tick's trace records of it,
 // with the intent of an action. Each moves `at` on, or leaves it where it is.
 const VISIBLE = {
-  // The program stays at an action until it ends (done, below).
-  act: (run, ins) => ({ intent: { ...ins.intent } }),
+  // The program stays at an action until it ends (done, below). What its
+  // inputs work out, such as a setting, is part of the intent, as it is now.
+  act(run, ins, entity, world) {
+    const intent = { ...ins.intent };
+    for (const [key, expr] of Object.entries(ins.args ?? {})) intent[key] = evaluate(expr, entity, world);
+    return { intent };
+  },
 
   // A false condition keeps the block active, to be tried again next tick; a
   // true one lets the next block run, next tick.
@@ -162,6 +168,8 @@ export function checkProgram(program) {
     if (e.op === "number" && Number.isInteger(e.value)) return;
     if (e.op === "stock" && isId(e.item) && isId(e.at)) return;
     if (e.op === "basket") return;
+    if ((e.op === "place" || e.op === "item") && isId(e.value)) return;
+    if (e.op === "setting" && e.slot in SETTINGS) return;
     if (e.op === "compare" && CMPS.includes(e.cmp)) {
       expression(i, e.a, depth + 1);
       expression(i, e.b, depth + 1);
@@ -181,9 +189,16 @@ export function checkProgram(program) {
     switch (ins.op) {
       case "act": {
         const { type } = ins.intent ?? {};
+        const args = ins.args ?? {};
         if (!ACTIONS.includes(type)) fail(i, `no action ${type}`);
-        else if (ROUTES[type] && !isId(ins.intent[ROUTES[type]])) fail(i, `${type} without its ${ROUTES[type]}`);
+        else if (args === null || typeof args !== "object" || Array.isArray(args)) fail(i, "args that aren't an object");
+        else if (ROUTES[type] && !isId(ins.intent[ROUTES[type]]) && !(ROUTES[type] in args)) fail(i, `${type} without its ${ROUTES[type]}`);
         else if (type === "wait" && !(Number.isInteger(ins.intent.steps) && ins.intent.steps >= 1)) fail(i, "a wait without its steps");
+        else for (const [key, e] of Object.entries(args)) {
+          if (key !== ROUTES[type] || key in ins.intent) fail(i, `an arg ${key}`);
+          else if (!["place", "item", "setting"].includes(e?.op)) fail(i, `an arg ${key} that isn't a place or item`);
+          else expression(i, e, 1);
+        }
         break;
       }
       case "until":

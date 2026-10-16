@@ -1,5 +1,5 @@
 import { ref } from "../i18n/index.js";
-import { block, chain, input, number } from "../content/build.js";
+import { act, block, chain, input, number } from "../content/build.js";
 
 // The editor lab's sample: a collector robot's program and a sawmill's, as
 // Blockly's JSON serialization, with fixed block ids so the sample markers can
@@ -13,9 +13,9 @@ export function demoProgram() {
       inputs: {
         TIMES: number(3, "times"),
         DO: input(
-          block("robot_go_to", "go-grove", { fields: { PLACE: "grove" } }),
-          block("robot_collect", "collect", { fields: { ITEM: "wood" } }),
-          block("robot_go_to", "go-mill", { fields: { PLACE: "sawmill" } }),
+          act("robot_go_to", "go-grove", "grove"),
+          act("robot_collect", "collect", "wood"),
+          act("robot_go_to", "go-mill", "sawmill"),
           block("robot_unload", "unload"),
         ),
       },

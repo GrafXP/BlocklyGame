@@ -20,7 +20,9 @@ import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged
 // The toolbox offers only what the robots or buildings running the program can
 // do, and its dropdowns only what's on the island (src/blockly/toolboxes.js,
 // choices.js). The compiler checks the draft as it's edited, and marks what
-// can't work at its block.
+// can't work at its block. Who runs the program is named above it, and, while
+// the draft has changes, everyone Apply will start again (PLAN.md §11, Phase 6:
+// shared Apply affects precisely the listed entities), as at the next step.
 //
 // Its markers show where each entity running the program is, only while the
 // draft is the very program that runs, block for block (the same instructions
@@ -37,11 +39,12 @@ const SETTLE = 300;
 export function openEditor(host, { blockly, markers: markerModule, programId, onPick }) {
   const library = currentLibrary();
   const doc = programDoc(library, programId);
-  const { runners, types } = programContext(programId);
+  const { types, builds } = programContext(programId);
   host.innerHTML = `<div class="code-head">
       <h2 class="code-title">${esc(display(doc.name))}</h2>
-      <p class="code-runners">${runners.map((e) => identityMark(currentGame().world, e.id)).join("")}${esc(t("editor.runners", { names: formatList(runners.map((e) => display(e.name))) }))}</p>
+      <p class="code-runners"></p>
       <p class="code-state" role="status"></p>
+      <p class="code-affects"></p>
       <p class="code-problems" role="alert"></p>
       <div class="code-actions">
         <button class="button small primary" data-code="apply">${esc(t("editor.apply"))}</button>
@@ -54,8 +57,8 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
   const codeHost = $(".code-host");
 
   // The island and robot or building type the dropdowns offer choices for.
-  const context = { world: currentGame().world, type: types.length === 1 ? types[0] : null };
-  const editor = blockly.createEditor(codeHost, { treatment: DEFAULT_TREATMENT, toolbox: toolboxFor(types), state: doc.draft, context, onChange });
+  const context = { world: currentGame().world, type: types.length === 1 ? types[0] : null, builds };
+  const editor = blockly.createEditor(codeHost, { treatment: DEFAULT_TREATMENT, toolbox: toolboxFor(types, { builds }), state: doc.draft, context, onChange });
   const warnings = createWarnings(editor.workspace);
   const marks = markerModule.createMarkers(codeHost, editor, blockly.Blockly, { onPick });
 
@@ -97,16 +100,29 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
     // Everyone who has it has it parked: it hasn't started (runtime.js).
     const { runners } = programContext(programId);
     const parked = runners.length > 0 && runners.every((e) => e.runtime.parked);
+    const names = formatList(runners.map((e) => display(e.name)));
+    const marks = runners.map((e) => identityMark(currentGame().world, e.id)).join("");
+    draw(".code-runners", runners.length ? `${marks}${esc(t("editor.runners", { names }))}` : esc(t("editor.noRunners")));
+    draw(".code-affects", changed && runners.length && !checked?.errors.length ? `${marks}${esc(t("editor.affects", { names }))}` : "");
+    // A program the world doesn't have yet, such as a copy given a moment ago,
+    // arrives with the next step.
+    const arriving = !programOf(world, programId) && runners.length > 0;
     let state;
     if (checked?.errors.length) state = t("editor.problems");
     else if (changed) state = parked ? t("editor.parkedChanged") : t("editor.changed", { revision: running });
-    else if (newest > running) state = t("editor.pending", { revision: newest });
+    else if (newest > running || arriving) state = t("editor.pending", { revision: newest });
     else state = parked ? t("editor.parked") : t("editor.running", { revision: running });
     $(".code-state").textContent = state;
     $('[data-code="apply"]').disabled = !changed || !!checked?.errors.length;
     $('[data-code="undo"]').disabled = !changed;
     $('[data-code="starter"]').disabled = sameBlocks(doc.draft, doc.starter);
     showMarks();
+  }
+
+  // Sets the markup of `sel` in the head, if it's new.
+  function draw(sel, markup) {
+    const el = $(sel);
+    if (el.innerHTML !== markup) el.innerHTML = markup;
   }
 
   // The markers and readings of the snapshot last shown.

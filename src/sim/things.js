@@ -17,3 +17,8 @@ export function thingAt(world, cell, fits = () => true) {
   }
   return null;
 }
+
+// What things there are, and what each is, in one string: it changes when a
+// building is placed, or a construction site becomes its building, and views
+// made thing by thing are made again then.
+export const thingsKey = (world) => [...world.entities, ...world.nodes].map((t) => `${t.id}:${t.type}`).join(" ");

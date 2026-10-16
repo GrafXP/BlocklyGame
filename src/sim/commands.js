@@ -1,9 +1,11 @@
 import { COMPILER_VERSION } from "../programming/compiler.js";
 import { checkProgram, startProgram } from "../programming/runtime.js";
-import { cancel } from "./actions.js";
+import { canRun, emptyBasket, fitsSetting, programFor, rebind, roleOf, startResolved, stop } from "./bindings.js";
 import { reason } from "./codes.js";
-import { ITEMS, can } from "./entities.js";
-import { setCount } from "./inventory.js";
+import { ITEMS, SETTINGS, TYPES } from "./entities.js";
+import { makeStore, setCount } from "./inventory.js";
+import { checkPlacement, freeId, isRequest, placedName } from "./placement.js";
+import { RECIPES } from "./recipes.js";
 import { runtimeOf } from "./runtimes.js";
 import { script } from "./script.js";
 import { thing } from "./things.js";
@@ -17,7 +19,24 @@ import { thing } from "./things.js";
 //        a compiled program (src/programming/compiler.js), new or a new revision:
 //        every entity running it starts the new one from its start, and one
 //        that has it parked keeps it parked (src/programming/runtime.js)
-//   { type: "assign", entity, program }       `entity` runs program `program` from its start
+//   { type: "assign", entity, program }       `entity`'s own program, or null for
+//                                             none: it runs what its team or type
+//                                             gives it (bindings.js). Either way it
+//                                             starts again, from the start
+//   { type: "role", entity, role }            robot `entity` joins team `role`, or
+//                                             leaves its team with null
+//   { type: "default", role | entityType, program }
+//                                             team `role`'s program, or the one for
+//                                             every robot or building of type
+//                                             `entityType`; null for none
+//   { type: "start", entity }                 `entity` starts its parked program
+//   { type: "settings", entity, settings }    robot `entity`'s settings, { slot:
+//                                             value }, each a place, an item, or
+//                                             null (entities.js, SETTINGS)
+//   { type: "name", entity, name }            the player's name for robot `entity`
+//   { type: "place", blueprint, x, z, facing, program }
+//                                             a construction site for a building
+//                                             (placement.js), running `program`
 //   { type: "script", entity, steps, loop }   give `entity` a script to run, from its start
 //   { type: "restart", entity }              start `entity`'s program or script again
 //   { type: "stock", at, item, count }       set a store's count (the sandbox's resource settings)
@@ -26,9 +45,11 @@ import { thing } from "./things.js";
 // let go and work it finished stays done (PLAN.md §5). A robot given a program to
 // run, a new one or a new revision, starts with an empty basket: what it carried
 // is gone, so its program starts as it would from the beginning, not stuck with
-// a load it never asked for. Returns { ok: true }, or
-// { ok: false, reason } for a command that doesn't fit the world, which changes
-// nothing.
+// a load it never asked for. A change to who runs what starts again exactly
+// those entities whose program changes; everyone else carries on (bindings.js).
+// Settings don't start anything again: a program reads them when it comes to
+// a block that does. Returns { ok: true }, or { ok: false, reason } for a
+// command that doesn't fit the world, which changes nothing.
 export function applyCommand(world, command) {
   const apply = COMMANDS[command?.type];
   const done = apply?.(world, command);
@@ -39,21 +60,18 @@ const runner = (world, id) => {
   const e = thing(world, id);
   return e && e.kind !== "node" ? e : null;
 };
-
-function stop(world, entity) {
-  cancel(world, entity);
-  entity.pending = null;
-  entity.error = null;
-}
+const robot = (world, id) => {
+  const e = thing(world, id);
+  return e?.kind === "robot" ? e : null;
+};
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
 // Program ids are the game's own; block ids are Blockly's, any characters.
 const isId = (value) => typeof value === "string" && /^[A-Za-z0-9_-]+$/.test(value);
+const hasProgram = (world, id) => id === null || world.programs.some((p) => p.id === id);
 
-// A robot's basket emptied, once its action is stopped and its holds let go.
-function emptyBasket(entity) {
-  if (entity.kind === "robot") entity.store.items = {};
-}
+// The longest name the player can give a robot, in characters.
+export const NAME_LENGTH = 24;
 
 // Puts compiled program `program` into `world`, in place of any older revision of
 // it, and starts every entity running it again, from its start, on the new one;
@@ -76,6 +94,10 @@ export function installProgram(world, program, { fresh = true } = {}) {
   }
 }
 
+// Whether each of `entities` could run the program it resolves to in `world`;
+// one following a script keeps it, so it doesn't count.
+const allCanRun = (world, entities) => entities.every((e) => e.runtime?.kind === "script" || canRun(world, e, programFor(world, e)));
+
 const COMMANDS = {
   publish(world, { program }) {
     if (!isId(program?.id) || !Number.isInteger(program.revision) || program.compiler !== COMPILER_VERSION || typeof program.start !== "string" || !Array.isArray(program.needs)) return false;
@@ -85,11 +107,97 @@ const COMMANDS = {
   },
   assign(world, { entity, program }) {
     const e = runner(world, entity);
-    const p = world.programs.find((it) => it.id === program);
-    if (!e || !p || !p.needs.every((ability) => can(e, ability))) return false;
+    if (!e || program === undefined || !hasProgram(world, program)) return false;
+    const own = e.own;
+    e.own = program;
+    if (!canRun(world, e, programFor(world, e))) {
+      e.own = own;
+      return false;
+    }
+    startResolved(world, e);
+    return true;
+  },
+  role(world, { entity, role }) {
+    const e = robot(world, entity);
+    if (!e || role === undefined || (role !== null && !roleOf(world, role))) return false;
+    if (!allCanRun(world, [{ ...e, role }])) return false;
+    e.role = role;
+    rebind(world, [e]);
+    return true;
+  },
+  default(world, command) {
+    const { program } = command;
+    if (program === undefined || !hasProgram(world, program)) return false;
+    // The teams and types as they'd be, to see what everyone would run.
+    let { roles, defaults } = world;
+    let affected;
+    if ("role" in command) {
+      if (!roleOf(world, command.role)) return false;
+      roles = roles.map((r) => (r.id === command.role ? { ...r, program } : r));
+      affected = world.entities.filter((e) => e.role === command.role);
+    } else {
+      const type = command.entityType;
+      if (!TYPES[type] || TYPES[type].kind === "node") return false;
+      // A type without a program yet gets one, in order of type.
+      defaults = [...defaults.filter((d) => d.type !== type), { type, program }].sort((a, b) => (a.type < b.type ? -1 : 1));
+      affected = world.entities.filter((e) => e.type === type);
+    }
+    if (!allCanRun({ ...world, roles, defaults }, affected)) return false;
+    Object.assign(world, { roles, defaults });
+    rebind(world, affected);
+    return true;
+  },
+  start(world, { entity }) {
+    const e = runner(world, entity);
+    if (e?.runtime?.kind !== "program") return false;
     stop(world, e);
     emptyBasket(e);
-    e.runtime = startProgram(p);
+    e.runtime = startProgram(world.programs.find((p) => p.id === e.runtime.program));
+    return true;
+  },
+  settings(world, { entity, settings }) {
+    const e = robot(world, entity);
+    if (!e || !settings || typeof settings !== "object" || Array.isArray(settings)) return false;
+    const changes = Object.entries(settings);
+    if (!changes.every(([slot, value]) => slot in SETTINGS && fitsSetting(world, slot, value))) return false;
+    for (const [slot, value] of changes) e.settings[slot] = value;
+    return true;
+  },
+  name(world, { entity, name }) {
+    const e = robot(world, entity);
+    const words = typeof name === "string" ? name.trim() : "";
+    if (!e || !words || words.length > NAME_LENGTH || /[\u0000-\u001f\u007f]/.test(words)) return false;
+    e.name = words;
+    return true;
+  },
+  place(world, request) {
+    if (!isRequest(request) || !hasProgram(world, request.program ?? null)) return false;
+    const plan = checkPlacement(world, request);
+    if (plan.problem) return false;
+    const { blueprint } = request;
+    const { id, n } = freeId(world, blueprint);
+    const site = {
+      id,
+      kind: "building",
+      type: "site",
+      name: placedName(blueprint, n, true),
+      own: request.program ?? null,
+      area: plan.area,
+      access: plan.access,
+      store: makeStore({ caps: RECIPES[blueprint].inputs }),
+      blueprint,
+      built: false,
+      action: null,
+      pending: null,
+      error: null,
+      runtime: null,
+    };
+    if (!canRun(world, site, programFor(world, site))) return false;
+    const at = world.entities.findIndex((e) => e.id > id);
+    world.entities.splice(at < 0 ? world.entities.length : at, 0, site);
+    world.nav++;
+    const program = programFor(world, site);
+    if (program) site.runtime = startProgram(world.programs.find((p) => p.id === program));
     return true;
   },
   script(world, { entity, steps, loop = false }) {

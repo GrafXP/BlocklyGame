@@ -8,19 +8,24 @@ import { bindWorldInput } from "../render/input.js";
 import { createIslandView } from "../render/island-view.js";
 import { createMeter } from "../render/meter.js";
 import { QUALITIES } from "../render/stage.js";
+import { FACINGS, layout } from "../sim/placement.js";
+import { RECIPES } from "../sim/recipes.js";
 import { stateHash } from "../sim/replay.js";
+import { thingsKey } from "../sim/things.js";
 import { checkWorld } from "../sim/validate.js";
 import { loadLocal, saveLocal } from "../storage/local.js";
 import { blockIcon } from "./chips.js";
 import { bindClock, clockMarkup, showClock } from "./clock.js";
-import { describeReason } from "./describe.js";
+import { amounts, describeReason } from "./describe.js";
 import { esc, html, isDev } from "./dom.js";
 import { openEditor } from "./editor.js";
 import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
+import { createLibraryPanel } from "./library.js";
 import { createMissionCard } from "./mission.js";
 import { createOverview } from "./overview.js";
-import { blockOf, currentLibrary, dismissNotice, libraryChanges, newGame, savePlay, usePlay } from "./session.js";
+import { blockOf, blueprints, checkPlace, currentLibrary, dismissNotice, libraryChanges, newGame, peekWorld, placeBuilding, savePlay, tools, usePlay } from "./session.js";
+import { createSetup } from "./setup.js";
 import { entryIn, takeSnapshot } from "./snapshot.js";
 import { declutter } from "./tags.js";
 import { createTogether } from "./together.js";
@@ -40,7 +45,8 @@ async function loadBlockly() {
 
 // What the page hands on to itself when it's opened again during this visit, as
 // after a change of language, for each play: the camera, what's chosen, the
-// panel open on the left, with its width, and how many hints show.
+// panel open on the left (the editor, All programs or the program library),
+// with its width, and how many hints show.
 const keptFor = new Map();
 const fresh = () => ({ camera: null, selected: null, panel: null, panelWidth: 0.42, hints: 0 });
 
@@ -84,10 +90,18 @@ export const play = (el) => islandPage(el, "slice");
 // tick: one snapshot (snapshot.js) is taken after the frame's ticks and drawn by
 // all. A mission's card sits above the overview, and the mission is saved as
 // it's played, at tick boundaries.
+//
+// Phase 6's tools, where the play offers them (session.js, tools): the chosen
+// row's program, team, own copy, name and settings (setup.js); Programs, the
+// program library, in the panel on the left (library.js); and Build, which
+// places a building where the player taps, its plan drawn green where it fits
+// and red where it doesn't, with the reason.
 function islandPage(el, key) {
   const bin = createBin();
   const playing = usePlay(key);
   const { mission } = playing;
+  const offers = tools();
+  const canBuild = offers.includes("build") && blueprints().length > 0;
   if (!keptFor.has(key)) keptFor.set(key, fresh());
   const kept = keptFor.get(key);
   let game = playing.game;
@@ -103,12 +117,28 @@ function islandPage(el, key) {
         <h1>${esc(mission ? missionText(`${mission.id}.title`) : t("island.title"))}</h1>
         ${clockMarkup(mission ? { resetTitle: t("clock.resetMission") } : {})}
         <button class="button small" data-panel="together" aria-pressed="false">${t("together.open")}</button>
+        ${offers.includes("library") ? `<button class="button small" data-panel="library" aria-pressed="false">${t("library.open")}</button>` : ""}
+        ${canBuild ? `<button class="button small" data-build="open" aria-pressed="false">${t("build.open")}</button>` : ""}
         ${languageChoice({ group: "segmented language-choice" })}
       </header>
       <div class="island-main">
         <div class="island-stage"></div>
         <div class="tags"></div>
         <p class="stall" role="status" hidden></p>
+        ${
+          canBuild
+            ? `<p class="build-pending" role="status" hidden>${esc(t("build.pending"))}</p>
+        <section class="build-card" hidden aria-label="${esc(t("build.open"))}">
+          <p class="build-ask"></p>
+          <p class="build-why" role="status"></p>
+          <div class="build-actions">
+            <button class="button small" data-build="turn">${esc(t("build.turn"))}</button>
+            <button class="button small primary" data-build="place" disabled>${esc(t("build.place"))}</button>
+            <button class="button small" data-build="cancel">${esc(t("build.cancel"))}</button>
+          </div>
+        </section>`
+            : ""
+        }
         <section class="editor-panel side-panel" hidden>
           <button class="button small panel-close" data-panel="close">${t("inspector.close")}</button>
           <div class="panel-body"></div>
@@ -139,7 +169,7 @@ function islandPage(el, key) {
   bin.add(() => view.dispose());
   if (kept.camera) view.restoreCamera(kept.camera);
   bindWorldInput(bin, view.canvas, view, {
-    onSelect: (id) => select(id),
+    onSelect: (id, x, y) => (placing ? aim(x, y, true) : select(id)),
     onHover: (x, y) => (hoverAt = x === null ? null : { x, y }),
   });
 
@@ -147,6 +177,7 @@ function islandPage(el, key) {
   // Chooses thing `id`, or nothing, and shows it at once unless `draw` is false.
   function select(id, draw = true) {
     const exists = id && [...game.world.entities, ...game.world.nodes].some((e) => e.id === id);
+    if ((exists ? id : null) !== selected) setup.reset();
     selected = exists ? id : null;
     view.select(selected);
     for (const tag of tagsEl.children) tag.classList.toggle("selected", tag.dataset.pick === selected);
@@ -156,6 +187,18 @@ function islandPage(el, key) {
     if (selected) overview.reveal(selected);
   }
   bin.on(el, "click", (e) => {
+    if (selected && setup.handle(e, selected)) {
+      refresh();
+      return;
+    }
+    const build = e.target.closest("[data-build]")?.dataset.build;
+    if (build) {
+      if (build === "open") placing ? stopPlacing() : startPlacing();
+      else if (build === "turn") turnPlan();
+      else if (build === "cancel") stopPlacing();
+      else if (build === "place") place();
+      return;
+    }
     const pick = e.target.closest("[data-pick]");
     const act = e.target.closest("[data-act]")?.dataset.act;
     const panelAct = e.target.closest("[data-panel]")?.dataset.panel;
@@ -166,16 +209,85 @@ function islandPage(el, key) {
       if (program) openPanel({ kind: "editor", program });
     } else if (panelAct === "close") closePanel();
     else if (panelAct === "together") (panel?.kind === "together" ? closePanel() : openPanel({ kind: "together" }));
+    else if (panelAct === "library") (panel?.kind === "library" ? closePanel() : openPanel({ kind: "library" }));
   });
+  // The setup's dropdowns and its name's form (setup.js).
+  for (const type of ["change", "submit"]) {
+    bin.on(el, type, (e) => {
+      if (selected && setup.handle(e, selected)) refresh();
+    });
+  }
   bin.on(document, "keydown", (e) => {
-    if (e.key === "Escape" && selected && !e.target.closest?.(".side-panel")) select(null);
+    if (e.key === "Escape" && placing) stopPlacing();
+    else if (e.key === "Escape" && selected && !e.target.closest?.(".side-panel, .setup")) select(null);
   });
+
+  // --- Placing a building ------------------------------------------------------
+  // The plan follows the pointer, or the last tap; it can be turned, and placed
+  // where it fits, at the next step (session.js).
+  let placing = null; // { blueprint, facing, at: { x, z } | null, pinned, problem }
+  function startPlacing() {
+    placing = { blueprint: blueprints()[0].blueprint, facing: "south", at: null, pinned: false, problem: null };
+    showPlacing();
+  }
+  function stopPlacing() {
+    placing = null;
+    view.showPlan(null);
+    showPlacing();
+  }
+  const request = () => ({ blueprint: placing.blueprint, facing: placing.facing, ...placing.at });
+  // Aims the plan at the cell under screen point (x, y); `pin` keeps it there
+  // until the next tap.
+  const aim = (x, y, pin) => aimCell(view.cellAt(x, y), pin);
+  // Aims the plan at cell `cell`, { x, z }, with the cell in its middle.
+  function aimCell(cell, pin) {
+    if (!cell) return;
+    const { area } = layout({ blueprint: placing.blueprint, facing: placing.facing, x: 0, z: 0 });
+    placing.at = { x: cell.x - Math.floor((area.w - 1) / 2), z: cell.z - Math.floor((area.d - 1) / 2) };
+    placing.pinned ||= pin;
+    showPlan();
+  }
+  function turnPlan() {
+    placing.facing = FACINGS[(FACINGS.indexOf(placing.facing) + 1) % FACINGS.length];
+    if (placing.at) showPlan();
+    showPlacing();
+  }
+  function showPlan() {
+    const check = checkPlace(request());
+    placing.problem = check.problem ?? null;
+    view.showPlan({ ...layout(request()), ok: !check.problem });
+    showPlacing();
+  }
+  // Places the plan, if it still fits: the world may have moved on since it
+  // was aimed, a robot onto it.
+  function place() {
+    if (!placing?.at) return;
+    if (!placeBuilding(request())) {
+      showPlan();
+      return;
+    }
+    stopPlacing();
+    refresh();
+  }
+  function showPlacing() {
+    const card = $(".build-card");
+    const button = $('[data-build="open"]');
+    button?.setAttribute("aria-pressed", String(!!placing));
+    card.hidden = !placing;
+    if (!placing) return;
+    $(".build-ask").textContent = t(`build.ask.${placing.blueprint}`);
+    const why = !placing.at ? "" : placing.problem ? describeReason(peekWorld(), placing.problem) : t("build.fits", { amounts: amounts(RECIPES[placing.blueprint].inputs) });
+    const line = $(".build-why");
+    line.textContent = why;
+    line.classList.toggle("bad", !!placing.problem);
+    $('[data-build="place"]').disabled = !placing.at || !!placing.problem;
+  }
 
   // --- Labels ---------------------------------------------------------------
   // One button for each robot, building and deposit, over it in the world.
   const tagsEl = $(".tags");
   const sizes = new Map(); // id → { w, h }, measured when a label's words change
-  let tagsShown = null; // the world the labels are for
+  let tagsShown = null; // the world the labels are for, and what things it has
   const tagWords = new Map(); // id → what its label last said
   function tagContent(w, snap, e) {
     const entry = entryIn(snap, e.id);
@@ -198,10 +310,10 @@ function islandPage(el, key) {
     };
   }
   function showTags(w, snap) {
-    if (tagsShown !== w) {
+    if (tagsShown?.world !== w || tagsShown.things !== thingsKey(w)) {
       tagsEl.innerHTML = [...w.entities, ...w.nodes].map((e) => `<button class="tag" data-pick="${esc(e.id)}"></button>`).join("");
       tagWords.clear();
-      tagsShown = w;
+      tagsShown = { world: w, things: thingsKey(w) };
     }
     let resized = false;
     for (const e of [...w.entities, ...w.nodes]) {
@@ -241,6 +353,7 @@ function islandPage(el, key) {
 
   // --- The overview, and the mission's card above it -------------------------
   const overview = createOverview($(".overview"));
+  const setup = createSetup({ onOpenProgram: (program) => openPanel({ kind: "editor", program }) });
   const card = mission
     ? createMissionCard($(".mission-card"), bin, {
         mission,
@@ -273,7 +386,12 @@ function islandPage(el, key) {
     sidePanel.dataset.kind = want.kind;
     const markers = { createMarkers };
     const onPick = (id) => select(id);
-    const pane = want.kind === "editor" ? openEditor(panelBody, { blockly, markers, programId: want.program, onPick }) : createTogether(panelBody, { blockly, markers, onPick });
+    const pane =
+      want.kind === "editor"
+        ? openEditor(panelBody, { blockly, markers, programId: want.program, onPick })
+        : want.kind === "library"
+          ? createLibraryPanel(panelBody, { onEdit: (program) => openPanel({ kind: "editor", program }) })
+          : createTogether(panelBody, { blockly, markers, onPick });
     panel = { ...want, view: pane };
     kept.panel = want;
     showPanelState();
@@ -293,6 +411,7 @@ function islandPage(el, key) {
   });
   function showPanelState() {
     $('[data-panel="together"]').setAttribute("aria-pressed", String(panel?.kind === "together"));
+    $('[data-panel="library"]')?.setAttribute("aria-pressed", String(panel?.kind === "library"));
     main.style.setProperty("--side", panel ? `${sidePanel.getBoundingClientRect().width}px` : "0px");
     placeTags();
   }
@@ -351,17 +470,18 @@ function islandPage(el, key) {
 
   // --- Every view from one snapshot -----------------------------------------
   let snapshot = null;
-  let shown = null; // what the views show: { world, tick, selected, changes }
+  let shown = null; // what the views show: { world, tick, selected, changes, queued }
   function showWorld(drew) {
     const w = game.world;
     let resized = false;
-    const now = { world: w, tick: w.tick, selected, changes: libraryChanges() };
+    const now = { world: w, tick: w.tick, selected, changes: libraryChanges(), queued: game.queueVersion };
     if (!shown || Object.keys(now).some((k) => now[k] !== shown[k])) {
       if (shown && shown.world !== w) select(null, false);
       snapshot = takeSnapshot(w, currentLibrary());
       resized = showTags(w, snapshot);
-      overview.show(w, snapshot, selected, words);
+      overview.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, offers, w) });
       panel?.view.show(w, snapshot, selected);
+      if (canBuild) $(".build-pending").hidden = !game.pending.some((c) => c.type === "place");
       const stall = $(".stall");
       stall.hidden = !w.stall;
       stall.textContent = w.stall ? describeReason(w, { code: "stall" }) : "";
@@ -431,9 +551,14 @@ function islandPage(el, key) {
     game.frame(now);
     if (mission) saveIfChanged(now);
     if (hoverAt !== undefined) {
-      const id = hoverAt ? view.pick(hoverAt.x, hoverAt.y) : null;
-      view.hover(id);
-      view.canvas.style.cursor = id ? "pointer" : "";
+      if (placing) {
+        if (hoverAt && !placing.pinned) aim(hoverAt.x, hoverAt.y, false);
+        view.canvas.style.cursor = "crosshair";
+      } else {
+        const id = hoverAt ? view.pick(hoverAt.x, hoverAt.y) : null;
+        view.hover(id);
+        view.canvas.style.cursor = id ? "pointer" : "";
+      }
       hoverAt = undefined;
     }
     view.sync(game.world, { alpha: game.clock.alpha, now, running: game.clock.running });
@@ -478,6 +603,17 @@ function islandPage(el, key) {
       },
       close: () => closePanel(),
       panel: () => (panel ? { kind: panel.kind, program: panel.program ?? null } : null),
+      // The world as it will be at the next step, and the library panel's
+      // programs as it shows them.
+      peek: () => peekWorld(),
+      programs: () => (panel?.kind === "library" ? panel.view.programs() : []),
+      // Placing: the plan aimed at cell (x, z), as a tap there would; and
+      // what the card says.
+      aimAt(x, z) {
+        if (!placing) startPlacing();
+        aimCell({ x, z }, true);
+      },
+      placing: () => (placing ? { ...placing, why: $(".build-why").textContent } : null),
       editor: () => (panel?.kind === "editor" ? panel.view.editor : null),
       markers: () => panel?.view.markerRects() ?? [],
       badges: () => panel?.view.badges() ?? [],

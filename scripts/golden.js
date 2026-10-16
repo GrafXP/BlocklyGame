@@ -28,14 +28,21 @@ function published(id, revision, change = (json) => json) {
 // as revision 2.
 const reference = (id) => ({ type: "publish", program: { id, revision: 2, ...compile(SLICE.reference[id]).program } });
 
+// Island program `id`'s blocks as a new program `as`, revision 1: a copy.
+const copied = (id, as) => ({ type: "publish", program: { id: as, revision: 1, ...compile(ISLAND_PROGRAMS.find((p) => p.id === id).source).program } });
+
 // The scenarios: the island left to its programs for five minutes of play; the
 // island with the player stepping in: restarting robots and buildings in the
 // middle of their work, giving one a script, changing stores, publishing a new
 // revision of a program that's running and of one that isn't, and giving a robot
-// a program again; and the bridge slice, run for a while before the player
+// a program again; the bridge slice, run for a while before the player
 // changes the courier's program, while its basket is still empty, and later the
 // site's, after which the bridge is built, the mission done, and Robo 3 given its
-// reward.
+// reward; and the island with Phase 6's choices: Robo 3 joins the Wood team,
+// whose program becomes the shared Collector, each robot doing what its own
+// settings say; Robo 2 gets its own copy of its program, and later goes back to
+// its team's; a setting changes mid-run; a robot is named; and a workshop is
+// placed east of the stream, given its materials, built, and makes kits.
 export const SCENARIOS = {
   island: { content: ISLAND, ticks: 3000, log: [] },
   commands: {
@@ -65,6 +72,24 @@ export const SCENARIOS = {
     content: SLICE.content,
     ticks: 1500,
     log: [command(50, reference("courier")), command(120, reference("bridge"))],
+  },
+  teams: {
+    content: ISLAND,
+    ticks: 2000,
+    log: [
+      command(10, { type: "role", entity: "r3", role: "wood-team" }),
+      command(60, { type: "default", role: "wood-team", program: "fetch" }),
+      command(150, copied("courier", "courier-r2")),
+      command(150, { type: "assign", entity: "r2", program: "courier-r2" }),
+      command(300, { type: "place", blueprint: "workshop", x: 24, z: 17, facing: "south", program: "build-workshop" }),
+      command(320, { type: "stock", at: "workshop", item: "plank", count: 4 }),
+      command(320, { type: "stock", at: "workshop", item: "stone", count: 2 }),
+      command(400, { type: "settings", entity: "r1", settings: { destination: "depot" } }),
+      command(500, { type: "name", entity: "r1", name: "Blinky" }),
+      command(600, { type: "stock", at: "workshop", item: "plank", count: 4 }),
+      command(600, { type: "stock", at: "workshop", item: "stone", count: 2 }),
+      command(1000, { type: "assign", entity: "r2", program: null }),
+    ],
   },
 };
 

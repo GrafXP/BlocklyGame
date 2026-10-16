@@ -126,6 +126,8 @@ test("each block's message has one placeholder per input or field, in every lang
   for (const { code } of LANGUAGES) {
     const { blocks } = await loadMessages(code);
     for (const def of BLOCKS) {
+      // A value block that's only its dropdown has no words of its own.
+      if (/^%1$/.test(def.message0) && def.args0.length === 1) continue;
       const key = def.message0.match(/^%\{BKY_(\w+)\}$/)?.[1];
       assert.ok(key, `${def.type}'s first line is a message reference`);
       assert.deepEqual(inputs(blocks[key]), def.args0.map((_, i) => i + 1), `${code} ${key}`);

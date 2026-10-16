@@ -38,6 +38,16 @@ export function describeReason(world, reason) {
     case "error.notHere":
     case "program.cannot":
       return t(reason.code, { action: actionName(reason.action) });
+    case "error.collect":
+      return t(reason.code, { item: t(`item.${reason.item}`) });
+    case "error.setting":
+      return t(reason.code, { setting: t(`setting.${reason.setting}`) });
+    case "place.taken":
+    case "place.blocks":
+    case "place.cutOff":
+      return t(reason.code, { thing: placeName(world, reason.thing) });
+    case "place.robot":
+      return t(reason.code, { robot: placeName(world, reason.robot) });
     default:
       // Every other code's values go into its message as they are: ids,
       // numbers and limits. Its `block` is where the editor shows it.

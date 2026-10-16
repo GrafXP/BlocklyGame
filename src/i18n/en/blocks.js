@@ -53,6 +53,20 @@ export default {
   SENSE_BASKET: "items in basket",
   SENSE_BASKET_TOOLTIP: "How many items the robot has in its basket.",
 
+  // A place or an item in an action's gap, chosen from a dropdown. No words of
+  // their own besides the dropdown's.
+  VALUE_PLACE_TOOLTIP: "A place on the island.",
+  VALUE_ITEM_TOOLTIP: "What to take.",
+  // A robot's own settings, as values to put in an action's gap: “go to my
+  // destination”. No picture and no inputs. Each robot chooses them in its
+  // settings, so robots sharing a program can do different jobs.
+  SETTING_SOURCE: "my source",
+  SETTING_SOURCE_TOOLTIP: "This robot's own source: where it fetches from. Choose it in its settings.",
+  SETTING_ITEM: "my item",
+  SETTING_ITEM_TOOLTIP: "This robot's own item: what it fetches. Choose it in its settings.",
+  SETTING_DESTINATION: "my destination",
+  SETTING_DESTINATION_TOOLTIP: "This robot's own destination: where it takes things. Choose it in its settings.",
+
   // Choices in the blocks' dropdowns. Places and items are shown alone, with
   // nothing around them to agree with, so give the plain word.
   PLACE_GROVE: "grove",
@@ -61,10 +75,12 @@ export default {
   PLACE_DEPOT: "depot",
   PLACE_CAMP: "camp",
   PLACE_QUARRY: "stone pit",
+  PLACE_WORKSHOP: "workshop",
   ITEM_WOOD: "wood",
   ITEM_STONE: "stone",
   ITEM_PLANK: "planks",
   ITEM_KIT: "kits",
   // What a construction site can build.
   BLUEPRINT_BRIDGE: "bridge",
+  BLUEPRINT_WORKSHOP: "workshop",
 };

@@ -18,8 +18,9 @@ import { reasonOf, statusOf } from "../sim/world.js";
 //   id; fresh: whether it evaluated that block in this tick.
 // - round: inside a Repeat, the innermost one's { block, count, times }.
 // - readings: what its active block read, when it read it in this tick: each
-//   sense's number and each comparison's true or false, by block id. Only the
-//   conditions read so far count: an If's after the first that held weren't.
+//   sense's number, each comparison's true or false, and each setting's place
+//   or item id, by block id. Only the conditions read so far count: an If's
+//   after the first that held weren't.
 //   The world after the tick is what the block read during it, since all that
 //   follows the runtimes in a tick is actions starting, which hold what they'll
 //   take rather than take it (src/sim/world.js).
@@ -72,7 +73,7 @@ function readingsOf(world, entity, ins) {
       if (e instanceof Fault) return null;
       throw e;
     }
-    if (expr.op !== "number") readings[expr.block] = value;
+    if (!["number", "place", "item"].includes(expr.op)) readings[expr.block] = value;
     if (expr.op === "compare") {
       read(expr.a);
       read(expr.b);
@@ -81,6 +82,7 @@ function readingsOf(world, entity, ins) {
   };
   if (ins?.op === "until") read(ins.test);
   if (ins?.op === "if") for (const { test } of ins.branches) if (read(test)) break;
+  if (ins?.op === "act") for (const arg of Object.values(ins.args ?? {})) read(arg);
   return readings;
 }
 

@@ -82,7 +82,7 @@ function nodeHash(ticks) {
 // Build under the site's start block, in the editor, applying each.
 async function fixPrograms(page) {
   await open(page, "editor", "courier");
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("site"));
   await page.locator('[data-code="apply"]').click();
   await expect(page.locator(".code-state")).toHaveText(/Version 2 starts with the next step|Version 2 is running/);
   await open(page, "editor", "bridge");
@@ -200,7 +200,7 @@ test("after a change while the world runs, Start again goes back to the start wi
   await steps(page, 120);
   await expect(page.locator(".mission-again")).toBeHidden();
   await open(page, "editor", "courier");
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("site"));
   await page.locator('[data-code="apply"]').click();
   await island(page, () => window.islandPage.close());
   await expect(page.locator(".mission-again")).toBeVisible();
@@ -266,7 +266,7 @@ test("Robo 3's program can be edited before it runs, and applying it starts Robo
   await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Stone carrier");
   await expect(page.locator(".code-state")).toHaveText("Not started yet. Change it and apply, and it starts.");
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("stones-go-depot").getField("PLACE").setValue("camp"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("stones-go-depot-place").getField("PLACE").setValue("camp"));
   await expect(page.locator(".code-state")).toHaveText("Changed. Apply to start it.");
   await page.locator('[data-code="apply"]').click();
   await page.getByRole("button", { name: "Step", exact: true }).click();
@@ -279,7 +279,7 @@ test("a robot given a new program while it carries something starts with an empt
   await openPlay(page);
   await stepUntil(page, (w) => w.entities.find((e) => e.id === "r2").store.items.plank === 2);
   await open(page, "editor", "courier");
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("site"));
   await page.locator('[data-code="apply"]').click();
   await page.getByRole("button", { name: "Step", exact: true }).click();
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "r2").store.items)).toEqual({});

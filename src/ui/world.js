@@ -5,6 +5,7 @@ import { reasonOf, statusOf } from "../sim/world.js";
 import { stateHash } from "../sim/replay.js";
 import { checkWorld } from "../sim/validate.js";
 import { kindOf } from "../sim/terrain.js";
+import { thingsKey } from "../sim/things.js";
 import { robotPose } from "../render/pose.js";
 import { blockChip } from "./chips.js";
 import { bindClock, clockMarkup, showClock } from "./clock.js";
@@ -89,7 +90,7 @@ export function world(el) {
       .filter((e) => e.kind === "robot")
       .map((r) => `<div class="robot" data-id="${r.id}" title="${esc(display(r.name))}">${r.name.params?.n ?? ""}</div>`)
       .join("");
-    drawn = { world: w, nav: w.nav };
+    drawn = { world: w, nav: w.nav, things: thingsKey(w) };
   }
 
   function placeRobots() {
@@ -134,7 +135,7 @@ export function world(el) {
   let shown = null; // the world and tick the table shows
   function showWorld() {
     const w = game.world;
-    if (drawn?.world !== w || drawn.nav !== w.nav) drawMap();
+    if (drawn?.world !== w || drawn.nav !== w.nav || drawn.things !== thingsKey(w)) drawMap();
     if (shown?.world !== w || shown.tick !== w.tick) {
       tbody.innerHTML = [...w.entities, ...w.nodes].map((e) => row(w, e)).join("");
       const stall = $(".stall");

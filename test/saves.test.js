@@ -44,7 +44,7 @@ test("a mission saved at a tick and read back goes on exactly as it would have",
   assert.equal(envelope.schema, SAVE_SCHEMA);
   assert.equal(envelope.sim, SIM_VERSION);
   assert.equal(envelope.compiler, COMPILER_VERSION);
-  assert.deepEqual(envelope.content, { id: "slice", version: 1 });
+  assert.deepEqual(envelope.content, { id: "slice", version: 2 });
   const read = readSave(envelope, SLICE);
   assert.equal(read.problem, undefined);
   assert.equal(stateHash(read.world), stateHash(game.world));
@@ -96,7 +96,7 @@ test("a save from another version, of another mission, or damaged anywhere, is l
     "mission",
   );
   assert.equal(
-    broken((s) => (s.content.version = 2)),
+    broken((s) => (s.content.version += 1)),
     "mission",
   );
   assert.equal(
@@ -184,7 +184,7 @@ test("applying Robo 3's parked program starts it, after a reload too; Start agai
     for (let i = 0; i < 10; i++) play.game.step();
     setDraft(session.currentLibrary(), "stones", SLICE.reference.courier);
     session.applyProgram("stones");
-    assert.equal(play.game.queued, 2, "its publish, and an assign that starts Robo 3");
+    assert.equal(play.game.queued, 2, "its publish, and a start for Robo 3");
     session.savePlay();
 
     const again = (await reload()).usePlay("slice");

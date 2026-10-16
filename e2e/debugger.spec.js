@@ -208,7 +208,7 @@ test("the editor offers only what its robot or building can do, and only places 
   expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("planks-make").getField("ITEM").getOptions(false))).toEqual([["planks", "plank"]]);
   await open(page, "editor", "collector");
   expect(await page.locator(".code-host .blocklyToolboxCategoryLabel").allTextContents()).toEqual(["Start", "Robot", "Control", "Sensing", "Values"]);
-  expect((await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-grove").getField("PLACE").getOptions(false))).map((o) => o[1])).toEqual(["grove", "sawmill", "site", "depot", "camp", "quarry"]);
+  expect((await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-grove-place").getField("PLACE").getOptions(false))).map((o) => o[1])).toEqual(["grove", "sawmill", "site", "depot", "camp", "quarry"]);
 });
 
 test("a draft being edited never moves the marks of the code that runs; Apply takes effect at the next step", async ({ page }) => {
@@ -240,11 +240,11 @@ test("a draft being edited never moves the marks of the code that runs; Apply ta
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "r1").runtime.revision)).toBe(1);
 
   // A place there isn't is marked at its block, and can't be applied.
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("nowhere"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill-place").getField("PLACE").setValue("nowhere"));
   await expect(state).toHaveText("Put the marked blocks right, then apply.");
   await expect(apply).toBeDisabled();
   expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getIcons().map((i) => i.getText?.()))).toEqual(["No such place: nowhere"]);
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("depot"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill-place").getField("PLACE").setValue("depot"));
   await expect(apply).toBeEnabled();
 
   // Apply: waits for the next step.
@@ -273,13 +273,13 @@ test("opening the editor pauses the world; the draft and the panel outlast a cha
   await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Plank courier");
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
-  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-site").getField("PLACE").setValue("depot"));
+  await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-site-place").getField("PLACE").setValue("depot"));
   await expect(page.locator(".code-state")).toHaveText("Changed. Apply to run it; until then, version 1 keeps running.");
   await page.getByRole("group", { name: "Language" }).getByRole("button", { name: "Deutsch" }).click();
   await page.waitForFunction(() => document.documentElement.lang === "de" && window.islandPage?.panel()?.kind === "editor" && document.querySelector(".code-host .blocklySvg"));
   await expect(page.locator(".code-title")).toHaveText("Bretterbote");
   await expect(page.locator(".code-state")).toHaveText("Geändert. Übernimm es, damit es läuft; bis dahin läuft Version 1 weiter.");
-  expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-site").getField("PLACE").getText())).toBe("Lagerhaus");
+  expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-site-place").getField("PLACE").getText())).toBe("Lagerhaus");
   await page.getByRole("button", { name: "Schließen" }).first().click();
   expect(await island(page, () => window.islandPage.panel())).toBe(null);
 });

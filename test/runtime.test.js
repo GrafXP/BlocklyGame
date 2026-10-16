@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { blockIndex, readWorkspace } from "../src/programming/adapter.js";
-import { compile } from "../src/programming/compiler.js";
+import { COMPILER_VERSION, compile } from "../src/programming/compiler.js";
 import { MAX_OPS } from "../src/programming/runtime.js";
 import { installProgram } from "../src/sim/commands.js";
 import { checkWorld } from "../src/sim/validate.js";
@@ -132,7 +132,7 @@ test("a program of nothing but loops can't freeze the world: it takes one block 
 
 test("a damaged program that never reaches a visible block stops with an error, instead of taking the tick for ever", () => {
   const world = tinyWorld({ entities: [bot("r1", [5, 1], "p")], programs: { p: program(wait("w", 1)) } });
-  const damaged = { id: "p", revision: 2, compiler: 1, start: "start", code: [{ op: "jump", to: 0 }, { op: "end" }], needs: [] };
+  const damaged = { id: "p", revision: 2, compiler: COMPILER_VERSION, start: "start", code: [{ op: "jump", to: 0 }, { op: "end" }], needs: [] };
   const [trace] = run(world, 1, { 1: [{ type: "publish", program: damaged }] });
   assert.deepEqual(trace.commands, [{ ok: true }]);
   assert.deepEqual(byId(world, "r1").error, { code: "error.busy", block: null });

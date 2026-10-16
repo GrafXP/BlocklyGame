@@ -9,9 +9,10 @@ import { BLUEPRINTS, MADE, PLACES } from "./blocks.js";
 // dropdown reads as the block does in every language, or else the thing's own
 // name: a message reference, or the player's words.
 //
-// `context` is { world, type }: the world of the island the program runs on,
-// and the robot or building type it's for (src/sim/entities.js), or null when
-// that's not one type. Each list returns [[label, id], …], perhaps none.
+// `context` is { world, type, builds? }: the world of the island the program
+// runs on, the robot or building type it's for (src/sim/entities.js), or null
+// when that's not one type, and for construction sites the blueprints of those
+// that run it. Each list returns [[label, id], …], perhaps none.
 
 const labelIn = (list, id) => list.find(([, value]) => value === id)?.[0] ?? null;
 const rank = (id) => {
@@ -32,8 +33,8 @@ export const CHOICES = {
       .map((t) => [labelIn(PLACES, t.id) ?? t.name, t.id]),
   // The items the building has a recipe for.
   makes: ({ type }) => MADE.filter(([, item]) => recipesOf(type)?.includes(item) ?? RECIPES[item]),
-  // What the building can build.
-  builds: ({ type }) => BLUEPRINTS.filter(([, what]) => recipesOf(type)?.includes(what) ?? RECIPES[what]),
+  // What the building can build: a construction site, what its blueprint says.
+  builds: ({ type, builds }) => BLUEPRINTS.filter(([, what]) => (builds?.length ? builds.includes(what) : (recipesOf(type)?.includes(what) ?? RECIPES[what]))),
 };
 
 export const choicesFor = (list, context) => CHOICES[list]?.(context) ?? [];

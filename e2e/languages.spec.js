@@ -96,7 +96,7 @@ async function exercise(page, check = async () => {}) {
     await check(`toolbox category ${i + 1}`);
   }
   await lab(page, () => window.lab.workspace().getToolbox().clearSelection());
-  await openDropdown(page, "go-grove", "PLACE");
+  await openDropdown(page, "go-grove-place", "PLACE");
   await check("dropdown");
   await page.keyboard.press("Escape");
   await openContextMenu(page, await blockStart(page, "unload"));
@@ -126,7 +126,7 @@ async function exerciseIslandEditor(page, check) {
     await check(`island toolbox category ${i + 1}`);
   }
   await page.evaluate(() => window.islandPage.editor().workspace.getToolbox().clearSelection());
-  const r = await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-grove").getField("PLACE").getSvgRoot().getBoundingClientRect().toJSON());
+  const r = await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-grove-place").getField("PLACE").getSvgRoot().getBoundingClientRect().toJSON());
   await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
   await expect(page.locator(".blocklyDropDownDiv .blocklyMenuItem").first()).toBeVisible();
   await check("island place dropdown");
@@ -222,10 +222,10 @@ test.describe("with a German browser", () => {
     await expect(page.locator(".editor-host .blocklyZoomIn")).toHaveAttribute("aria-label", "Vergrößern");
     expect(await page.locator(".execution-markers text").allTextContents()).toEqual(expect.arrayContaining(["Robo 1", "Robo 2", "Sägewerk"]));
 
-    await openDropdown(page, "go-grove", "PLACE");
-    expect(await menuTexts(page, ".blocklyDropDownDiv")).toEqual(["Wäldchen", "Sägewerk", "Baustelle", "Lagerhaus", "Camp", "Steinbruch"]);
+    await openDropdown(page, "go-grove-place", "PLACE");
+    expect(await menuTexts(page, ".blocklyDropDownDiv")).toEqual(["Wäldchen", "Sägewerk", "Baustelle", "Lagerhaus", "Camp", "Steinbruch", "Werkstatt"]);
     await page.locator(".blocklyDropDownDiv .blocklyMenuItem", { hasText: "Lagerhaus" }).click();
-    expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.fields.PLACE)).toBe("depot");
+    expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.inputs.PLACE.shadow.fields.PLACE)).toBe("depot");
 
     await openContextMenu(page, await blockStart(page, "unload"));
     expect(await menuTexts(page, ".blocklyContextMenu")).toEqual(expect.arrayContaining(["Baustein löschen", "Kommentar hinzufügen"]));
@@ -332,6 +332,18 @@ async function islandAt(page, query, ticks, id, panel = null) {
   await frames(page);
 }
 
+// The island's Phase 6 tools at their fullest: Robo 2's setup with a change of
+// team waiting for OK, the program library with a Give to… open, and the Build
+// card saying why a building doesn't fit.
+async function islandTools(page, query) {
+  await islandAt(page, query, 20, "r2", ["library"]);
+  await page.locator("#setup-team").selectOption("wood-team");
+  await page.locator('.lib-program[data-program="fetch"] [data-lib="give"]').click();
+  await page.locator('[data-build="open"]').click();
+  await page.evaluate(() => window.islandPage.aimAt(14, 8));
+  await frames(page);
+}
+
 // The bridge slice at /play, from its start, as `state` asks: `broken`, a save
 // it can't use (the card says so); `fixed`, the courier and the site's programs
 // changed in the editor and applied; `ticks` steps on, or until the mission is
@@ -351,7 +363,7 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
   };
   if (fixed) {
     await page.evaluate(() => window.islandPage.open("editor", "courier"));
-    await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+    await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("site"));
     await apply();
     await page.evaluate(() => window.islandPage.open("editor", "bridge"));
     await page.evaluate(() => {
@@ -370,7 +382,7 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
   );
   if (changed) {
     await page.evaluate(() => window.islandPage.open("editor", "courier"));
-    await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("depot"));
+    await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("depot"));
     await apply();
     await page.evaluate(() => window.islandPage.close());
   }
@@ -432,17 +444,19 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
   // The editor's toolbox, a changed draft, a problem, and an Apply waiting for
   // the next step.
   await exerciseIslandEditor(page, async (what) => expect(await page.evaluate(unmarkedText), what).toEqual([]));
-  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("nowhere"));
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill-place").getField("PLACE").setValue("nowhere"));
   await expect(page.locator(".code-problems, .code-state")).not.toHaveText(["", ""]);
   await page.waitForTimeout(500);
   // "nowhere" is the place the test typed, which the dropdown and the problem
   // show by its id, as the program holds it: not words of the game's.
   expect((await page.evaluate(unmarkedText)).filter((text) => !/^(aria-label=".*: )?nowhere"?$/.test(text)), "a problem").toEqual([]);
   expect((await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getIcons()[0].getText())).replace("nowhere", "")).not.toMatch(/[A-Za-z]{2}/);
-  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("depot"));
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill-place").getField("PLACE").setValue("depot"));
   await page.waitForTimeout(500);
   await page.locator('[data-code="apply"]').click();
   expect(await page.evaluate(unmarkedText), "an Apply waiting").toEqual([]);
+  await islandTools(page, "&lang=pseudo");
+  expect(await page.evaluate(unmarkedText), "the island's setup, library and Build card").toEqual([]);
   // The mission: its card with every hint, a save it can't use, the offer to
   // start again, and the reward; and the title page asking to start over.
   for (const state of PLAY_STATES) {
@@ -483,6 +497,8 @@ for (const [lang, query] of everyLanguage) {
       await islandAt(page, query, ticks, id, panel);
       expect(await page.evaluate(clippedText), `island at step ${ticks}, ${id} chosen, ${panel} open`).toEqual([]);
     }
+    await islandTools(page, query);
+    expect(await page.evaluate(clippedText), "the island's setup, library and Build card").toEqual([]);
     for (const state of PLAY_STATES) {
       await playAt(page, query, state);
       expect(await page.evaluate(clippedText), `play ${JSON.stringify(state)}`).toEqual([]);

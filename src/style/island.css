@@ -324,6 +324,9 @@
 
 .rows {
   display: grid;
+  /* As wide as the overview, however long a line: a row that isn't chosen
+     shortens its lines with an ellipsis rather than widening the column. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   margin: 0;
   padding: 0;
@@ -331,6 +334,7 @@
 }
 
 .row {
+  min-width: 0;
   padding: 4px 8px 6px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -764,4 +768,341 @@
   border-radius: 6px;
   background: rgb(255 255 255 / 0.85);
   font-size: 0.75rem;
+}
+
+/* The chosen row's program, team, name and settings (src/ui/setup.js): one
+   field to a line, its label above, so German's longer words fit. */
+.setup {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.setup-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px 6px;
+  margin-top: 4px;
+}
+
+.setup-field label {
+  grid-column: 1 / -1;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.setup-field select,
+.setup-rename input,
+.lib-give select,
+.lib-rename input {
+  grid-column: 1 / -1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+/* A setting: its name, then its choice, with an item's picture before it. */
+.settings .setup-field {
+  grid-template-columns: minmax(4.5em, auto) 24px 1fr;
+}
+
+.settings .setup-field label {
+  grid-column: 1;
+}
+
+.settings .setup-field select {
+  grid-column: 2 / -1;
+}
+
+.settings .setup-field .picture {
+  grid-column: 2;
+}
+
+.settings .setup-field .picture + select {
+  grid-column: 3;
+}
+
+.setup-note {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  hyphens: auto;
+}
+
+.setup-note .identity {
+  margin-inline-end: 4px;
+}
+
+.setup-note.pending {
+  color: #123d7d;
+  font-weight: 600;
+}
+
+.setup-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.setup .settings {
+  margin: 8px 0 0;
+  padding: 4px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.setup .settings legend {
+  padding: 0 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.setup-rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 6px;
+}
+
+.setup-rename label {
+  width: 100%;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.setup-rename input {
+  flex: 1 1 8rem;
+}
+
+/* What a change will do, before it's made: whom it starts again. */
+.setup-preview {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #e3edfb;
+  color: #123d7d;
+  font-size: 0.85rem;
+}
+
+.setup-preview p {
+  margin: 0 0 6px;
+}
+
+/* The program library (src/ui/library.js), in the panel on the left. */
+.library-head {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 10px 14px 8px;
+  padding-inline-end: 96px; /* clear of the Close button */
+  background: rgb(var(--toolbox-rgb) / var(--toolbox-alpha));
+  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.library-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.library-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px 16px;
+}
+
+.lib-programs {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lib-program {
+  padding: 6px 10px 8px;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.75);
+}
+
+.lib-program h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  hyphens: auto;
+}
+
+.lib-runners,
+.lib-for {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.lib-runners .identity {
+  margin-inline-end: 4px;
+}
+
+.lib-for {
+  color: #123d7d;
+  font-weight: 600;
+}
+
+.lib-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.lib-actions .button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.lib-give,
+.lib-rename {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #e3edfb;
+  color: #123d7d;
+  font-size: 0.85rem;
+}
+
+.lib-rename {
+  margin-top: 0;
+  background: none;
+  padding: 0;
+  color: var(--ink);
+}
+
+.lib-give p {
+  margin: 0;
+}
+
+.lib-give .button,
+.lib-rename .button {
+  justify-self: start;
+}
+
+.lib-archived {
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.lib-archived summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lib-archived ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lib-archived li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Who Apply starts again, while the draft has changes. */
+.code-affects {
+  margin: 2px 0 0;
+  color: #123d7d;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.code-affects:empty {
+  display: none;
+}
+
+.code-affects .identity {
+  margin-inline-end: 4px;
+}
+
+/* Placing a building (src/ui/island.js): what to do, why it fits or doesn't,
+   and the buttons, at the top of the world, between the panel and the
+   overview. */
+.build-card {
+  position: absolute;
+  top: 12px;
+  left: calc(var(--side, 0px) + 12px);
+  right: calc(min(320px, 42%) + 24px);
+  width: min(26rem, calc(100% - var(--side, 0px) - min(320px, 42%) - 36px));
+  margin-inline: auto;
+  padding: 10px 12px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
+  z-index: 1;
+}
+
+.build-card[hidden],
+.build-pending[hidden] {
+  display: none;
+}
+
+.build-ask {
+  margin: 0;
+  font-weight: 600;
+}
+
+.build-why {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.build-why:empty {
+  display: none;
+}
+
+.build-why.bad {
+  color: #8f1b12;
+}
+
+.build-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.build-actions .button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.island-main .build-pending {
+  padding: 8px 12px;
+  border: 1px solid #8fb3e8;
+  border-radius: var(--radius);
+  background: #e3edfb;
+  color: #123d7d;
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(36rem, calc(100% - 24px));
+  margin: 0;
+  z-index: 1;
 }

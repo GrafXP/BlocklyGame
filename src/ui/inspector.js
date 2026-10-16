@@ -3,7 +3,7 @@ import { ITEMS } from "../sim/entities.js";
 import { thing, thingAt } from "../sim/things.js";
 import { identityOf } from "../render/identity.js";
 import { blockChip } from "./chips.js";
-import { amounts, describeAction, progressOf } from "./describe.js";
+import { amounts, describeAction, placeName, progressOf } from "./describe.js";
 import { esc } from "./dom.js";
 import { blockOf } from "./session.js";
 
@@ -35,19 +35,24 @@ function stock(place) {
   return lines.length ? `<ul class="stock">${lines.join("")}</ul>` : "";
 }
 
-// A reading in words: a number, or whether a condition is true.
-export const readingWords = (value) => (typeof value === "boolean" ? t(value ? "reading.true" : "reading.false") : formatNumber(value));
+// A reading in words: a number, whether a condition is true, or a setting's
+// place or item in `world`.
+export function readingWords(value, world) {
+  if (typeof value === "boolean") return t(value ? "reading.true" : "reading.false");
+  if (typeof value === "string") return ITEMS.includes(value) ? t(`item.${value}`) : placeName(world, value);
+  return formatNumber(value);
+}
 
-// What the active block read (snapshot.js), each sense or comparison as a chip
-// with its value, in the order the block holds them.
-function readings(entry, words) {
+// What the active block read (snapshot.js), each sense, comparison or setting
+// as a chip with its value, in the order the block holds them.
+function readings(world, entry, words) {
   const node = entry.block ? blockOf(entry.program, entry.revision, entry.block) : null;
   if (!node) return "";
   const lines = [];
   const visit = (n) => {
     for (const inner of Object.values(n.inputs)) {
       for (const child of inner) {
-        if (child.id in entry.readings) lines.push(`<li>${blockChip(child, words)} <strong>${esc(readingWords(entry.readings[child.id]))}</strong></li>`);
+        if (child.id in entry.readings) lines.push(`<li>${blockChip(child, words)} <strong>${esc(readingWords(entry.readings[child.id], world))}</strong></li>`);
         visit(child);
       }
     }
@@ -78,7 +83,7 @@ export function detailsHtml(world, id, entry, words) {
     parts.push(row(t("inspector.basket"), `<span class="basket"><span>${esc(amounts(it.store.items))}</span> <span class="count">${esc(t("inspector.of", { have: held, cap: it.store.total }))}</span></span>`));
   } else parts.push(row(t("world.has"), stock(it)));
   if (entry) {
-    parts.push(row(t("inspector.reads"), readings(entry, words)));
+    parts.push(row(t("inspector.reads"), readings(world, entry, words)));
     if (entry.round) parts.push(row(t("inspector.loop"), esc(t("inspector.round", { count: entry.round.count, times: entry.round.times }))));
   }
   return `<div class="details">

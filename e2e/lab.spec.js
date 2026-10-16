@@ -83,7 +83,7 @@ test("the world shows through the editor's background, and not through a solid o
 test("saving and loading the program loses nothing, and it's there after a reload", async ({ page }) => {
   await openLab(page);
   const trip = await lab(page, () => window.lab.roundTrip());
-  expect(trip).toMatchObject({ ok: true, blocks: 15 });
+  expect(trip).toMatchObject({ ok: true, blocks: 18 });
 
   const start = await lab(page, () => window.lab.blockRect("start"));
   await drag(page, { x: start.x + 30, y: start.y + start.height - 12 }, { x: start.x + 130, y: start.y + start.height + 28 });
@@ -205,11 +205,11 @@ test("a finger drags blocks in the editor and pans and pinches the world", async
 test("taps open dropdowns in the editor and select things in the world", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.use.hasTouch, "for the touch devices");
   await openLab(page);
-  const field = await lab(page, () => window.lab.fieldRect("go-grove", "PLACE"));
+  const field = await lab(page, () => window.lab.fieldRect("go-grove-place", "PLACE"));
   await page.touchscreen.tap(...Object.values(centre(field)));
   await expect(page.locator(".blocklyDropDownDiv .blocklyMenuItem")).toHaveCount(PLACES.length);
   await page.locator(".blocklyDropDownDiv .blocklyMenuItem", { hasText: "depot" }).tap();
-  expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.fields.PLACE)).toBe("depot");
+  expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.inputs.PLACE.shadow.fields.PLACE)).toBe("depot");
 
   const rock = await lab(page, () => window.lab.screenOf("rock-1"));
   await page.touchscreen.tap(rock.x, rock.y);
@@ -221,7 +221,7 @@ test("dropdowns open over the editor with readable choices in every treatment", 
   for (const treatment of ["classic", "calm", "bold"]) {
     await lab(page, (t) => window.lab.set({ treatment: t }), treatment);
     await frames(page);
-    const field = await lab(page, () => window.lab.fieldRect("go-grove", "PLACE"));
+    const field = await lab(page, () => window.lab.fieldRect("go-grove-place", "PLACE"));
     await page.mouse.click(field.x + field.width / 2, field.y + field.height / 2);
     const menu = page.locator(".blocklyDropDownDiv");
     await expect(menu).toBeVisible();
@@ -236,7 +236,7 @@ test("dropdowns open over the editor with readable choices in every treatment", 
     }
     await menu.locator(".blocklyMenuItem", { hasText: "camp" }).click();
     await expect(menu).toBeHidden();
-    expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.fields.PLACE)).toBe("camp");
+    expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.inputs.PLACE.shadow.fields.PLACE)).toBe("camp");
   }
   expect((await lab(page, () => window.lab.camera())).selected).toBe(null);
 });

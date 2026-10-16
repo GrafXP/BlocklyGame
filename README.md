@@ -16,6 +16,8 @@ Phase 4 (Blockly editing and the world-wide debugger) is in place on the island:
 
 Phase 5 (the bridge slice) is in place: the first mission, **Across the Stream**, at `/play` and first on the title page. Four programs (a wood collector, the sawmill, a plank courier and the construction site) have to work together to build the bridge; two of them need changing first. A mission card shows the goal, the planks arriving, three hints and the reward. Start again goes back to the mission's start, keeping the programs, and the mission is saved on the device as it's played, so a reload goes on where it was. *Start over…* on the title page forgets it, for the next player. Findings, and notes for the first playtest, are in [docs/phase5.md](docs/phase5.md).
 
+Phase 6 (shared roles, type defaults and placement) is in place on the island: robots on a **team** share its program, buildings of a kind share theirs, and any robot or building can have its own; the chosen one's row changes its program and team, makes its own copy, renames a robot and sets its **settings**, which the new *my source*, *my item* and *my destination* blocks read in an action's gap. Every change of program names, before it's made, each robot it will start again, and so does Apply. **Programs** in the bar is the program library. **Build** places a workshop where it fits, without cutting anyone off; robots bring its planks and stone, its site builds it, and it makes kits. Findings are in [docs/phase6.md](docs/phase6.md).
+
 ## Development
 
 | Command | What it does |
@@ -24,10 +26,10 @@ Phase 5 (the bridge slice) is in place: the first mission, **Across the Stream**
 | `npm run dev` | Development server |
 | `npm run build` / `npm run preview` | Production build in `dist/`, and serving it |
 | `npm test` | Node unit tests in `test/` |
-| `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, and the bridge slice), after a deliberate change to the simulation and a new `SIM_VERSION` |
+| `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, the bridge slice, and the island with teams, settings, copies and a workshop), after a deliberate change to the simulation and a new `SIM_VERSION` |
 | `npx playwright install chromium webkit` | Once: the browsers for the browser tests |
 | `npm run e2e` | Browser tests in `e2e/` (Chromium, WebKit, WebKit as an iPad), against a fresh build |
-| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/`, `docs/phase4/` and `docs/phase5/`; `npm run shots -- play` for some groups only |
+| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/`, `docs/phase4/`, `docs/phase5/` and `docs/phase6/`; `npm run shots -- library` for some groups only |
 
 Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`, which `/play` has too) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
 

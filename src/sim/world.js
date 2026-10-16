@@ -1,8 +1,9 @@
 import { compile } from "../programming/compiler.js";
 import { startProgram } from "../programming/runtime.js";
 import { finish, progress, tryStart } from "./actions.js";
+import { canRun, fitsSetting, programFor, rebind } from "./bindings.js";
 import { applyCommand } from "./commands.js";
-import { TYPES } from "./entities.js";
+import { SETTINGS, TYPES } from "./entities.js";
 import { count, makeStore } from "./inventory.js";
 import { checkGoals, createMission } from "./objectives.js";
 import { runtimeOf } from "./runtimes.js";
@@ -15,30 +16,40 @@ import { cellAt, inside, parseTerrain } from "./terrain.js";
 // objects, so it saves and loads exactly; robots, buildings and deposits are kept
 // in order of id, and nothing depends on the order of an object's keys.
 //
-//   { sim, content, tick, terrain, nav, serial, programs, entities, nodes, stall, mission }
+//   { sim, content, tick, terrain, nav, serial, programs, roles, defaults, entities, nodes, stall, mission }
 //
 // `nav` is the navigation revision, counted up whenever the ways change; `serial`
 // numbers waiting intents in the order they started waiting; `programs` are the
-// compiled programs entities run, { id, revision, …compiled } in order of id
-// (src/programming/compiler.js); `stall` is { since } while nothing can happen
-// (codes.js); `mission` is the mission being played, with its goals
+// compiled programs entities can run, { id, revision, …compiled } in order of
+// id (src/programming/compiler.js); `roles` and `defaults` are the teams' and
+// the types' programs (bindings.js); `stall` is { since } while nothing can
+// happen (codes.js); `mission` is the mission being played, with its goals
 // (objectives.js), or null.
 //
 // An entity (robot or building) is
 //
-//   { id, kind, type, name, cell | area + access, store, action, pending, error, runtime }
+//   { id, kind, type, name, own, role?, settings?, cell | area + access, store,
+//     blueprint?, built?, gap?, action, pending, error, runtime }
 //
-// with `action` what it's doing (actions.js), `pending` an intent that's waiting
-// to start { intent, order, since, reason, nav }, `error` the reason its program
-// stopped, and `runtime` what decides its next intent: a program's runtime state
-// (src/programming/runtime.js), or a script (runtimes.js). `name` is a message
-// reference, worded only when shown (PLAN.md §8).
+// with `own` the program given to it alone, a robot's `role` its team and its
+// `settings` what its program's “my source”, “my item” and “my destination”
+// read (entities.js, SETTINGS); a construction site's `blueprint` what it
+// builds; `action` what it's doing (actions.js), `pending` an intent that's
+// waiting to start { intent, order, since, reason, nav }, `error` the reason its
+// program stopped, and `runtime` what decides its next intent: a program's
+// runtime state (src/programming/runtime.js), or a script (runtimes.js). Which
+// program it runs follows from `own`, `role` and the defaults (bindings.js).
+// `name` is a message reference until the player names a robot, worded only
+// when shown (PLAN.md §8).
 
 // Bumped whenever a deliberate change makes the same commands give a different
 // world; the golden replays (test/golden/) are then recorded again: npm run golden.
 // 3: worlds have a mission, whose goals are checked every tick.
 // 4: a robot given a program starts with an empty basket; programs can be parked.
-export const SIM_VERSION = 4;
+// 5: teams, type defaults and own programs; robots' settings; actions whose
+//    place or item a program works out as it runs; the workshop, its kits, and
+//    buildings placed by the player.
+export const SIM_VERSION = 5;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -49,9 +60,13 @@ const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 // A world at tick 0 from `content` (src/content/island.js shows the shape). Its
 // programs are compiled here, each as its `revision`, 1 unless said (a world
 // started again keeps the programs the player applied: src/programming/
-// programs.js), and an entity with a program starts at its start; one with a
-// script follows the script; one with `parked` has its program without starting
-// it (src/programming/runtime.js). Content with a `mission`
+// programs.js). Who runs what comes from content's `roles` (teams, each with
+// its program), `defaults` (a program for every robot or building of a type),
+// and each entity's `program`, its own, and `role`, a robot's team
+// (bindings.js). An entity with a program starts at its start; one with a
+// script follows the script; one with `parked` has its program without
+// starting it (src/programming/runtime.js). Robots start with the `settings`
+// content gives them, and nothing chosen for the rest. Content with a `mission`
 // (src/content/missions/) makes a world with that mission's goals to meet.
 export function createWorld(content) {
   const terrain = parseTerrain(content.terrain);
@@ -66,28 +81,35 @@ export function createWorld(content) {
     if (!Number.isInteger(revision) || revision < 1) throw new Error(`${content.id}: program ${id} has revision ${revision}`);
     return { id, revision, ...program };
   });
-  const runtime = (e) => {
-    if (e.script) return script(e.script.steps.map((s) => ({ ...s })), { loop: !!e.script.loop });
-    if (!e.program) return null;
-    const program = programs.find((p) => p.id === e.program);
-    if (!program) throw new Error(`${content.id}: ${e.id} runs program ${e.program}, which there isn't`);
-    const missing = program.needs.filter((ability) => !TYPES[e.type].can?.includes(ability));
-    if (missing.length) throw new Error(`${content.id}: ${e.id} can't run program ${e.program}: it can't ${missing.join(", ")}`);
-    return startProgram(program, { parked: !!e.parked });
+  const program = (id, what) => {
+    if (id == null) return null;
+    if (!programs.some((p) => p.id === id)) throw new Error(`${content.id}: ${what} runs program ${id}, which there isn't`);
+    return id;
   };
-  const runner = (e) => ({ action: null, pending: null, error: null, runtime: runtime(e) });
+  const roles = (content.roles ?? []).map((r) => ({ id: r.id, name: r.name, program: program(r.program, `team ${r.id}`) }));
+  const defaults = (content.defaults ?? []).map((d) => {
+    if (!TYPES[d.type] || TYPES[d.type].kind === "node") throw new Error(`${content.id}: a default for "${d.type}", which isn't a robot or building type`);
+    return { type: d.type, program: program(d.program, `type ${d.type}`) };
+  });
   const entities = content.entities.map((e) => {
     const type = TYPES[e.type];
     if (!type || type.kind === "node") throw new Error(`${content.id}: ${e.id} has no robot or building type "${e.type}"`);
-    const base = { id: e.id, kind: type.kind, type: e.type, name: e.name };
-    if (type.kind === "robot") return { ...base, cell: cell(e.cell), store: makeStore({ items: e.items, total: type.basket }), ...runner(e) };
+    const base = { id: e.id, kind: type.kind, type: e.type, name: e.name, own: program(e.program, e.id) };
+    const runner = { action: null, pending: null, error: null, runtime: null };
+    if (type.kind === "robot") {
+      if (e.role != null && !roles.some((r) => r.id === e.role)) throw new Error(`${content.id}: ${e.id} is on team ${e.role}, which there isn't`);
+      const settings = Object.fromEntries(Object.keys(SETTINGS).map((slot) => [slot, e.settings?.[slot] ?? null]));
+      return { ...base, role: e.role ?? null, settings, cell: cell(e.cell), store: makeStore({ items: e.items, total: type.basket }), ...runner };
+    }
+    const blueprint = e.blueprint ?? (e.gap ? "bridge" : null);
     return {
       ...base,
       area: { ...e.area },
       access: e.access.map(cell),
       store: makeStore({ items: e.items, caps: e.caps }),
-      ...(e.gap && { gap: e.gap.map(cell), built: false }),
-      ...runner(e),
+      ...(blueprint && { blueprint, built: false }),
+      ...(e.gap && { gap: e.gap.map(cell) }),
+      ...runner,
     };
   });
   const nodes = content.nodes.map((n) => {
@@ -103,7 +125,7 @@ export function createWorld(content) {
       ...(n.regrow && { regrow: { ...n.regrow } }),
     };
   });
-  return {
+  const world = {
     sim: SIM_VERSION,
     content: { id: content.id, version: content.version },
     tick: 0,
@@ -111,11 +133,33 @@ export function createWorld(content) {
     nav: 0,
     serial: 0,
     programs: programs.sort(byId),
+    roles: roles.sort(byId),
+    defaults: defaults.sort((a, b) => (a.type < b.type ? -1 : a.type > b.type ? 1 : 0)),
     entities: entities.sort(byId),
     nodes: nodes.sort(byId),
     stall: null,
     mission: content.mission ? createMission(content.mission) : null,
   };
+  // What each entity runs: its script, or the program it resolves to.
+  for (const e of world.entities) {
+    const given = content.entities.find((it) => it.id === e.id);
+    for (const [slot, value] of Object.entries(e.settings ?? {})) {
+      if (!fitsSetting(world, slot, value)) throw new Error(`${content.id}: ${e.id}'s ${slot} can't be ${value}`);
+    }
+    if (given.script) {
+      e.runtime = script(given.script.steps.map((step) => ({ ...step })), { loop: !!given.script.loop });
+      continue;
+    }
+    const id = programFor(world, e);
+    if (given.parked && !id) throw new Error(`${content.id}: ${e.id} is parked with no program`);
+    if (!id) continue;
+    if (!canRun(world, e, id)) {
+      const missing = world.programs.find((p) => p.id === id).needs.filter((ability) => !TYPES[e.type].can?.includes(ability));
+      throw new Error(`${content.id}: ${e.id} can't run program ${id}: it can't ${missing.join(", ")}`);
+    }
+    e.runtime = startProgram(world.programs.find((p) => p.id === id), { parked: !!given.parked });
+  }
+  return world;
 }
 
 // Moves `world` on by one tick, applying the player's `commands` first. Returns
@@ -167,8 +211,10 @@ export function advanceWorld(world, commands = []) {
     const state = progress(world, entity, now);
     if (state === "done") {
       trace.ended.push({ entity: entity.id, type: entity.action.type });
-      finish(world, entity);
-      runtimeOf(entity)?.done(entity);
+      // A construction site that has become its building starts the program
+      // its new type runs; anything else goes on to its next step.
+      if (finish(world, entity)) rebind(world, [entity]);
+      else runtimeOf(entity)?.done(entity);
     } else if (state.wait) {
       // The way is gone: the move waits to start again from where the robot is.
       entity.pending = { intent: { type: "goTo", target: state.wait.target }, order: world.serial++, since: now, reason: state.wait, nav: world.nav };

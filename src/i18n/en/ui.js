@@ -27,7 +27,7 @@ export default {
   "home.startOverYes": "Start over",
   "home.startOverNo": "Keep it",
   "home.island": "Island",
-  "home.islandNote": "Phase 4 prototype: the island in 3D, its robots and buildings running programs you can watch, step through and change.",
+  "home.islandNote": "Phase 6 prototype: the island in 3D. Watch its programs, step through them and change them; share a program in a team, give each robot its settings, and build a workshop.",
   "home.lab": "Editor lab",
   "home.labNote": "Phase 0 prototype: the editor over the 3D world.",
   "home.world": "World lab",
@@ -150,11 +150,100 @@ export default {
   // waiting for its job. Applying it starts it.
   "editor.parked": "Not started yet. Change it and apply, and it starts.",
   "editor.parkedChanged": "Changed. Apply to start it.",
+  // Who an Apply changes: every robot and building that runs the program, as it
+  // will be at the next step. {names}: their names, as a list.
+  "editor.affects": "Apply changes it for {names}, from the next step.",
+  // A program nothing runs, such as a new one, or a copy no one has yet.
+  "editor.noRunners": "Nothing runs it yet. Apply it, then give it to a robot or building.",
   // Every running program side by side, with where each robot is in it.
   "together.open": "All programs",
   "together.title": "All programs",
   "together.version": "version {revision}",
   "together.empty": "Nothing is running a program.",
+
+  // The program library: every program, who runs it, and giving it to robots
+  // and buildings. A team is a named group of robots that share one program.
+  "library.open": "Programs",
+  "library.title": "Programs",
+  "library.new": "New program",
+  "library.unused": "Nothing runs it.",
+  // A team's shared program, or the one every building of a kind runs. {team}
+  // is a team's name, such as “Wood team”; {type} a kind of building, such as
+  // “Sawmill”.
+  "library.forTeam": "Team program: {team}",
+  "library.forType": "For every building like this: {type}",
+  "library.edit": "Edit",
+  "library.give": "Give to…",
+  // Above the choices of whom to give program {program} to.
+  "library.giveTo": "Give {program} to:",
+  "library.giveTeam": "Team: {team}",
+  "library.giveType": "Every building like this: {type}",
+  "library.giveOne": "Only {name}",
+  "library.duplicate": "Copy",
+  "library.rename": "Rename",
+  // Putting a program away hides it from the list; it can be brought back.
+  "library.archive": "Put away",
+  "library.archiveTitle": "Only a program nothing runs can be put away.",
+  "library.archived": "Put away: {count}",
+  "library.restore": "Bring back",
+  "library.name": "Name",
+  "library.ok": "OK",
+  "library.cancel": "Cancel",
+
+  // The chosen robot or building's program, team and settings, in the
+  // inspector.
+  "setup.program": "Program",
+  "setup.team": "Team",
+  "setup.noTeam": "No team",
+  "setup.noProgram": "No program",
+  // Where its program comes from: given to it alone, shared by its team
+  // ({team}: the team's name), or run by every building of its kind.
+  "setup.own": "Its own program",
+  "setup.fromTeam": "Shared by its team: {team}",
+  "setup.fromType": "For every building like this",
+  // Others running the same program. {names}: their names, as a list.
+  "setup.alsoRuns": "Also run by: {names}",
+  "setup.copy": "Make its own copy",
+  "setup.back": "Back to the shared program",
+  "setup.rename": "Rename",
+  "setup.name": "Name",
+  "setup.ok": "OK",
+  "setup.cancel": "Cancel",
+  // A robot's settings, which the “my source”, “my item” and “my destination”
+  // blocks read. Each is a place or an item, or not chosen yet.
+  "settings.title": "Settings",
+  "settings.none": "Not chosen",
+  // A setting changed while the world is paused counts from the next step.
+  "settings.pending": "From the next step",
+  "setting.source": "Source",
+  "setting.item": "Item",
+  "setting.destination": "Destination",
+
+  // What a change of program will do, shown before it's made: every robot and
+  // building it changes, {names}, as a list, and how many, {count}.
+  "preview.program": {
+    one: "{names} will run {program} from the next step, from the beginning.",
+    other: "{names} will run {program} from the next step, from the beginning.",
+  },
+  "preview.stop": {
+    one: "{names} will have no program from the next step, and stop.",
+    other: "{names} will have no program from the next step, and stop.",
+  },
+  "preview.basket": "A robot that gets a new program starts with an empty basket.",
+  "preview.nobody": "Nobody runs anything different because of this.",
+  // Making a robot's own copy of the program it shares. {name}: the robot.
+  "preview.copy": "{name} gets its own copy of {program}. Change the copy, and only {name} changes.",
+
+  // Placing a building: the player chooses where it goes, and robots bring
+  // what its construction site needs.
+  "build.open": "Build",
+  "build.ask.workshop": "Where should the workshop go? Tap a spot on the island.",
+  "build.turn": "Turn",
+  "build.place": "Build it here",
+  "build.cancel": "Cancel",
+  // {amounts}: what the construction site needs, such as “4 planks, 2 stones”.
+  "build.fits": "It fits here. Robots bring what the construction site needs: {amounts}.",
+  "build.pending": "The construction site appears with the next step.",
   // For screen readers: the handle on the edge of the panel on the left.
   "panel.resize": "Resize the panel",
   // Items, named on their own, in a list of what a building has.
@@ -231,6 +320,7 @@ export default {
   "action.unload": "Unloading {amounts}",
   "action.make": "Making {amount}",
   "action.build.bridge": "Building the bridge",
+  "action.build.workshop": "Building the workshop",
   "action.wait": {
     one: "Waiting {count} more step",
     other: "Waiting {count} more steps",
@@ -244,6 +334,8 @@ export default {
   "action.name.wait": "Wait",
   // Counting what's in its basket, which only a robot has.
   "action.name.basket": "Look in the basket",
+  // Reading its settings, which only a robot has.
+  "action.name.settings": "Use its settings",
 
   // Counts of items.
   "count.wood": {
@@ -274,6 +366,10 @@ export default {
   "error.target": "No such place: {target}",
   "error.cannot": "Can't do this: {action}",
   "error.notHere": "Not in the right place for this: {action}",
+  // {item}: an item's name, such as “Planks”.
+  "error.collect": "Only wood and stone can be collected, not this: {item}",
+  // {setting}: a setting's name, such as “Destination”.
+  "error.setting": "Choose a setting first: {setting}",
   // Can't happen with programs made of blocks; a damaged program.
   "error.busy": "This program did too much in one step.",
 
@@ -287,6 +383,8 @@ export default {
   "program.empty": "Something is missing: put a block in this block's gap.",
   "program.wantNumber": "This block's gaps need numbers.",
   "program.wantTest": "This block's gap needs something that is true or false.",
+  "program.wantPlace": "This block's gap needs a place.",
+  "program.wantItem": "This block's gap needs an item.",
   "program.whole": "Use a whole number from {min} to {max}.",
   "program.target": "No such place: {target}",
   "program.cannot": "Can't do this: {action}",
@@ -297,6 +395,15 @@ export default {
   stall: "Everything is waiting: nothing can happen until something changes.",
   // {type} is a command's name, for developers.
   "command.invalid": "A command didn't fit this world: {type}",
+
+  // Why a building can't go where the player wants it. {thing} is a building
+  // or deposit, {robot} a robot.
+  "place.ground": "It needs open ground, with open ground in front of it.",
+  "place.taken": "Something is in the way: {thing}",
+  "place.blocks": "It would stand where robots use this: {thing}",
+  "place.robot": "A robot is in the way: {robot}",
+  "place.cutOff": "Robots couldn't get to this any more: {thing}",
+  "place.unreachable": "No robot could get to it.",
 
   // Names of things on the island. {n} tells things of a kind apart.
   "entity.tree": "Tree {n}",
@@ -310,12 +417,31 @@ export default {
   "entity.robot": "Robot",
   // A robot's default name, until the player gives it one.
   "entity.robo": "Robo {n}",
+  // Buildings the player places, and their construction sites. {n} tells a
+  // second one from the first.
+  "entity.workshop": "Workshop",
+  "entity.workshopN": "Workshop {n}",
+  "entity.workshopSite": "Workshop site",
+  "entity.workshopSiteN": "Workshop site {n}",
   // The starter programs' names, until the player gives them others.
   "programName.collector": "Wood collector",
   "programName.courier": "Plank courier",
   "programName.stones": "Stone carrier",
   "programName.planks": "Plank maker",
   "programName.bridge": "Bridge builder",
+  "programName.fetch": "Collector",
+  "programName.kits": "Kit maker",
+  "programName.buildWorkshop": "Workshop builder",
+  // A program's copy for one robot or building: the program's name, then
+  // whose copy it is.
+  "programName.copy": "{program} ({name})",
+  // A copy made in the program library.
+  "programName.duplicate": "Copy of {program}",
+  "programName.new": "New program {n}",
+  // The teams: named groups of robots that share one program.
+  "role.woodTeam": "Wood team",
+  "role.plankTeam": "Plank team",
+  "role.stoneTeam": "Stone team",
 
   "notFound.title": "Not found",
   "notFound.text": "There's no such page.",

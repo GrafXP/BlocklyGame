@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ITEMS } from "../sim/entities.js";
+import { thingsKey } from "../sim/things.js";
 import { BUILDINGS } from "./buildings.js";
 import { TOP, areaCentre, facing, headingOf, pointAt, sharedSpots, topOf } from "./grid.js";
 import { identityOf } from "./identity.js";
@@ -20,7 +21,10 @@ import { light } from "./view.js";
 // except the camera turning and a robot turning to face its way.
 //
 // It draws only when something has changed: the world, the camera, the
-// selection, or the pointer over something.
+// selection, or the pointer over something. A building placed, or a site that
+// has become its building, gets its model at once. While the player places a
+// building, its plan is drawn where it would go (showPlan): its footprint, in
+// green where it fits and red where it doesn't, and its front.
 
 const NODES = { grove: createGrove, quarry: createQuarry };
 const ROBOT_SCALE = 0.5; // the robot model is two cells high at scale 1
@@ -69,6 +73,7 @@ export function createIslandView(container, { quality = "high" } = {}) {
   scene.add(layer);
 
   let world = null;
+  let built = ""; // thingsKey of the world the models are for
   let selected = null;
   let hover = null;
   let drawn = { tick: -1, alpha: -1 };
@@ -101,8 +106,27 @@ export function createIslandView(container, { quality = "high" } = {}) {
       layer.add(model.group);
     }
     world = w;
+    built = thingsKey(w);
     drawn = { tick: -1, alpha: -1 };
   }
+
+  // The floor rays find to say which cell is under the pointer: never drawn.
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), m.blueprint);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = TOP.grass;
+  floor.visible = false;
+  scene.add(floor);
+
+  // A building's plan, while it's being placed.
+  const plan = new THREE.Group();
+  scene.add(plan);
+  const planLook = {
+    ok: new THREE.MeshBasicMaterial({ color: 0x2f9e5b, transparent: true, opacity: 0.55, depthWrite: false }),
+    bad: new THREE.MeshBasicMaterial({ color: 0xd64545, transparent: true, opacity: 0.55, depthWrite: false }),
+    front: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false }),
+  };
+  const planBlock = new THREE.BoxGeometry(0.94, 0.5, 0.94);
+  const planTile = new THREE.BoxGeometry(0.7, 0.04, 0.7);
 
   // Where robot `r` is drawn, at `alpha` of the way to the next tick.
   function placeRobot(w, r, alpha, spots, dt, running) {
@@ -163,7 +187,7 @@ export function createIslandView(container, { quality = "high" } = {}) {
     sync(w, { alpha = 0, now = 0, running = false } = {}) {
       const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
       last = now;
-      if (w !== world) build(w);
+      if (w !== world || (w.tick !== drawn.tick && thingsKey(w) !== built)) build(w);
       if (terrain.update(w.terrain)) stage.invalidate();
       if (w.tick !== drawn.tick || alpha !== drawn.alpha) {
         drawn = { tick: w.tick, alpha };
@@ -186,6 +210,32 @@ export function createIslandView(container, { quality = "high" } = {}) {
       if (!stage.dirty) return false;
       stage.render();
       return true;
+    },
+    // The cell under the screen point, { x, z } in cells, or null off the map.
+    cellAt(clientX, clientY) {
+      const [hit] = stage.raycast(clientX, clientY, [floor]);
+      if (!hit || !world) return null;
+      const { width, height } = world.terrain;
+      const x = Math.floor(hit.point.x + width / 2);
+      const z = Math.floor(hit.point.z + height / 2);
+      return x >= 0 && z >= 0 && x < width && z < height ? { x, z } : null;
+    },
+    // Draws the plan of a building being placed: { area, front, ok } (area
+    // { x, z, w, d } in cells, front [[x, z], …]), or nothing for null.
+    showPlan(p) {
+      plan.clear();
+      if (p && world) {
+        const { terrain } = world;
+        const at = (x, z, geometry, material, y) => {
+          const piece = new THREE.Mesh(geometry, material);
+          const c = pointAt(terrain, x, z);
+          piece.position.set(c.x, y, c.z);
+          plan.add(piece);
+        };
+        for (let dz = 0; dz < p.area.d; dz++) for (let dx = 0; dx < p.area.w; dx++) at(p.area.x + dx, p.area.z + dz, planBlock, p.ok ? planLook.ok : planLook.bad, TOP.grass + 0.25);
+        for (const [x, z] of p.front) at(x, z, planTile, planLook.front, TOP.grass + 0.03);
+      }
+      stage.invalidate();
     },
     // The id of the thing under the screen point, or null.
     pick(clientX, clientY) {
@@ -221,6 +271,9 @@ export function createIslandView(container, { quality = "high" } = {}) {
       return stage.project(new THREE.Vector3(p.x, p.y + model.top * 0.45, p.z));
     },
     dispose() {
+      plan.clear();
+      for (const g of [planBlock, planTile]) g.dispose();
+      for (const mat of Object.values(planLook)) mat.dispose();
       for (const t of things.values()) t.group.traverse((o) => o.isInstancedMesh && o.dispose());
       terrain.dispose();
       marks.dispose();

@@ -59,5 +59,19 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | start again (the mission, keeping programs) | neu anfangen | The clock's button. |
 | start over (forgetting the saved game) | ganz von vorn | On the title page only, and it asks first. Not “neu anfangen”. |
 | saved (at step …) | gespeichert (bei Schritt …) | |
+| team (robots sharing one program; the plan's *role*) | Team | “Holz-Team”, “Bretter-Team”, “Stein-Team”. Teams are named for their material, not their job, so a team's name never reads the same as its program's (*Holzsammler* is singular and plural). |
+| program (shared, own) | Programm (geteilt, eigenes) | “Zurück zum geteilten Programm”, “Eigenes Programm”. |
+| own copy | eigene Kopie | “Eigene Kopie machen”. |
+| program library | Programme | The panel and its button. |
+| put away, bring back (a program) | wegräumen, zurückholen | |
+| settings | Einstellungen | A robot's: source, item, destination. |
+| source, item, destination | Quelle, Material, Ziel | The settings' names. *Material* stands for wood, stone, planks and kits alike. |
+| my source, my item, my destination | meine Quelle, mein Material, mein Ziel | Blocks that go in a gap. They're names of values, like a variable's, so they aren't inflected: “gehe zu mein Ziel”. For the fluent speaker's review. |
+| workshop | Werkstatt | |
+| workshop site | Werkstatt-Baustelle | A placed building's construction site. |
+| kit maker, workshop builder, collector | Bausatzmacher, Werkstattbauer, Sammler | Starter programs. |
+| build (a building, the bar's button) | bauen | “Hier bauen”. |
+| turn (a plan) | drehen | |
+| from the next step | ab dem nächsten Schritt | A change waiting for the next step. |
 
 Open: whether the game's name is translated (*Robot Island*, *Roboterinsel*). Both catalogues say “Robot Island” until it's decided, before Phase 9 (PLAN.md §8).

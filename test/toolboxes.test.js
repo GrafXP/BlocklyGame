@@ -73,7 +73,19 @@ test("what a building can make or build is what it has recipes for", () => {
   const world = createWorld(ISLAND);
   assert.deepEqual(choicesFor("makes", { world, type: "sawmill" }), [["%{BKY_ITEM_PLANK}", "plank"]]);
   assert.deepEqual(choicesFor("builds", { world, type: "sawmill" }), []);
-  assert.deepEqual(choicesFor("builds", { world, type: "site" }), [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]]);
-  assert.deepEqual(choicesFor("makes", { world, type: null }), [["%{BKY_ITEM_PLANK}", "plank"]], "for no one type: whatever any recipe makes");
+  assert.deepEqual(choicesFor("builds", { world, type: "site" }), [
+    ["%{BKY_BLUEPRINT_BRIDGE}", "bridge"],
+    ["%{BKY_BLUEPRINT_WORKSHOP}", "workshop"],
+  ]);
+  assert.deepEqual(choicesFor("builds", { world, type: "site", builds: ["bridge"] }), [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]], "a site builds what its blueprint says");
+  assert.deepEqual(choicesFor("makes", { world, type: "workshop" }), [["%{BKY_ITEM_KIT}", "kit"]]);
+  assert.deepEqual(
+    choicesFor("makes", { world, type: null }),
+    [
+      ["%{BKY_ITEM_PLANK}", "plank"],
+      ["%{BKY_ITEM_KIT}", "kit"],
+    ],
+    "for no one type: whatever any recipe makes",
+  );
   assert.deepEqual(choicesFor("nothing", { world, type: null }), []);
 });

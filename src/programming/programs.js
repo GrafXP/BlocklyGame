@@ -2,16 +2,15 @@ import { canonicalJson } from "../sim/replay.js";
 import { compile } from "./compiler.js";
 
 // The program library (PLAN.md §5, §10): every program's source, as the player
-// edits it and as it was applied. The world keeps only what runs, compiled
-// (world.programs); the library keeps the blocks. Phase 4 has what the editor
-// and the debugger need; roles, type defaults, copies and the player's own names
-// come with Phase 6. It's plain data, so a save holds it (src/storage/saves.js):
+// edits it and as it was applied. The world keeps what can run, compiled
+// (world.programs), and who runs what (src/sim/bindings.js); the library keeps
+// the blocks. It's plain data, so a save holds it (src/storage/saves.js):
 //
-//   { programs: [{ id, name, starter, draft, published: [{ revision, source }, …] }, …] }
+//   { programs: [{ id, name, starter, draft, published: [{ revision, source }, …], archived? }, …] }
 //
 // in order of id, where
 // - `name` is a message reference until the player renames the program (PLAN.md
-//   §8);
+//   §8); a copy's names the program it's a copy of, and whose it is;
 // - `starter` is the workspace the game gave it, to go back to;
 // - `draft` is the workspace being edited. Editing changes only the draft, never
 //   what runs;
@@ -19,7 +18,9 @@ import { compile } from "./compiler.js";
 //   starter. The world runs one of them, usually the newest: an applied revision
 //   reaches the world at the next tick (game.js), and until then the world runs
 //   the one before. The debugger shows the blocks of the revision the world runs
-//   (sourceAt), never the draft's, so its marks can't land on the wrong block.
+//   (sourceAt), never the draft's, so its marks can't land on the wrong block;
+// - `archived` is true for a program the player has put away: nothing runs it,
+//   and the library lists it apart, to bring back.
 //
 // Workspaces are Blockly's JSON serialization, as everywhere (adapter.js).
 
@@ -27,13 +28,87 @@ const copy = (json) => JSON.parse(JSON.stringify(json));
 const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 // A library of `programs`, [{ id, name, source, revision? }]: each starts as its
-// source, published as `revision` (1 unless said).
-export function createLibrary(programs) {
+// source, published as `revision` (1 unless said). With `word`, a function that
+// words a message reference in the player's language, the names the game gave
+// in each program's blocks are worded as they're copied in (wordStarter).
+export function createLibrary(programs, { word = null } = {}) {
   return {
     programs: programs
-      .map(({ id, name, source, revision = 1 }) => ({ id, name, starter: copy(source), draft: copy(source), published: [{ revision, source: copy(source) }] }))
+      .map(({ id, name, source, revision = 1 }) => {
+        const blocks = word ? wordStarter(source, word) : copy(source);
+        return { id, name, starter: copy(blocks), draft: copy(blocks), published: [{ revision, source: copy(blocks) }] };
+      })
       .sort(byId),
   };
+}
+
+// Starter program `source` with the names the game gave in it worded by `word`
+// (PLAN.md §8): its variables', and those a block's fields hold, such as a
+// procedure's. The game writes them as message references, { key, params? };
+// once worded they're the player's, as typed, in the language they were copied
+// in. Returns a new workspace.
+export function wordStarter(source, word) {
+  const isRef = (value) => !!value && typeof value === "object" && typeof value.key === "string" && !("id" in value);
+  const json = copy(source);
+  for (const variable of Array.isArray(json.variables) ? json.variables : []) if (isRef(variable?.name)) variable.name = word(variable.name);
+  const visit = (block) => {
+    if (!block || typeof block !== "object") return;
+    for (const [name, value] of Object.entries(block.fields ?? {})) if (isRef(value)) block.fields[name] = word(value);
+    for (const input of Object.values(block.inputs ?? {})) {
+      visit(input?.block);
+      visit(input?.shadow);
+    }
+    visit(block.next?.block);
+  };
+  for (const block of json.blocks?.blocks ?? []) visit(block);
+  return json;
+}
+
+// --- Making, naming and putting away programs ---------------------------------
+
+// An id for a new program, from `base`: base itself, or with a number after it
+// (base-2, base-3, …), whichever no program of `library` has, nor `taken`
+// lists (such as the programs a world has).
+export function freeProgramId(library, base, taken = []) {
+  const used = new Set([...library.programs.map((p) => p.id), ...taken]);
+  for (let n = 1; ; n++) {
+    const id = n === 1 ? base : `${base}-${n}`;
+    if (!used.has(id)) return id;
+  }
+}
+
+function insert(library, doc) {
+  library.programs.push(doc);
+  library.programs.sort(byId);
+  return doc;
+}
+
+// A copy of program `id` as a new program `newId`, named `name`: its blocks as
+// last applied, as revision 1 and as its draft; its starter the original's, to
+// go back to. Its draft's unapplied changes stay with the original. Returns the
+// new program.
+export function copyProgram(library, id, { newId, name }) {
+  const doc = programDoc(library, id);
+  const source = latest(doc).source;
+  return insert(library, { id: newId, name: copy(name), starter: copy(doc.starter), draft: copy(source), published: [{ revision: 1, source: copy(source) }] });
+}
+
+// A new program `newId`, named `name`, of `source`'s blocks: just a start
+// block, unless said. Returns it.
+export function newProgram(library, { newId, name, source }) {
+  return insert(library, { id: newId, name: copy(name), starter: copy(source), draft: copy(source), published: [{ revision: 1, source: copy(source) }] });
+}
+
+// The player names program `id` `name`: from now on it's their words, as typed.
+export function renameProgram(library, id, name) {
+  programDoc(library, id).name = name;
+}
+
+// Puts program `id` away (`archived` true) or brings it back.
+export function archiveProgram(library, id, archived) {
+  const doc = programDoc(library, id);
+  if (archived) doc.archived = true;
+  else delete doc.archived;
 }
 
 export const programDoc = (library, id) => library.programs.find((p) => p.id === id) ?? null;
@@ -75,6 +150,7 @@ export function checkLibrary(library) {
     if (typeof doc?.id !== "string" || !/^[A-Za-z0-9_-]+$/.test(doc.id)) return problems.push(`${at} has id ${doc?.id}`);
     if (i && !(library.programs[i - 1].id < doc.id)) problems.push(`programs out of id order at ${doc.id}`);
     if (typeof doc.name !== "string" && typeof doc.name?.key !== "string") problems.push(`${doc.id} has no name`);
+    if ("archived" in doc && doc.archived !== true) problems.push(`${doc.id} is archived as ${doc.archived}`);
     if (!isWorkspace(doc.starter) || !isWorkspace(doc.draft)) problems.push(`${doc.id} has no starter or draft`);
     if (!Array.isArray(doc.published) || !doc.published.length) return problems.push(`${doc.id} has no revisions`);
     doc.published.forEach((p, j) => {

@@ -4,30 +4,38 @@
     "blocks": [
       {
         "type": "island_when_started",
-        "id": "2QhwKSEShebHXj^@D`Lv",
-        "x": 64,
-        "y": 17,
+        "id": "WOlr_XqsvgNZD!3E]2m4",
+        "x": 30,
+        "y": 30,
         "next": {
           "block": {
             "type": "control_forever",
-            "id": "au]D`X$c[mxO?K[X;Tqx",
+            "id": "=p(FLbb8@Nb4ovhX[KWY",
             "inputs": {
               "DO": {
                 "block": {
                   "type": "robot_go_to",
-                  "id": "S*^8uI{T7mksUpUt.[xw",
-                  "fields": {
-                    "PLACE": "grove"
+                  "id": "}3):MOlUVhg?.*haCM9K",
+                  "inputs": {
+                    "PLACE": {
+                      "shadow": {
+                        "type": "value_place",
+                        "id": "gm,(VZ~@@3ieD.5YU$i*",
+                        "fields": {
+                          "PLACE": "grove"
+                        }
+                      }
+                    }
                   },
                   "next": {
                     "block": {
                       "type": "controls_repeat_ext",
-                      "id": "!k409zeQ#,ZaHGc~FXim",
+                      "id": "@Lj4MmspdNpm(?;3~$u,",
                       "inputs": {
                         "TIMES": {
                           "shadow": {
                             "type": "math_number",
-                            "id": "-ZmNV,Ip3svy,w6/n2Ex",
+                            "id": "5km__D(?0^WT+K1qPm!A",
                             "fields": {
                               "NUM": 2
                             }
@@ -36,14 +44,22 @@
                         "DO": {
                           "block": {
                             "type": "robot_collect",
-                            "id": "!xd5/uuSqKu0zl2@!;(G",
-                            "fields": {
-                              "ITEM": "wood"
+                            "id": "9wS`Iitjt!kwr+p3i(zg",
+                            "inputs": {
+                              "ITEM": {
+                                "shadow": {
+                                  "type": "value_raw",
+                                  "id": "-qeTQnBA%|y|]K}O+53f",
+                                  "fields": {
+                                    "ITEM": "wood"
+                                  }
+                                }
+                              }
                             },
                             "next": {
                               "block": {
                                 "type": "control_wait_steps",
-                                "id": "368FRMdz;mEaRqEf@3=O",
+                                "id": "D%{z5N$4gQ*2Yvkev)hX",
                                 "disabledReasons": [
                                   "MANUALLY_DISABLED"
                                 ],
@@ -53,9 +69,21 @@
                                 "next": {
                                   "block": {
                                     "type": "robot_collect",
-                                    "id": "Ashfz.6FEDElVYTZg:Q7",
-                                    "fields": {
-                                      "ITEM": "wood"
+                                    "id": "DW[UFnI1Zh,1ka,h4b.S",
+                                    "inputs": {
+                                      "ITEM": {
+                                        "shadow": {
+                                          "type": "value_raw",
+                                          "id": "WkWont~TRqf~|tZJ{0O6",
+                                          "fields": {
+                                            "ITEM": "stone"
+                                          }
+                                        },
+                                        "block": {
+                                          "type": "setting_item",
+                                          "id": ")5Pen03U;_^Y_r^lhJl/"
+                                        }
+                                      }
                                     }
                                   }
                                 }
@@ -67,14 +95,22 @@
                       "next": {
                         "block": {
                           "type": "robot_go_to",
-                          "id": "5KATDRS.dX{]JU]7wUB{",
-                          "fields": {
-                            "PLACE": "sawmill"
+                          "id": "z6pZ%V5Z02{}k!0ONfH6",
+                          "inputs": {
+                            "PLACE": {
+                              "shadow": {
+                                "type": "value_place",
+                                "id": "+9U,)LRz5dsJk/D6f1|]",
+                                "fields": {
+                                  "PLACE": "sawmill"
+                                }
+                              }
+                            }
                           },
                           "next": {
                             "block": {
                               "type": "controls_if",
-                              "id": ".S5xonx[+C/rN}j5lZO}",
+                              "id": "$y+w6MB:S28,{DB+IshR",
                               "extraState": {
                                 "elseIfCount": 1,
                                 "hasElse": true
@@ -83,7 +119,7 @@
                                 "IF0": {
                                   "block": {
                                     "type": "logic_compare",
-                                    "id": "BVb-l8m$~IgpU(Hd2R]L",
+                                    "id": "LkEv%b`R:huyH^UQ@*k,",
                                     "fields": {
                                       "OP": "LT"
                                     },
@@ -91,7 +127,7 @@
                                       "A": {
                                         "block": {
                                           "type": "sense_stock",
-                                          "id": "m^{e%N|R!ohoHpNaf?$S",
+                                          "id": "zOVx2i04zX7XR`o+DM(9",
                                           "fields": {
                                             "ITEM": "plank",
                                             "PLACE": "sawmill"
@@ -101,14 +137,14 @@
                                       "B": {
                                         "shadow": {
                                           "type": "math_number",
-                                          "id": "rYciw@Cl|HSiH*.K9;zb",
+                                          "id": "RPG`1vCC~}`~xF/_gGJ;",
                                           "fields": {
-                                            "NUM": 1
+                                            "NUM": 0
                                           }
                                         },
                                         "block": {
                                           "type": "math_number",
-                                          "id": "u.QYIgR^)4lA,Nbc%ImG",
+                                          "id": "eq0e(j0U@X,hfp1*sgE:",
                                           "fields": {
                                             "NUM": 4
                                           }
@@ -120,13 +156,13 @@
                                 "DO0": {
                                   "block": {
                                     "type": "robot_unload",
-                                    "id": "ufsH|[Ir(^6H1YFXHiiH"
+                                    "id": "%{{SN|?L]Q|Y5UpElm?d"
                                   }
                                 },
                                 "IF1": {
                                   "block": {
                                     "type": "logic_compare",
-                                    "id": "L4S{GWmKPY5+x/ZMs;F)",
+                                    "id": "sh,kZX4_Dgr[O%.dd$^m",
                                     "fields": {
                                       "OP": "GT"
                                     },
@@ -134,13 +170,13 @@
                                       "A": {
                                         "block": {
                                           "type": "sense_basket",
-                                          "id": "UGT)_4[#6tP]=;cIy.l9"
+                                          "id": "$tbSB(1SdD^R$AxRjw7E"
                                         }
                                       },
                                       "B": {
-                                        "shadow": {
+                                        "block": {
                                           "type": "math_number",
-                                          "id": "fF=NKNNv`}=caoiH?sP(",
+                                          "id": "#qfJ{3c.FuM:%Pfe-{Db",
                                           "fields": {
                                             "NUM": 0
                                           }
@@ -152,7 +188,7 @@
                                 "DO1": {
                                   "block": {
                                     "type": "control_wait_steps",
-                                    "id": "sgIb(HGdoz@l|w8co{ol",
+                                    "id": "b+u^SZYunc5)D}jf%-BA",
                                     "fields": {
                                       "STEPS": 3
                                     }
@@ -161,12 +197,12 @@
                                 "ELSE": {
                                   "block": {
                                     "type": "control_wait_until",
-                                    "id": "oL8?VhXSo^aG_^sBI[Ce",
+                                    "id": "c|Egm|_T]3udL%9Ipxxg",
                                     "inputs": {
                                       "UNTIL": {
                                         "block": {
                                           "type": "logic_compare",
-                                          "id": "823;(1SA;iCt_%3sPDD.",
+                                          "id": "i;b~naGwT4EnuUEF.2a@",
                                           "fields": {
                                             "OP": "EQ"
                                           },
@@ -174,13 +210,13 @@
                                             "A": {
                                               "block": {
                                                 "type": "sense_basket",
-                                                "id": "t/YS@{8;,{4tK{aJRsD("
+                                                "id": "4jb4C-g1e6HTR~g8qqf."
                                               }
                                             },
                                             "B": {
-                                              "shadow": {
+                                              "block": {
                                                 "type": "math_number",
-                                                "id": "W{+?rasbA@JoD_V_H4bJ",
+                                                "id": "[LW%:KO?YhP[[LO~)CQ+",
                                                 "fields": {
                                                   "NUM": 2
                                                 }
@@ -188,6 +224,27 @@
                                             }
                                           }
                                         }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "robot_go_to",
+                                  "id": "/!7z[KN60vb7in7=+p@2",
+                                  "inputs": {
+                                    "PLACE": {
+                                      "shadow": {
+                                        "type": "value_place",
+                                        "id": "d1o#ZC9RA^d%SI29rm/*",
+                                        "fields": {
+                                          "PLACE": "depot"
+                                        }
+                                      },
+                                      "block": {
+                                        "type": "setting_destination",
+                                        "id": "}QcXY~-U|rCNz+$Ut4]9"
                                       }
                                     }
                                   }
@@ -207,11 +264,19 @@
       },
       {
         "type": "robot_pick_up",
-        "id": "pM*kJ6;LV1f,MW#SLayn",
+        "id": "Pk[p+5l77Maqf3M/i8rj",
         "x": 400,
-        "y": 40,
-        "fields": {
-          "ITEM": "plank"
+        "y": 60,
+        "inputs": {
+          "ITEM": {
+            "shadow": {
+              "type": "value_item",
+              "id": "Z|H8?CSYF,+D#;vMO1pG",
+              "fields": {
+                "ITEM": "plank"
+              }
+            }
+          }
         }
       }
     ]

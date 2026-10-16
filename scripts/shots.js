@@ -5,18 +5,19 @@
 // the title page and in the lab; programs (docs/phase2.md): the world lab's
 // robots and buildings at their blocks, and the editor marking a program's
 // problems; the island in 3D (docs/phase3.md); the island's editor and debugger
-// (docs/phase4.md); and the bridge slice at /play (docs/phase5.md). Builds the
-// app, serves it, and writes to docs/phase0/, docs/languages/, docs/phase2/,
-// docs/phase3/, docs/phase4/ and docs/phase5/. Run it after changing how the
-// editor or the island looks: npm run shots, or for some groups only: npm run
-// shots -- languages ipad.
+// (docs/phase4.md); the bridge slice at /play (docs/phase5.md); and teams,
+// settings, copies, the program library and placing the workshop
+// (docs/phase6.md). Builds the app, serves it, and writes to docs/phase0/,
+// docs/languages/, docs/phase2/, docs/phase3/, docs/phase4/, docs/phase5/ and
+// docs/phase6/. Run it after changing how the editor or the island looks: npm
+// run shots, or for some groups only: npm run shots -- languages ipad.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { build, preview } from "vite";
 import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
 
-const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger", "play"];
+const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger", "play", "library"];
 const asked = process.argv.slice(2);
 for (const group of asked) if (!GROUPS.includes(group)) throw new Error(`No group "${group}"; there are ${GROUPS.join(", ")}.`);
 const want = (group) => !asked.length || asked.includes(group);
@@ -28,6 +29,7 @@ const PHASE2 = new URL("../docs/phase2/", import.meta.url);
 const PHASE3 = new URL("../docs/phase3/", import.meta.url);
 const PHASE4 = new URL("../docs/phase4/", import.meta.url);
 const PHASE5 = new URL("../docs/phase5/", import.meta.url);
+const PHASE6 = new URL("../docs/phase6/", import.meta.url);
 const PORT = 4178;
 const BEHIND = 3.6; // radians round its circuit: the test robot behind the editor, clear of the trees
 // The game follows the browser's language; the pictures choose theirs.
@@ -39,6 +41,7 @@ mkdirSync(PHASE2, { recursive: true });
 mkdirSync(PHASE3, { recursive: true });
 mkdirSync(PHASE4, { recursive: true });
 mkdirSync(PHASE5, { recursive: true });
+mkdirSync(PHASE6, { recursive: true });
 
 await build({ logLevel: "warn" });
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: "warn" });
@@ -65,7 +68,7 @@ async function openLab(browser, settings, { context = DESKTOP, lang = "en", cont
 }
 
 async function openDropdown(page) {
-  const field = await page.evaluate(() => window.lab.fieldRect("go-grove", "PLACE"));
+  const field = await page.evaluate(() => window.lab.fieldRect("go-grove-place", "PLACE"));
   await page.mouse.click(field.x + field.width / 2, field.y + field.height / 2);
   await page.waitForSelector(".blocklyDropDownDiv .blocklyMenuItem");
   await page.waitForTimeout(300);
@@ -231,7 +234,7 @@ const share = (page) =>
 // The collector's draft changed, its marks hidden, and the change applied, to
 // start at the next step.
 async function changeAndApply(page) {
-  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill").getField("PLACE").setValue("depot"));
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("collector-go-sawmill-place").getField("PLACE").setValue("depot"));
   await page.waitForTimeout(500);
 }
 if (want("island")) {
@@ -287,7 +290,7 @@ async function fixSlice(page) {
     await page.click('[data-code="apply"]');
   };
   await page.evaluate(() => window.islandPage.open("editor", "courier"));
-  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await page.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("site"));
   await apply();
   await page.evaluate(() => window.islandPage.open("editor", "bridge"));
   await page.evaluate(() => {
@@ -308,7 +311,7 @@ if (want("play")) {
   for (const lang of ["en", "de"]) await shot(await openPlay(browser, { lang, fixed: true, ticks: 300, chosen: "r3" }), `play-done-${lang}`, PHASE5);
   const again = await openPlay(browser, { ticks: 120 });
   await again.evaluate(() => window.islandPage.open("editor", "courier"));
-  await again.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot").getField("PLACE").setValue("site"));
+  await again.evaluate(() => window.islandPage.editor().workspace.getBlockById("courier-go-depot-place").getField("PLACE").setValue("site"));
   await again.waitForTimeout(400);
   await again.click('[data-code="apply"]');
   await again.waitForTimeout(400);
@@ -320,7 +323,95 @@ if (want("play")) {
   await home.waitForTimeout(300);
   await shot(home, "home-start-over-en", PHASE5);
 }
+// Phase 6's tools on the island: `chosen`'s setup, with `team` chosen for it
+// and waiting for OK; robots joining teams first (`teams`, { robot: team },
+// made and stepped through `ticks` steps); the program library open with a
+// Give to… for `give` ([program, target]); and the Build card aimed at `aim`
+// ([x, z]).
+async function openTools(browser, { context = DESKTOP, lang = "en", teams = {}, ticks = 0, chosen = null, team = null, give = null, aim = null, panel = null } = {}) {
+  const page = await openIsland(browser, { context, lang });
+  await page.evaluate(
+    ([t, n]) => {
+      for (const [entity, role] of Object.entries(t)) window.islandPage.game.queue({ type: "role", entity, role });
+      for (let i = 0; i < n; i++) window.islandPage.game.step();
+    },
+    [teams, ticks],
+  );
+  await page.evaluate((id) => window.islandPage.select(id), chosen);
+  if (team) await page.selectOption("#setup-team", team);
+  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
+  if (give) {
+    await page.evaluate(() => window.islandPage.open("library"));
+    await page.waitForSelector(".lib-program");
+    await page.click(`.lib-program[data-program="${give[0]}"] [data-lib="give"]`);
+    await page.selectOption("#lib-target", give[1]);
+  }
+  if (aim) {
+    await page.click('[data-build="open"]');
+    await page.evaluate(([x, z]) => window.islandPage.aimAt(x, z), aim);
+  }
+  await page.waitForTimeout(900);
+  return page;
+}
+if (want("library")) {
+  console.log("Teams, settings, copies, the library and the workshop:");
+  await shot(await openTools(browser, { ticks: 20, chosen: "r2", team: "wood-team" }), "team-preview-en", PHASE6);
+  await shot(await openTools(browser, { teams: { r2: "wood-team" }, ticks: 60, chosen: "r2", panel: ["together"] }), "team-shared-en", PHASE6);
+  for (const lang of ["en", "de"]) await shot(await openTools(browser, { lang, teams: { r3: "wood-team" }, ticks: 1, chosen: "r3", give: ["fetch", "role:wood-team"] }), `library-${lang}`, PHASE6);
+  await shot(await openTools(browser, { lang: "de", ticks: 30, chosen: "r1" }), "settings-de", PHASE6);
+  // The shared Collector, run by Robo 1 and Robo 3 with their own settings.
+  const shared = await openTools(browser, { teams: { r3: "wood-team" }, chosen: "r3" });
+  await shared.evaluate(() => {
+    window.islandPage.game.queue({ type: "default", role: "wood-team", program: "fetch" });
+    for (let i = 0; i < 34; i++) window.islandPage.game.step();
+    window.islandPage.select("r3");
+  });
+  await shared.evaluate(() => window.islandPage.open("editor", "fetch"));
+  await shared.waitForTimeout(900);
+  await shot(shared, "settings-editor-en", PHASE6);
+  // Robo 3's own copy of the Wood team's program, open and changed.
+  const copy = await openTools(browser, { teams: { r3: "wood-team" }, ticks: 30, chosen: "r3" });
+  await copy.click('[data-setup="copy"]');
+  await copy.waitForTimeout(300);
+  await copy.screenshot({ path: fileURLToPath(new URL("copy-preview-en.jpg", PHASE6)), type: "jpeg", quality: 82 });
+  console.log("  copy-preview-en.jpg");
+  await copy.click('[data-setup="ok"]');
+  await copy.waitForFunction(() => window.islandPage.panel()?.program === "collector-r3");
+  await copy.evaluate(() => {
+    window.islandPage.game.step();
+    window.islandPage.editor().workspace.getBlockById("collector-times").getField("NUM").setValue(1);
+  });
+  await copy.waitForTimeout(700);
+  await shot(copy, "copy-editor-en", PHASE6);
+  await shot(await openTools(browser, { aim: [25, 17] }), "place-fits-en", PHASE6);
+  await shot(await openTools(browser, { aim: [14, 8] }), "place-blocked-en", PHASE6);
+  // The workshop built, with a kit made and another under way.
+  const shop = await openTools(browser);
+  await shop.evaluate(() => {
+    const game = window.islandPage.game;
+    game.queue({ type: "place", blueprint: "workshop", x: 24, z: 17, facing: "south", program: "build-workshop" });
+    game.step();
+    for (const [item, count] of [
+      ["plank", 4],
+      ["stone", 2],
+    ])
+      game.queue({ type: "stock", at: "workshop", item, count });
+    while (game.world.entities.find((e) => e.id === "workshop").type !== "workshop") game.step();
+    game.queue({ type: "stock", at: "workshop", item: "plank", count: 4 });
+    game.queue({ type: "stock", at: "workshop", item: "stone", count: 2 });
+    for (let i = 0; i < 45; i++) game.step();
+    window.islandPage.select("workshop");
+  });
+  await shop.waitForTimeout(900);
+  await shot(shop, "workshop-en", PHASE6);
+}
 await browser.close();
+
+if (want("library")) {
+  const safari = await webkit.launch();
+  await shot(await openTools(safari, { context: IPAD, teams: { r3: "wood-team" }, ticks: 1, chosen: "r3", give: ["fetch", "role:wood-team"] }), "library-ipad", PHASE6);
+  await safari.close();
+}
 
 if (want("play")) {
   const safari = await webkit.launch();

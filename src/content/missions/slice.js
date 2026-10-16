@@ -1,5 +1,5 @@
 import { block, chain, workspace } from "../build.js";
-import { ISLAND, TERRAIN } from "../island.js";
+import { ISLAND, ISLAND_ROLES, TERRAIN } from "../island.js";
 import { ISLAND_PROGRAMS, carry, start } from "../programs.js";
 
 // The bridge slice (PLAN.md §11, Phase 5): mission 15 of the campaign, “Across
@@ -17,9 +17,14 @@ import { ISLAND_PROGRAMS, carry, start } from "../programs.js";
 // built, when the mission starts it and Robo 3 crosses the stream to the stone
 // pit: the reward.
 //
+// Who runs what is the island's (src/content/island.js): each robot on its
+// team, the sawmill running its type's program, the site its own. The slice has
+// no workshop, and offers none of Phase 6's tools: choosing programs, settings
+// and placing buildings are chapter 5's (`tools`, src/ui/island.js).
+//
 // A mission is
 //
-//   { id, content, look, progress, reference, steps }
+//   { id, content, look, progress, reference, steps, tools? }
 //
 // - id: its id, and the prefix of its words in each language's missions.js:
 //   <id>.title, .goal, .progress, .hint.look, .hint.think, .hint.try, .reward.
@@ -32,6 +37,8 @@ import { ISLAND_PROGRAMS, carry, start } from "../programs.js";
 //   changes, by program id; with the others as they start, they're the
 //   mission's reference solution (test/missions.test.js).
 // - steps: how many steps the reference solution may take at most.
+// - tools: which of the program library, settings and placing buildings the
+//   player is offered; none unless said.
 
 const courier = carry("courier", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "depot" });
 
@@ -41,23 +48,24 @@ const bridge = workspace(start("bridge"), block("building_build", "bridge-build"
 const island = (id) => ISLAND_PROGRAMS.find((p) => p.id === id);
 const PROGRAMS = [island("collector"), { ...island("courier"), source: courier }, island("planks"), { ...island("bridge"), source: bridge }, island("stones")];
 
-// Who runs what. Robo 3's program is parked until the reward.
-const RUNS = { r1: "collector", r2: "courier", r3: "stones", sawmill: "planks", site: "bridge" };
+// Robo 3's program is parked until the reward.
 const PARKED = ["r3"];
 
 export const SLICE = {
   id: "slice",
   content: {
     id: "slice",
-    version: 1,
+    version: 2,
     terrain: TERRAIN,
     programs: PROGRAMS,
-    entities: ISLAND.entities.map(({ program, ...e }) => (RUNS[e.id] ? { ...e, program: RUNS[e.id], ...(PARKED.includes(e.id) && { parked: true }) } : e)),
+    roles: ISLAND_ROLES,
+    defaults: [{ type: "sawmill", program: "planks" }],
+    entities: ISLAND.entities.map((e) => (PARKED.includes(e.id) ? { ...e, parked: true } : e)),
     nodes: ISLAND.nodes,
     mission: {
       id: "slice",
       goals: [{ id: "bridge", type: "built", at: "site" }],
-      reward: [{ type: "assign", entity: "r3", program: "stones" }],
+      reward: [{ type: "start", entity: "r3" }],
     },
   },
   look: "site",

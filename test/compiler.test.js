@@ -7,7 +7,7 @@ import { checkProgram } from "../src/programming/runtime.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { block, chain, input, workspace } from "../src/content/build.js";
 import { CODES } from "../src/sim/codes.js";
-import { basket, collect, compare, forever, go, make, num, program, repeat, start, stock, unload, until, wait, when } from "./programs.js";
+import { basket, collect, compare, forever, go, make, my, num, pickUp, program, repeat, start, stock, unload, until, wait, when } from "./programs.js";
 
 // The compiler (PLAN.md §7, §12): Blockly's JSON in, the game's instructions
 // out, each visible one with the id of its block; and what can't work as
@@ -43,11 +43,23 @@ test("the adapter reads Blockly's own JSON: stacks in order, shadows where no bl
   assert.deepEqual([lessThan.inputs.B[0].fields.NUM, lessThan.inputs.B[0].shadow], [4, false], "a block covers the shadow under it");
   const ifBlock = [...index.values()].find((n) => n.type === "controls_if");
   assert.deepEqual(ifBlock.extra, { elseIfCount: 1, hasElse: true });
+  // An action's place is its shadow, or the setting that covers it.
+  const goes = [...index.values()].filter((n) => n.type === "robot_go_to").map((n) => [n.inputs.PLACE[0].type, n.inputs.PLACE[0].fields.PLACE ?? null, n.inputs.PLACE[0].shadow]);
+  assert.deepEqual(goes, [
+    ["value_place", "grove", true],
+    ["value_place", "sawmill", true],
+    ["setting_destination", null, false],
+  ]);
   // The fixture compiles; its stray stack is a warning.
   const { program, errors, warnings } = compile(FIXTURE);
   assert.deepEqual(errors, []);
   assert.deepEqual(codes(warnings), [`program.unused ${tree.stacks[1][0].id}`]);
   assert.ok(program.code.length > 5);
+  assert.deepEqual(
+    program.code.filter((ins) => ins.args).map((ins) => Object.values(ins.args)[0].slot),
+    ["item", "destination"],
+    "the settings are worked out as their blocks run",
+  );
 });
 
 test("the adapter refuses what isn't a workspace, and one too big to be a child's", () => {
@@ -149,9 +161,10 @@ test("what can't work as written is an error with its block's id, and every erro
         until("u"),
         when("i", [[compare("cmp", compare("inner", num("x", 1), "LT", num("y", 2)), "EQ", num("z", 1)), []]]),
         block("logic_boolean", "bool"),
-        block("robot_collect", "gold", { fields: { ITEM: "gold" } }),
+        collect("gold", "gold"),
         wait("w", 0),
-        block("robot_go_to", "nowhere", { fields: { PLACE: "Grove!" } }),
+        go("nowhere", "Grove!"),
+        block("robot_go_to", "no-place"),
       ),
       chain(start("start-2"), unload("u2")),
     ),
@@ -164,9 +177,10 @@ test("what can't work as written is an error with its block's id, and every erro
     "program.empty u",
     "program.wantNumber cmp",
     "program.unsupported bool",
-    "program.unsupported gold",
+    "program.unsupported gold-item",
     "program.whole w",
-    "program.unsupported nowhere",
+    "program.unsupported nowhere-place",
+    "program.empty no-place",
   ]);
   assert.deepEqual(errors[1], { code: "program.whole", block: "half", min: -LIMITS.number, max: LIMITS.number });
   assert.deepEqual(errors[7], { code: "program.whole", block: "w", min: 1, max: 999 });
@@ -186,10 +200,32 @@ test("a program needs a start block, and a stack that isn't under it is only a w
 
 test("for a robot or building, and an island, the compiler checks what it can do and where it can go", () => {
   const robotProgram = program(go("g", "moon"), collect("c"), make("m"), until("u", compare("cmp", basket("b"), "GT", num("n", 0))));
-  assert.deepEqual(codes(compile(robotProgram, { type: "helper", places: ["grove"] }).errors), ["program.target g", "program.cannot m"]);
+  assert.deepEqual(codes(compile(robotProgram, { type: "helper", places: ["grove"] }).errors), ["program.target g-place", "program.cannot m"]);
   assert.deepEqual(codes(compile(robotProgram, { type: "sawmill" }).errors), ["program.cannot g", "program.cannot c", "program.cannot b"]);
   assert.deepEqual(codes(compile(program(make("m", "kit")), { type: "sawmill" }).errors), ["program.cannot m"], "the sawmill makes planks, not kits");
   assert.deepEqual(compile(program(make("m", "kit"))).errors, [], "without a robot or building to run on, only the blocks are checked");
+});
+
+test("an action's place or item is part of its intent when the blocks give it, and worked out as it runs when it's a setting", () => {
+  const { program: p, errors } = compile(program(go("g", "grove"), collect("c", my("i", "item")), go("d", my("dest", "destination")), pickUp("p", "kit")));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(
+    p.code.filter((ins) => ins.op === "act"),
+    [
+      { op: "act", block: "g", intent: { type: "goTo", target: "grove" } },
+      { op: "act", block: "c", intent: { type: "collect" }, args: { item: { op: "setting", block: "i", slot: "item" } } },
+      { op: "act", block: "d", intent: { type: "goTo" }, args: { target: { op: "setting", block: "dest", slot: "destination" } } },
+      { op: "act", block: "p", intent: { type: "pickUp", item: "kit" } },
+    ],
+  );
+  assert.deepEqual(p.needs, ["collect", "goTo", "pickUp", "settings"], "reading settings is something the robot must be able to do");
+  assert.deepEqual(checkProgram(p), []);
+  // Only robots have settings; a setting under a shadow that holds a place
+  // the island hasn't is still fine, since the setting is what counts.
+  assert.deepEqual(codes(compile(program(go("g", my("s", "source"))), { type: "sawmill" }).errors), ["program.cannot s", "program.cannot g"]);
+  assert.deepEqual(compile(program(go("g", my("s", "source"), { under: "moon" })), { type: "helper", places: ["grove"] }).errors, []);
+  // Only what a deposit yields can be collected.
+  assert.deepEqual(codes(compile(program(collect("c", "plank"))).errors), ["program.unsupported c-item"]);
 });
 
 test("blocks nested too deeply are an error, not a stack overflow", () => {
@@ -235,6 +271,8 @@ test("the compiler can report every program code, each with the values the table
     workspace(chain(start(), block("logic_boolean", "b"), until("u"), until("v", compare("c", compare("d", num("x", 1), "LT", num("y", 1)), "EQ", num("z", 0))))),
     workspace(chain(start(), wait("w", 1.5), go("g", "moon"), make("m")), chain(start("s2")), unload("stray")),
     swapped,
+    // A number where a place goes, and a place where an item goes.
+    program(block("robot_go_to", "gn", { inputs: { PLACE: input(num("n2", 1)) } }), block("robot_collect", "cp", { inputs: { ITEM: input(block("value_place", "vp", { fields: { PLACE: "grove" } })) } })),
     program(deep),
   ];
   const found = bad.flatMap((source) => {

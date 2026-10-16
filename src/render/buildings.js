@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { mesh } from "./models.js";
 import { createStock } from "./resources.js";
 
-// The buildings (PLAN.md §4): camp, depot, sawmill and construction site, each
-// sized to its footprint, `across` by `deep` as it faces its front (+z,
-// grid.js facing), with its store stacked on pads in front. Each is
+// The buildings (PLAN.md §4): camp, depot, sawmill, workshop and construction
+// site, each sized to its footprint, `across` by `deep` as it faces its front
+// (+z, grid.js facing), with its store stacked on pads in front. Each is
 // { group, top, update(world, entity, t) }: `top` how high its label goes, and
 // update() shows the world at `t`, a tick and the fraction of the next. Only
 // tick-derived things move, so a paused world stands still.
@@ -134,7 +134,12 @@ function site(m, { across, deep, caps }) {
   flag.add(pole, cloth);
   flag.visible = false;
   group.add(scaffold, flag);
-  const stock = createStock(m, caps, { plank: { x: 0, y: 0.12, z: 0.15, w: across - 0.6, d: deep - 0.8 } });
+  // A bridge's site stacks its planks across the slab; a building's, its planks
+  // and its stone side by side.
+  const pads = caps.stone
+    ? { plank: { x: -across / 4, y: 0.12, z: 0.15, w: across / 2 - 0.35, d: deep - 0.8 }, stone: { x: across / 4, y: 0.12, z: 0.15, w: across / 2 - 0.35, d: deep - 0.8 } }
+    : { plank: { x: 0, y: 0.12, z: 0.15, w: across - 0.6, d: deep - 0.8 } };
+  const stock = createStock(m, caps, pads);
   group.add(stock.group);
   return {
     group,
@@ -151,4 +156,47 @@ function site(m, { across, deep, caps }) {
   };
 }
 
-export const BUILDINGS = { camp, depot, sawmill, site };
+// The workshop: a small hut with a pitched roof and a chimney, a workbench in
+// front of it where a kit takes shape while one is being made, and its store:
+// planks and stone waiting, and kits on a shelf.
+function workshop(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  const hutZ = -deep / 2 + 0.5;
+  const hut = mesh(new THREE.BoxGeometry(across - 0.9, 0.85, 0.85), m.shell, { receive: true });
+  hut.position.set(-0.25, 0.425, hutZ);
+  const roof = mesh(new THREE.ConeGeometry(0.95, 0.5, 4), m.roof);
+  roof.position.set(-0.25, 1.1, hutZ);
+  roof.rotation.y = Math.PI / 4;
+  roof.scale.set((across - 0.7) / 1.35, 1, 0.75);
+  const chimney = mesh(new THREE.BoxGeometry(0.16, 0.45, 0.16), m.roofGrey);
+  chimney.position.set(-0.9, 1.25, hutZ - 0.1);
+  const bench = mesh(new THREE.BoxGeometry(0.8, 0.32, 0.42), m.wood);
+  bench.position.set(across / 2 - 0.55, 0.16, hutZ + 0.15);
+  // The kit being made, on the bench: it grows as the work goes on.
+  const making = mesh(new THREE.BoxGeometry(0.22, 0.2, 0.22), m.kit);
+  making.position.set(across / 2 - 0.55, 0.42, hutZ + 0.15);
+  making.visible = false;
+  const shelf = mesh(new THREE.BoxGeometry(0.85, 0.05, 0.5), m.wood);
+  shelf.position.set(across / 3, 0.3, deep / 2 - 0.4);
+  group.add(hut, roof, chimney, bench, making, shelf);
+  const stock = createStock(m, caps, {
+    plank: { x: -across / 3, y: 0, z: deep / 2 - 0.4, w: across / 3 - 0.15, d: 0.6 },
+    stone: { x: 0, y: 0, z: deep / 2 - 0.4, w: across / 3 - 0.2, d: 0.5 },
+    kit: { x: across / 3, y: 0.32, z: deep / 2 - 0.4, w: 0.8, d: 0.45 },
+  });
+  group.add(stock.group);
+  return {
+    group,
+    top: 1.6,
+    update(world, e, t) {
+      const done = progress(e, t, "make");
+      const scale = done === null ? 0 : 0.35 + 0.65 * done;
+      const moved = making.visible !== (done !== null) || making.scale.x !== scale;
+      making.visible = done !== null;
+      if (done !== null) making.scale.setScalar(scale);
+      return stock.update(e.store.items) || moved;
+    },
+  };
+}
+
+export const BUILDINGS = { camp, depot, sawmill, site, workshop };

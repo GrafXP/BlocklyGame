@@ -73,8 +73,11 @@ export const formatList = (parts) => cached(Intl.ListFormat, current.locale, { s
 // { n: 1 }) is "Robo 1" in every language until the player renames the robot.
 export const ref = (key, params) => (params ? { key, params } : { key });
 
-// A name to show: the player's own words as typed, or a ref's message.
-export const display = (name) => (typeof name === "string" ? name : t(name.key, name.params));
+// A name to show: the player's own words as typed, or a ref's message. A ref's
+// params may be names themselves, worded too: a copy's name holds the names of
+// the program it copies and of whose it is.
+export const display = (name) =>
+  typeof name === "string" ? name : t(name.key, name.params && Object.fromEntries(Object.entries(name.params).map(([k, v]) => [k, v && typeof v === "object" ? display(v) : v])));
 
 // --- Choosing --------------------------------------------------------------
 

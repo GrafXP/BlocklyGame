@@ -88,6 +88,7 @@ export function createClock({ rate = TICKS_PER_SECOND, maxPerFrame = MAX_TICKS_P
 // the last tick's (advanceWorld).
 export function createGame(world, { clock = createClock() } = {}) {
   let queued = [];
+  let version = 0; // counted up whenever the queue changes
   const log = [];
   let trace = null;
   let resume = false; // running when the page was hidden
@@ -95,6 +96,7 @@ export function createGame(world, { clock = createClock() } = {}) {
   const tick = () => {
     const commands = queued;
     queued = [];
+    if (commands.length) version++;
     for (const command of commands) log.push({ tick: world.tick + 1, command });
     trace = advanceWorld(world, commands);
   };
@@ -108,9 +110,18 @@ export function createGame(world, { clock = createClock() } = {}) {
     },
     queue(command) {
       queued.push(command);
+      version++;
     },
     get queued() {
       return queued.length;
+    },
+    // The commands waiting for the next tick, in order; and a number that
+    // changes whenever they do.
+    get pending() {
+      return queued;
+    },
+    get queueVersion() {
+      return version;
     },
     // Runs the ticks due at a frame at `now` ms. Returns how many.
     frame(now) {

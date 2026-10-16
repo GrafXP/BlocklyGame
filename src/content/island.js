@@ -15,6 +15,17 @@ import { ISLAND_PROGRAMS } from "./programs.js";
 // brings wood to the sawmill, which makes planks; a second carries planks to the
 // site, which builds the bridge from four; the third wants stone from across the
 // stream, and waits for the bridge.
+//
+// Who runs what (PLAN.md §5; src/sim/bindings.js): each robot is on a team, a
+// named group with one program, and the sawmill (and a workshop, once there is
+// one) runs its type's program, so a robot that joins another team, or a second
+// sawmill, runs that program too. A construction site builds one thing, so it
+// has a program of its own.
+// Each robot's settings already say where its job is, for the shared Collector
+// (“fetch”) to use when a robot is given it. `blueprints` are the buildings the
+// player can place, each with the program its construction site starts with
+// (src/sim/placement.js): east of the stream there's room for the workshop,
+// whose kits take planks and stone.
 // prettier-ignore
 export const TERRAIN = [
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", // 0
@@ -51,19 +62,32 @@ export const TERRAIN = [
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", // 31
 ];
 
+// The teams, by id: each a name and its program.
+export const ISLAND_ROLES = [
+  { id: "plank-team", name: ref("role.plankTeam"), program: "courier" },
+  { id: "stone-team", name: ref("role.stoneTeam"), program: "stones" },
+  { id: "wood-team", name: ref("role.woodTeam"), program: "collector" },
+];
+
 export const ISLAND = {
   id: "island",
-  version: 2,
+  version: 3,
   terrain: TERRAIN,
   programs: ISLAND_PROGRAMS,
+  roles: ISLAND_ROLES,
+  defaults: [
+    { type: "sawmill", program: "planks" },
+    { type: "workshop", program: "kits" },
+  ],
+  blueprints: [{ blueprint: "workshop", program: "build-workshop" }],
   entities: [
-    { id: "r1", type: "helper", name: ref("entity.robo", { n: 1 }), cell: [10, 15], program: "collector" },
-    { id: "r2", type: "helper", name: ref("entity.robo", { n: 2 }), cell: [10, 16], program: "courier" },
-    { id: "r3", type: "helper", name: ref("entity.robo", { n: 3 }), cell: [9, 17], program: "stones" },
+    { id: "r1", type: "helper", name: ref("entity.robo", { n: 1 }), cell: [10, 15], role: "wood-team", settings: { source: "grove", item: "wood", destination: "sawmill" } },
+    { id: "r2", type: "helper", name: ref("entity.robo", { n: 2 }), cell: [10, 16], role: "plank-team", settings: { source: "sawmill", item: "plank", destination: "site" } },
+    { id: "r3", type: "helper", name: ref("entity.robo", { n: 3 }), cell: [9, 17], role: "stone-team", settings: { source: "quarry", item: "stone", destination: "depot" } },
     { id: "camp", type: "camp", name: ref("entity.camp"), area: { x: 8, z: 15, w: 2, d: 2 }, access: [[10, 15], [10, 16], [8, 17], [9, 17]], caps: { wood: 10, stone: 10, plank: 10 } },
-    { id: "sawmill", type: "sawmill", name: ref("entity.sawmill"), area: { x: 13, z: 6, w: 3, d: 2 }, access: [[13, 8], [14, 8]], caps: { wood: 4, plank: 4 }, program: "planks" },
+    { id: "sawmill", type: "sawmill", name: ref("entity.sawmill"), area: { x: 13, z: 6, w: 3, d: 2 }, access: [[13, 8], [14, 8]], caps: { wood: 4, plank: 4 } },
     { id: "depot", type: "depot", name: ref("entity.depot"), area: { x: 6, z: 21, w: 2, d: 2 }, access: [[8, 21], [8, 22]], caps: { wood: 20, stone: 20, plank: 20, kit: 20 } },
-    { id: "site", type: "site", name: ref("entity.site"), area: { x: 16, z: 13, w: 2, d: 2 }, access: [[18, 13], [18, 14]], caps: { plank: 4 }, gap: [[20, 15], [21, 15]], program: "bridge" },
+    { id: "site", type: "site", name: ref("entity.site"), area: { x: 16, z: 13, w: 2, d: 2 }, access: [[18, 13], [18, 14]], caps: { plank: 4 }, blueprint: "bridge", gap: [[20, 15], [21, 15]], program: "bridge" },
   ],
   nodes: [
     { id: "grove", type: "grove", name: ref("entity.grove"), area: { x: 7, z: 5, w: 4, d: 3 }, access: [[11, 6], [11, 7], [8, 8], [9, 8]], items: { wood: 12 }, caps: { wood: 12 }, regrow: { every: 40 } },

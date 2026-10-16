@@ -2,7 +2,27 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ISLAND } from "../src/content/island.js";
 import { createGame } from "../src/game.js";
-import { applyDraft, checkDraft, createLibrary, isChanged, latest, newestPrograms, programDoc, resetDraft, sameBlocks, setDraft, sourceAt } from "../src/programming/programs.js";
+import {
+  applyDraft,
+  archiveProgram,
+  checkDraft,
+  checkLibrary,
+  copyProgram,
+  createLibrary,
+  freeProgramId,
+  isChanged,
+  latest,
+  newProgram,
+  newestPrograms,
+  programDoc,
+  renameProgram,
+  resetDraft,
+  sameBlocks,
+  setDraft,
+  sourceAt,
+  wordStarter,
+} from "../src/programming/programs.js";
+import { display, ref } from "../src/i18n/index.js";
 import { createWorld } from "../src/sim/world.js";
 import { checkWorld } from "../src/sim/validate.js";
 import { byId } from "./helpers.js";
@@ -22,7 +42,7 @@ test("each program starts as its starter: draft and revision 1 the same blocks",
   const library = islandLibrary();
   assert.deepEqual(
     library.programs.map((p) => p.id),
-    ["bridge", "collector", "courier", "planks", "stones"],
+    ["bridge", "build-workshop", "collector", "courier", "fetch", "kits", "planks", "stones"],
   );
   const doc = collector(library);
   assert.deepEqual(doc.name, { key: "programName.collector" });
@@ -51,7 +71,7 @@ test("moving a stack about is no change; changing a block, or what's in it, is",
 test("a draft is checked for every type that runs it, and for the island's places", () => {
   const library = createLibrary([{ id: "p", name: "p", source: program(go("g", "nowhere"), make("m")) }]);
   assert.deepEqual(checkDraft(library, "p", { types: ["helper", "sawmill"], places }).errors, [
-    { code: "program.target", block: "g", target: "nowhere" },
+    { code: "program.target", block: "g-place", target: "nowhere" },
     { code: "program.cannot", block: "m", action: "make" },
     { code: "program.cannot", block: "g", action: "goTo" },
   ]);
@@ -66,7 +86,7 @@ test("a draft that can't run isn't applied, and nothing changes", () => {
   setDraft(library, "collector", edit(collector(library).starter, '"PLACE":"grove"', '"PLACE":"nowhere"'));
   const result = applyDraft(library, "collector", { types: ["helper"], places });
   assert.equal(result.command, undefined);
-  assert.deepEqual(result.errors, [{ code: "program.target", block: "collector-go-grove", target: "nowhere" }]);
+  assert.deepEqual(result.errors, [{ code: "program.target", block: "collector-go-grove-place", target: "nowhere" }]);
   assert.deepEqual(collector(library).published, collector(before).published);
 });
 
@@ -125,4 +145,67 @@ test("the draft goes back to the newest revision, or to the starter", () => {
   resetDraft(library, "collector", "starter");
   assert.deepEqual(doc.draft, doc.starter);
   assert.equal(isChanged(doc), true, "the starter isn't what runs now, until it's applied");
+});
+
+test("a copy is a program of its own: the blocks as last applied, its own revisions, the original's starter", () => {
+  const library = islandLibrary();
+  setDraft(library, "collector", edit(collector(library).starter, '"PLACE":"sawmill"', '"PLACE":"depot"'));
+  applyDraft(library, "collector", { types: ["helper"], places });
+  setDraft(library, "collector", program(unload("unapplied")));
+  const id = freeProgramId(library, "collector-r2");
+  assert.equal(id, "collector-r2");
+  const name = ref("programName.copy", { program: collector(library).name, name: ref("entity.robo", { n: 2 }) });
+  const doc = copyProgram(library, "collector", { newId: id, name });
+  assert.deepEqual(
+    library.programs.map((p) => p.id),
+    ["bridge", "build-workshop", "collector", "collector-r2", "courier", "fetch", "kits", "planks", "stones"],
+    "in order of id",
+  );
+  assert.deepEqual(latest(doc), { revision: 1, source: latest(collector(library)).source });
+  assert.deepEqual(doc.draft, latest(collector(library)).source, "the original's unapplied changes stay with it");
+  assert.deepEqual(doc.starter, collector(library).starter);
+  assert.equal(display(doc.name), "Wood collector (Robo 2)", "its name is worded from the original's and the robot's");
+  // Editing the copy leaves the original alone.
+  setDraft(library, id, program(unload("u")));
+  applyDraft(library, id, { types: ["helper"], places });
+  assert.equal(latest(doc).revision, 2);
+  assert.equal(latest(collector(library)).revision, 2);
+  assert.equal(freeProgramId(library, "collector-r2"), "collector-r2-2");
+  assert.equal(freeProgramId(library, "fresh", ["fresh"]), "fresh-2", "nor one a world has");
+  assert.deepEqual(checkLibrary(library), []);
+});
+
+test("a new program starts as its start block; programs can be renamed, and put away and brought back", () => {
+  const library = islandLibrary();
+  const doc = newProgram(library, { newId: "program", name: ref("programName.new", { n: 1 }), source: program() });
+  assert.equal(display(doc.name), "New program 1");
+  assert.deepEqual(doc.draft, program());
+  renameProgram(library, "program", "My robot job");
+  assert.equal(programDoc(library, "program").name, "My robot job", "the player's words, as typed");
+  archiveProgram(library, "program", true);
+  assert.equal(programDoc(library, "program").archived, true);
+  assert.deepEqual(checkLibrary(library), []);
+  archiveProgram(library, "program", false);
+  assert.equal("archived" in programDoc(library, "program"), false);
+  programDoc(library, "program").archived = "yes";
+  assert.notDeepEqual(checkLibrary(library), []);
+});
+
+test("names the game gives inside a starter program are worded in the player's language when it's copied into the library", () => {
+  // Variables and procedures come with Phase 8; a starter can already name
+  // them, as messages, and the library words them as the player's own.
+  const starter = {
+    variables: [{ id: "v1", name: { key: "programName.new", params: { n: 7 } } }],
+    blocks: { languageVersion: 0, blocks: [{ type: "island_when_started", id: "s", next: { block: { type: "procedures_call", id: "c", fields: { NAME: { key: "entity.camp" } } } } }] },
+  };
+  const word = (name) => `[${name.key}]`;
+  const worded = wordStarter(starter, word);
+  assert.equal(worded.variables[0].name, "[programName.new]");
+  assert.equal(worded.blocks.blocks[0].next.block.fields.NAME, "[entity.camp]");
+  assert.deepEqual(starter.variables[0].name, { key: "programName.new", params: { n: 7 } }, "the starter itself is left as it was");
+  const library = createLibrary([{ id: "p", name: "p", source: starter }], { word: display });
+  const doc = programDoc(library, "p");
+  assert.equal(doc.draft.variables[0].name, "New program 7");
+  assert.equal(doc.starter.variables[0].name, "New program 7", "from now on they're the player's names");
+  assert.deepEqual(wordStarter(program(unload("u")), word), program(unload("u")), "a variable field ({ id }) and everything else stay as they are");
 });

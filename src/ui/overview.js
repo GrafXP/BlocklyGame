@@ -1,4 +1,5 @@
 import { display, t } from "../i18n/index.js";
+import { thingsKey } from "../sim/things.js";
 import { blockChip, blockWords } from "./chips.js";
 import { amounts, describeReason } from "./describe.js";
 import { esc } from "./dom.js";
@@ -10,8 +11,10 @@ import { entryIn } from "./snapshot.js";
 // every robot and building, on screen or not, with its program and version, the
 // block it's at as a chip (outlined when it took that block in the latest
 // step), its state, and why it waits or stopped; then the deposits with what
-// they hold. The chosen one's row opens to show its details (inspector.js).
-// Rows are drawn from the tick's snapshot (snapshot.js).
+// they hold. The chosen one's row opens to show its details (inspector.js),
+// and, where the play offers them, its program, team and settings to change
+// (setup.js). Rows are drawn from the tick's snapshot (snapshot.js), and made
+// again when a building is placed or becomes another.
 //
 // The list holds still while the world runs, so its buttons can be pressed:
 // - Each row is made once, and only the parts whose words changed are drawn
@@ -24,7 +27,8 @@ import { entryIn } from "./snapshot.js";
 //   changing below them doesn't move them.
 export function createOverview(el) {
   let shownWorld = null;
-  const rows = new Map(); // id → { li, head state, actions, info, details, drawn: { part → markup } }
+  let shownThings = "";
+  const rows = new Map(); // id → { li, head state, actions, setup, info, details, drawn: { part → markup } }
 
   // Draws `part` of row `row` as `markup`, if that's new.
   function draw(row, part, markup) {
@@ -55,9 +59,9 @@ export function createOverview(el) {
 
   return {
     // Shows `world` as of `snapshot`, with thing `selected` open, its blocks
-    // worded with Blockly's `words`.
-    show(world, snapshot, selected, words) {
-      if (shownWorld !== world) {
+    // worded with Blockly's `words`; `setup(id)` gives the chosen one's setup.
+    show(world, snapshot, selected, words, { setup = () => "" } = {}) {
+      if (shownWorld !== world || shownThings !== thingsKey(world)) {
         const things = [...world.entities, ...world.nodes];
         el.innerHTML =
           `<p class="hint">${esc(t("inspector.hint"))}</p>` +
@@ -67,15 +71,16 @@ export function createOverview(el) {
               (it) =>
                 `<li class="row" data-row="${esc(it.id)}">` +
                 `<button class="row-head" data-pick="${esc(it.id)}" aria-expanded="false">${identityMark(world, it.id)}<span class="row-name">${esc(display(it.name))}</span><span class="state" hidden></span></button>` +
-                `<div class="row-actions" hidden></div><div class="row-info"></div><div class="row-details"></div></li>`,
+                `<div class="row-actions" hidden></div><div class="row-setup"></div><div class="row-info"></div><div class="row-details"></div></li>`,
             )
             .join("")}</ul>`;
         rows.clear();
         for (const li of el.querySelectorAll(".row")) {
           const $ = (sel) => li.querySelector(sel);
-          rows.set(li.dataset.row, { li, head: $(".row-head"), state: $(".state"), actions: $(".row-actions"), info: $(".row-info"), details: $(".row-details"), drawn: {} });
+          rows.set(li.dataset.row, { li, head: $(".row-head"), state: $(".state"), actions: $(".row-actions"), setup: $(".row-setup"), info: $(".row-info"), details: $(".row-details"), drawn: {} });
         }
         shownWorld = world;
+        shownThings = thingsKey(world);
       }
       el.querySelector(".hint").hidden = !!selected;
       for (const [id, row] of rows) {
@@ -95,6 +100,7 @@ export function createOverview(el) {
         }
         row.actions.hidden = !chosen;
         draw(row, "actions", chosen ? detailsActions(entry) : "");
+        draw(row, "setup", chosen ? setup(id) : "");
         draw(row, "info", infoHtml(world, snapshot, it, entry, words));
         draw(row, "details", chosen ? detailsHtml(world, id, entry, words) : "");
       }

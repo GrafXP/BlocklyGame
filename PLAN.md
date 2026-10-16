@@ -674,12 +674,12 @@ The slice is an implementation milestone. In the campaign, chapters 1–3 (Phase
 
 ### Phase 6 — Shared roles, type defaults, and placement
 
-- [ ] Implement the program library, robot role defaults, and building-type defaults.
-- [ ] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs.
-- [ ] Keep authored robot and program names as catalogue keys until the player renames them. Name the variables and procedures in copied starter programs in the current language.
-- [ ] Add deterministic program revision application and cancellation of affected unfinished actions.
-- [ ] Add blueprint placement with footprint/path validation and visible starter construction programs.
-- [ ] Add the workshop with its recipe of two planks and one stone for one construction kit, and kit stores and models, as mission 25 needs.
+- [x] Implement the program library, robot role defaults, and building-type defaults. (On the island at `/island`: docs/phase6.md. Roles are *teams* to the player; who runs what is world state, `src/sim/bindings.js`, resolved own → team → type. *Programs* in the bar is the library: edit, give, copy, rename, put away, new.)
+- [x] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs. (In the chosen robot's or building's row, `src/ui/setup.js`. Go To, Collect and Pick Up take a value in a gap, a shadow until a setting covers it; `COMPILER_VERSION` 2. Robots only: no mission needs a building's Target Stock.)
+- [x] Keep authored robot and program names as catalogue keys until the player renames them. Name the variables and procedures in copied starter programs in the current language. (A copy's name is a reference holding its program's and its robot's; `wordStarter` words the names a starter gives, tested ahead of Phase 8's variables and procedures.)
+- [x] Add deterministic program revision application and cancellation of affected unfinished actions. (Every change of who runs what starts again exactly the entities whose program changes, at the next tick; previews apply the change to the world as it will be, so they name exactly those. `SIM_VERSION` 5.)
+- [x] Add blueprint placement with footprint/path validation and visible starter construction programs. (*Build* places the workshop: open ground, clear of everything and its interaction cells, cutting nobody off now or once the bridges are built, `src/sim/placement.js`. Its site runs the *Workshop builder*, then becomes the workshop.)
+- [x] Add the workshop with its recipe of two planks and one stone for one construction kit, and kit stores and models, as mission 25 needs. (Every workshop runs the *Kit maker*; a test plays mission 25's chain to two kits.)
 
 Acceptance: two collectors share code but keep separate runtime state/settings. A personal copy can be edited independently. Shared Apply affects precisely the listed entities on the next tick. Invalid placements cannot cut off required interaction cells. These are the tools chapter 5 (missions 21–25) teaches.
 
