@@ -18,6 +18,8 @@ const SHAPES = {
   wait: `<path d="M8.5 6h7l-3.5 6 3.5 6h-7l3.5-6z" stroke-width="1.4"/>`,
   until: `<path d="M8.5 6h7l-3.5 6 3.5 6h-7l3.5-6z" stroke-width="1.4"/><path d="M15.5 16.5l1.8 1.8 3.2-3.6" fill="none" stroke-width="1.6"/>`,
   forever: `<path d="M16.8 13.2A5 5 0 1 1 15.6 8.4" fill="none"/><path d="M17.2 5.6v3.8h-3.8z" stroke-width="1"/>`,
+  send: `<rect x="4.5" y="7" width="11" height="8" rx="1" fill="none" stroke-width="1.6"/><path d="M5 7.5l5 4 5-4" fill="none" stroke-width="1.6"/><path d="M14.5 17.5h5M17.5 15.5l2 2-2 2" fill="none" stroke-width="1.6"/>`,
+  mail: `<rect x="5.5" y="7" width="13" height="10" rx="1" fill="none" stroke-width="1.6"/><path d="M6 7.5l6 4.5 6-4.5" fill="none" stroke-width="1.6"/>`,
 };
 
 export const ICONS = Object.fromEntries(Object.entries(SHAPES).map(([name, inner]) => [name, `data:image/svg+xml,${encodeURIComponent(disc(inner))}`]));

@@ -31,6 +31,12 @@ export const CHOICES = {
       .filter((t) => t.access?.length)
       .sort((a, b) => rank(a.id) - rank(b.id) || (a.id < b.id ? -1 : 1))
       .map((t) => [labelIn(PLACES, t.id) ?? t.name, t.id]),
+  // Every robot and building, which a message can go to: robots first, then
+  // buildings in the order the game's places are listed.
+  recipients: ({ world }) =>
+    [...world.entities]
+      .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "robot" ? -1 : 1) || rank(a.id) - rank(b.id) || (a.id < b.id ? -1 : 1))
+      .map((t) => [labelIn(PLACES, t.id) ?? t.name, t.id]),
   // The items the building has a recipe for.
   makes: ({ type }) => MADE.filter(([, item]) => recipesOf(type)?.includes(item) ?? RECIPES[item]),
   // What the building can build: a construction site, what its blueprint says.

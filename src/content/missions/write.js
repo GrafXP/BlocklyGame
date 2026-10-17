@@ -1,4 +1,5 @@
-import { act, block, chain, workspace } from "../build.js";
+import { ref } from "../../i18n/index.js";
+import { act, block, call, chain, changeVar, getVar, number, routine, send, setVar, waitFor, withVariables, workspace } from "../build.js";
 
 // Writing a mission's programs (docs/campaign-plan.md, “Authoring package for
 // each mission”), as Blockly's JSON, with readable block ids: each program's
@@ -11,11 +12,17 @@ import { act, block, chain, workspace } from "../build.js";
 //
 // A program's main stack hangs from its start block, at the top left; loose
 // stacks, blocks a mission lays beside it for the child to use, go below it,
-// where Blockly marks them as not running until they're attached.
+// where Blockly marks them as not running until they're attached. A block of
+// the player's own (a routine) is a stack of its own, laid out the same way.
+//
+// Variables, routines and their inputs are named by message references:
+// p.variable("order") is the variable `${id}-order`, named by "variable.order"
+// in ui.js, worded as the program is given out (wordStarter). The workspace
+// lists every variable its blocks use.
 
 // The inputs of blocks that hold statements, rather than a value.
 const insides = (b) =>
-  ({ controls_repeat_ext: ["DO"], control_forever: ["DO"], controls_if: b.extraState?.hasElse ? ["DO0", "ELSE"] : ["DO0"] })[b.type] ?? [];
+  ({ controls_repeat_ext: ["DO"], control_forever: ["DO"], controls_if: b.extraState?.hasElse ? ["DO0", "ELSE"] : ["DO0"], procedures_defnoreturn: ["STACK"] })[b.type] ?? [];
 
 // Roughly how tall `blocks` are on the workspace, in rows: a statement a row,
 // a loop's or an If's insides (one row when empty) and its foot more.
@@ -54,6 +61,21 @@ export function writer(p) {
   };
   const body = (blocks) => (blocks.length ? { block: chain(...blocks) } : undefined);
   const inputs = (map) => Object.fromEntries(Object.entries(map).filter(([, v]) => v !== undefined));
+  const variables = new Map(); // id → { id, name }: those the blocks use
+  const named = (kind, key) => {
+    const v = { id: `${p}-${key}`, name: ref(`${kind}.${key}`) };
+    variables.set(v.id, v);
+    return v;
+  };
+  const short = (v) => v.id.slice(p.length + 1);
+  // What a use of a routine gives its input: a number, a place (a picture
+  // dropdown, in a shadow, as a toolbox gives it), or a block.
+  const arg = (value) =>
+    typeof value === "number"
+      ? number(value, id("n"))
+      : typeof value === "string"
+        ? { shadow: { type: "value_place", id: id("place"), fields: { PLACE: value } } }
+        : { block: value };
 
   const w = {
     // The start block, with `blocks` under it. It can't be deleted: every
@@ -79,6 +101,19 @@ export function writer(p) {
     stock: (item, place) => block("sense_stock", id("stock"), { fields: { ITEM: item, PLACE: place } }),
     compare: (a, op, b) => block("logic_compare", id("compare"), { fields: { OP: op }, inputs: { A: gap(a, 0), B: gap(b, 0) } }),
     mine: (slot) => block(`setting_${slot}`, id(slot)),
+    // Memory: a variable of the program, Set, Change and Get.
+    variable: (key) => named("variable", key),
+    set: (v, value) => setVar(id(`set-${short(v)}`), v, value),
+    change: (v, by) => changeVar(id(`change-${short(v)}`), v, by),
+    get: (v) => getVar(id(`get-${short(v)}`), v),
+    // A block of one's own, named by routine.<key>, with its input `param`
+    // (p.input("destination"), named by input.<key>) or null; and a use of it.
+    input: (key) => named("input", key),
+    routine: (key, param, ...blocks) => routine(id(`def-${key}`), ref(`routine.${key}`), param, ...blocks),
+    call: (key, param = null, value = null) => call(id(`call-${key}`), ref(`routine.${key}`), param, value === null ? null : arg(value)),
+    // Messages.
+    send: (message, to) => send(id("send"), message, to),
+    waitFor: (message) => waitFor(id("wait-for"), message),
     // Blocks lying apart, a stack of their own.
     loose: (...blocks) => chain(...blocks),
     // The workspace: the main stack, then loose stacks below it, one under
@@ -90,7 +125,7 @@ export function writer(p) {
         y += (rows(stack(first)) + 1) * ROW;
         return top;
       });
-      return workspace(main, ...placed);
+      return withVariables(workspace(main, ...placed), [...variables.values()]);
     },
   };
   return w;

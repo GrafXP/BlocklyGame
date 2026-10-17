@@ -170,8 +170,11 @@ export function createWorld(content) {
 // 1. The player's commands.
 // 2. Actions under way move on; those that end settle their holds, in order of
 //    entity id. Then deposits grow back.
-// 3. Messages are delivered (from Phase 8). From here to phase 5 the world is
-//    read, not changed: runtimes see it as it stands after phase 2.
+// 3. Messages sent in the tick before are in their inboxes: a Send is an action
+//    of one step, which ends in phase 2 and delivers its message there
+//    (messages.js). From here to phase 5 the world is read, not changed:
+//    runtimes see it as it stands after phase 2. (A Wait For takes a message
+//    out of its own entity's inbox, which nothing else reads in this phase.)
 // 4. Each entity that's free, in order of id, evaluates its runtime's next
 //    visible step, one at most: an action's block gives an intent, which is only
 //    noted here; a loop, a condition or a Wait Until only moves the runtime on.
@@ -211,7 +214,7 @@ export function advanceWorld(world, commands = []) {
     if (growing(node) && now % node.regrow.every === 0) node.store.items[TYPES[node.type].yields] = count(node.store, TYPES[node.type].yields) + 1;
   }
 
-  // 3. Messages come with Phase 8.
+  // 3. Messages have arrived, with the Sends that ended in phase 2.
 
   // 4. Runtimes.
   const intents = [];

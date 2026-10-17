@@ -39,7 +39,7 @@ function playWith(id, { programs = {}, commands = [] } = {}) {
 test("every mission is verified: its reference does it alone and in sequence, its starters don't, within its steps, toolbox, budget and words", async () => {
   const { problems, rows } = await verifyCampaign();
   assert.deepEqual(problems, []);
-  assert.equal(rows.length, 25);
+  assert.equal(rows.length, 40);
   for (const row of rows) assert.ok(row.alone !== null && row.sequence !== null, row.id);
 });
 
@@ -149,6 +149,7 @@ test("each mission begins on the island the one before left: the bridge, names a
   const world = baseWorld();
   const library = { programs: [] };
   const camp = [];
+  let kits = 0;
   for (const m of CAMPAIGN) {
     enterMission(world, library, m);
     assert.deepEqual(checkWorld(world), [], `${m.id}'s checkpoint`);
@@ -166,11 +167,12 @@ test("each mission begins on the island the one before left: the bridge, names a
     if (m.id === "m23") assert.deepEqual(byId(world, "r3").settings, { source: "quarry", item: "stone", destination: "depot" }, "mission 22's settings carry on");
     playMission(world, referenceCommands(world, library, m), m.steps);
     camp.push(byId(world, "camp").store.items.wood ?? 0);
+    if (m.id === "m25") kits = byId(world, "workshop").store.items.kit;
   }
   assert.equal(byId(world, "r1").name, "Blinky");
   assert.deepEqual(camp.slice(0, 10), [0, 0, 1, 1, 2, 2, 3, 4, 4, 3], "the camp holds only what each mission of chapters 1 and 2 brought");
   assert.equal(byId(world, "site").built, true, "the bridge, from mission 15 on");
-  assert.equal(byId(world, "workshop").store.items.kit, 2, "the first kits");
+  assert.equal(kits, 2, "the first kits, at mission 25");
   assert.ok(CAMPAIGN.every((m) => m.programs.every((p) => library.programs.some((d) => d.id === p.id))), "every mission's programs are in the library");
 });
 
@@ -203,7 +205,8 @@ test("a mission played again on its own starts from its checkpoint, whatever the
 
 // --- What each mission offers -----------------------------------------------------------
 
-const blocksIn = (toolbox) => toolbox.contents.flatMap((c) => c.contents.map((b) => (b.type === "controls_if" && b.extraState?.hasElse ? "controls_if_else" : b.type)));
+// A category filled as it's opened (Memory, My blocks) counts as what it offers.
+const blocksIn = (toolbox) => toolbox.contents.flatMap((c) => c.offers ?? c.contents.map((b) => (b.type === "controls_if" && b.extraState?.hasElse ? "controls_if_else" : b.type)));
 
 test("each mission's toolboxes offer only what it and the missions before it unlocked", () => {
   const box = (id, type) => blocksIn(toolboxFor([type], { blocks: unlockedBlocks(mission(id)) }));

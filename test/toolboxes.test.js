@@ -11,13 +11,13 @@ import { tinyWorld } from "./helpers.js";
 // or building can use, and in their dropdowns only what's on the island and
 // what the building can make.
 
-const blocksIn = (toolbox) => toolbox.contents.flatMap((c) => c.contents.map((b) => b.type));
+const blocksIn = (toolbox) => toolbox.contents.flatMap((c) => c.offers ?? c.contents.map((b) => b.type));
 const categories = (toolbox) => toolbox.contents.map((c) => c.name);
-const blockIn = (toolbox, type) => toolbox.contents.flatMap((c) => c.contents).find((b) => b.type === type);
+const blockIn = (toolbox, type) => toolbox.contents.flatMap((c) => c.contents ?? []).find((b) => b.type === type);
 
 test("a robot's toolbox has a robot's actions and senses, and none of a building's", () => {
   const robot = toolboxFor(["helper"]);
-  assert.deepEqual(categories(robot), ["%{BKY_CAT_START}", "%{BKY_CAT_ROBOT}", "%{BKY_CAT_CONTROL}", "%{BKY_CAT_SENSING}", "%{BKY_CAT_VALUES}"]);
+  assert.deepEqual(categories(robot), ["%{BKY_CAT_START}", "%{BKY_CAT_ROBOT}", "%{BKY_CAT_CONTROL}", "%{BKY_CAT_SENSING}", "%{BKY_CAT_VALUES}", "%{BKY_CAT_MEMORY}", "%{BKY_CAT_ROUTINES}", "%{BKY_CAT_MESSAGES}"]);
   const types = blocksIn(robot);
   for (const type of ["robot_go_to", "robot_collect", "robot_pick_up", "robot_unload", "control_wait_steps", "control_wait_until", "sense_basket", "sense_stock"]) assert.ok(types.includes(type), type);
   for (const type of ["building_make", "building_build"]) assert.ok(!types.includes(type), type);
@@ -39,6 +39,16 @@ test("a building's toolbox has Make only with a recipe that makes an item, and B
   assert.ok(blocksIn(camp).includes("control_wait_steps"));
 });
 
+test("Memory and My blocks are filled as they're opened, offering what the play allows; messages are for everyone", () => {
+  const all = toolboxFor(["sawmill"]);
+  const memory = all.contents.find((c) => c.custom === "GAME_MEMORY");
+  assert.deepEqual(memory, { kind: "category", name: "%{BKY_CAT_MEMORY}", categorystyle: "memory_category", custom: "GAME_MEMORY", offers: ["variables_set", "math_change", "variables_get"] });
+  assert.ok(blocksIn(all).includes("message_send") && blocksIn(all).includes("message_wait"), "a building sends and waits too");
+  const some = toolboxFor(["helper"], { blocks: ["robot_go_to", "variables_get", "procedures_callnoreturn"] });
+  assert.deepEqual(some.contents.filter((c) => c.custom).map((c) => [c.custom, c.offers]), [["GAME_MEMORY", ["variables_get"]], ["GAME_ROUTINES", ["procedures_callnoreturn"]]]);
+  assert.ok(!categories(toolboxFor(["helper"], { blocks: ["robot_go_to"] })).includes("%{BKY_CAT_MEMORY}"), "nothing unlocked, no category");
+});
+
 test("a program run by several types offers only what every one of them can use", () => {
   const both = blocksIn(toolboxFor(["helper", "sawmill"]));
   assert.ok(both.includes("control_wait_steps"));
@@ -49,7 +59,8 @@ test("a program run by several types offers only what every one of them can use"
 test("every block a toolbox offers is defined, by the game or by Blockly", () => {
   for (const type of ["helper", "camp", "depot", "sawmill", "site"]) {
     for (const block of blocksIn(toolboxFor([type]))) {
-      assert.ok(BLOCKS.some((b) => b.type === block) || ["controls_repeat_ext", "controls_if", "math_number", "logic_compare"].includes(block), block);
+      const builtIn = ["controls_repeat_ext", "controls_if", "math_number", "logic_compare", "variables_set", "math_change", "variables_get", "procedures_defnoreturn", "procedures_callnoreturn"];
+      assert.ok(BLOCKS.some((b) => b.type === block) || builtIn.includes(block), block);
     }
   }
 });

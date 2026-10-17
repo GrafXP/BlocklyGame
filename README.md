@@ -20,13 +20,15 @@ Phase 6 (shared roles, type defaults and placement) is in place on the island: r
 
 Phase 7 (the main campaign and free play) is in place: **Play** on the title page starts the campaign's twenty-five missions in five chapters, on one island that grows mission by mission: the sawmill, the depot, the bridge, and at last the workshop's first kits. Each mission's toolbox offers only the blocks learned so far. Its card shows the goal with pictures, asks for a prediction before Run and an explanation after success, offers hints that answer the problem in view, a start or the whole program in the editor, and in missions 16–19 two trials one after the other. Missions done can be played again from the title page. **Free play** opens after mission 15, with every program written in the missions, and grows into the **sandbox** after mission 25. `npm run verify:missions` plays every mission's reference solution, alone and in sequence. Phase 5's slice is at `/slice`. Findings are in [docs/phase7.md](docs/phase7.md).
 
+Phase 8 (memory, blocks of one's own and messages) is in place: missions 26–40 go on with **variables** that each robot remembers for itself, shown beside it as it runs; **blocks of one's own** (“my block bring wood”) with one input, which the debugger follows in and out of; and **messages** from one program to another, waited for and shown in the inbox. The campaign ends with four kits for the island's celebration. Findings are in [docs/phase8.md](docs/phase8.md).
+
 ## Development
 
 | Command | What it does |
 | --- | --- |
 | `npm install` | Installs the pinned dependencies |
 | `npm run dev` | Development server |
-| `npm run build` / `npm run preview` | Production build in `dist/`, and serving it |
+| `npm run build` / `npm run preview` | Production build in `dist/`, and serving it. `dist/` holds an Apache `.htaccess` (from `public/`): every address is the game, with a strict CSP and long caching for hashed files. Serve it from the root of a domain or subdomain. |
 | `npm test` | Node unit tests in `test/`, `verify:missions` among them |
 | `npm run verify:missions` | Plays every mission's reference solution, alone and in sequence, and checks its starters, steps, toolbox, budget, room and words (`scripts/verify-missions.js`) |
 | `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, the bridge slice, the island with teams, settings, copies and a workshop, and the campaign played through by its reference solutions), after a deliberate change to the simulation and a new `SIM_VERSION` |

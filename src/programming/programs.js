@@ -44,9 +44,10 @@ export function createLibrary(programs, { word = null } = {}) {
 
 // Starter program `source` with the names the game gave in it worded by `word`
 // (PLAN.md §8): its variables', and those a block's fields hold, such as a
-// procedure's. The game writes them as message references, { key, params? };
-// once worded they're the player's, as typed, in the language they were copied
-// in. Returns a new workspace.
+// routine's, and those its extra state holds: a routine's input's, and the
+// routine a call uses. The game writes them as message references, { key,
+// params? }; once worded they're the player's, as typed, in the language they
+// were copied in. Returns a new workspace.
 export function wordStarter(source, word) {
   const isRef = (value) => !!value && typeof value === "object" && typeof value.key === "string" && !("id" in value);
   const json = copy(source);
@@ -54,6 +55,11 @@ export function wordStarter(source, word) {
   const visit = (block) => {
     if (!block || typeof block !== "object") return;
     for (const [name, value] of Object.entries(block.fields ?? {})) if (isRef(value)) block.fields[name] = word(value);
+    const extra = block.extraState;
+    if (extra && typeof extra === "object") {
+      if (isRef(extra.name)) extra.name = word(extra.name);
+      if (Array.isArray(extra.params)) extra.params = extra.params.map((p) => (isRef(p) ? word(p) : isRef(p?.name) ? { ...p, name: word(p.name) } : p));
+    }
     for (const input of Object.values(block.inputs ?? {})) {
       visit(input?.block);
       visit(input?.shadow);

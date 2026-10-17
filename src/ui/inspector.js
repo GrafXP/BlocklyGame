@@ -3,15 +3,17 @@ import { ITEMS } from "../sim/entities.js";
 import { thing, thingAt } from "../sim/things.js";
 import { identityOf } from "../render/identity.js";
 import { blockChip } from "./chips.js";
-import { amounts, describeAction, placeName, progressOf } from "./describe.js";
+import { amounts, describeAction, messageWords, placeName, progressOf } from "./describe.js";
 import { esc } from "./dom.js";
 import { blockOf } from "./session.js";
 
 // The inspector (PLAN.md §8): what the chosen robot, building or deposit is
 // doing, in words, opened in its row of the overview (overview.js): what it's
 // doing and how far it's got, where it is, what it holds against how much
-// room there is, what its block read in this step, and how far round its Repeat
-// it is. A robot or building's program can be opened from here.
+// room there is, what its block read in this step, how far round its Repeat
+// it is, what its variables hold, which of the player's own blocks it's inside,
+// and the messages in its inbox (PLAN.md §11, Phase 8). A robot or building's
+// program can be opened from here.
 
 const KIND = { robot: "inspector.robot", building: "inspector.building", node: "inspector.resource" };
 
@@ -61,6 +63,28 @@ function readings(world, entry, words) {
   return lines.length ? `<ul class="readings">${lines.join("")}</ul>` : "";
 }
 
+// What `entry`'s variables hold now (snapshot.js): “order 3 · delivered 1”,
+// or "" when its program has none.
+export const memoryWords = (entry) => entry.memory.map((m) => `${m.name} ${formatNumber(m.value)}`).join(" · ");
+
+// The name of the player's own block whose definition is block `routine` of
+// `entry`'s program.
+function routineName(entry, routine) {
+  const name = blockOf(entry.program, entry.revision, routine)?.fields.NAME;
+  return typeof name === "string" ? name : name ? display(name) : "…";
+}
+
+// Its variables, each name with its number.
+function memoryHtml(entry) {
+  return `<ul class="memory">${entry.memory.map((m) => `<li><span>${esc(m.name)}</span> <strong>${esc(formatNumber(m.value))}</strong></li>`).join("")}</ul>`;
+}
+
+// The messages in its inbox, oldest first, or that it's empty.
+function inboxHtml(world, entry) {
+  if (!entry.inbox.length) return esc(t("inspector.inboxEmpty"));
+  return `<ul class="inbox">${entry.inbox.map((m) => `<li>${esc(t("inspector.message", { message: messageWords(m.message), name: placeName(world, m.from) }))}</li>`).join("")}</ul>`;
+}
+
 // The details of thing `id` of `world`: its snapshot entry `entry` (null for a
 // deposit), with Blockly's `words` for its blocks. A robot or building always
 // has its Doing line, with its progress bar kept in place while idle, and a
@@ -85,6 +109,9 @@ export function detailsHtml(world, id, entry, words) {
   if (entry) {
     parts.push(row(t("inspector.reads"), readings(world, entry, words)));
     if (entry.round) parts.push(row(t("inspector.loop"), esc(t("inspector.round", { count: entry.round.count, times: entry.round.times }))));
+    if (entry.memory.length) parts.push(row(t("inspector.memory"), memoryHtml(entry)));
+    if (entry.inside.length) parts.push(row(t("inspector.inside"), esc(entry.inside.map((f) => routineName(entry, f.routine)).join(" › "))));
+    if (entry.listens || entry.inbox.length) parts.push(row(t("inspector.inbox"), inboxHtml(world, entry)));
   }
   return `<div class="details">
       <p class="kind">${esc(t(KIND[it.kind]))}</p>

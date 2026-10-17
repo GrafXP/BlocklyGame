@@ -1,6 +1,7 @@
 import { checkProgram } from "../programming/runtime.js";
 import { fitsSetting, programFor, roleOf } from "./bindings.js";
 import { SETTINGS, TYPES } from "./entities.js";
+import { INBOX_SIZE, MESSAGES, queued } from "./messages.js";
 import { walkable } from "./navigation.js";
 import { GOALS, goalProblem } from "./objectives.js";
 import { RECIPES } from "./recipes.js";
@@ -71,6 +72,21 @@ export function checkWorld(world) {
     if (e.kind === "robot" && !walk[e.cell]) fail(`${e.id} stands on cell ${e.cell}, which can't be walked on`);
   }
 
+  // Messages (messages.js): an inbox is kept only with something in it, and
+  // holds, with what's on its way, no more than INBOX_SIZE; each message one
+  // there is, from a robot or building, sent in a tick that has been.
+  for (const e of world.entities) {
+    if (e.action?.type === "send" && (!MESSAGES.includes(e.action.message) || !world.entities.some((it) => it.id === e.action.to))) fail(`${e.id} sends ${e.action.message} to ${e.action.to}`);
+    if (!("inbox" in e)) continue;
+    if (!Array.isArray(e.inbox) || !e.inbox.length) fail(`${e.id} has an empty inbox`);
+    else if (queued(world, e) > INBOX_SIZE) fail(`${e.id}'s inbox holds more than ${INBOX_SIZE}`);
+    else
+      for (const m of e.inbox) {
+        if (!MESSAGES.includes(m?.message) || !world.entities.some((it) => it.id === m.from) || !(Number.isInteger(m.sent) && m.sent >= 1 && m.sent <= world.tick)) fail(`${e.id} has a message ${JSON.stringify(m)}`);
+      }
+  }
+  for (const n of world.nodes) if ("inbox" in n) fail(`${n.id} is a deposit with an inbox`);
+
   // Programs, and where each program's runtimes are in them.
   for (let i = 0; i < world.programs.length; i++) {
     const p = world.programs[i];
@@ -124,6 +140,14 @@ export function checkWorld(world) {
     if (!(run.at >= 0 && run.at < p.code.length)) fail(`${e.id} is at instruction ${run.at} of ${p.code.length}`);
     for (const loop of run.loops) {
       if (p.code[loop.at]?.op !== "repeat" || !(loop.count >= 0 && loop.count <= Math.max(0, loop.times))) fail(`${e.id} has a loop at ${loop.at} that isn't a repeat's`);
+    }
+    if ("vars" in run && (!run.vars || typeof run.vars !== "object" || Array.isArray(run.vars) || !Object.keys(run.vars).length)) fail(`${e.id} remembers ${JSON.stringify(run.vars)}`);
+    if ("frames" in run) {
+      const frames = Array.isArray(run.frames) ? run.frames : [];
+      if (!frames.length) fail(`${e.id} has no frames, but keeps them`);
+      for (const f of frames) {
+        if (p.code[f?.back - 1]?.op !== "call" || p.code[f.back - 1].block !== f.call || p.code[f.back - 1].routine !== f.routine || !f.args || typeof f.args !== "object") fail(`${e.id} is inside ${JSON.stringify(f)}`);
+      }
     }
   }
 

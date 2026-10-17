@@ -90,5 +90,12 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | trip (a robot's delivery) | Weg | “Wege von Robo 3”. *Fahrt* would mean a vehicle. |
 | Mission 3: Robo 1 (a mission's program) | Auftrag 3: Robo 1 | |
 | plank courier to the depot | Bretterbote zum Lagerhaus | Free play's, with the bridge built. |
+| variable (a named piece of a robot's memory) | Variable | It *remembers* (*merkt sich*) a number. The Memory category is *Merken*. |
+| set … to …, change … by … | setze … auf …, ändere … um … | Blockly's own German, but *ändere* rather than its *erhöhe*, since a change can be -1. |
+| my block (a block of one's own) | mein Baustein | Blockly's “to do something” and “um etwas tun”. The category is *Meine Bausteine*. |
+| input (of one's own block) | Eingabe | “Holz holen mit: Ziel”. |
+| message | Nachricht | Named in quotes: „Brett fertig“, „Stein bitte“. |
+| send … to …, wait for … | schicke … an …, warte auf … | |
+| inbox | Briefkasten | “Der Briefkasten ist voll: Werkstatt”. |
 
 Open: whether the game's name is translated (*Robot Island*, *Roboterinsel*). Both catalogues say “Robot Island” until it's decided, before Phase 9 (PLAN.md §8).

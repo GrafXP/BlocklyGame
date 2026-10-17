@@ -93,8 +93,8 @@ export const NAME_LENGTH = 24;
 // when a mission starts again from its checkpoint, what the checkpoint gave it
 // stays. The program must be sound (checkProgram).
 export function installProgram(world, program, { fresh = true } = {}) {
-  const { id, revision, compiler, start, code, needs } = copy(program);
-  const entry = { id, revision, compiler, start, code, needs };
+  const { id, revision, compiler, start, code, needs, variables } = copy(program);
+  const entry = { id, revision, compiler, start, code, needs, ...(variables && { variables }) };
   const at = world.programs.findIndex((p) => p.id >= id);
   if (world.programs[at]?.id === id) world.programs[at] = entry;
   else world.programs.splice(at < 0 ? world.programs.length : at, 0, entry);

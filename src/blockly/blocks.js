@@ -17,6 +17,12 @@ import { ICONS } from "./icons.js";
 // Styles name a colour family (src/blockly/treatments.js), not a colour, so each
 // visual treatment colours every block.
 //
+// Variables, routines and Set, Change and Get are Blockly's own blocks
+// (variables_set, math_change, variables_get, procedures_defnoreturn,
+// procedures_callnoreturn), worded by Blockly's catalogue and the game's
+// overrides (src/i18n/*/blockly.js); the messages' Send and Wait For are the
+// game's, below.
+//
 // A robot action's place or item is an input, not a dropdown of its own (PLAN.md
 // §5, §7): it holds a value block. Its shadow, a place or an item chosen from a
 // dropdown, is there from the start, like the number in a new Repeat, and a
@@ -46,6 +52,24 @@ export const MADE = [
 export const BLUEPRINTS = [
   ["%{BKY_BLUEPRINT_BRIDGE}", "bridge"],
   ["%{BKY_BLUEPRINT_WORKSHOP}", "workshop"],
+];
+// The messages there are (src/sim/messages.js, MESSAGES), in the same order.
+export const MESSAGE_CHOICES = [
+  ["%{BKY_MESSAGE_PLANKREADY}", "plankReady"],
+  ["%{BKY_MESSAGE_KITREADY}", "kitReady"],
+  ["%{BKY_MESSAGE_WOODPLEASE}", "woodPlease"],
+  ["%{BKY_MESSAGE_PLANKPLEASE}", "plankPlease"],
+  ["%{BKY_MESSAGE_STONEPLEASE}", "stonePlease"],
+  ["%{BKY_MESSAGE_STONEDELIVERED}", "stoneDelivered"],
+  ["%{BKY_MESSAGE_GO}", "go"],
+];
+// Who a message can go to: the island's robots and buildings. On an island,
+// its own (src/blockly/choices.js, recipients); these where there's none.
+export const RECIPIENTS = [
+  ["%{BKY_ROBO_1}", "r1"],
+  ["%{BKY_ROBO_2}", "r2"],
+  ["%{BKY_ROBO_3}", "r3"],
+  ...PLACES.filter(([, id]) => !["grove", "quarry"].includes(id)),
 ];
 
 // The value block each action's input starts with, as its shadow: the input's
@@ -157,6 +181,29 @@ export const BLOCKS = [
     previousStatement: null,
     style: "loop_blocks",
     tooltip: "%{BKY_CONTROL_FOREVER_TOOLTIP}",
+  },
+  // Messages (src/sim/messages.js): send one to a robot or building, and wait
+  // for one to come. Send is two rows, the message and whom it's for, so it
+  // fits the toolbox in every language.
+  {
+    type: "message_send",
+    message0: "%{BKY_MESSAGE_SEND}",
+    args0: [icon("send"), { type: "field_dropdown", name: "MESSAGE", options: MESSAGE_CHOICES }],
+    message1: "%{BKY_MESSAGE_SEND_TO}",
+    args1: [{ type: "field_choice", name: "TO", options: RECIPIENTS, choices: "recipients" }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "message_blocks",
+    tooltip: "%{BKY_MESSAGE_SEND_TOOLTIP}",
+  },
+  {
+    type: "message_wait",
+    message0: "%{BKY_MESSAGE_WAIT}",
+    args0: [icon("mail"), { type: "field_dropdown", name: "MESSAGE", options: MESSAGE_CHOICES }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "message_blocks",
+    tooltip: "%{BKY_MESSAGE_WAIT_TOOLTIP}",
   },
   {
     type: "sense_stock",

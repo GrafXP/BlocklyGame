@@ -8,8 +8,13 @@ import { reason } from "../sim/codes.js";
 //
 // The tree is plain data:
 //
-//   { stacks: [[node, …], …], count }
+//   { stacks: [[node, …], …], count, variables: [{ id, name }, …] }
 //   node = { id, type, fields: { NAME: value }, inputs: { NAME: [node, …] }, extra, shadow }
+//
+// `variables` are the workspace's, as Blockly lists them: a variable field
+// holds { id }, and the adapter adds its `name` from this list, so the
+// compiler and the words for a block (src/ui/chips.js) have it. A routine's
+// inputs are variables too (Blockly's procedure blocks).
 //
 // A stack is a chain of blocks joined top to bottom, in the order Blockly saved
 // the workspace's top blocks. Every input is a chain too: a statement input's
@@ -32,6 +37,17 @@ class Unreadable extends Error {
 }
 
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+// A name the program holds: the player's words, or a message reference the
+// game wrote in a starter ({ key, params? }), which the game words as it gives
+// the starter out (src/programming/programs.js, wordStarter). Run unworded, in
+// the tests and verify:missions, a reference stands for itself, by its key.
+// Returns null for anything else.
+export function nameText(value) {
+  if (typeof value === "string") return value;
+  if (isObject(value) && typeof value.key === "string" && !("id" in value)) return value.params ? `${value.key} ${JSON.stringify(value.params)}` : value.key;
+  return null;
+}
 const isDisabled = (json) => (Array.isArray(json.disabledReasons) && json.disabledReasons.length > 0) || json.enabled === false;
 
 // Field values are strings, numbers or booleans; a variable field's is an object
@@ -49,6 +65,10 @@ export function readWorkspace(json) {
   if (!isObject(json)) return { problem: reason("program.unreadable") };
   const top = json.blocks?.blocks ?? [];
   if (!Array.isArray(top)) return { problem: reason("program.unreadable") };
+  const listed = json.variables ?? [];
+  if (!Array.isArray(listed) || !listed.every((v) => isObject(v) && typeof v.id === "string" && v.id && nameText(v.name) !== null)) return { problem: reason("program.unreadable") };
+  const variables = listed.map(({ id, name }) => ({ id, name: nameText(name) }));
+  const names = new Map(variables.map((v) => [v.id, v.name]));
 
   const ids = new Set();
   let count = 0;
@@ -61,7 +81,10 @@ export function readWorkspace(json) {
     if (b.fields !== undefined && !isObject(b.fields)) throw new Unreadable(reason("program.unreadable"));
     if (b.inputs !== undefined && !isObject(b.inputs)) throw new Unreadable(reason("program.unreadable"));
     const fields = {};
-    for (const [name, value] of Object.entries(b.fields ?? {})) fields[name] = readField(value);
+    for (const [name, value] of Object.entries(b.fields ?? {})) {
+      fields[name] = readField(value);
+      if (isObject(fields[name]) && typeof fields[name].id === "string" && names.has(fields[name].id)) fields[name].name = names.get(fields[name].id);
+    }
     const inputs = {};
     for (const [name, input] of Object.entries(b.inputs ?? {})) {
       if (!isObject(input)) throw new Unreadable(reason("program.unreadable"));
@@ -86,7 +109,7 @@ export function readWorkspace(json) {
 
   try {
     const stacks = top.map((b) => readChain(b, false)).filter((stack) => stack.length);
-    return { tree: { stacks, count } };
+    return { tree: { stacks, count, variables } };
   } catch (e) {
     if (e instanceof Unreadable) return { problem: e.problem };
     throw e;

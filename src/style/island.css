@@ -609,6 +609,18 @@
   font-size: 0.85rem;
 }
 
+/* What its variables hold, beside it as it runs. */
+.row-memory {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: #8a2c52;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* A row holds still while the world runs (src/ui/overview.js): the block and
    the reason keep their lines when empty, and a row that isn't chosen keeps
    each line to one, the whole of it on hover. */
@@ -694,17 +706,24 @@
 }
 
 .details .stock,
-.details .readings {
+.details .readings,
+.details .memory,
+.details .inbox {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .details .stock li,
+.details .memory li,
 .details .basket {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+}
+
+.details .memory strong {
+  font-variant-numeric: tabular-nums;
 }
 
 .details .readings li {

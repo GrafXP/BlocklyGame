@@ -42,3 +42,36 @@ export const mine = (id, slot) => block(`setting_${slot}`, id);
 
 // A workspace of `stacks`, each a chain's first block.
 export const workspace = (...stacks) => ({ blocks: { languageVersion: 0, blocks: stacks } });
+
+// --- Memory, routines and messages (PLAN.md §7, Phase 8) ---------------------
+//
+// Variables are the workspace's, as Blockly lists them, and a block names one
+// by its id; a name the game gives is a message reference, worded when the
+// program is given out (src/programming/programs.js, wordStarter).
+
+// Workspace `ws` with `variables`, [{ id, name }], Blockly's list of them.
+export const withVariables = (ws, variables) => (variables.length ? { ...ws, variables: variables.map(({ id, name }) => ({ name, id })) } : ws);
+
+// Set variable `v` ({ id }) to `value`, a block or a number.
+export const setVar = (id, v, value) => block("variables_set", id, { fields: { VAR: { id: v.id } }, inputs: { VALUE: typeof value === "number" ? number(value, `${id}-n`) : input(value) } });
+// Change variable `v` by `by`, a block or a number.
+export const changeVar = (id, v, by) => block("math_change", id, { fields: { VAR: { id: v.id } }, inputs: { DELTA: typeof by === "number" ? number(by, `${id}-n`) : input(by) } });
+// What variable `v` holds; or, inside a routine, what its input `v` was given.
+export const getVar = (id, v) => block("variables_get", id, { fields: { VAR: { id: v.id } } });
+
+// A routine's definition (Blockly's procedures_defnoreturn): its `name`, its
+// one input `param` ({ id, name }, a variable) or null, and its blocks.
+export const routine = (id, name, param, ...blocks) =>
+  block("procedures_defnoreturn", id, {
+    fields: { NAME: name },
+    ...(param && { extraState: { params: [{ name: param.name, id: param.id }] } }),
+    ...(blocks.length && { inputs: { STACK: input(...blocks) } }),
+  });
+// A use of routine `name`, whose input `param` (or null) is given `arg`: an
+// input, as input() or number() make it, or null for a gap.
+export const call = (id, name, param = null, arg = null) =>
+  block("procedures_callnoreturn", id, { extraState: { name, ...(param && { params: [param.name] }) }, ...(arg && { inputs: { ARG0: arg } }) });
+
+// Send message `message` to robot or building `to`; wait for message `message`.
+export const send = (id, message, to) => block("message_send", id, { fields: { MESSAGE: message, TO: to } });
+export const waitFor = (id, message) => block("message_wait", id, { fields: { MESSAGE: message } });

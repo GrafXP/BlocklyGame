@@ -5,7 +5,7 @@ import { MAX_BLOCKS, blockIndex, readWorkspace } from "../src/programming/adapte
 import { COMPILER_VERSION, LIMITS, compile } from "../src/programming/compiler.js";
 import { checkProgram } from "../src/programming/runtime.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
-import { block, chain, input, workspace } from "../src/content/build.js";
+import { block, call, chain, changeVar, getVar, input, routine, setVar, withVariables, workspace } from "../src/content/build.js";
 import { CODES } from "../src/sim/codes.js";
 import { basket, collect, compare, forever, go, make, my, num, pickUp, program, repeat, start, stock, unload, until, wait, when } from "./programs.js";
 
@@ -70,7 +70,7 @@ test("the adapter refuses what isn't a workspace, and one too big to be a child'
   assert.deepEqual(readWorkspace(twice).problem, { code: "program.unreadable" }, "two blocks with one id");
   const long = workspace(chain(start(), ...Array.from({ length: MAX_BLOCKS }, (_, i) => unload(`u${i}`))));
   assert.deepEqual(compile(long).errors, [{ code: "program.tooBig", limit: MAX_BLOCKS }]);
-  assert.deepEqual(readWorkspace({}).tree, { stacks: [], count: 0 }, "an empty workspace is a workspace");
+  assert.deepEqual(readWorkspace({}).tree, { stacks: [], count: 0, variables: [] }, "an empty workspace is a workspace");
 });
 
 test("a program compiles to instructions, each visible one with its block's id; the start block is none", () => {
@@ -274,6 +274,19 @@ test("the compiler can report every program code, each with the values the table
     // A number where a place goes, and a place where an item goes.
     program(block("robot_go_to", "gn", { inputs: { PLACE: input(num("n2", 1)) } }), block("robot_collect", "cp", { inputs: { ITEM: input(block("value_place", "vp", { fields: { PLACE: "grove" } })) } })),
     program(deep),
+    // Blocks of one's own: a use of none, two of one name, one with two
+    // inputs, one using itself through another, and a Set of an input.
+    withVariables(
+      workspace(
+        chain(start(), call("none", "nowhere"), call("ca", "a")),
+        routine("a", "a", null, call("cb", "b")),
+        routine("b", "b", null, call("cab", "a")),
+        routine("a2", "A"),
+        block("procedures_defnoreturn", "two", { fields: { NAME: "two" }, extraState: { params: [{ name: "x", id: "x" }, { name: "y", id: "y" }] } }),
+        routine("in", "in", { id: "p", name: "p" }, setVar("sp", { id: "p" }, 1), changeVar("cp", { id: "p" }, getVar("gp", { id: "p" }))),
+      ),
+      [{ id: "x", name: "x" }, { id: "y", name: "y" }, { id: "p", name: "p" }],
+    ),
   ];
   const found = bad.flatMap((source) => {
     const { errors, warnings } = compile(source, { type: "helper", places: ["grove"] });

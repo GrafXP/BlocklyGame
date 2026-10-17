@@ -15,7 +15,9 @@ import { ref } from "../i18n/index.js";
 
 // The colour families, and which family each block style takes. Built-in blocks
 // keep their style names (controls_if is logic_blocks, repeat is loop_blocks).
-export const FAMILIES = ["entry", "robot", "building", "control", "sensing", "values"];
+// Variables are Blockly's variable_blocks, the player's own blocks its
+// procedure_blocks (PLAN.md §7, Phase 8).
+export const FAMILIES = ["entry", "robot", "building", "control", "sensing", "values", "memory", "routine", "message"];
 export const BLOCK_STYLES = {
   entry_blocks: "entry",
   robot_blocks: "robot",
@@ -24,6 +26,9 @@ export const BLOCK_STYLES = {
   logic_blocks: "control",
   sensing_blocks: "sensing",
   math_blocks: "values",
+  variable_blocks: "memory",
+  procedure_blocks: "routine",
+  message_blocks: "message",
 };
 
 const ROUNDED = 'ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
@@ -41,6 +46,9 @@ export const TREATMENTS = {
       control: { primary: "120" },
       sensing: { primary: "180" },
       values: { primary: "230" },
+      memory: { primary: "330" },
+      routine: { primary: "290" },
+      message: { primary: "190" },
     },
     blockInk: "#ffffff",
     panel: { rgb: [255, 255, 255], ink: "#1d2633" },
@@ -58,6 +66,9 @@ export const TREATMENTS = {
       control: { primary: "#c9b8f2", secondary: "#e2d9f8", tertiary: "#8a72c9" },
       sensing: { primary: "#97dcc9", secondary: "#c6ece1", tertiary: "#4c9f88" },
       values: { primary: "#bfe095", secondary: "#dcefc4", tertiary: "#7aa64b" },
+      memory: { primary: "#f3b3c8", secondary: "#f9d7e3", tertiary: "#c26f8d" },
+      routine: { primary: "#dcc8a6", secondary: "#ece0cc", tertiary: "#a08a62" },
+      message: { primary: "#8fd3ea", secondary: "#c5e8f4", tertiary: "#4f9cb8" },
     },
     blockInk: "#1d2633",
     panel: { rgb: [250, 247, 240], ink: "#1d2633" },
@@ -75,6 +86,9 @@ export const TREATMENTS = {
       control: { primary: "#6a3fc0", secondary: "#9476d4", tertiary: "#452880" },
       sensing: { primary: "#0b6f66", secondary: "#4a9890", tertiary: "#064a44" },
       values: { primary: "#37701a", secondary: "#6a9a52", tertiary: "#224a0f" },
+      memory: { primary: "#a3305d", secondary: "#c4688c", tertiary: "#6d1f3e" },
+      routine: { primary: "#7a5a26", secondary: "#a0834f", tertiary: "#4f3a18" },
+      message: { primary: "#0f6a8c", secondary: "#4b93ae", tertiary: "#08465d" },
     },
     blockInk: "#ffffff",
     panel: { rgb: [22, 28, 45], ink: "#eef2ff" },

@@ -14,6 +14,8 @@ export const CODES = {
   "wait.space": ["item", "at", "need", "free"], // room for fewer than `need` of `item` at `at`
   "wait.route": ["target"], // no way to `target`; tried again when the ways change
   "wait.until": ["block"], // a Wait Until block whose condition isn't true yet
+  "wait.message": ["message", "block"], // a Wait For block: no message `message` in the inbox yet
+  "wait.mailbox": ["to"], // a Send: robot or building `to` has a full inbox
 
   // Program errors: what can't work as written. The entity stops until it's
   // restarted or given another program. From a program, each also has the
@@ -23,6 +25,7 @@ export const CODES = {
   "error.notHere": ["action"], // not where `action` can be done
   "error.collect": ["item"], // `item` isn't one a deposit yields, so it can't be collected
   "error.setting": ["setting"], // the program reads setting `setting`, and none is chosen
+  "error.recipient": ["target"], // a message for `target`, which is no robot or building
   "error.busy": ["block"], // a program did more in one tick than it may (never, compiled from blocks)
 
   // What the compiler finds wrong with a program (src/programming/compiler.js).
@@ -42,6 +45,11 @@ export const CODES = {
   "program.tooBig": ["limit"], // more than `limit` blocks
   "program.tooDeep": ["block", "limit"], // blocks inside each other more than `limit` deep
   "program.unused": ["block"], // warning: a stack that isn't under the start block, and won't run
+  "program.noRoutine": ["block", "name"], // a call of a block `name` that isn't defined
+  "program.twoRoutines": ["block", "name"], // a second definition of block `name`
+  "program.recursive": ["block", "name"], // a block that uses itself, through others or directly
+  "program.inputs": ["block", "limit"], // a block of your own with more than `limit` inputs
+  "program.setInput": ["block"], // a Set or Change of a block's input, which only its use gives
 
   // The whole world: nothing is under way, and every entity that isn't stopped
   // is waiting, so nothing can change until the player changes something.

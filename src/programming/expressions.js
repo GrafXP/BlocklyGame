@@ -8,8 +8,10 @@ import { thing } from "../sim/things.js";
 // runtime reads the same world, and none changes it, so what one program sees
 // never depends on which ran first. Values are whole numbers, booleans, and
 // ids: of places and of items. A setting is the entity's own, so robots sharing
-// a program read their own (PLAN.md §5). An expression is at most
-// LIMITS.expression deep, so evaluating one is bounded.
+// a program read their own (PLAN.md §5), and so is a variable, which lives in
+// the entity's runtime (runtime.js): robots sharing a program each remember
+// their own. A routine's input is the value its call gave, in the call's frame.
+// An expression is at most LIMITS.expression deep, so evaluating one is bounded.
 
 // What can't be worked out as written: the program stops with `reason`.
 export class Fault extends Error {
@@ -46,6 +48,13 @@ export function evaluate(expr, entity, world) {
     case "place":
     case "item":
       return expr.value;
+    case "var":
+      return entity.runtime?.vars?.[expr.var] ?? 0;
+    case "arg": {
+      const frame = entity.runtime?.frames?.at(-1);
+      if (!frame || !(expr.param in frame.args)) throw new Fault(reason("error.busy", { block: expr.block }));
+      return frame.args[expr.param];
+    }
     case "setting": {
       if (!can(entity, "settings")) throw new Fault(reason("error.cannot", { action: "settings", block: expr.block }));
       const value = entity.settings[expr.slot];

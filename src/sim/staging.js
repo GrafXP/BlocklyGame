@@ -40,9 +40,13 @@ import { thing } from "./things.js";
 const entries = (map) => Object.entries(map ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
 // Stops everything under way: actions cancelled, their holds let go, waits and
-// errors forgotten. Work that ended stays done.
+// errors forgotten, messages on their way or in an inbox gone (messages.js).
+// Work that ended stays done.
 function stopAll(world) {
-  for (const e of world.entities) stop(world, e);
+  for (const e of world.entities) {
+    stop(world, e);
+    delete e.inbox;
+  }
 }
 
 // Thing `given` from the catalogue, added to `world` unless it's there, with

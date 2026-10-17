@@ -136,6 +136,12 @@ html[data-treatment] .blocklyDropDownDiv .blocklyMenuItem {
   stroke: #b42318;
 }
 
+/* A use of one's own block the chosen entity is inside, to come back to. */
+.execution-markers .marker-badge.call rect {
+  fill: #f1e6d2;
+  stroke: #7a5a26;
+}
+
 .execution-markers .marker-badge text {
   fill: #1d2633;
   text-anchor: middle;

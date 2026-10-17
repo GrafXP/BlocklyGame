@@ -107,12 +107,17 @@ function goalView(world, goal) {
       pictures = pics(goal.item);
       label = t("goal.steady", { item, place: nameOf(world, goal.at), have, need });
       break;
+    case "remembers":
+      pictures = pics("memory");
+      label = t("goal.remembers", { robot: nameOf(world, goal.robot), have, need });
+      break;
   }
   const notes = [];
   if (goal.exact) notes.push(t("goal.exact"));
   if (goal.load === 2) notes.push(t("goal.load"));
   if (goal.noWait) notes.push(t("goal.noWait", { robot: nameOf(world, goal.by) }));
-  if (goal.type === "steady") notes.push(t("goal.steadyNote", { name: nameOf(world, goal.after) }));
+  if (goal.type === "steady") notes.push(goal.after ? t("goal.steadyNote", { name: nameOf(world, goal.after) }) : t("goal.steadyAlone"));
+  if (goal.type === "remembers") notes.push(t("goal.remembersNote"));
   return { pictures, label, note: failed ? t("goal.failed") : notes.join(" "), done, failed };
 }
 

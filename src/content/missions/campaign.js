@@ -3,10 +3,14 @@ import { CHAPTER_2 } from "./chapter2.js";
 import { CHAPTER_3 } from "./chapter3.js";
 import { CHAPTER_4 } from "./chapter4.js";
 import { CHAPTER_5 } from "./chapter5.js";
+import { CHAPTER_6 } from "./chapter6.js";
+import { CHAPTER_7 } from "./chapter7.js";
+import { CHAPTER_8 } from "./chapter8.js";
 
-// The campaign (PLAN.md §9; docs/campaign-plan.md): chapters 1–5, missions
-// 1–25, the main learning journey, on one island that grows (island.js).
-// Chapters 6–8 come with Phase 8. A mission is
+// The campaign (PLAN.md §9; docs/campaign-plan.md): chapters 1–8, missions
+// 1–40, on one island that grows (island.js). Missions 1–25 are the main
+// learning journey; 26–40 go on to memory, blocks of one's own and messages
+// (Phase 8). A mission is
 //
 //   { id, n, chapter, setup, goals | trials, programs, blocks, tools?, reward?,
 //     look, problems?, predict?, project?, scaffold?, reference, budget?,
@@ -39,7 +43,7 @@ import { CHAPTER_5 } from "./chapter5.js";
 // - milestone: it ends a chapter; unlocks: "free" or "sandbox", what it opens
 //   once done.
 
-const CHAPTERS = [CHAPTER_1, CHAPTER_2, CHAPTER_3, CHAPTER_4, CHAPTER_5];
+const CHAPTERS = [CHAPTER_1, CHAPTER_2, CHAPTER_3, CHAPTER_4, CHAPTER_5, CHAPTER_6, CHAPTER_7, CHAPTER_8];
 
 export const CAMPAIGN = CHAPTERS.flatMap((missions, c) => missions.map((m) => ({ ...m, chapter: c + 1 }))).map((m, i) => ({ ...m, n: i + 1 }));
 

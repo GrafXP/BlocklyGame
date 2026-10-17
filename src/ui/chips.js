@@ -1,6 +1,7 @@
 import { BLOCKS } from "../blockly/blocks.js";
 import { BLOCK_STYLES, TREATMENTS } from "../blockly/treatments.js";
-import { formatNumber } from "../i18n/index.js";
+import { display, formatNumber } from "../i18n/index.js";
+import { nameText } from "../programming/adapter.js";
 import { esc } from "./dom.js";
 
 // A block as a DOM chip, outside Blockly (PLAN.md §8): its colour, its picture
@@ -38,8 +39,38 @@ const BUILT_IN = [
     style: "logic_blocks",
   },
   { type: "math_number", message0: "%1", args0: [{ type: "field_number", name: "NUM" }], style: "math_blocks" },
+  // Memory: a variable's name is the player's, from the workspace's list
+  // (src/programming/adapter.js puts it in the field).
+  {
+    type: "variables_set",
+    message0: "%{BKY_VARIABLES_SET}",
+    args0: [
+      { type: "field_variable", name: "VAR" },
+      { type: "input_value", name: "VALUE" },
+    ],
+    style: "variable_blocks",
+  },
+  {
+    type: "math_change",
+    message0: "%{BKY_MATH_CHANGE_TITLE}",
+    args0: [
+      { type: "field_variable", name: "VAR" },
+      { type: "input_value", name: "DELTA" },
+    ],
+    style: "variable_blocks",
+  },
+  { type: "variables_get", message0: "%1", args0: [{ type: "field_variable", name: "VAR" }], style: "variable_blocks" },
+  // Blocks of the player's own: the definition, “my block bring wood”, and a
+  // use, “bring wood with: camp” (blockWords words these itself).
+  { type: "procedures_defnoreturn", message0: "%{BKY_PROCEDURES_DEFNORETURN_TITLE} %1", args0: [{ type: "field_name", name: "NAME" }], style: "procedure_blocks" },
+  { type: "procedures_callnoreturn", message0: "%1", args0: [{ type: "field_name", name: "NAME" }], style: "procedure_blocks" },
 ];
 const DEFINITIONS = new Map([...BLOCKS, ...BUILT_IN].map((def) => [def.type, def]));
+
+// A routine's name: the player's words, or a starter's message reference,
+// worded (a starter's names are worded as it's given out, so only an unworded
+// one, in the tests, gets here).
+const routineName = (value) => (typeof value === "string" ? value : value?.key ? display(value) : (nameText(value) ?? ""));
 
 // %{BKY_KEY} references in `text`, from `messages`.
 const resolve = (text, messages) => text.replace(/%\{BKY_(\w+)\}/g, (all, key) => messages[key] ?? all);
@@ -51,8 +82,21 @@ const resolve = (text, messages) => text.replace(/%\{BKY_(\w+)\}/g, (all, key) =
 export function blockWords(node, messages) {
   const def = DEFINITIONS.get(node.type);
   if (!def) return node.type;
-  const text = resolve(def.message0, messages).replace(/%(\d+)/g, (all, n) => {
-    const arg = def.args0[n - 1];
+  const rows = [lineWords(node, def.message0, def.args0, messages)];
+  // A second row of words, such as Send's “to Robo 2”; a statement input's
+  // row has none.
+  if (def.message1) rows.push(lineWords(node, def.message1, def.args1, messages));
+  return rows.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function lineWords(node, message, args, messages) {
+  if (node.type === "procedures_callnoreturn") {
+    const name = routineName(node.extra?.name) || "…";
+    const arg = node.inputs.ARG0?.[0];
+    return arg ? `${name} ${resolve("%{BKY_PROCEDURES_CALL_BEFORE_PARAMS}", messages)} ${blockWords(arg, messages)}` : name;
+  }
+  const text = resolve(message, messages).replace(/%(\d+)/g, (all, n) => {
+    const arg = args[n - 1];
     const value = node.fields[arg?.name];
     switch (arg?.type) {
       case "field_dropdown":
@@ -62,6 +106,10 @@ export function blockWords(node, messages) {
       }
       case "field_number":
         return typeof value === "number" ? formatNumber(value) : String(value ?? "");
+      case "field_variable":
+        return value?.name ?? "…";
+      case "field_name":
+        return routineName(value) || "…";
       case "input_value": {
         const inner = node.inputs[arg.name]?.[0];
         if (!inner) return "…";

@@ -1,6 +1,7 @@
 import { reason } from "./codes.js";
 import { ITEMS, RAW, TYPES, can, typeOf } from "./entities.js";
 import { available, reserve, release, room, settle } from "./inventory.js";
+import { INBOX_SIZE, deliver, queued } from "./messages.js";
 import { findPath } from "./navigation.js";
 import { BLUEPRINTS, placedName } from "./placement.js";
 import { RECIPES } from "./recipes.js";
@@ -22,6 +23,7 @@ import { thing, thingAt } from "./things.js";
 //   { type: "unload", to, start, end, holds }
 //   { type: "make", recipe, start, end, holds }
 //   { type: "wait", start, end }
+//   { type: "send", to, message, start, end }      a message on its way (messages.js)
 //
 // A robot's position along a move is derived from `path`, `start` and `perCell`;
 // it only ever stands on one cell, entity.cell, which changes as each is reached.
@@ -98,6 +100,15 @@ const STARTS = {
   wait(world, entity, { steps }, now) {
     return { action: action("wait", now, Math.trunc(steps) || 1, {}) };
   },
+
+  // A message to robot or building `to`, there when the action ends, next
+  // tick. A Send keeps a place in the recipient's inbox while it's on its way.
+  send(world, entity, { message, to }, now) {
+    const recipient = thing(world, to);
+    if (!recipient || recipient.kind === "node") return { error: reason("error.recipient", { target: to }) };
+    if (queued(world, recipient) >= INBOX_SIZE) return { wait: reason("wait.mailbox", { to }) };
+    return { action: action("send", now, 1, { to, message }) };
+  },
 };
 
 export const ACTIONS = Object.keys(STARTS);
@@ -144,6 +155,7 @@ export function progress(world, entity, now) {
 export function finish(world, entity) {
   const a = entity.action;
   if (a.holds) settle(world, a.holds);
+  if (a.type === "send") deliver(thing(world, a.to), { message: a.message, from: entity.id, sent: a.start });
   entity.action = null;
   const builds = a.type === "make" ? RECIPES[a.recipe].builds : null;
   if (!builds) return false;
@@ -180,10 +192,13 @@ function become(site, what) {
 // Stops `entity`'s action before it ends, at the tick boundary after tick
 // world.tick: its holds are let go and nothing moves. A robot stopped between two
 // cells ends on the nearer, or on the one it left when it's halfway (PLAN.md §5).
+// A message on its way still arrives: it was sent, and messages are never lost
+// (PLAN.md §7).
 export function cancel(world, entity) {
   const a = entity.action;
   if (!a) return;
   if (a.holds) release(world, a.holds);
+  if (a.type === "send") deliver(thing(world, a.to), { message: a.message, from: entity.id, sent: a.start });
   if (a.type === "move") {
     const walked = world.tick - a.start;
     const leg = Math.floor(walked / a.perCell);

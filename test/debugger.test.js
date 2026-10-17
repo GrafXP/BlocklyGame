@@ -106,8 +106,9 @@ test("the snapshot says, for every robot and building, its state, program, block
   const game = island();
   const before = takeSnapshot(game.world, null);
   assert.equal(before.tick, 0);
-  assert.deepEqual(entryIn(before, "r1"), { id: "r1", kind: "robot", state: "ready", reason: null, program: "collector", revision: 1, block: null, fresh: false, round: null, readings: {} });
-  assert.deepEqual(entryIn(before, "camp"), { id: "camp", kind: "building", state: "stopped", reason: null, program: null, revision: null, block: null, fresh: false, round: null, readings: {} });
+  const nothingMore = { memory: [], inside: [], inbox: [], listens: false };
+  assert.deepEqual(entryIn(before, "r1"), { id: "r1", kind: "robot", state: "ready", reason: null, program: "collector", revision: 1, block: null, fresh: false, round: null, readings: {}, ...nothingMore });
+  assert.deepEqual(entryIn(before, "camp"), { id: "camp", kind: "building", state: "stopped", reason: null, program: null, revision: null, block: null, fresh: false, round: null, readings: {}, ...nothingMore });
   assert.deepEqual(
     before.programs.map((p) => [p.id, p.runners]),
     [

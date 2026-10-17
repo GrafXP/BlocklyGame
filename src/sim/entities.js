@@ -22,20 +22,20 @@ export const SETTINGS = { source: "place", item: "item", destination: "place" };
 export const TYPES = {
   helper: {
     kind: "robot",
-    can: ["goTo", "collect", "pickUp", "unload", "wait", "basket", "settings"],
+    can: ["goTo", "collect", "pickUp", "unload", "wait", "send", "basket", "settings"],
     basket: 2, // items, of any kinds
     perCell: 3, // ticks to walk from a cell to its neighbour
     collectTicks: 5,
     pickUpTicks: 3,
     unloadTicks: 3,
   },
-  camp: { kind: "building", can: ["wait"] },
-  depot: { kind: "building", can: ["wait"] },
-  sawmill: { kind: "building", can: ["make", "wait"], recipes: ["plank"] },
+  camp: { kind: "building", can: ["wait", "send"] },
+  depot: { kind: "building", can: ["wait", "send"] },
+  sawmill: { kind: "building", can: ["make", "wait", "send"], recipes: ["plank"] },
   // A construction site builds the one thing its blueprint says: a bridge over
   // its gap, or the building it stands for (recipes.js, placement.js).
-  site: { kind: "building", can: ["make", "wait"], recipes: ["bridge", "workshop"] },
-  workshop: { kind: "building", can: ["make", "wait"], recipes: ["kit"] },
+  site: { kind: "building", can: ["make", "wait", "send"], recipes: ["bridge", "workshop"] },
+  workshop: { kind: "building", can: ["make", "wait", "send"], recipes: ["kit"] },
   grove: { kind: "node", yields: "wood" },
   quarry: { kind: "node", yields: "stone" },
 };

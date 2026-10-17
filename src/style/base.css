@@ -330,6 +330,27 @@ a {
   --hue-ink: #a3284f;
 }
 
+.home .chapter-6 {
+  --hue: #0e7a7e;
+  --hue-soft: #dff3f3;
+  --hue-edge: #b3dedf;
+  --hue-ink: #0b6266;
+}
+
+.home .chapter-7 {
+  --hue: #8a5a12;
+  --hue-soft: #f6ead6;
+  --hue-edge: #e6cfa8;
+  --hue-ink: #734a0e;
+}
+
+.home .chapter-8 {
+  --hue: #3f4fb0;
+  --hue-soft: #e5e8f8;
+  --hue-edge: #c3c9ee;
+  --hue-ink: #334095;
+}
+
 .home .chapter h3 {
   display: flex;
   flex-wrap: wrap;

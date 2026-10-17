@@ -5,8 +5,9 @@ import { readingWords } from "./inspector.js";
 // The execution markers of program `programId` (src/blockly/markers.js), from a
 // tick's snapshot (snapshot.js): a marker for each entity running it at its
 // active block, the chosen one `selected` marked as chosen, and the chosen
-// one's readings as badges: ✓ and ✗ for conditions, numbers for senses, a
-// place's or item's name for a setting.
+// one's readings as badges: ✓ and ✗ for conditions, numbers for senses and
+// variables, a place's or item's name for a setting; and ↪ on each use of
+// one's own block it's inside, so it can be followed in and out of it.
 // Returns { list, readings } for markers' show().
 export function marksFor(world, snapshot, programId, selected) {
   const list = [];
@@ -22,6 +23,7 @@ export function marksFor(world, snapshot, programId, selected) {
           ? { blockId, text: value ? "✓" : "✗", kind: String(value) }
           : { blockId, text: readingWords(value, world), kind: typeof value === "string" ? "setting" : "number" },
       );
+      for (const { call } of entry.inside) readings.push({ blockId: call, text: "↪", kind: "call" });
     }
   }
   return { list, readings };

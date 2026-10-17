@@ -77,10 +77,11 @@ export function enterMission(world, library, mission, { word = null } = {}) {
 // Mission `mission`'s checkpoint without the missions before it played: the
 // island before mission 1 with the setup of each mission up to this one made in
 // turn, nothing happening between. `library` is the player's, or one of every
-// mission's starters up to this one.
-export function missionStart(mission, library) {
+// mission's starters up to this one; starters it hasn't got yet join it worded
+// by `word`, as enterMission's do.
+export function missionStart(mission, library, { word = null } = {}) {
   const world = baseWorld();
-  for (const m of CAMPAIGN.slice(0, mission.n)) enterMission(world, library, m);
+  for (const m of CAMPAIGN.slice(0, mission.n)) enterMission(world, library, m, { word });
   return world;
 }
 
@@ -138,13 +139,16 @@ export function blocksUsed(source) {
 // and the values an action's gap starts with.
 const ALWAYS = ["island_when_started", "value_place", "value_raw", "value_item"];
 const GAME_BLOCKS = new Set(BLOCKS.map((b) => b.type));
+// Blockly's own blocks a mission may use, by the names their unlocks go by.
+const BUILT_IN = ["controls_repeat_ext", "controls_if", "controls_if_else", "logic_compare", "math_number", "variables_set", "math_change", "variables_get", "procedures_defnoreturn", "procedures_callnoreturn"];
 
 // What's wrong with mission `mission` as written, checked headlessly, for a
 // developer to read: [] when it keeps the campaign's rules.
 // - Its reference programs, and the starters of the programs they change, use
 //   only blocks the mission has unlocked: what its toolbox offers.
 // - At its checkpoint `world`, every store its goals deliver to or make in
-//   has room for what they count, and the deposits hold its budget.
+//   has room for what they count, and the deposits hold its budget, with what
+//   later trials stage in them.
 export function missionProblems(mission, world) {
   const problems = [];
   const allowed = new Set([...ALWAYS, ...unlockedBlocks(mission)]);
@@ -156,7 +160,7 @@ export function missionProblems(mission, world) {
   for (const [what, source] of sources) {
     for (const type of blocksUsed(source)) {
       if (!allowed.has(type)) problems.push(`${mission.id}: ${what} uses ${type}, which isn't unlocked`);
-      else if (!GAME_BLOCKS.has(type) && !["controls_repeat_ext", "controls_if", "controls_if_else", "logic_compare", "math_number"].includes(type)) problems.push(`${mission.id}: ${what} uses ${type}`);
+      else if (!GAME_BLOCKS.has(type) && !BUILT_IN.includes(type)) problems.push(`${mission.id}: ${what} uses ${type}`);
     }
   }
   const goals = (mission.trials ?? [{ goals: mission.goals }]).flatMap((t) => t.goals);
@@ -167,8 +171,12 @@ export function missionProblems(mission, world) {
     if (!store) problems.push(`${mission.id}: goal ${goal.id} counts at ${at}, which isn't there`);
     else if (goal.item && room(store, goal.item) < needOf(goal)) problems.push(`${mission.id}: ${at} has room for ${room(store, goal.item)} ${goal.item}, goal ${goal.id} counts ${needOf(goal)}`);
   }
+  // The deposits as the checkpoint has them, and what each later trial stages
+  // in them again (mission 40 fills them for its second run).
+  const deposits = world.nodes.filter((d) => d.store.caps);
   for (const [item, n] of Object.entries(mission.budget ?? {})) {
-    const held = world.nodes.filter((d) => d.store.caps[item]).reduce((sum, d) => sum + (d.store.items[item] ?? 0), 0);
+    let held = deposits.reduce((sum, d) => sum + (d.store.items[item] ?? 0), 0);
+    for (const trial of (mission.trials ?? []).slice(1)) for (const d of deposits) held += trial.stage?.stock?.[d.id]?.[item] ?? 0;
     if (held < n) problems.push(`${mission.id}: the deposits hold ${held} ${item}, its budget is ${n}`);
   }
   return problems;

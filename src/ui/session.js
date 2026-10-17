@@ -24,6 +24,7 @@ import {
   renameProgram,
   setDraft,
   sourceAt,
+  wordStarter,
 } from "../programming/programs.js";
 import { choicesOf, makeChoices, programFor } from "../sim/bindings.js";
 import { applyCommand, installProgram } from "../sim/commands.js";
@@ -283,7 +284,7 @@ function campaignLibrary() {
 // library, so the campaign's island and programs stay as they are.
 function replayOf(mission) {
   const library = clone(campaignLibrary() ?? { programs: [] });
-  const world = missionStart(mission, library);
+  const world = missionStart(mission, library, { word: display });
   return playOf("replay", mission, {}, library, world);
 }
 
@@ -544,7 +545,10 @@ export function showProgram(id, which) {
   const p = play();
   const doc = programDoc(p.library, id);
   if (!doc) return false;
-  const source = which === "start" ? p.mission?.scaffold?.[id] : which === "whole" ? p.mission?.reference?.programs?.[id] : which === "blank" ? startOnly(doc.draft) : null;
+  const given = which === "start" ? p.mission?.scaffold?.[id] : which === "whole" ? p.mission?.reference?.programs?.[id] : null;
+  // A start or the whole program names variables and blocks of its own as the
+  // starters do, worded in the player's language as it's shown.
+  const source = given ? wordStarter(given, display) : which === "blank" ? startOnly(doc.draft) : null;
   if (!source) return false;
   setDraft(p.library, id, source);
   changes++;

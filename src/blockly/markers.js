@@ -26,7 +26,8 @@ export const MIXED = "#1d2633"; // the outline of a block more than one entity i
 
 // `groups`: [{ blockId, box: { x, y, width, rowHeight }, entities: [...] }], in
 // overlay pixels, each entity { id, name, colour, ink, shape, chosen? }.
-// `readings`: [{ blockId, box, text, kind }], kind "number", "true", "false" or "setting".
+// `readings`: [{ blockId, box, text, kind }], kind "number", "true", "false",
+// "setting" or "call" (a use of one's own block the entity is inside).
 // `right`: where the view ends; a block's labels that would run past it move
 // left, onto the block's row, as far as its start. Returns the outlines, labels
 // and badges to draw, labels in entity id order at each block.

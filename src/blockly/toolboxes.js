@@ -78,7 +78,20 @@ const GAME = [
     "values",
     [block("math_number", { fields: { NUM: 4 } }), block("logic_compare", { inputs: { A: number(0), B: number(4) } }), ...Object.keys(SETTING_BLOCKS).map((b) => block(b))],
   ],
+  ["CAT_MEMORY", "memory", "GAME_MEMORY"],
+  ["CAT_ROUTINES", "routine", "GAME_ROUTINES"],
+  ["CAT_MESSAGES", "message", [block("message_send"), block("message_wait")]],
 ];
+
+// The categories whose blocks depend on the program (PLAN.md §7, Phase 8),
+// filled as the editor opens them (src/blockly/workspace.js): Memory offers
+// Set, Change and Get for each variable the program has, and a new variable;
+// My blocks a new block of one's own, and a use of each the program has. Each
+// offers the unlocks listed here that the play allows, its `offers`.
+export const DYNAMIC = {
+  GAME_MEMORY: ["variables_set", "math_change", "variables_get"],
+  GAME_ROUTINES: ["procedures_defnoreturn", "procedures_callnoreturn"],
+};
 
 // The fields a toolbox block starts with for `type`: a Make or Build at the
 // first thing the building makes or builds (of `builds`, the blueprints of the
@@ -96,13 +109,20 @@ export const unlockName = (b) => (b.type === "controls_if" && b.extraState?.hasE
 // every one of them can use, in categories; a category with none left out.
 // `builds` is what the construction sites running it build, if they do;
 // `blocks`, when given, the unlocks a mission allows (unlockName).
+// A category filled as it's opened has `custom`, the name of what fills it
+// (DYNAMIC), and `offers`, the unlocks it may offer; no contents.
 export function toolboxFor(types, { builds = null, blocks = null } = {}) {
   const allowed = blocks && new Set(blocks);
   const usable = (b) => types.every((type) => USE[b.type]?.(type) ?? true) && (!allowed || allowed.has(unlockName(b)));
   return {
     kind: "categoryToolbox",
-    contents: GAME.map(([name, style, blocks]) => category(name, style, blocks.filter(usable).map((b) => (types.length === 1 ? startingFields(b, types[0], builds) : b)))).filter(
-      (c) => c.contents.length,
-    ),
+    contents: GAME.map(([name, style, blocks]) => {
+      if (typeof blocks === "string") {
+        const offers = DYNAMIC[blocks].filter((unlock) => !allowed || allowed.has(unlock));
+        return offers.length ? { kind: "category", name: `%{BKY_${name}}`, categorystyle: `${style}_category`, custom: blocks, offers } : null;
+      }
+      const offered = category(name, style, blocks.filter(usable).map((b) => (types.length === 1 ? startingFields(b, types[0], builds) : b)));
+      return offered.contents.length ? offered : null;
+    }).filter(Boolean),
   };
 }

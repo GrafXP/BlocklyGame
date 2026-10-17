@@ -248,14 +248,14 @@ Use a documented, testable phase order:
 
 1. Apply queued player commands at the tick boundary: placements, assignments, program updates, and entity restarts.
 2. Advance actions already in progress; settle completed work and reservations in deterministic order.
-3. Deliver messages scheduled for this tick and establish one immutable sensing snapshot.
+3. Messages sent in the tick before are in their inboxes: a Send is an action of one step, which completes in phase 2 and delivers its message (decided in Phase 8, docs/phase8.md). Establish one immutable sensing snapshot.
 4. Advance each entity runtime against that same snapshot, evaluating at most one new visible Blockly instruction. Produce action/message intents without directly mutating shared resources.
 5. Resolve competing intents and begin accepted actions. New actions take at least one tick and cannot complete during their start tick. New messages are delivered on the following tick.
 6. Evaluate objectives, record the tick's execution trace, and commit the new world state.
 
 No entity can see another entity's newly issued action during the same sensing phase. This removes accidental behaviour based on the order in which programs are visited.
 
-The sensing snapshot does not need to be a copy. Tick phase 4 reads committed state through read-only accessors and writes only intents, which tick phase 5 applies.
+The sensing snapshot does not need to be a copy. Tick phase 4 reads committed state through read-only accessors and writes only intents, which tick phase 5 applies. A Wait For Message takes its message out of its own entity's inbox in phase 4, which no other runtime reads.
 
 Action timing is fixed. An action accepted in phase 5 of tick T with duration d (d ≥ 1) completes in phase 2 of tick T + d, and its entity can evaluate its next visible block in phase 4 of that same tick. Wait N Steps is an action of duration N.
 
@@ -697,13 +697,13 @@ Acceptance: a fresh player can complete missions 1–25 in sequence, restarting 
 
 ### Phase 8 — Variables, reusable routines, coordination, and chapters 6–8
 
-- [ ] Add local variables with Set, Change, and Get, and live value inspection beside each entity. Values belong to one entity's runtime and reset predictably on restart.
-- [ ] Add non-recursive procedures with one input each, a place or a number, explicit call frames, and block-level tracing into and out of a routine.
-- [ ] Add bounded next-tick messages to one named recipient, matching Wait For Message blocks, and inbox inspection.
-- [ ] Author chapters 6–8 (missions 26–40) in English and German, and extend the reference solution runner, including the finale's normal and slower-courier conditions. Hold the playtest gates after missions 30, 35, and 40.
-- [ ] Exercise shared routines and resource competition with several active entities.
+- [x] Add local variables with Set, Change, and Get, and live value inspection beside each entity. Values belong to one entity's runtime and reset predictably on restart. (Blockly's own blocks in a Memory category; whole numbers, 0 until set, forgotten at every start; each robot's row shows them as it runs: docs/phase8.md.)
+- [x] Add non-recursive procedures with one input each, a place or a number, explicit call frames, and block-level tracing into and out of a routine. (“my block …” and its uses, in My blocks; an input's type is what its blocks use it as; the inspector says which blocks of its own a robot is inside, and the editor marks the use it came from with ↪.)
+- [x] Add bounded next-tick messages to one named recipient, matching Wait For Message blocks, and inbox inspection. (Seven named messages; Send is a step, delivered at the start of the next tick; an inbox holds four, and a Send to a full one waits: `src/sim/messages.js`.)
+- [x] Author chapters 6–8 (missions 26–40) in English and German, and extend the reference solution runner, including the finale's normal and slower-courier conditions. Hold the playtest gates after missions 30, 35, and 40. (`src/content/missions/chapter6.js`–`chapter8.js`; mission 40's two trials are the normal run and the kit courier starting at the grove. The gates need children and are still to hold.)
+- [x] Exercise shared routines and resource competition with several active entities. (Three robots sharing a block of their own compete for one pile, `test/memory.test.js`; missions 39 and 40 run five programs at once.)
 
-Acceptance: children can express reusable delivery routines and supply requests. Variable scopes remain local to an entity. Messages arrive at the documented tick and never create hidden concurrent threads. A fresh player can continue from mission 25 to the end of the campaign.
+Acceptance: children can express reusable delivery routines and supply requests. Variable scopes remain local to an entity. Messages arrive at the documented tick and never create hidden concurrent threads. A fresh player can continue from mission 25 to the end of the campaign. (`verify:missions` passes for all forty missions, alone and in sequence; `SIM_VERSION` and `COMPILER_VERSION` are unchanged, and a world that doesn't use the new blocks runs as before.)
 
 ### Phase 9 — Robust saves and offline shell
 
@@ -892,6 +892,26 @@ The 12-mission campaign is replaced by the 40-mission campaign in [docs/campaign
 - The campaign's playtest gates, after missions 5, 10, 15, 20, 25, 30, 35, and 40, join the Phase 5 playtest.
 
 Applied in: the introduction, 1 (working decisions), 3 (first release, the bridge chain), 4 (resource rules), 5 (settings), 7 (block families, messages), 8 (main layout, beginner support), 9 (campaign and sandbox), 10 (data contracts, layout), 11 (Phases 5, 6, 7, 8, and 10), 12 (checks and completion), 13 (risks), 14, and 15 (a note on its mission numbers).
+
+### Playtest of Phase 7 (17 October 2026)
+
+Three changes after a first playtest of the campaign (docs/phase7.md):
+
+- Each mission begins with its resources reset: every building empty, every deposit full. Supplies no longer pile up at the camp from mission to mission.
+- The program library is offered in every mission, so every program can be opened and given to any robot or building at any time. Missions 21–24 still teach teams and settings; settings open with mission 22.
+- The title page is a mission map: a card for each chapter, done missions starred, the current one to go on with, later ones locked; `?dev` opens every mission on its own.
+
+Applied in: 9 (settlement and checkpoints, reliable lessons), and 11 (Phase 7's acceptance).
+
+### Phase 8 (17 October 2026)
+
+Decisions made while building memory, blocks of one's own and messages (docs/phase8.md):
+
+- Variables hold whole numbers and start at 0 whenever their program starts; reading one never set is 0, not an error.
+- A procedure's input takes its type from where its blocks use it, and every use must give that type; Set or Change of an input is refused.
+- Send is an action of one step. Its message is delivered when it ends, at the start of the next tick (phase 2, which Section 6's phase 3 now describes), before any runtime reads an inbox. A Send stopped on its way still delivers. Restarting a program keeps its inbox; a mission's start and each trial empty them.
+
+Applied in: 6 (tick phases), 7 (memory, reuse and coordination), and 11 (Phase 8's notes).
 
 ### Phase 7 (16 October 2026)
 

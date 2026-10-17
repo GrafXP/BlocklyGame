@@ -24,6 +24,9 @@ export function placeName(world, id) {
 
 const actionName = (action) => (hasMessage(`action.name.${action}`) ? t(`action.name.${action}`) : action);
 
+// A message's words, “plank ready”, or its id when the game has none for it.
+export const messageWords = (message) => (hasMessage(`message.${message}`) ? t(`message.${message}`) : message);
+
 // A reason (codes.js) in words. The compiler's codes (program.*) need no world:
 // describeReason(null, problem).
 export function describeReason(world, reason) {
@@ -34,6 +37,12 @@ export function describeReason(world, reason) {
       return t("wait.space", { amount: amount(reason.item, reason.need), place: placeName(world, reason.at), free: reason.free });
     case "wait.route":
       return t("wait.route", { place: placeName(world, reason.target) });
+    case "wait.message":
+      return t("wait.message", { message: messageWords(reason.message) });
+    case "wait.mailbox":
+      return t("wait.mailbox", { name: placeName(world, reason.to) });
+    case "error.recipient":
+      return t("error.recipient", { target: placeName(world, reason.target) });
     case "error.cannot":
     case "error.notHere":
     case "program.cannot":
@@ -76,6 +85,8 @@ export function describeAction(world, entity) {
     }
     case "wait":
       return t("action.wait", { count: a.end - world.tick });
+    case "send":
+      return t("action.send", { message: messageWords(a.message), name: placeName(world, a.to) });
     default:
       return a.type;
   }

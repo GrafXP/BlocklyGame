@@ -10,6 +10,26 @@
 export const load = () => import("blockly/msg/de");
 
 export const overrides = {
+  // Eigene Bausteine: „mein Baustein Holz holen“ statt Blocklys „um Holz holen“,
+  // ohne Kommentar zum Ausfüllen. Variablen merken sich eine Zahl.
+  PROCEDURES_DEFNORETURN_TITLE: "mein Baustein",
+  PROCEDURES_DEFNORETURN_PROCEDURE: "neuer Baustein",
+  PROCEDURES_DEFNORETURN_COMMENT: "",
+  PROCEDURES_DEFNORETURN_DO: "",
+  PROCEDURES_DEFNORETURN_TOOLTIP: "Ein eigener Baustein: Die Bausteine darin laufen überall, wo du ihn benutzt.",
+  PROCEDURES_CALLNORETURN_TOOLTIP: "Führe die Bausteine von „%1“ aus.",
+  PROCEDURES_BEFORE_PARAMS: "mit:",
+  PROCEDURES_MUTATORCONTAINER_TITLE: "Eingabe",
+  PROCEDURES_MUTATORARG_TITLE: "Name der Eingabe:",
+  ARIA_TYPE_FIELD_TEXT_INPUT_ARGUMENT: "Name der Eingabe",
+  ARIA_TYPE_FIELD_TEXT_INPUT_PROCEDURE: "Name des Bausteins",
+  INPUT_LABEL_VARIABLES_SET: "Zahl zum Merken",
+  VARIABLES_SET_TOOLTIP: "Merke dir diese Zahl ab jetzt.",
+  VARIABLES_GET_TOOLTIP: "Die Zahl, die das sich merkt.",
+  MATH_CHANGE_TITLE: "ändere %1 um %2",
+  MATH_CHANGE_TOOLTIP: "Zähle diese Zahl zu „%1“ dazu. Eine Zahl unter 0 zieht ab.",
+  NEW_VARIABLE: "Neue Variable …",
+
   // Tasten, wie sie auf deutschen Tastaturen heißen.
   ALT_KEY: "Alt",
   BACKSPACE_KEY: "Rücktaste",

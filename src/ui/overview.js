@@ -3,15 +3,15 @@ import { thingsKey } from "../sim/things.js";
 import { blockChip, blockWords } from "./chips.js";
 import { amounts, describeReason } from "./describe.js";
 import { esc } from "./dom.js";
-import { detailsActions, detailsHtml, identityMark } from "./inspector.js";
+import { detailsActions, detailsHtml, identityMark, memoryWords } from "./inspector.js";
 import { blockOf, programName } from "./session.js";
 import { entryIn } from "./snapshot.js";
 
 // The execution overview (PLAN.md §8, "Every program is observable"): a row for
 // every robot and building, on screen or not, with its program and version, the
 // block it's at as a chip (outlined when it took that block in the latest
-// step), its state, and why it waits or stopped; then the deposits with what
-// they hold. The chosen one's row opens to show its details (inspector.js),
+// step), its state, why it waits or stopped, and what its variables hold;
+// then the deposits with what they hold. The chosen one's row opens to show its details (inspector.js),
 // and, where the play offers them, its program, team and settings to change
 // (setup.js). Rows are drawn from the tick's snapshot (snapshot.js), and made
 // again when a building is placed or becomes another.
@@ -54,6 +54,10 @@ export function createOverview(el) {
     parts.push(`<div class="row-block"${node ? ` title="${esc(blockWords(node, words))}"` : ""}>${chip}</div>`);
     const why = entry.reason ? describeReason(world, entry.reason) : "";
     parts.push(`<p class="why"${why ? ` title="${esc(why)}"` : ""}>${esc(why)}</p>`);
+    // Its variables, live beside it (PLAN.md §11, Phase 8): a program that has
+    // them has them all along, so the row keeps its height.
+    const memory = memoryWords(entry);
+    if (memory) parts.push(`<p class="row-memory" title="${esc(memory)}">${esc(memory)}</p>`);
     return parts.join("");
   }
 

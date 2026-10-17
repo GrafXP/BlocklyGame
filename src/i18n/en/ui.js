@@ -18,7 +18,7 @@ export default {
   "home.play": "Play",
   // The button once the missions have begun: the mission they're at.
   "home.continue": "Mission {n}: {title}",
-  "home.playNote": "Twenty-five missions, from a first instruction to a team of robots.",
+  "home.playNote": "Forty missions, from a first instruction to a whole island at work.",
   // How far the mission got, when it's saved on this device.
   "home.saved": "Saved at step {tick}.",
   "home.completed": "Done!",
@@ -148,6 +148,16 @@ export default {
   // Which time round a Repeat block it is: "Round 1 of 2".
   "inspector.loop": "Repeat",
   "inspector.round": "Round {count} of {times}",
+  // What its program's variables hold now: each name with its number. A
+  // variable is a named piece of a robot's memory (docs/glossary.md).
+  "inspector.memory": "Remembers",
+  // The blocks of the player's own it's inside, innermost last: “Bring wood”.
+  "inspector.inside": "Inside",
+  // The messages it has been sent and hasn't taken yet, oldest first.
+  "inspector.inbox": "Inbox",
+  "inspector.inboxEmpty": "empty",
+  // A message in an inbox: “plank ready” from Sawmill.
+  "inspector.message": "“{message}” from {name}",
   // Whether a condition, such as "wood at sawmill > 0", holds.
   "reading.true": "true",
   "reading.false": "not true",
@@ -277,6 +287,15 @@ export default {
   "item.stone": "Stone",
   "item.plank": "Planks",
   "item.kit": "Kits",
+  // The messages robots and buildings send each other, as said in a sentence
+  // (in quotes, as the blocks show them: MESSAGE_* in blocks.js).
+  "message.plankReady": "plank ready",
+  "message.kitReady": "kit ready",
+  "message.woodPlease": "wood please",
+  "message.plankPlease": "plank please",
+  "message.stonePlease": "stone please",
+  "message.stoneDelivered": "stone delivered",
+  "message.go": "go",
   // A label over a robot or building, for screen readers: its name and what
   // it's doing in a word (state.*).
   "tag.label": "{name}: {state}",
@@ -383,11 +402,15 @@ export default {
   "goal.built": "{place} builds the bridge",
   // Keeping a number on a shelf: {have} now, {need} to keep.
   "goal.steady": "{place} · {item}: {have}, keep it at {need}",
+  // What a robot remembers in a variable: {have} now, {need} once it's done.
+  "goal.remembers": "{robot} remembers: {have} of {need}",
   // Notes under a goal.
   "goal.exact": "Exactly this many, then the job stops.",
   "goal.load": "Two at a time, in full baskets.",
   "goal.noWait": "{robot} sets off only when everything is ready.",
   "goal.steadyNote": "Keep it so for a while after {name} has finished.",
+  "goal.steadyAlone": "Keep it so for a while: no more come.",
+  "goal.remembersNote": "Counted when its job is done.",
   "goal.failed": "Not this time. Start again to try once more.",
 
   // The campaign, free play and the sandbox.
@@ -397,6 +420,9 @@ export default {
   "chapter.3": "A Working Island",
   "chapter.4": "Look Before You Act",
   "chapter.5": "Give Everyone a Job",
+  "chapter.6": "Remember the Job",
+  "chapter.7": "Make Your Own Blocks",
+  "chapter.8": "Talk and Work Together",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",
@@ -442,6 +468,8 @@ export default {
     one: "Waiting {count} more step",
     other: "Waiting {count} more steps",
   },
+  // {message}: a message's words (message.*); {name}: who it's for.
+  "action.send": "Sending “{message}” to {name}",
   // Actions named on their own, after an error's colon.
   "action.name.goTo": "Go to",
   "action.name.collect": "Collect",
@@ -449,6 +477,7 @@ export default {
   "action.name.unload": "Unload",
   "action.name.make": "Make",
   "action.name.wait": "Wait",
+  "action.name.send": "Send a message",
   // Counting what's in its basket, which only a robot has.
   "action.name.basket": "Look in the basket",
   // Reading its settings, which only a robot has.
@@ -479,6 +508,10 @@ export default {
   "wait.route": "No way to {place}",
   // At a "wait until" block whose condition is false.
   "wait.until": "Waiting until its condition is true",
+  // At a "wait for" block, with no such message in its inbox yet.
+  "wait.message": "Waiting for the message “{message}”",
+  // A message can't be sent yet: {name}'s inbox has as many as it can hold.
+  "wait.mailbox": "{name}'s inbox is full",
   // Why a program stopped. {target} is an id, as written in the program.
   "error.target": "No such place: {target}",
   "error.cannot": "Can't do this: {action}",
@@ -487,6 +520,8 @@ export default {
   "error.collect": "Only wood and stone can be collected, not this: {item}",
   // {setting}: a setting's name, such as “Destination”.
   "error.setting": "Choose a setting first: {setting}",
+  // A message for {target}, which isn't a robot or building.
+  "error.recipient": "Only robots and buildings get messages, not this: {target}",
   // Can't happen with programs made of blocks; a damaged program.
   "error.busy": "This program did too much in one step.",
 
@@ -508,6 +543,12 @@ export default {
   "program.tooBig": "This program has too many blocks: at most {limit}.",
   "program.tooDeep": "Too many blocks inside each other here: at most {limit}.",
   "program.unused": "This isn't under the start block, so it won't run.",
+  // Blocks of the player's own (“my block bring wood”), by their {name}.
+  "program.noRoutine": "There's no block called “{name}”. Make it with “my block”, or take this away.",
+  "program.twoRoutines": "There's already a block called “{name}”. Give this one another name.",
+  "program.recursive": "“{name}” uses itself, so it would never end. Take that out.",
+  "program.inputs": "A block of your own can have at most {limit} input.",
+  "program.setInput": "An input gets its value where the block is used. Remember things in a variable instead.",
   // The whole world is stuck.
   stall: "Everything is waiting: nothing can happen until something changes.",
   // {type} is a command's name, for developers.
@@ -551,6 +592,23 @@ export default {
   "programName.fetch": "Collector",
   "programName.kits": "Kit maker",
   "programName.buildWorkshop": "Workshop builder",
+  "programName.counter": "Delivery counter",
+  "programName.woodSupplier": "Wood supplier",
+  "programName.partsCourier": "Parts courier",
+  "programName.kitCourier": "Kit courier",
+  // The names the missions give variables, blocks of one's own and their
+  // inputs, as the player sees them in the blocks: “set order to 3”, “my
+  // block bring wood”. Once given out they're the player's, to rename.
+  "variable.order": "order",
+  "variable.delivered": "delivered",
+  "variable.remaining": "remaining",
+  "routine.bringWood": "bring wood",
+  "routine.bringSomeWood": "bring some wood",
+  "routine.bringPlanks": "bring two planks",
+  "routine.bringStone": "bring one stone",
+  "routine.deliverKit": "deliver one kit",
+  "input.destination": "destination",
+  "input.amount": "amount",
   // A program's copy for one robot or building: the program's name, then
   // whose copy it is.
   "programName.copy": "{program} ({name})",

@@ -1,6 +1,7 @@
 import { ACTIONS } from "../sim/actions.js";
 import { reason } from "../sim/codes.js";
 import { SETTINGS } from "../sim/entities.js";
+import { MESSAGES, takeMessage } from "../sim/messages.js";
 import { LIMITS } from "./compiler.js";
 import { evaluate, Fault } from "./expressions.js";
 
@@ -10,7 +11,7 @@ import { evaluate, Fault } from "./expressions.js";
 // entity, entity.runtime:
 //
 //   { kind: "program", program, revision, compiler, at, loops: [{ at, count, times }],
-//     block, evaluated: { block, tick } | null, wait, ended, parked? }
+//     block, evaluated: { block, tick } | null, wait, ended, parked?, vars?, frames? }
 //
 // - `program` and `revision`: the compiled program it runs, in world.programs;
 //   `compiler` the COMPILER_VERSION that compiled it.
@@ -28,6 +29,15 @@ import { evaluate, Fault } from "./expressions.js";
 //   it's assigned the program again: when the player applies the program, or a
 //   mission gives the job as its reward. Its program can still be edited. A
 //   runtime that isn't parked has no `parked`.
+// - `vars`: what its variables hold, { [variable id]: number }, once one is set
+//   or changed. A variable never set holds 0. They're this entity's own: robots
+//   sharing a program each have theirs (PLAN.md §7, memory).
+// - `frames`: the routines it's inside, innermost last, while it's inside one:
+//   { call, back, routine, args }, the block that used it, where to go on after
+//   it, its definition's block, and what the use gave its input, by the input's
+//   id. Routines never use themselves, so these are at most LIMITS.calls deep.
+// A start, or a start again, forgets the variables and routines: a program
+// always starts from the same place (PLAN.md §11, Phase 8).
 //
 // The world calls it through the interface every runtime has (src/sim/runtimes.js).
 
@@ -103,7 +113,54 @@ const VISIBLE = {
     run.at = branch >= 0 ? ins.branches[branch].to : ins.otherwise;
     return { branch };
   },
+
+  set(run, ins, entity, world) {
+    return remember(run, ins.var, evaluate(ins.value, entity, world));
+  },
+
+  change(run, ins, entity, world) {
+    return remember(run, ins.var, (run.vars?.[ins.var] ?? 0) + evaluate(ins.by, entity, world));
+  },
+
+  // Into the routine, with what this use gives its input, worked out here, in
+  // the caller's frame. Its blocks begin next tick.
+  call(run, ins, entity, world) {
+    if ((run.frames?.length ?? 0) >= LIMITS.calls) throw new Fault(reason("error.busy", { block: ins.block }));
+    const args = {};
+    for (const { param, value } of ins.args) args[param] = evaluate(value, entity, world);
+    (run.frames ??= []).push({ call: ins.block, back: run.at + 1, routine: ins.routine, args });
+    run.at = ins.to;
+    return {};
+  },
+
+  // A message there is taken, and the next block runs next tick; with none,
+  // the block stays active, to look again next tick.
+  receive(run, ins, entity) {
+    const taken = takeMessage(entity, ins.message);
+    if (!taken) {
+      run.wait = reason("wait.message", { message: ins.message, block: ins.block });
+      return { received: null };
+    }
+    run.at++;
+    return { received: { message: taken.message, from: taken.from } };
+  },
 };
+
+// Variable `id` holds `value` from now on, kept within LIMITS.number either
+// side of 0.
+function remember(run, id, value) {
+  const kept = Math.max(-LIMITS.number, Math.min(LIMITS.number, value));
+  (run.vars ??= {})[id] = kept;
+  run.at++;
+  return { value: kept };
+}
+
+// Back from the routine run's innermost frame, to after its call.
+function back(run) {
+  const frame = run.frames.pop();
+  if (!run.frames.length) delete run.frames;
+  run.at = frame.back;
+}
 
 export const programRuntime = {
   // Goes through bookkeeping to the next visible instruction, and evaluates it:
@@ -117,6 +174,10 @@ export const programRuntime = {
       const ins = code[run.at];
       if (ins.op === "jump") {
         run.at = ins.to;
+        continue;
+      }
+      if (ins.op === "return") {
+        back(run);
         continue;
       }
       if (ins.op === "end") {
@@ -139,6 +200,8 @@ export const programRuntime = {
   },
   restart(entity) {
     Object.assign(entity.runtime, { at: 0, loops: [], block: null, evaluated: null, wait: null, ended: false });
+    delete entity.runtime.vars;
+    delete entity.runtime.frames;
   },
   finished: (entity) => entity.runtime.ended || !!entity.runtime.parked,
   waiting: (entity) => entity.runtime.wait,
@@ -170,6 +233,8 @@ export function checkProgram(program) {
     if (e.op === "basket") return;
     if ((e.op === "place" || e.op === "item") && isId(e.value)) return;
     if (e.op === "setting" && e.slot in SETTINGS) return;
+    if (e.op === "var" && isId(e.var)) return;
+    if (e.op === "arg" && isId(e.param)) return;
     if (e.op === "compare" && CMPS.includes(e.cmp)) {
       expression(i, e.a, depth + 1);
       expression(i, e.b, depth + 1);
@@ -183,7 +248,7 @@ export function checkProgram(program) {
       if (!inCode(ins.to)) fail(i, `a jump to ${ins.to}`);
       return;
     }
-    if (ins?.op === "end") return;
+    if (ins?.op === "end" || ins?.op === "return") return;
     if (!isId(ins?.block)) return fail(i, `${ins?.op} without a block`);
     if (i + 1 >= code.length) fail(i, "runs off the end");
     switch (ins.op) {
@@ -194,9 +259,10 @@ export function checkProgram(program) {
         else if (args === null || typeof args !== "object" || Array.isArray(args)) fail(i, "args that aren't an object");
         else if (ROUTES[type] && !isId(ins.intent[ROUTES[type]]) && !(ROUTES[type] in args)) fail(i, `${type} without its ${ROUTES[type]}`);
         else if (type === "wait" && !(Number.isInteger(ins.intent.steps) && ins.intent.steps >= 1)) fail(i, "a wait without its steps");
+        else if (type === "send" && !(MESSAGES.includes(ins.intent.message) && isId(ins.intent.to))) fail(i, "a send without its message or recipient");
         else for (const [key, e] of Object.entries(args)) {
           if (key !== ROUTES[type] || key in ins.intent) fail(i, `an arg ${key}`);
-          else if (!["place", "item", "setting"].includes(e?.op)) fail(i, `an arg ${key} that isn't a place or item`);
+          else if (!["place", "item", "setting", "arg"].includes(e?.op)) fail(i, `an arg ${key} that isn't a place or item`);
           else expression(i, e, 1);
         }
         break;
@@ -209,6 +275,26 @@ export function checkProgram(program) {
         if (!inCode(ins.exit)) fail(i, `an exit at ${ins.exit}`);
         break;
       case "forever":
+        break;
+      case "set":
+        if (!isId(ins.var)) fail(i, "a set without its variable");
+        expression(i, ins.value, 1);
+        break;
+      case "change":
+        if (!isId(ins.var)) fail(i, "a change without its variable");
+        expression(i, ins.by, 1);
+        break;
+      case "call":
+        if (!inCode(ins.to) || !isId(ins.routine)) fail(i, `a call of ${ins.to}`);
+        if (!Array.isArray(ins.args)) fail(i, "a call without its inputs");
+        else
+          for (const arg of ins.args) {
+            if (!isId(arg?.param)) fail(i, "an input without its name");
+            else expression(i, arg.value, 1);
+          }
+        break;
+      case "receive":
+        if (!MESSAGES.includes(ins.message)) fail(i, `a wait for ${ins.message}`);
         break;
       case "if":
         if (!Array.isArray(ins.branches) || !ins.branches.length) fail(i, "an if without branches");
@@ -223,5 +309,8 @@ export function checkProgram(program) {
         fail(i, `no instruction ${ins.op}`);
     }
   });
+  if (program.variables !== undefined && !(Array.isArray(program.variables) && program.variables.length && program.variables.every((v) => isId(v?.id) && typeof v.name === "string"))) {
+    problems.push("variables that aren't a list of names");
+  }
   return problems;
 }

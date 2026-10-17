@@ -50,7 +50,11 @@ import { isAt, thing } from "./things.js";
 //   { type: "steady", at, item, count, ticks, after? }
 //        building `at` has kept exactly `count` of `item` for `ticks` ticks, once
 //        `after` (a robot or building) has stopped: a settled cycle, not the
-//        instant a count is reached (missions 20 and 40)
+//        instant a count is reached (missions 20 and 28)
+//   { type: "remembers", robot, count }
+//        once robot `robot` has stopped, a variable of its program holds `count`
+//        (missions 27, 29, 30): whichever variable, so no name is required
+//        (docs/campaign-plan.md: learning evidence without fixed names)
 //
 // Every goal has an `id`. An `exact` count is judged once the work is over:
 // when `by` (or for `made`, the building `at`; else every robot and building)
@@ -76,6 +80,11 @@ const MEASURES = {
     const t = thing(world, g.at);
     return t ? count(t.store, g.item) : 0;
   },
+  // The variable that has got furthest: the count, in a program with one.
+  remembers: (world, g) => {
+    const values = Object.values(thing(world, g.robot)?.runtime?.vars ?? {});
+    return values.length ? Math.max(0, ...values) : 0;
+  },
 };
 export const GOALS = Object.keys(MEASURES);
 
@@ -88,6 +97,7 @@ const FIELDS = {
   trips: [["by", "count"], ["to", "exact"]],
   made: [["at", "item", "count"], ["exact"]],
   steady: [["at", "item", "count", "ticks"], ["after"]],
+  remembers: [["robot", "count"], []],
 };
 
 const ZERO = { items: 0, trips: 0, doubles: 0 };
@@ -149,7 +159,7 @@ export function createMission({ id, trials, goals, reward = [] }) {
 // Whether the work goal `goal` waits for is over: its robot or building has
 // stopped, or, when it names none, every robot and building has.
 function settled(world, goal) {
-  const who = goal.by ?? (goal.type === "made" ? goal.at : null);
+  const who = goal.by ?? (goal.type === "made" ? goal.at : goal.type === "remembers" ? goal.robot : null);
   const actors = who ? [thing(world, who)].filter(Boolean) : world.entities;
   return actors.every((e) => statusOf(e) === "stopped");
 }
@@ -165,6 +175,7 @@ function holds(world, goal, now) {
     goal.since = null;
     return false;
   }
+  if (goal.type === "remembers") return have === needOf(goal) && settled(world, goal);
   return goal.exact ? have === needOf(goal) && settled(world, goal) : have >= needOf(goal);
 }
 

@@ -27,12 +27,13 @@ export const UNUSED_BLOCKLY = [
 
   { feature: "while, count, for-each and break blocks", kind: "blocks", keys: /^(CONTROLS_(WHILEUNTIL|FOR|FOREACH|FLOW_STATEMENTS)_|INPUT_LABEL_(CONDITION|LOOP_(BY|FROM|LIST|TO))$)/ },
   { feature: "true, false, not, and, or, null and test blocks", kind: "blocks", keys: /^(LOGIC_(BOOLEAN|NEGATE|NULL|OPERATION|TERNARY)|INPUT_LABEL_CONDITION_[AB]$)/ },
-  { feature: "maths blocks other than numbers", kind: "blocks", keys: /^(MATH_(?!NUMBER_)|INPUT_LABEL_(MATH|NUMBER))/ },
+  { feature: "maths blocks other than numbers and Change", kind: "blocks", keys: /^(MATH_(?!NUMBER_|CHANGE_)|INPUT_LABEL_(MATH|NUMBER))/ },
   { feature: "text blocks", kind: "blocks", keys: /^(TEXT|INPUT_LABEL_TEXT)_/ },
   { feature: "list blocks", kind: "blocks", keys: /^((LISTS|INPUT_LABEL_LISTS)_|ORDINAL_NUMBER_SUFFIX$)/ },
-  { feature: "variable blocks", kind: "blocks", keys: /^(VARIABLES_|INPUT_LABEL_VARIABLES_SET$)/ },
-  // Blockly's core names a new procedure with the two messages left out here.
-  { feature: "procedure blocks", kind: "blocks", keys: /^(PROCEDURES_(?!DEF(NO)?RETURN_PROCEDURE$)|ARIA_TYPE_FIELD_TEXT_INPUT_(ARGUMENT|PROCEDURE)$)/ },
+  // Variables and blocks of the player's own are offered (PLAN.md §7, Phase 8),
+  // but not those that give back a value. Blockly's core names a new procedure
+  // with DEFRETURN_PROCEDURE, left out here.
+  { feature: "procedure blocks that return a value", kind: "blocks", keys: /^PROCEDURES_(DEFRETURN_(?!PROCEDURE$)|CALLRETURN_|IFRETURN_)/ },
 ];
 
 // Messages that aren't words: the addresses of Blockly's help pages, and the

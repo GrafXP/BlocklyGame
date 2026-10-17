@@ -18,6 +18,8 @@ const SHAPES = {
   depot: `<path d="M4 9h16v11H4z"/><path d="M4 9l2-4h12l2 4M10 13h4" fill="none"/>`,
   place: `<path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6" />`,
   basket: `<path d="M3 10h18l-2 10H5z"/><path d="M7 10l3-6M17 10l-3-6M8 14v3M12 14v3M16 14v3" fill="none"/>`,
+  // A thought: one for each count a robot is to remember.
+  memory: `<path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9l-4 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 9.5h8" fill="none"/>`,
 };
 
 const COLOURS = {
@@ -32,6 +34,7 @@ const COLOURS = {
   depot: ["#c9a26b", "#6a4b1e"],
   place: ["#ef6b5b", "#7f2a20"],
   basket: ["#e5c48a", "#7a5a2a"],
+  memory: ["#f3b3c8", "#8a2c52"],
 };
 
 // The picture for place `id`, when a goal is to get there.

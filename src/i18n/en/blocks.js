@@ -15,6 +15,14 @@ export default {
   CAT_CONTROL: "Control",
   CAT_SENSING: "Sensing",
   CAT_VALUES: "Values",
+  // A robot's memory: variables, which remember a number (Set, Change, Get).
+  CAT_MEMORY: "Memory",
+  // Blocks the player makes: a named job made of other blocks.
+  CAT_ROUTINES: "My blocks",
+  CAT_MESSAGES: "Messages",
+  // In Memory or My blocks, when the program has nothing there to use yet.
+  MEMORY_NONE: "No variables yet",
+  ROUTINES_NONE: "No blocks of your own yet",
 
   // In every block, %1 is the block's picture.
   ISLAND_WHEN_STARTED: "%1 when started",
@@ -45,6 +53,14 @@ export default {
   CONTROL_WAIT_UNTIL_TOOLTIP: "Wait here until this is true.",
   CONTROL_FOREVER: "%1 forever",
   CONTROL_FOREVER_TOOLTIP: "Do these blocks again and again.",
+  // %2: a message, from MESSAGE_*. Its second row: %1, who it's for, a robot
+  // or building.
+  MESSAGE_SEND: "%1 send %2",
+  MESSAGE_SEND_TO: "to %1",
+  MESSAGE_SEND_TOOLTIP: "Send a message to a robot or building. It arrives in its inbox at the next step.",
+  // %2: a message, from MESSAGE_*.
+  MESSAGE_WAIT: "%1 wait for %2",
+  MESSAGE_WAIT_TOOLTIP: "Wait here until this message is in the inbox, then take it out.",
   // A value: how many of item %1 there are in store at place %2. No picture.
   SENSE_STOCK: "%1 at %2",
   SENSE_STOCK_TOOLTIP: "How many of an item a building has in store.",
@@ -80,6 +96,18 @@ export default {
   ITEM_STONE: "stone",
   ITEM_PLANK: "planks",
   ITEM_KIT: "kits",
+  // Messages, shown in quotes on their own in a dropdown: “plank ready”.
+  MESSAGE_PLANKREADY: "“plank ready”",
+  MESSAGE_KITREADY: "“kit ready”",
+  MESSAGE_WOODPLEASE: "“wood please”",
+  MESSAGE_PLANKPLEASE: "“plank please”",
+  MESSAGE_STONEPLEASE: "“stone please”",
+  MESSAGE_STONEDELIVERED: "“stone delivered”",
+  MESSAGE_GO: "“go”",
+  // The robots a message can go to, where there's no island to name them.
+  ROBO_1: "Robo 1",
+  ROBO_2: "Robo 2",
+  ROBO_3: "Robo 3",
   // What a construction site can build.
   BLUEPRINT_BRIDGE: "bridge",
   BLUEPRINT_WORKSHOP: "workshop",

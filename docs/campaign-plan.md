@@ -535,9 +535,9 @@ This plan was grounded in the [phase 2 findings](phase2.md), [phase 3 findings](
 | Stock sensing, comparisons, If/Else, Wait Until | 16–20 | In place (Phase 2); tightly controlled trials and objective observation come with Phase 7 |
 | Library assignment, shared-edit preview, per-entity settings, individual copies | 21–24 | In place (Phase 6, [phase 6 findings](phase6.md)): teams, type defaults and own programs, settings in action inputs, previews naming every robot a change starts again, own copies and back to the shared program; mission unlocks come with Phase 7 |
 | Workshop entity, kit recipe, kit rendering and valid stores | 25 | In place (Phase 6): the workshop, two planks and a stone to a kit, kit stores, and placing it on a construction site |
-| Variables, set/change/read, visible local values | 26–30 | Phase 8; values local to each entity, reset predictably on restart |
-| Non-recursive procedures and typed inputs | 31–35 | Phase 8; mission 33 needs a destination input, mission 34 a numeric input |
-| Send, matching Wait For Message, inbox display | 36–38 | Phase 8; explicit receive, next-step delivery, one entry thread, no payload/broadcast requirement for this campaign |
+| Variables, set/change/read, visible local values | 26–30 | In place (Phase 8, [phase 8 findings](phase8.md)): Blockly's Set, Change and Get, whole numbers local to each entity, 0 at every start, shown beside each robot |
+| Non-recursive procedures and typed inputs | 31–35 | In place (Phase 8): “my block …” with one input, a place or a number as its blocks use it, traced into and out of |
+| Send, matching Wait For Message, inbox display | 36–38 | In place (Phase 8): seven named messages to one robot or building, delivered at the next step, inboxes of four, the inbox in the inspector |
 | Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | In place for missions 1–25 (Phase 7, [phase 7 findings](phase7.md)): goals on completed work with exact orders and trials, hints that answer the problem in view, mission-start checkpoints on one growing island, replays apart from it, unlocks per mission, free play and the sandbox, English and German text, and `verify:missions` |
 
 No mission requires AND/OR, recursion, lists, return values, global variables, message payloads, broadcasts, or child-defined object types. These can become future expansion topics. Nested loops appear only in a small guided example and remain optional in later projects.

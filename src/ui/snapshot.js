@@ -11,7 +11,8 @@ import { reasonOf, statusOf } from "../sim/world.js";
 // opened) without asking the world, which may have moved on.
 //
 //   { tick, stall, entities: [entry, …], programs: [{ id, revision, newest, runners }, …] }
-//   entry = { id, kind, state, reason, program, revision, block, fresh, round, readings }
+//   entry = { id, kind, state, reason, program, revision, block, fresh, round, readings,
+//             memory, inside, inbox, listens }
 //
 // - state, reason: statusOf's word and why it waits or stopped (a code).
 // - program, revision: the program it runs, or null; block: its active block's
@@ -23,7 +24,15 @@ import { reasonOf, statusOf } from "../sim/world.js";
 //   after the first that held weren't.
 //   The world after the tick is what the block read during it, since all that
 //   follows the runtimes in a tick is actions starting, which hold what they'll
-//   take rather than take it (src/sim/world.js).
+//   take rather than take it (src/sim/world.js). A Repeat's count, a Set's or
+//   Change's number and what a use of one's own block gives count too.
+// - memory: its program's variables, [{ id, name, value }], each as it is now
+//   (PLAN.md §11 Phase 8: live values beside each entity).
+// - inside: the blocks of the player's own it's inside, [{ call, routine }],
+//   innermost last: the block that used it and its definition's block.
+// - inbox: the messages sent to it and not yet taken, [{ message, from, sent }];
+//   listens: whether its program has a Wait For, so its inbox is worth showing
+//   even when it's empty.
 // - programs: every program that something runs, with the revision it runs,
 //   the newest applied (newer while an Apply waits for the next tick), and the
 //   ids of what runs it.
@@ -59,6 +68,10 @@ function entryOf(world, entity) {
     fresh,
     round: loop && program ? { block: program.code[loop.at].block, count: loop.count, times: loop.times } : null,
     readings: fresh && program ? readingsOf(world, entity, program.code.find((ins) => ins.block === run.block)) : {},
+    memory: (program?.variables ?? []).map((v) => ({ id: v.id, name: v.name, value: run.vars?.[v.id] ?? 0 })),
+    inside: (run?.frames ?? []).map((f) => ({ call: f.call, routine: f.routine })),
+    inbox: (entity.inbox ?? []).map((m) => ({ ...m })),
+    listens: !!program?.code.some((ins) => ins.op === "receive"),
   };
 }
 
@@ -83,6 +96,23 @@ function readingsOf(world, entity, ins) {
   if (ins?.op === "until") read(ins.test);
   if (ins?.op === "if") for (const { test } of ins.branches) if (read(test)) break;
   if (ins?.op === "act") for (const arg of Object.values(ins.args ?? {})) read(arg);
+  if (ins?.op === "repeat") read(ins.times);
+  if (ins?.op === "set") read(ins.value);
+  if (ins?.op === "change") read(ins.by);
+  // What a use gives its block's input was worked out in the frame it was
+  // used from, the one under the block's own now.
+  if (ins?.op === "call") {
+    const frames = entity.runtime.frames ?? [];
+    const caller = { ...entity, runtime: { ...entity.runtime, frames: frames.slice(0, -1) } };
+    for (const { value } of ins.args) {
+      try {
+        const v = evaluate(value, caller, world);
+        if (!["number", "place", "item"].includes(value.op)) readings[value.block] = v;
+      } catch (e) {
+        if (!(e instanceof Fault)) throw e;
+      }
+    }
+  }
   return readings;
 }
 

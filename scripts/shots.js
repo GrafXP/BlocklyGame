@@ -19,6 +19,7 @@ import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
 import { missionStart } from "../src/campaign.js";
 import { CAMPAIGN, campaignMission } from "../src/content/missions/campaign.js";
+import { loadMessages, translate } from "../src/i18n/index.js";
 import { makeSave } from "../src/storage/saves.js";
 
 const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger", "play", "library", "campaign"];
@@ -423,7 +424,9 @@ async function openCampaign(browser, opts = {}) {
   const page = await (await browser.newContext(context)).newPage();
   const m = campaignMission(mission);
   const library = { programs: [] };
-  const world = missionStart(m, library);
+  // The starters' names worded in `lang`, as the game words them.
+  const { ui } = await loadMessages(lang);
+  const world = missionStart(m, library, { word: (name) => translate(ui, lang === "pseudo" ? "en" : lang, name.key, name.params) });
   const completed = CAMPAIGN.slice(0, m.n - (done ? 0 : 1)).map((it) => it.id);
   const save = makeSave({ content: { id: "campaign", version: 1 }, mission, world, library, checkpoint: world, progress: { completed } });
   await page.goto(`${base}/?dev&lang=${lang}`);

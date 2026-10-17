@@ -401,7 +401,7 @@ const PLAY_STATES = [{ hints: 3 }, { broken: true }, { fixed: true, ticks: 60, c
 // until everything waits; `chosen`, a robot or building chosen; `done`, solved;
 // or `replay`, a mission done before played again; or free play grown into
 // the sandbox, with the grove chosen and the new island's layout asked for.
-async function campaignAt(page, query, { mission = "m01", hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false } = {}) {
+async function campaignAt(page, query, { mission = "m01", hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
   await seedCampaign(page, sandbox ? "m25" : mission, { done: sandbox, query });
   await page.goto(sandbox ? `/free?dev${query}` : replay ? `/replay?dev${query}&mission=${replay}` : `/play?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
@@ -422,6 +422,7 @@ async function campaignAt(page, query, { mission = "m01", hints = 0, passed = fa
     while (!game.world.stall && game.world.tick < 2000) game.step();
   });
   if (done) await solveMission(page);
+  if (steps) await page.evaluate((n) => Array.from({ length: n }, () => window.islandPage.game.step()), steps);
   if (chosen) await page.evaluate((id) => window.islandPage.select(id), chosen);
   if (sandbox) {
     await page.evaluate(() => window.islandPage.select("grove"));
@@ -438,6 +439,11 @@ const CAMPAIGN_STATES = [
   { mission: "m25", done: true },
   { mission: "m06", replay: "m03" },
   { sandbox: true },
+  // Phase 8: what a robot remembers, the block of its own it's inside, and an
+  // inbox, with a stalled team's hint.
+  { mission: "m30", chosen: "r1", hints: 3 },
+  { mission: "m33", chosen: "r1", steps: 40 },
+  { mission: "m38", chosen: "workshop", stuck: true, hints: 2 },
 ];
 
 // The title page with the campaign saved at mission 6, every mission done so
@@ -464,8 +470,8 @@ const islandToolboxBlocks = (page) =>
     return found;
   });
 
-test("the pseudo-language leaves no text unmarked, on the title page, in the editor or in the world", async ({ page }) => {
-  test.slow(); // every page of the game, the campaign's among them
+test("the pseudo-language leaves no text unmarked, on the title page, in the editor, in the world or in the slice", async ({ page }) => {
+  test.setTimeout(300_000); // every page of the game, the campaign's among them
   await page.goto("/?dev&lang=pseudo");
   await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
   await page.waitForSelector(".home .chapter");
@@ -513,6 +519,13 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
     await playAt(page, "&lang=pseudo", state);
     expect(await page.evaluate(unmarkedText), `play ${JSON.stringify(state)}`).toEqual([]);
   }
+});
+
+// The campaign apart, on a page of its own: a page that has made dozens of 3D
+// views before can lose WebGL on WebKit (“context lost”), which says nothing
+// about the words.
+test("the pseudo-language leaves no text unmarked in the campaign, or on the title page asking to start over", async ({ page }) => {
+  test.setTimeout(300_000);
   for (const state of CAMPAIGN_STATES) {
     await campaignAt(page, "&lang=pseudo", state);
     expect(await page.evaluate(unmarkedText), `campaign ${JSON.stringify(state)}`).toEqual([]);
@@ -526,7 +539,7 @@ const everyLanguage = [...LANGUAGES.map(({ code }) => [code, `&lang=${code}`]), 
 
 for (const [lang, query] of everyLanguage) {
   test(`no text is cut off or runs off the window (${lang})`, async ({ page }) => {
-    test.slow(); // every page of the game, the campaign's among them
+    test.setTimeout(300_000); // every page of the game, the campaign's among them
     await page.goto(`/?dev${query}`);
     await expect(page.locator("html")).toHaveAttribute("lang", lang);
     await page.waitForSelector(".home .chapter");
@@ -559,6 +572,11 @@ for (const [lang, query] of everyLanguage) {
       await playAt(page, query, state);
       expect(await page.evaluate(clippedText), `play ${JSON.stringify(state)}`).toEqual([]);
     }
+  });
+
+  // The campaign on a page of its own, as above.
+  test(`no text is cut off or runs off the window in the campaign (${lang})`, async ({ page }) => {
+    test.setTimeout(300_000);
     for (const state of CAMPAIGN_STATES) {
       await campaignAt(page, query, state);
       expect(await page.evaluate(clippedText), `campaign ${JSON.stringify(state)}`).toEqual([]);

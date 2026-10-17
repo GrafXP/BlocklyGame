@@ -204,10 +204,10 @@ test("the editor offers only what its robot or building can do, and only places 
   await open(page, "editor", "planks");
   await expect(page.locator(".code-title")).toHaveText("Plank maker");
   await expect(page.locator(".code-runners")).toHaveText("Run by Sawmill");
-  expect(await page.locator(".code-host .blocklyToolboxCategoryLabel").allTextContents()).toEqual(["Start", "Buildings", "Control", "Sensing", "Values"]);
+  expect(await page.locator(".code-host .blocklyToolboxCategoryLabel").allTextContents()).toEqual(["Start", "Buildings", "Control", "Sensing", "Values", "Memory", "My blocks", "Messages"]);
   expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("planks-make").getField("ITEM").getOptions(false))).toEqual([["planks", "plank"]]);
   await open(page, "editor", "collector");
-  expect(await page.locator(".code-host .blocklyToolboxCategoryLabel").allTextContents()).toEqual(["Start", "Robot", "Control", "Sensing", "Values"]);
+  expect(await page.locator(".code-host .blocklyToolboxCategoryLabel").allTextContents()).toEqual(["Start", "Robot", "Control", "Sensing", "Values", "Memory", "My blocks", "Messages"]);
   expect((await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-go-grove-place").getField("PLACE").getOptions(false))).map((o) => o[1])).toEqual(["grove", "sawmill", "site", "depot", "camp", "quarry"]);
 });
 

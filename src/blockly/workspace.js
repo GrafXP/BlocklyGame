@@ -5,6 +5,7 @@ import { count, probe } from "../lifecycle.js";
 import { isDev } from "../ui/dom.js";
 import { BLOCKS } from "./blocks.js";
 import { registerFields, setChoiceContext } from "./fields.js";
+import { DYNAMIC } from "./toolboxes.js";
 import { registerRenderers, themeFor } from "./theme.js";
 import { TREATMENTS } from "./treatments.js";
 
@@ -103,6 +104,7 @@ export function createEditor(host, { treatment, toolbox = null, state = null, on
   });
   count("editors", 1);
   if (context) setChoiceContext(workspace, context);
+  if (toolbox && !readOnly) fillsCategories(workspace, toolbox);
   if (state) {
     try {
       Blockly.serialization.workspaces.load(state, workspace);
@@ -148,6 +150,58 @@ export function createEditor(host, { treatment, toolbox = null, state = null, on
       count("editors", -1);
     },
   };
+}
+
+// --- Memory and My blocks ---------------------------------------------------
+//
+// The toolbox categories whose blocks depend on the program (src/blockly/
+// toolboxes.js, DYNAMIC), filled each time one is opened, with what its
+// `offers` allow: Set, Change and Get for each of the program's variables, and
+// a button for a new one; a new block of one's own, and a use of each the
+// program has. A routine's input is a variable too, but only its Get makes
+// sense, inside the routine: Set and Change are for the program's own.
+
+function fillsCategories(workspace, toolbox) {
+  const offers = Object.fromEntries(toolbox.contents.filter((c) => c.custom).map((c) => [c.custom, new Set(c.offers)]));
+  workspace.registerToolboxCategoryCallback("GAME_MEMORY", (ws) => memoryFlyout(ws, offers.GAME_MEMORY ?? new Set()));
+  workspace.registerToolboxCategoryCallback("GAME_ROUTINES", (ws) => routinesFlyout(ws, offers.GAME_ROUTINES ?? new Set()));
+  workspace.registerButtonCallback("GAME_NEW_VARIABLE", (button) => Blockly.Variables.createVariableButtonHandler(button.getTargetWorkspace()));
+}
+
+const byName = (a, b) => a.getName().localeCompare(b.getName());
+
+function memoryFlyout(workspace, offers) {
+  const inputs = new Set(
+    workspace
+      .getTopBlocks(false)
+      .filter((b) => b.type === "procedures_defnoreturn")
+      .flatMap((b) => b.getVarModels().map((v) => v.getId())),
+  );
+  const variables = workspace.getVariableMap().getAllVariables().sort(byName);
+  const own = variables.filter((v) => !inputs.has(v.getId()));
+  const items = [];
+  if (offers.has("variables_set")) items.push({ kind: "button", text: "%{BKY_NEW_VARIABLE}", callbackkey: "GAME_NEW_VARIABLE" });
+  for (const v of own) {
+    const VAR = { id: v.getId() };
+    if (offers.has("variables_set")) items.push({ kind: "block", type: "variables_set", fields: { VAR }, inputs: { VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } } } });
+    if (offers.has("math_change")) items.push({ kind: "block", type: "math_change", fields: { VAR }, inputs: { DELTA: { shadow: { type: "math_number", fields: { NUM: 1 } } } } });
+  }
+  if (offers.has("variables_get")) for (const v of variables) items.push({ kind: "block", type: "variables_get", fields: { VAR: { id: v.getId() } } });
+  if (!items.length) items.push({ kind: "label", text: "%{BKY_MEMORY_NONE}" });
+  return items;
+}
+
+function routinesFlyout(workspace, offers) {
+  const items = [];
+  if (offers.has("procedures_defnoreturn")) items.push({ kind: "block", type: "procedures_defnoreturn" });
+  if (offers.has("procedures_callnoreturn")) {
+    const [defined] = Blockly.Procedures.allProcedures(workspace);
+    for (const [name, params] of [...defined].sort(([a], [b]) => a.localeCompare(b))) {
+      items.push({ kind: "block", type: "procedures_callnoreturn", extraState: { name, ...(params.length && { params }) } });
+    }
+  }
+  if (!items.length) items.push({ kind: "label", text: "%{BKY_ROUTINES_NONE}" });
+  return items;
 }
 
 export { Blockly };

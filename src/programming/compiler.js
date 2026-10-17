@@ -1,7 +1,7 @@
 import { BLOCKS, SETTING_BLOCKS } from "../blockly/blocks.js";
 import { reason } from "../sim/codes.js";
 import { RAW, TYPES } from "../sim/entities.js";
-import { readWorkspace } from "./adapter.js";
+import { nameText, readWorkspace } from "./adapter.js";
 
 // The compiler (PLAN.md §7): a program's Blockly workspace, as JSON, to the game's
 // instructions. The game never runs generated JavaScript; the runtime
@@ -11,21 +11,34 @@ import { readWorkspace } from "./adapter.js";
 //
 // A compiled program is plain data, kept in the world (world.programs):
 //
-//   { compiler, start, code: [instruction, …], needs: [capability, …] }
+//   { compiler, start, code: [instruction, …], needs: [capability, …], variables? }
 //
 // `start` is the When Started block's id; `needs` what the program asks of the
-// robot or building that runs it (entities.js, `can`). The instructions:
+// robot or building that runs it (entities.js, `can`); `variables`, when it
+// has any, its variables, [{ id, name }], for the debugger to show their
+// values. The instructions:
 //
-//   { op: "act", block, intent, args? }                an action: go to, collect, make, wait N steps…
+//   { op: "act", block, intent, args? }                an action: go to, collect, make, send…
 //   { op: "until", block, test }                       Wait Until: stays here while `test` is false
 //   { op: "repeat", block, times, exit }               Repeat N: into the next instruction, or on to `exit`
 //   { op: "forever", block }                           Forever: into the next instruction
 //   { op: "if", block, branches: [{ test, to }], otherwise }   If / else if / else
+//   { op: "set", block, var, value }                   Set: the variable `var` is `value` from now on
+//   { op: "change", block, var, by }                   Change: `var` goes up by `by` (down, when it's less than 0)
+//   { op: "call", block, to, routine, args: [{ param, value }] }
+//                                                      a block of the player's own (a routine): into
+//                                                      its instructions at `to`, and back after it
+//   { op: "receive", block, message }                  Wait For: takes message `message` from the inbox,
+//                                                      or stays here until there is one
 //   { op: "jump", to }                                 the end of a loop's body or a branch
+//   { op: "return" }                                   the end of a routine: back to after its call
 //   { op: "end" }                                      the program is over
 //
-// The first five are visible: each is one step a child sees, and takes a tick.
-// Jumps and the end are bookkeeping, done on the way to the next visible one.
+// The first nine are visible: each is one step a child sees, and takes a tick.
+// Jumps, returns and the end are bookkeeping, done on the way to the next
+// visible one. The program's own instructions come first, ending at its end;
+// each routine's follow, ending at its return.
+//
 // An action's place or item that the blocks give outright is in its `intent`,
 // { type: "goTo", target: "grove" }; one worked out as the action's block runs,
 // such as a robot's setting, is an expression in `args`, by the intent's field:
@@ -40,8 +53,20 @@ import { readWorkspace } from "./adapter.js";
 //   { op: "place", block, value }                      a place: a thing's id
 //   { op: "item", block, value }                       an item
 //   { op: "setting", block, slot }                     my setting `slot` (src/sim/entities.js)
+//   { op: "var", block, var }                          what variable `var` holds: a number, 0 until set
+//   { op: "arg", block, param }                        what this use of the routine gave its input `param`
 //
 // Each has a type: "number", "boolean", "place" or "item".
+//
+// Variables (PLAN.md §7, memory) hold whole numbers. Each robot or building
+// running the program has its own (runtime.js), so robots sharing a program
+// count apart; they start at 0 whenever the program does.
+//
+// A routine is a block the player makes, Blockly's “procedure”: a definition
+// with a name and at most one input, and blocks that use it by its name. Its
+// input is a place, a number or an item, whichever its definition uses it as;
+// each use gives it one. A routine never uses itself, through others or
+// directly: there's no recursion (PLAN.md §7).
 //
 // What can't work as written is an error, a code with the block's id and values
 // (src/sim/codes.js), and there's no program; a stack that won't run is a
@@ -52,12 +77,16 @@ import { readWorkspace } from "./adapter.js";
 // position is an index into its program's instructions, so a world saved by
 // another compiler restarts its programs from their start (PLAN.md §10).
 // 2: actions take their place or item from an input, which a setting can fill.
+// (Variables, routines and messages are new blocks: the blocks before them
+// compile as they did.)
 export const COMPILER_VERSION = 2;
 
 export const LIMITS = {
   nesting: 10, // blocks inside blocks, such as a Repeat in an If in a Forever
   expression: 8, // values inside values, such as a sense in a comparison
-  number: 99999, // the largest a typed number may be, either side of 0
+  number: 99999, // the largest a typed number may be, either side of 0, and a variable
+  inputs: 1, // inputs a routine may have
+  calls: 8, // routines inside routines: a use of one in another's, and so on
 };
 
 const options = (type, field) =>
@@ -81,11 +110,16 @@ const ACTIONS = {
     const { min, max } = fieldNumber("control_wait_steps", "STEPS");
     return { type: "wait", steps: field.whole(node, node.fields.STEPS, min, max) };
   },
+  message_send: ({ field }, node) => ({ type: "send", message: field.choice(node, "MESSAGE"), to: field.place(node, "TO") }),
 };
 
 // Expressions whose value is known as the program is compiled.
 const CONSTANT = new Set(["place", "item"]);
 const WANT = { number: "program.wantNumber", boolean: "program.wantTest", place: "program.wantPlace", item: "program.wantItem" };
+
+// A routine's name as Blockly matches a use to its definition: whatever the
+// letters' case.
+const nameKey = (name) => name.toLowerCase();
 
 // Compiles `source`, a workspace's JSON. `context`, when given, is what the
 // program will run on: `type`, a robot or building type (entities.js), whose
@@ -100,6 +134,7 @@ export function compile(source, context = {}) {
   const warnings = [];
   const code = [];
   const needs = new Set();
+  const used = new Set(); // the ids of the variables the program uses
   const type = context.type ? TYPES[context.type] : null;
   const places = context.places ? new Set(context.places) : null;
   const fail = (what, values) => errors.push(reason(what, values));
@@ -136,6 +171,45 @@ export function compile(source, context = {}) {
     },
   };
 
+  // --- Routines ------------------------------------------------------------
+  //
+  // Each definition: { name, key, block, body, params: [{ id, name, type }],
+  // at, calls }, `type` what its input is used as, found as its blocks are
+  // compiled (null while it isn't used), `at` where its instructions begin,
+  // `calls` the routines its blocks use, by key.
+
+  const isStart = (stack) => stack[0].type === "island_when_started";
+  const isRoutine = (stack) => stack[0].type === "procedures_defnoreturn";
+  const routines = new Map();
+  for (const [def] of tree.stacks.filter(isRoutine)) {
+    const name = nameText(def.fields.NAME)?.trim() ?? "";
+    const params = Array.isArray(def.extra?.params) ? def.extra.params : [];
+    if (!name || !params.every((p) => typeof p?.id === "string" && p.id && nameText(p.name) !== null)) {
+      fail("program.unsupported", { block: def.id, type: def.type });
+      continue;
+    }
+    if (routines.has(nameKey(name))) {
+      fail("program.twoRoutines", { block: def.id, name });
+      continue;
+    }
+    if (params.length > LIMITS.inputs) fail("program.inputs", { block: def.id, limit: LIMITS.inputs });
+    routines.set(nameKey(name), { name, key: nameKey(name), block: def.id, body: def.inputs.STACK ?? [], params: params.map((p) => ({ id: p.id, name: nameText(p.name), type: null })), at: -1, calls: new Set() });
+  }
+  let scope = null; // the routine whose blocks are being compiled, or null for the program's own
+  const calls = []; // [{ at, routine }]: each call's instruction, to point at its routine
+  const passes = []; // [{ block, routine, i, type, from }]: each input given, to check once types are known
+
+  // The variable variable block `node` names: { id, param } with `param` the
+  // input of the routine being compiled it is, or null.
+  function variableOf(node) {
+    const v = node.fields.VAR;
+    if (!v || typeof v.id !== "string" || !v.id) {
+      fail("program.unsupported", { block: node.id, type: node.type });
+      return null;
+    }
+    return { id: v.id, param: scope?.params.find((p) => p.id === v.id) ?? null };
+  }
+
   // --- Values --------------------------------------------------------------
 
   // The value in input `name` of `parent`, which must be of type `want`
@@ -152,6 +226,8 @@ export function compile(source, context = {}) {
     }
     const compiled = expression(node, depth);
     if (!compiled) return null;
+    // A routine's input not used before is what its first use here wants.
+    if (compiled.type === null && compiled.param) compiled.param.type = compiled.type = want;
     if (compiled.type !== want) {
       fail(WANT[want], { block: parent.id });
       return null;
@@ -159,7 +235,8 @@ export function compile(source, context = {}) {
     return compiled.expr;
   }
 
-  // { expr, type } for value block `node`, or null when it can't be compiled.
+  // { expr, type, param? } for value block `node`, or null when it can't be
+  // compiled. A routine's input has `param`, and type null until it's used.
   function expression(node, depth) {
     const block = node.id;
     switch (node.type) {
@@ -194,6 +271,13 @@ export function compile(source, context = {}) {
         const a = value(node, "A", "number", depth + 1);
         const b = value(node, "B", "number", depth + 1);
         return a && b ? { expr: { op: "compare", block, cmp, a, b }, type: "boolean" } : null;
+      }
+      case "variables_get": {
+        const v = variableOf(node);
+        if (!v) return null;
+        if (v.param) return { expr: { op: "arg", block, param: v.id }, type: v.param.type, param: v.param };
+        used.add(v.id);
+        return { expr: { op: "var", block, var: v.id }, type: "number" };
       }
       default:
         fail("program.unsupported", { block, type: node.type });
@@ -265,6 +349,45 @@ export function compile(source, context = {}) {
         for (const end of ends) code[end].to = code.length;
         return;
       }
+      case "variables_set":
+      case "math_change": {
+        const v = variableOf(node);
+        if (!v) return;
+        if (v.param) {
+          fail("program.setInput", { block });
+          return;
+        }
+        used.add(v.id);
+        if (node.type === "variables_set") emit({ op: "set", block, var: v.id, value: value(node, "VALUE", "number", 1) });
+        else emit({ op: "change", block, var: v.id, by: value(node, "DELTA", "number", 1) });
+        return;
+      }
+      case "procedures_callnoreturn": {
+        const name = nameText(node.extra?.name) ?? "";
+        const routine = routines.get(nameKey(name));
+        if (!routine) {
+          fail("program.noRoutine", { block, name });
+          return;
+        }
+        scope?.calls.add(routine.key);
+        if (!scope) mainCalls.add(routine.key);
+        const args = routine.params.map((param, i) => {
+          const [arg] = node.inputs[`ARG${i}`] ?? [];
+          if (!arg) {
+            fail("program.empty", { block });
+            return null;
+          }
+          const compiled = expression(arg, 1);
+          if (!compiled) return null;
+          passes.push({ block, routine, i, type: compiled.type, from: compiled.param ?? null });
+          return { param: param.id, value: compiled.expr };
+        });
+        calls.push({ at: emit({ op: "call", block, to: -1, routine: routine.block, args }), routine });
+        return;
+      }
+      case "message_wait":
+        emit({ op: "receive", block, message: field.choice(node, "MESSAGE") });
+        return;
       default:
         fail("program.unsupported", { block, type: node.type });
     }
@@ -272,16 +395,63 @@ export function compile(source, context = {}) {
 
   // --- The program ---------------------------------------------------------
 
-  const isStart = (stack) => stack[0].type === "island_when_started";
+  const mainCalls = new Set();
   const starts = tree.stacks.filter(isStart);
-  for (const stack of tree.stacks) if (!isStart(stack)) warnings.push(reason("program.unused", { block: stack[0].id }));
+  for (const stack of tree.stacks) if (!isStart(stack) && !isRoutine(stack)) warnings.push(reason("program.unused", { block: stack[0].id }));
   for (const extra of starts.slice(1)) fail("program.twoStarts", { block: extra[0].id });
   if (!starts.length) fail("program.noStart");
   else {
     statements(starts[0].slice(1), 0);
     emit({ op: "end" });
   }
+  for (const routine of routines.values()) {
+    scope = routine;
+    routine.at = code.length;
+    statements(routine.body, 0);
+    emit({ op: "return" });
+  }
+  scope = null;
+  for (const { at, routine } of calls) code[at].to = routine.at;
+
+  // What each use gives its routine's input must be what the routine uses it
+  // as. An input given on from another routine's input takes its type.
+  for (const pass of passes) {
+    const param = pass.routine.params[pass.i];
+    if (pass.from && pass.from.type === null) pass.from.type = param.type;
+    const given = pass.from ? pass.from.type : pass.type;
+    if (param.type && given && given !== param.type) fail(WANT[param.type], { block: pass.block });
+  }
+
+  // No routine may use itself, and uses inside uses go LIMITS.calls deep at
+  // most.
+  const depth = new Map(); // key → how deep its uses go, once known
+  const visiting = new Set();
+  function deepest(routine) {
+    if (depth.has(routine.key)) return depth.get(routine.key);
+    if (visiting.has(routine.key)) {
+      fail("program.recursive", { block: routine.block, name: routine.name });
+      depth.set(routine.key, 0);
+      return 0;
+    }
+    visiting.add(routine.key);
+    let most = 0;
+    for (const key of routine.calls) most = Math.max(most, deepest(routines.get(key)));
+    visiting.delete(routine.key);
+    depth.set(routine.key, most + 1);
+    return most + 1;
+  }
+  for (const routine of routines.values()) deepest(routine);
+  for (const key of mainCalls) {
+    const routine = routines.get(key);
+    if (deepest(routine) > LIMITS.calls) fail("program.tooDeep", { block: routine.block, limit: LIMITS.calls });
+  }
 
   if (errors.length) return { program: null, errors, warnings };
-  return { program: { compiler: COMPILER_VERSION, start: starts[0][0].id, code, needs: [...needs].sort() }, errors, warnings };
+  const variables = tree.variables.filter((v) => used.has(v.id));
+  for (const id of used) if (!variables.some((v) => v.id === id)) variables.push({ id, name: id });
+  return {
+    program: { compiler: COMPILER_VERSION, start: starts[0][0].id, code, needs: [...needs].sort(), ...(variables.length && { variables }) },
+    errors,
+    warnings,
+  };
 }
