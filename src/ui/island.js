@@ -23,6 +23,7 @@ import { esc, go, html, isDev } from "./dom.js";
 import { openEditor } from "./editor.js";
 import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
+import { createFlyout } from "./flyout.js";
 import { createLibraryPanel } from "./library.js";
 import { createMissionCard } from "./mission.js";
 import { createMissionOverlays } from "./mission-overlays.js";
@@ -118,21 +119,20 @@ export const slice = (el) => islandPage(el, "slice");
 // the world as it stands, with the debugger round it. Robots and buildings can
 // be looked at from any side and chosen by tapping them, their labels, or their
 // rows in the overview, which lists every one with the block it's at and why it
-// waits; the chosen one's row says more. A robot or building's program opens in
-// the editor on the left, over the world, from its Edit program button: there
-// it can be given another, or a new one, and the editor follows it to the
-// program it runs. One that runs none is given a new program as the editor
-// opens. All programs shows every running program there instead, with
-// everyone's markers. Every view shows the same tick: one snapshot
+// waits; the chosen one's flyout, beside the list, says more (flyout.js). A
+// robot or building's program opens in the editor on the left, over the world,
+// from its Edit program button; one that runs none is given a new program as
+// the editor opens. All programs shows every running program there instead,
+// with everyone's markers. Every view shows the same tick: one snapshot
 // (snapshot.js) is taken after the frame's ticks and drawn by all. A mission's
 // card sits above the overview, and the mission is saved as it's played, at
 // tick boundaries. A mission begins with its briefing over the page, and ends
 // with the win, fireworks and the way on (mission-overlays.js).
 //
-// Phase 6's tools, where the play offers them (session.js, tools): the chosen
-// robot or building's program, chosen in the editor, and its own copy
-// (program-choice.js); a robot's team, name and settings (setup.js); Programs,
-// the program library, in the panel on the left (library.js); and Build, which
+// Phase 6's tools, where the play offers them (session.js, tools): in the
+// chosen one's flyout, its own copy of its program and a robot's team, name and
+// settings (setup.js); Programs, the program library, in the panel on the left
+// (library.js), which gives programs; and Build, which
 // places a building where the player taps, its plan drawn green where it fits
 // and red where it doesn't, with the reason.
 function islandPage(el, key, { mission: asked = null } = {}) {
@@ -215,6 +215,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
           ${mission ? `<section class="mission-card"></section>` : ""}
           <aside class="inspector overview" aria-label="${esc(t("inspector.everyone"))}"></aside>
         </div>
+        <aside class="flyout" id="flyout" aria-labelledby="flyout-title" hidden></aside>
         <div class="island-tools">
           <div class="view-controls" role="group" aria-label="${esc(t("view.controls"))}">
             ${VIEW_BUTTONS.map(([act, key, icon]) => `<button class="button icon" data-view="${act}" aria-label="${esc(t(key))}" title="${esc(t(key))}">${icon}</button>`).join("")}
@@ -255,6 +256,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     if (!draw) return;
     showWorld(false);
     if (selected) overview.reveal(selected);
+    placeFlyout();
   }
   bin.on(el, "click", (e) => {
     if (selected && setup.handle(e, selected)) {
@@ -454,7 +456,19 @@ function islandPage(el, key, { mission: asked = null } = {}) {
 
   // --- The overview, and the mission's card above it -------------------------
   const overview = createOverview($(".overview"));
-  const setup = createSetup();
+  const flyout = createFlyout($(".flyout"));
+  const setup = createSetup({ onOpenProgram: (program) => openPanel({ kind: "editor", program }) });
+  // The flyout level with the chosen one's row, inside the page.
+  function placeFlyout() {
+    const el = $(".flyout");
+    const row = selected && overview.rowOf(selected);
+    if (el.hidden || !row) return;
+    const area = main.getBoundingClientRect();
+    const top = row.getBoundingClientRect().top - area.top;
+    el.style.top = `${Math.round(Math.max(12, Math.min(top, area.height - el.offsetHeight - 12)))}px`;
+  }
+  bin.on($(".overview"), "scroll", placeFlyout);
+  bin.on(window, "resize", placeFlyout);
   const card = mission
     ? createMissionCard($(".mission-card"), bin, {
         mission,
@@ -510,16 +524,13 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   // --- The panel on the left: the editor, or every program together ---------
   const sidePanel = $(".side-panel");
   const panelBody = $(".panel-body");
-  let panel = null; // { kind, program?, entity?, view }
+  let panel = null; // { kind, program?, view }
   let opening = 0; // the latest panel asked for, while Blockly is fetched
-  let wanted = null; // that panel, until it's open
   async function openPanel(want) {
     const ticket = ++opening;
-    wanted = want;
     if (want.kind === "editor") game.pause(); // editing pauses the world (PLAN.md §5)
     const blockly = await loadBlockly();
     if (!bin.open || ticket !== opening) return;
-    wanted = null;
     closePanel(false);
     sidePanel.hidden = false;
     sidePanel.dataset.kind = want.kind;
@@ -527,7 +538,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     const onPick = (id) => select(id);
     const pane =
       want.kind === "editor"
-        ? openEditor(panelBody, { blockly, markers, programId: want.program, entity: want.entity ?? null, onPick })
+        ? openEditor(panelBody, { blockly, markers, programId: want.program, onPick })
         : want.kind === "library"
           ? createLibraryPanel(panelBody, { onEdit: (program) => openPanel({ kind: "editor", program }) })
           : createTogether(panelBody, { blockly, markers, onPick });
@@ -537,10 +548,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     refresh();
   }
   function closePanel(forget = true) {
-    if (forget) {
-      opening++;
-      wanted = null;
-    }
+    if (forget) opening++;
     panel?.view.dispose();
     panel = null;
     if (forget) kept.panel = null;
@@ -551,23 +559,13 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     opening++;
     panel?.view.dispose();
   });
-  // Opens the editor on what robot or building `id` runs, for it, where the play
-  // offers giving programs (program-choice.js). Given none, it's given a new
-  // one of its own there.
+  // Opens the editor on what robot or building `id` runs. Where the play gives
+  // programs, one that runs none is given a new one of its own.
   function editFor(id) {
     const e = peekWorld().entities.find((it) => it.id === id);
     let program = e?.runtime?.kind === "program" ? e.runtime.program : null;
     if (e && !program && giving) program = newProgramFor(id);
-    if (program) openPanel({ kind: "editor", program, entity: giving ? id : null });
-  }
-  // The editor opened for a robot or building goes over to the program it
-  // runs, once that's another, chosen at the editor's head or anywhere else.
-  function follow() {
-    const at = wanted ?? panel;
-    if (at?.kind !== "editor" || !at.entity) return;
-    const e = peekWorld().entities.find((it) => it.id === at.entity);
-    const runs = e?.runtime?.kind === "program" ? e.runtime.program : null;
-    if (runs && runs !== at.program) openPanel({ kind: "editor", program: runs, entity: at.entity });
+    if (program) openPanel({ kind: "editor", program });
   }
 
   function showPanelState() {
@@ -640,8 +638,9 @@ function islandPage(el, key, { mission: asked = null } = {}) {
       if (shown && shown.world !== w) select(null, false);
       snapshot = takeSnapshot(w, currentLibrary());
       resized = showTags(w, snapshot);
-      overview.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w), make: giving });
-      follow();
+      overview.show(w, snapshot, selected, words);
+      flyout.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w), make: giving });
+      placeFlyout();
       panel?.view.show(w, snapshot, selected);
       if (canBuild) $(".build-pending").hidden = !game.pending.some((c) => c.type === "place");
       const stall = $(".stall");
@@ -763,14 +762,14 @@ function islandPage(el, key, { mission: asked = null } = {}) {
         refresh();
       },
       snapshot: () => snapshot,
-      // Opens the editor of program `program`, for robot or building `entity`
-      // if it's given, or All programs; resolves once it's open.
-      async open(kind, program, entity = null) {
-        await openPanel({ kind, program, entity });
+      // Opens the editor of program `program`, or All programs; resolves once
+      // it's open.
+      async open(kind, program) {
+        await openPanel({ kind, program });
         showWorld(false);
       },
       close: () => closePanel(),
-      panel: () => (panel ? { kind: panel.kind, program: panel.program ?? null, entity: panel.entity ?? null } : null),
+      panel: () => (panel ? { kind: panel.kind, program: panel.program ?? null } : null),
       // The world as it will be at the next step, and the library panel's
       // programs as it shows them.
       peek: () => peekWorld(),

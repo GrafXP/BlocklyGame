@@ -7,8 +7,9 @@ import { test, expect } from "@playwright/test";
 // shared program's actions; a building that doesn't fit says why, and one that
 // fits becomes a construction site, then the workshop, which makes kits; the
 // program library gives programs to teams, makes, names and puts them away;
-// and every robot and building's Edit program opens its program, or a new one,
-// with its program to choose at the editor's head.
+// every robot and building's flyout has Edit program, which opens its program,
+// or a new one; and the editor's Versions puts an older version back into the
+// draft, keeping changes not applied.
 
 const frames = (page, n = 2) =>
   page.evaluate(
@@ -42,12 +43,11 @@ async function choose(page, id) {
   await island(page, (i) => window.islandPage.select(i), id);
   await frames(page);
 }
-const setup = (page) => page.locator(".row.selected .setup");
-const choice = (page) => page.locator(".code-choice");
+const setup = (page) => page.locator(".flyout .setup");
 // The chosen robot or building's Edit program, pressed; resolves once the
 // editor is open on program `program`.
 async function editProgram(page, program) {
-  await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
+  await page.locator(".flyout").getByRole("button", { name: "Edit program" }).click();
   await page.waitForFunction((p) => window.islandPage.panel()?.program === p, program);
   await frames(page);
 }
@@ -56,8 +56,7 @@ test("two robots on one team share its program, each at its own block with its o
   await openIsland(page);
   await steps(page, 20);
   await choose(page, "r2");
-  await editProgram(page, "courier");
-  await expect(choice(page).locator(".setup-note")).toHaveText("Shared by its team: Plank team");
+  await expect(setup(page).locator(".setup-note")).toHaveText("Shared by its team: Plank team");
   await setup(page).locator("#setup-team").selectOption("wood-team");
   // The change is shown before it's made, naming the robot it changes.
   await expect(setup(page).locator(".setup-preview p")).toHaveText(
@@ -65,13 +64,10 @@ test("two robots on one team share its program, each at its own block with its o
   );
   expect((await entity(page, "r2")).role, "nothing changes yet").toBe("plank-team");
   await setup(page).locator('[data-setup="ok"]').click();
-  await expect(setup(page).locator(".setup-note.pending")).toHaveText("From the next step");
-  // The editor open for Robo 2 goes over to the program it runs from now.
-  await page.waitForFunction(() => window.islandPage.panel()?.program === "collector");
-  await frames(page);
-  await expect(choice(page).locator(".setup-note")).toHaveText(["Shared by its team: Wood team", "From the next step"]);
+  await expect(setup(page).locator(".setup-note")).toHaveText(["Shared by its team: Wood team", "From the next step"]);
   await steps(page, 1);
-  await expect(choice(page).locator(".setup-note")).toHaveText("Shared by its team: Wood team");
+  await expect(setup(page).locator(".setup-note")).toHaveText("Shared by its team: Wood team");
+  await editProgram(page, "collector");
   await expect(page.locator(".code-runners")).toHaveText("Run by Robo 1, Robo 2");
   await island(page, () => window.islandPage.close());
 
@@ -109,16 +105,15 @@ test("a robot's own copy is edited on its own; Apply names exactly the robots it
   expect(restarted).toEqual(["r1", "r3"]);
   expect(before.length).toBe(after.length);
 
-  // Robo 3's own copy, made in the editor opened for it: only Robo 3 changes.
+  // Robo 3's own copy, from its flyout: only Robo 3 changes.
   await island(page, () => window.islandPage.close());
   await choose(page, "r3");
-  await editProgram(page, "collector");
-  await choice(page).locator('[data-choice="copy"]').click();
-  await expect(choice(page).locator(".setup-preview p")).toHaveText(
+  await setup(page).locator('[data-setup="copy"]').click();
+  await expect(setup(page).locator(".setup-preview p")).toHaveText(
     "Robo 3 gets its own copy of Wood collector. Change the copy, and only Robo 3 changes. A robot that gets a new program starts with an empty basket.",
   );
-  await choice(page).locator('[data-choice="ok"]').click();
-  // The editor goes over to it, named for Robo 3.
+  await setup(page).locator('[data-setup="ok"]').click();
+  // It opens in the editor, named for Robo 3.
   await page.waitForFunction(() => window.islandPage.panel()?.program === "collector-r3");
   await frames(page);
   await expect(page.locator(".code-title")).toHaveText("Wood collector (Robo 3)");
@@ -132,9 +127,8 @@ test("a robot's own copy is edited on its own; Apply names exactly the robots it
   expect([(await entity(page, "r1")).runtime.program, (await entity(page, "r1")).runtime.revision]).toEqual(["collector", 2]);
 
   // And back to the team's.
-  await choice(page).locator('[data-choice="back"]').click();
-  await choice(page).locator('[data-choice="ok"]').click();
-  await page.waitForFunction(() => window.islandPage.panel()?.program === "collector");
+  await setup(page).locator('[data-setup="back"]').click();
+  await setup(page).locator('[data-setup="ok"]').click();
   await steps(page, 1);
   expect((await entity(page, "r3")).runtime.program).toBe("collector");
 });
@@ -199,9 +193,9 @@ test("a building that doesn't fit says why; one that fits becomes a construction
   await expect(page.locator(".build-pending")).toBeHidden();
   await expect(page.locator('.tag[data-pick="workshop"]')).toContainText("Workshop site");
   await choose(page, "workshop");
+  await expect(setup(page).locator(".setup-note")).toHaveText("Its own program");
   await editProgram(page, "build-workshop");
-  await expect(page.locator("#code-program option:checked")).toHaveText("Workshop builder");
-  await expect(choice(page).locator(".setup-note")).toHaveText("Its own program");
+  await expect(page.locator(".code-title")).toHaveText("Workshop builder");
   await island(page, () => window.islandPage.close());
   await expect(page.locator('.row[data-row="workshop"] .why')).toHaveText("Needs 4 planks · Workshop site has 0");
 
@@ -265,49 +259,82 @@ test("the library makes a new program, names it, and puts away only what nothing
   await expect(page.locator('[data-panel="library"]')).toHaveText("Programme");
 });
 
-test("every robot and building has Edit program: one without a program gets a new one, and the editor's head gives it another", async ({ page }) => {
+test("the overview is a list; choosing in it or on the island opens the chosen one's flyout, with Edit program, which gives one that runs nothing a new program", async ({ page }) => {
   await openIsland(page);
+  const flyout = page.locator(".flyout");
+  await expect(flyout).toBeHidden();
+  await page.locator('.row-head[data-pick="r2"]').click();
+  await expect(flyout).toBeVisible();
+  await expect(flyout.locator("h2")).toHaveText("Robo 2");
+  await expect(page.locator(".row.selected .row-name")).toHaveText("Robo 2");
+  await expect(page.locator(".rows .setup, .rows .details")).toHaveCount(0);
+  // Beside its row, as high as there's room for.
+  const [row, fly] = [await page.locator(".row.selected").boundingBox(), await flyout.boundingBox()];
+  expect(row.y).toBeGreaterThanOrEqual(fly.y - 1);
+  expect(row.y).toBeLessThanOrEqual(fly.y + fly.height);
+  expect(fly.x + fly.width).toBeLessThanOrEqual(row.x);
+  // On the island, its label.
+  await page.locator('.tag[data-pick="sawmill"]').click();
+  await expect(flyout.locator("h2")).toHaveText("Sawmill");
+  await flyout.getByRole("button", { name: "Close" }).click();
+  await expect(flyout).toBeHidden();
+  expect(await island(page, () => window.islandPage.selected)).toBe(null);
+
   // The depot runs nothing: a new program of its own, from the next step.
   await choose(page, "depot");
+  await expect(setup(page).locator(".setup-note")).toHaveText("No program");
   await editProgram(page, "program");
   await expect(page.locator(".code-title")).toHaveText("New program 1");
-  await expect(page.locator("#code-program option:checked")).toHaveText("New program 1");
-  await expect(choice(page).locator(".setup-note")).toHaveText(["Its own program", "From the next step"]);
+  await expect(setup(page).locator(".setup-note")).toHaveText(["Its own program", "From the next step"]);
   await steps(page, 1);
   expect((await entity(page, "depot")).runtime.program).toBe("program");
   await expect(page.locator(".code-runners")).toHaveText("Run by Depot");
+  await page.keyboard.press("Escape");
+  await expect(flyout).toBeHidden();
+});
 
-  // Robo 1 runs its team's program; the dropdown offers the others it can run.
-  await island(page, () => window.islandPage.close());
-  await choose(page, "r1");
-  await editProgram(page, "collector");
-  expect(await island(page, () => window.islandPage.panel().entity)).toBe("r1");
-  await page.locator("#code-program").selectOption("fetch");
-  await expect(choice(page).locator(".setup-preview p")).toHaveText(
-    "Robo 1 will run Collector from the next step, from the beginning. A robot that gets a new program starts with an empty basket.",
-  );
-  await choice(page).locator('[data-choice="cancel"]').click();
-  await expect(page.locator("#code-program option:checked")).toHaveText("Wood collector");
-  await page.locator("#code-program").selectOption("fetch");
-  expect((await entity(page, "r1")).runtime.program, "nothing changes before OK").toBe("collector");
-  await choice(page).locator('[data-choice="ok"]').click();
-  await page.waitForFunction(() => window.islandPage.panel()?.program === "fetch");
-  await steps(page, 1);
-  expect([(await entity(page, "r1")).own, (await entity(page, "r1")).runtime.program]).toEqual(["fetch", "fetch"]);
-  await expect(choice(page).locator(".setup-note")).toHaveText("Its own program");
-
-  // A new program from there, too.
-  await page.locator("#code-program").selectOption("+new");
-  await expect(choice(page).locator(".setup-preview p")).toHaveText(
-    "Robo 1 gets a new program from the next step, with only its start block. A robot that gets a new program starts with an empty basket.",
-  );
-  await choice(page).locator('[data-choice="ok"]').click();
-  await page.waitForFunction(() => window.islandPage.panel()?.program === "program-2");
+test("Versions shows the program's history as a tree; a version goes into the draft without running, and changes not applied are kept at the bottom", async ({ page }) => {
+  await openIsland(page);
+  await island(page, () => window.islandPage.open("editor", "collector"));
   await frames(page);
-  await expect(page.locator(".code-title")).toHaveText("New program 2");
-  // The row keeps the team and settings; the program is chosen in the editor.
-  await expect(setup(page).locator("#setup-team")).toHaveCount(1);
-  await expect(page.locator(".row.selected #setup-program, .row.selected [data-setup='copy']")).toHaveCount(0);
+  const history = page.locator(".code-history");
+  await expect(history).toBeHidden();
+  const times = (n) => island(page, (v) => window.islandPage.editor().workspace.getBlockById("collector-times").getField("NUM").setValue(v), n);
+  const apply = async () => {
+    await page.waitForTimeout(400); // the editor saves its draft
+    await page.locator('[data-code="apply"]').click();
+  };
+  await times(3);
+  await apply();
+  await times(4);
+  await apply();
+  await steps(page, 1);
+  await times(5);
+  await page.waitForTimeout(400);
+  await expect(page.locator('[data-code="history"]')).toHaveText("Versions 3");
+  await page.locator('[data-code="history"]').click();
+  await expect(history).toBeVisible();
+  await expect(history.locator(".history-entry")).toHaveText(["Version 1", "Version 2", "Version 3runningin the editor, changed"]);
+
+  // Version 1 into the draft: not running; the changes kept at the bottom.
+  await history.locator('[data-version="1"]').click();
+  expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-times").getFieldValue("NUM"))).toBe(2);
+  await expect(page.locator(".code-state")).toHaveText("Changed. Apply to run it; until then, version 3 keeps running.");
+  await expect(history.locator(".history-entry")).toHaveText(["Version 1in the editor", "Version 2", "Version 3running", "Current, not applied yetfrom version 3"]);
+  expect((await entity(page, "r1")).runtime.revision, "nothing runs it yet").toBe(3);
+
+  // Applied from version 1: a branch, versions 2 and 3 indented under it.
+  await times(1);
+  await apply();
+  await steps(page, 1);
+  await expect(history.locator(".history-branch .history-entry")).toHaveText(["Version 2", "Version 3"]);
+  await expect(history.locator(":scope > .history-tree > li > .history-entry")).toHaveText(["Version 1", "Version 4runningin the editor", "Current, not applied yetfrom version 3"]);
+
+  // And back to the kept changes.
+  await history.locator('[data-version="kept"]').click();
+  expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-times").getFieldValue("NUM"))).toBe(5);
+  await expect(history.locator(".history-entry.kept")).toHaveCount(0);
+  await expect(history.locator(".history-entry.base")).toHaveText("Version 3in the editor, changed");
 });
 
 test("the bridge slice offers none of Phase 6's tools", async ({ page }) => {

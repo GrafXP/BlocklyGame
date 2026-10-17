@@ -7,7 +7,7 @@ import { esc } from "./dom.js";
 import { identityMark } from "./inspector.js";
 import { marksFor } from "./marks.js";
 import { createWarnings } from "./problems.js";
-import { createProgramChoice } from "./program-choice.js";
+import { createHistory } from "./history.js";
 import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged, programContext, rules, showProgram } from "./session.js";
 
 // The program editor (PLAN.md §5, "Editing and applying"): the Blockly editor for
@@ -19,9 +19,8 @@ import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged
 // the game gave it; and in a chapter's project or free play, Start from
 // nothing leaves the start block alone.
 //
-// Opened for a robot or building, from its Edit program button, the editor's
-// head starts with that one's program to choose: another of those it can run,
-// or a new one (program-choice.js).
+// Versions, at the head, opens the program's history: every version applied,
+// as a tree, each to put back into the draft (history.js).
 //
 // The toolbox offers only what the robots or buildings running the program can
 // do, and its dropdowns only what's on the island (src/blockly/toolboxes.js,
@@ -40,16 +39,14 @@ import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged
 const SETTLE = 300;
 
 // `host` is the panel's content; `blockly` the module src/blockly/workspace.js,
-// with prepareBlockly done, and `markers` src/blockly/markers.js. `entity` is
-// the robot or building it was opened for, whose program can be chosen at its
-// head, or null. `onPick(id)` chooses an entity whose marker was tapped.
-export function openEditor(host, { blockly, markers: markerModule, programId, entity = null, onPick }) {
+// with prepareBlockly done, and `markers` src/blockly/markers.js. `onPick(id)`
+// chooses an entity whose marker was tapped.
+export function openEditor(host, { blockly, markers: markerModule, programId, onPick }) {
   const library = currentLibrary();
   const doc = programDoc(library, programId);
   const { types, builds } = programContext(programId);
   const { blocks, blank } = rules();
   host.innerHTML = `<div class="code-head">
-      ${entity ? `<div class="code-choice"></div>` : ""}
       <h2 class="code-title">${esc(display(doc.name))}</h2>
       <p class="code-runners"></p>
       <p class="code-state" role="status"></p>
@@ -60,12 +57,14 @@ export function openEditor(host, { blockly, markers: markerModule, programId, en
         <button class="button small" data-code="undo">${esc(t("editor.undo"))}</button>
         <button class="button small" data-code="starter" title="${esc(t("editor.starterTitle"))}">${esc(t("editor.starter"))}</button>
         ${blank ? `<button class="button small" data-code="blank" title="${esc(t("editor.blankTitle"))}">${esc(t("editor.blank"))}</button>` : ""}
+        <button class="button small history-toggle" data-code="history" aria-expanded="false" aria-controls="code-history">${esc(t("history.open"))} <span class="history-count"></span></button>
       </div>
+      <div class="code-history" id="code-history" hidden></div>
     </div>
     <div class="code-host"></div>`;
   const $ = (sel) => host.querySelector(sel);
   const codeHost = $(".code-host");
-  const choice = entity ? createProgramChoice($(".code-choice"), entity) : null;
+  const history = createHistory($(".code-history"), programId);
 
   // The island and robot or building type the dropdowns offer choices for;
   // the blocks the play has unlocked, of those they can use.
@@ -129,7 +128,9 @@ export function openEditor(host, { blockly, markers: markerModule, programId, en
     $('[data-code="apply"]').disabled = !changed || !!checked?.errors.length;
     $('[data-code="undo"]').disabled = !changed;
     $('[data-code="starter"]').disabled = sameBlocks(doc.draft, doc.starter);
-    choice?.show();
+    $(".history-count").textContent = String(doc.published.length);
+    $('[data-code="history"]').setAttribute("aria-expanded", String(history.open));
+    history.show(programOf(world, programId)?.revision ?? null);
     showMarks();
   }
 
@@ -156,16 +157,18 @@ export function openEditor(host, { blockly, markers: markerModule, programId, en
   }
 
   host.addEventListener("click", onClick);
-  host.addEventListener("change", onChoice);
-  function onChoice(e) {
-    choice?.handle(e);
-  }
   function onClick(e) {
-    if (choice?.handle(e)) return;
+    const version = e.target.closest("[data-version]")?.dataset.version;
     const act = e.target.closest("[data-code]")?.dataset.code;
-    if (!act) return;
+    if (!act && !version) return;
     if (timer) settle();
-    if (act === "apply") {
+    if (version) {
+      // A version from the history into the draft: in the editor, not running.
+      if (history.pick(version)) load(doc.draft);
+    } else if (act === "history") {
+      history.toggle();
+      showState();
+    } else if (act === "apply") {
       applyProgram(programId);
       showState();
     } else if (act === "undo" || act === "starter") {
@@ -195,7 +198,6 @@ export function openEditor(host, { blockly, markers: markerModule, programId, en
     dispose() {
       if (timer) settle();
       host.removeEventListener("click", onClick);
-      host.removeEventListener("change", onChoice);
       marks.dispose();
       editor.dispose();
       host.innerHTML = "";

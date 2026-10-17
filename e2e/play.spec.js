@@ -241,7 +241,7 @@ test("Robo 3's program can be edited before it runs, and applying it starts Robo
   await page.locator('.row-head[data-pick="r3"]').click();
   await expect(page.locator('.row[data-row="r3"] .state')).toHaveText("Stopped");
   await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveText("Stone carrier, version 1");
-  await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
+  await page.locator(".flyout").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Stone carrier");
   await expect(page.locator(".code-state")).toHaveText("Not started yet. Change it and apply, and it starts.");
   await island(page, () => window.islandPage.editor().workspace.getBlockById("stones-go-depot-place").getField("PLACE").setValue("camp"));
@@ -271,11 +271,11 @@ test("the overview holds still while the world runs, and its buttons stay there 
   const look = () =>
     island(page, () => {
       const top = (el) => Math.round(el.getBoundingClientRect().top);
-      window.firstButtons ??= [...document.querySelectorAll(".island-side button")];
+      window.firstButtons ??= [...document.querySelectorAll(".island-side button, .flyout button")];
       return {
         list: top(document.querySelector(".overview")),
         heads: [...document.querySelectorAll(".row-head")].map(top),
-        edit: document.querySelector('.row.selected [data-act="edit"]') && top(document.querySelector('.row.selected [data-act="edit"]')),
+        edit: document.querySelector('.flyout [data-act="edit"]') && top(document.querySelector('.flyout [data-act="edit"]')),
         replaced: window.firstButtons.filter((b) => !b.isConnected).length,
       };
     });
@@ -320,7 +320,7 @@ test("the overview holds still while the world runs, and its buttons stay there 
   await expect(page.locator(".win")).toBeHidden();
   const from = await tick(page);
   await expect.poll(() => tick(page)).toBeGreaterThan(from + 5);
-  await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
+  await page.locator(".flyout").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Wood collector");
 });
 

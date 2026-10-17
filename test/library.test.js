@@ -12,7 +12,10 @@ import {
   freeProgramId,
   isChanged,
   latest,
+  loadVersion,
   newProgram,
+  parentOf,
+  prunedLibrary,
   newestPrograms,
   programDoc,
   renameProgram,
@@ -145,6 +148,65 @@ test("the draft goes back to the newest revision, or to the starter", () => {
   resetDraft(library, "collector", "starter");
   assert.deepEqual(doc.draft, doc.starter);
   assert.equal(isChanged(doc), true, "the starter isn't what runs now, until it's applied");
+});
+
+test("a version from the history goes into the draft, not into the world; unapplied changes are kept to go back to; applying it starts a branch", () => {
+  const library = islandLibrary();
+  const doc = collector(library);
+  const apply = (json) => {
+    setDraft(library, "collector", json);
+    return applyDraft(library, "collector", { types: ["helper"], places }).revision;
+  };
+  assert.deepEqual([apply(program(unload("a"))), apply(program(unload("b")))], [2, 3]);
+  assert.deepEqual(
+    doc.published.map((_, i) => parentOf(doc, i)),
+    [null, 1, 2],
+    "one after another",
+  );
+  // Changes not applied, then version 2 put into the draft: the changes are kept.
+  setDraft(library, "collector", program(unload("c")));
+  assert.equal(loadVersion(library, "collector", 2), true);
+  assert.deepEqual(doc.draft, program(unload("a")));
+  assert.equal(latest(doc).revision, 3, "nothing is applied");
+  assert.deepEqual(doc.kept, { source: program(unload("c")), from: 3 });
+  assert.equal(isChanged(doc), true, "version 2 isn't what runs");
+  // Another version while the draft is one: the kept changes stay.
+  assert.equal(loadVersion(library, "collector", 1), true);
+  assert.deepEqual(doc.kept.source, program(unload("c")));
+  // Applied from version 1: a branch.
+  assert.equal(apply(edit(doc.draft, '"type":"island_when_started"', '"type":"island_when_started"')), 4);
+  assert.equal(parentOf(doc, 3), 1);
+  // The kept changes back, with the draft in their place only if it had changes of its own.
+  assert.equal(loadVersion(library, "collector", "kept"), true);
+  assert.deepEqual(doc.draft, program(unload("c")));
+  assert.equal("kept" in doc, false, "version 4 was applied, so there's nothing to keep");
+  setDraft(library, "collector", program(unload("d")));
+  loadVersion(library, "collector", 3);
+  loadVersion(library, "collector", "kept");
+  assert.deepEqual(doc.draft, program(unload("d")));
+  assert.equal(apply(doc.draft), 5);
+  assert.equal(parentOf(doc, 4), 3, "the kept draft started from version 3");
+  assert.equal(loadVersion(library, "collector", 9), false);
+  assert.deepEqual(checkLibrary(library), []);
+  doc.published[1].from = 7;
+  assert.notDeepEqual(checkLibrary(library), [], "a parent after its child");
+});
+
+test("a save keeps each program's newest versions for its history; a version whose parent went names none", () => {
+  const library = islandLibrary();
+  for (let i = 0; i < 45; i++) {
+    setDraft(library, "collector", program(...Array.from({ length: (i % 3) + 1 }, (_, k) => unload(`u${i}-${k}`))));
+    applyDraft(library, "collector", { types: ["helper"], places });
+  }
+  const pruned = programDoc(prunedLibrary(library, (id) => (id === "collector" ? [1] : [])), "collector");
+  assert.deepEqual(
+    pruned.published.map((p) => p.revision),
+    [1, ...Array.from({ length: 40 }, (_, i) => i + 7)],
+    "the one something runs, and the newest forty",
+  );
+  assert.equal(pruned.published[1].from, null, "version 7's parent, 6, is gone");
+  assert.equal(pruned.published[2].from, 7);
+  assert.deepEqual(checkLibrary({ programs: [pruned] }), []);
 });
 
 test("a copy is a program of its own: the blocks as last applied, its own revisions, the original's starter", () => {

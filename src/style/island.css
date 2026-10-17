@@ -162,7 +162,7 @@
 }
 
 /* The overview (src/ui/overview.js): a row for every robot, building and
-   deposit, the chosen one open with its details (src/ui/inspector.js). */
+   deposit, the chosen one marked; its details are in its flyout. */
 .overview {
   flex: 0 1 auto;
   min-height: 0;
@@ -556,7 +556,7 @@
   hyphens: auto;
 }
 
-.row .state {
+:is(.row, .flyout) .state {
   flex: none;
   padding: 0 8px;
   border-radius: 999px;
@@ -565,18 +565,18 @@
   font-weight: 600;
 }
 
-.row .state.waiting {
+:is(.row, .flyout) .state.waiting {
   background: #fff1cc;
   color: #6b4100;
 }
 
-.row .state.error {
+:is(.row, .flyout) .state.error {
   background: #fde2e0;
   color: #8f1b12;
 }
 
-.row .state.moving,
-.row .state.working {
+:is(.row, .flyout) .state.moving,
+:is(.row, .flyout) .state.working {
   background: #dcebfb;
   color: #123d7d;
 }
@@ -633,24 +633,89 @@
   min-height: 1.45em;
 }
 
-.row:not(.selected) :is(.row-block, .why, .row-has) {
+.row :is(.row-block, .why, .row-has) {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.row:not(.selected) .row-block {
+.row .row-block {
   height: 1.9em;
 }
 
-.row .state[hidden],
-.row-actions[hidden] {
+.row .state[hidden] {
   display: none;
 }
 
-/* The chosen row's buttons, under its name. */
-.row-actions .details-actions {
-  margin-top: 4px;
+/* The chosen one's flyout (src/ui/flyout.js), beside the list, level with its
+   row (src/ui/island.js): its name, Edit program, its setup and details. On a
+   narrow screen it lies over the list instead. */
+.flyout {
+  position: absolute;
+  top: 12px;
+  right: calc(max(12px, env(safe-area-inset-right)) + min(320px, 42%) + 10px);
+  width: 300px;
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  padding: 10px 12px 12px;
+  border: 2px solid #f6b73c;
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.97);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.22);
+  z-index: 1;
+}
+
+.flyout[hidden] {
+  display: none;
+}
+
+.flyout-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flyout-title {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.flyout-title h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.1rem;
+  hyphens: auto;
+}
+
+.flyout-title .identity {
+  flex: none;
+}
+
+.flyout-close {
+  flex: none;
+  min-width: 34px;
+  padding: 0;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.flyout .details-actions {
+  margin-top: 8px;
+}
+
+.flyout .details-actions .button {
+  width: 100%;
+}
+
+@media (max-width: 44rem) {
+  .flyout {
+    right: max(12px, env(safe-area-inset-right));
+    width: min(320px, calc(100% - 24px));
+  }
 }
 
 /* Kept in its place while there's nothing to show progress of. */
@@ -819,20 +884,95 @@
   hyphens: auto;
 }
 
-/* The program of the robot or building the editor was opened for
-   (src/ui/program-choice.js), above the program's name. */
-.code-choice {
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+/* The program's history (src/ui/history.js), folded away under the head:
+   every version as a tree, oldest at the top, branches indented. */
+.code-history {
+  margin-top: 8px;
+  max-height: 14rem;
+  overflow: auto;
+  padding: 6px 8px;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.9);
 }
 
-.code-choice .setup-field {
-  margin-top: 0;
+.code-history[hidden] {
+  display: none;
 }
 
-.code-choice label .identity {
-  margin-inline-end: 4px;
+.history-hint {
+  margin: 0 0 4px;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.history-tree,
+.history-branch {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-branch {
+  margin-inline-start: 14px;
+  padding-inline-start: 8px;
+  border-inline-start: 2px solid #c9c2b2;
+}
+
+.history-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  width: 100%;
+  min-height: 32px;
+  margin: 2px 0;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.history-entry:hover {
+  background: #f1ede4;
+}
+
+.history-entry:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.history-entry small {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* The version the draft came from. */
+.history-entry.base {
+  border-color: #f6b73c;
+  background: #fff6de;
+}
+
+/* Changes not applied, kept to go back to. */
+.history-entry.kept {
+  border-style: dashed;
+  border-color: #2f6fd6;
+  color: #123d7d;
+}
+
+.history-count {
+  min-width: 1.4em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #eef1f5;
+  font-size: 0.8rem;
 }
 
 .code-runners,
@@ -983,9 +1123,8 @@
   font-size: 0.75rem;
 }
 
-/* The chosen row's team, name and settings (src/ui/setup.js), and the editor's
-   program choice (program-choice.js): one field to a line, its label above, so
-   German's longer words fit. */
+/* The chosen one's setup in its flyout (src/ui/setup.js): one field to a
+   line, its label above, so German's longer words fit. */
 .setup {
   margin-top: 6px;
   padding-top: 6px;

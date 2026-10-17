@@ -3,19 +3,20 @@ import { ITEMS, SETTINGS } from "../sim/entities.js";
 import { NAME_LENGTH } from "../sim/commands.js";
 import { esc } from "./dom.js";
 import { picture } from "./pictures.js";
-import { COMMANDS, choose, nameRobot, peekWorld, preview, programName, setSetting } from "./session.js";
+import { COMMANDS, choose, makeOwnCopy, nameRobot, peekWorld, preview, programName, setSetting, sharedProgram } from "./session.js";
 
-// The chosen robot's team, name and settings, in its row of the overview
-// (PLAN.md §5, §11 Phase 6): a team shares its program, and the settings are
-// what “my source”, “my item” and “my destination” read. In the sandbox, a
-// building's or deposit's supplies too. A robot or building's program is
-// chosen in the editor, opened from its Edit program button
-// (program-choice.js).
+// Who runs what, in the chosen robot or building's flyout (PLAN.md §5, §11
+// Phase 6; flyout.js): where its program comes from (its own, its team's, its
+// kind's), its own copy of a shared program, and back to the shared one; a
+// robot's team, which shares its program, its name, and its settings, which
+// “my source”, “my item” and “my destination” read. In the sandbox, a
+// building's or deposit's supplies too. Another program is given from the
+// program library (library.js).
 //
-// A change of team is shown before it's made: every robot it starts again,
-// with the program each will run (preview()), then OK makes it, at the next
-// step. Settings and names are made at once, at the next step too, since they
-// start nothing again.
+// A change of team, a copy or going back is shown before it's made: every
+// robot or building it starts again, with the program each will run
+// (preview()), then OK makes it, at the next step. Settings and names are made
+// at once, at the next step too, since they start nothing again.
 //
 // It shows the world as it will be at the next step (session.js, peekWorld), so
 // a choice made while paused shows at once. It's drawn again only when what it
@@ -41,12 +42,22 @@ export function changeWords(commands) {
   return lines.join(" ");
 }
 
-export function createSetup() {
-  let asked = null; // { entity, commands, text, choice }: a change of team waiting for OK
+// `onOpenProgram(id)` opens program `id` in the editor, as a robot's own copy
+// is once it's made.
+export function createSetup({ onOpenProgram }) {
+  let asked = null; // { entity, commands, text, choice?, copy? }: a change waiting for OK
   let renaming = null; // the id of the robot being named
 
+  // A preview's words: who starts what; or, for a copy, whose it is.
+  function previewText(commands, { copy = null } = {}) {
+    if (!copy) return changeWords(commands);
+    const e = peekWorld().entities.find((it) => it.id === copy);
+    const words = t("preview.copy", { name: display(e.name), program: display(programName(e.runtime.program)) });
+    return isRobot(e) ? `${words} ${t("preview.basket")}` : words;
+  }
+
   function ask(entity, commands, extra = {}) {
-    asked = { entity, commands, text: changeWords(commands), ...extra };
+    asked = { entity, commands, text: previewText(commands, extra), ...extra };
   }
 
   // The markup of thing `id`'s setup, or "" when there's nothing to set.
@@ -59,7 +70,9 @@ export function createSetup() {
     const node = world.nodes.find((it) => it.id === id);
     const parts = [];
     const library = tools.includes("library");
-    if (e && library && isRobot(e)) parts.push(teamHtml(world, e, now?.entities.find((it) => it.id === id)), nameHtml(e));
+    const before = now?.entities.find((it) => it.id === id);
+    if (e && library) parts.push(programHtml(world, e, before));
+    if (e && library && isRobot(e)) parts.push(teamHtml(world, e), nameHtml(e));
     if (e && tools.includes("settings") && isRobot(e)) parts.push(settingsHtml(e, now?.entities.find((it) => it.id === id)));
     if (tools.includes("stock") && (e ?? node)?.store.caps) parts.push(stockHtml(e ?? node));
     if (asked?.entity === id && asked.text) {
@@ -72,14 +85,33 @@ export function createSetup() {
     return parts.length ? `<div class="setup" data-entity="${esc(id)}">${parts.join("")}</div>` : "";
   }
 
-  // Robot `e`'s team, `before` as the world has it now.
-  function teamHtml(world, e, before) {
+  // Where entity `e`'s program comes from, and its own copy or back to the
+  // shared one; `before` as the world has it now.
+  function programHtml(world, e, before) {
+    const running = e.runtime?.kind === "program" ? e.runtime.program : null;
+    const pending = before && (before.runtime?.kind === "program" ? before.runtime.program : null) !== running;
+    const shared = sharedProgram(e);
+    const team = isRobot(e) && e.role ? world.roles.find((r) => r.id === e.role) : null;
+    const from = !running ? t("setup.noProgram") : e.own ? t("setup.own") : team?.program === running ? t("setup.fromTeam", { team: display(team.name) }) : t("setup.fromType");
+    const others = running && world.entities.some((it) => it.id !== e.id && it.runtime?.kind === "program" && it.runtime.program === running);
+    const buttons = [];
+    // A copy of a program only it runs would change nothing.
+    if (running && !(e.own && !others)) buttons.push(`<button class="button small" data-setup="copy">${esc(t("setup.copy"))}</button>`);
+    if (e.own && shared && shared !== e.own) buttons.push(`<button class="button small" data-setup="back">${esc(t("setup.back"))}</button>`);
+    return (
+      `<p class="setup-note setup-from">${esc(from)}</p>` +
+      (pending ? `<p class="setup-note pending">${esc(t("settings.pending"))}</p>` : "") +
+      (buttons.length ? `<div class="setup-buttons">${buttons.join("")}</div>` : "")
+    );
+  }
+
+  // Robot `e`'s team.
+  function teamHtml(world, e) {
     const wanted = asked?.entity === e.id && asked.choice?.kind === "team" ? asked.choice.value : (e.role ?? "");
     const options = [["", t("setup.noTeam")], ...world.roles.map((r) => [r.id, display(r.name)])].map(
       ([value, words]) => `<option value="${esc(value)}"${value === wanted ? " selected" : ""}>${esc(words)}</option>`,
     );
-    const pending = before && before.role !== e.role ? `<p class="setup-note pending">${esc(t("settings.pending"))}</p>` : "";
-    return `<div class="setup-field"><label for="setup-team">${esc(t("setup.team"))}</label><select id="setup-team" data-setup="team">${options.join("")}</select></div>${pending}`;
+    return `<div class="setup-field"><label for="setup-team">${esc(t("setup.team"))}</label><select id="setup-team" data-setup="team">${options.join("")}</select></div>`;
   }
 
   function nameHtml(e) {
@@ -148,12 +180,20 @@ export function createSetup() {
         return true;
       }
       if (event.type !== "click") return false;
-      if (act === "rename") renaming = id;
+      if (act === "copy") ask(id, [], { copy: id });
+      else if (act === "back") ask(id, COMMANDS.give(id, null));
+      else if (act === "rename") renaming = id;
       else if (act === "cancel-name") renaming = null;
       else if (act === "cancel") asked = null;
       else if (act === "ok" && asked) {
-        choose(asked.commands);
-        asked = null;
+        if (asked.copy) {
+          const program = makeOwnCopy(asked.copy);
+          asked = null;
+          if (program) onOpenProgram?.(program);
+        } else {
+          choose(asked.commands);
+          asked = null;
+        }
       } else return false;
       return true;
     },

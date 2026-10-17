@@ -56,17 +56,18 @@ test("a mission saved at a tick and read back goes on exactly as it would have",
   assert.deepEqual(read.world, game.world);
 });
 
-test("a save keeps only the revisions the world and the checkpoint run, and each program's newest", () => {
+test("a save keeps each program's history: the revisions the world and the checkpoint run, and the newest (library.test.js)", () => {
   const game = played(100, { pending: true });
   assert.deepEqual(
     programDoc(game.library, "courier").published.map((p) => p.revision),
     [1, 2, 3, 4],
   );
   const { library } = readSave(save(game), SLICE_SAVE);
-  // 1 for the checkpoint, 3 for the world, 4 waiting for the next tick.
+  // 1 for the checkpoint, 3 for the world, 4 waiting for the next tick, and 2
+  // in the history between them.
   assert.deepEqual(
     programDoc(library, "courier").published.map((p) => p.revision),
-    [1, 3, 4],
+    [1, 2, 3, 4],
   );
   assert.deepEqual(programDoc(library, "courier").draft, programDoc(game.library, "courier").draft, "drafts are kept");
   assert.deepEqual(latest(programDoc(library, "courier")).source, SLICE.reference.courier);

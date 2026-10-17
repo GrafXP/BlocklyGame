@@ -208,7 +208,8 @@ In the first release, settings are a fixed set of named slots per entity kind: S
 
 ### Editing and applying
 
-- Every robot and building has an Edit program button. It opens the program the entity runs; one that runs none is given a new program of its own, a start block, and the editor opens on that. At the editor's head, a dropdown chooses the entity's program from the programs it can run, or a new one, with its own copy and the way back to the shared program beside it; the editor then shows the program chosen (decided 17 October 2026).
+- Every robot and building has an Edit program button, in its flyout (Section 8). It opens the program the entity runs; one that runs none is given a new program of its own, a start block, and the editor opens on that. Other programs are given from the program library (decided 17 October 2026).
+- Each program keeps its history: every version applied, and the version each was made from. The editor's Versions, folded away until opened, shows it as a tree, branches indented. Tapping a version puts it into the draft, not into the world: it runs once applied, as a new version branching from the one it came from. A draft with changes no version has is kept at the bottom, “Current, not applied yet”, to go back to (one at most). A save keeps each program's newest 40 versions.
 - Entering edit mode pauses the entire world.
 - Editing saves a draft; it does not change published running code.
 - Apply validates and compiles a new published version.
@@ -330,7 +331,7 @@ Define ordinary game blocks with Blockly JSON definitions and small extensions f
 - Top mission card with the goal in one short sentence and pictures, objective progress, and the hint ladder (Beginner support).
 - A mission's two big moments, each a window over the whole page: the briefing as it starts (its title, goal, setup and goals with pictures, and Let's go), and the win once it's done (fireworks behind “Mission complete!”, the reward, a large glowing Next mission and a smaller Keep playing). The win pauses the world; Keep playing runs it again if it was running (decided 17 October 2026).
 - Global Run/Pause, Step, Step to Next Block, speed, tick counter, and Restart Mission controls.
-- Entity inspector with Edit program, team, stock/basket contents, settings, and current status. The program itself is chosen at the editor's head (Section 5).
+- Execution overview as a list, one row per robot, building and deposit. Choosing one, in the list or in the world, opens its flyout beside its row: name and state, Edit program, where its program comes from with its own copy and the way back to the shared one, team, name and settings, stock or basket, and current status.
 - Blockly editor in a partially transparent overlay panel, with the 3D world still visible behind it on larger screens. Editing pauses the world (Section 5); the camera still moves, and while the world is paused the renderer draws only when the view changes.
 - Execution overview available throughout play and stepping.
 
@@ -677,7 +678,7 @@ The slice is an implementation milestone. In the campaign, chapters 1–3 (Phase
 ### Phase 6 — Shared roles, type defaults, and placement
 
 - [x] Implement the program library, robot role defaults, and building-type defaults. (On the island at `/island`: docs/phase6.md. Roles are *teams* to the player; who runs what is world state, `src/sim/bindings.js`, resolved own → team → type. *Programs* in the bar is the library: edit, give, copy, rename, put away, new.)
-- [x] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs. (In the chosen robot's or building's row, `src/ui/setup.js`; since 17 October 2026 the program, its own copy and the way back are chosen at the editor's head instead, `src/ui/program-choice.js`. Go To, Collect and Pick Up take a value in a gap, a shadow until a setting covers it; `COMPILER_VERSION` 2. Robots only: no mission needs a building's Target Stock.)
+- [x] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs. (In the chosen robot's or building's flyout since 17 October 2026, `src/ui/setup.js`, `flyout.js`; first in its row of the overview. Go To, Collect and Pick Up take a value in a gap, a shadow until a setting covers it; `COMPILER_VERSION` 2. Robots only: no mission needs a building's Target Stock.)
 - [x] Keep authored robot and program names as catalogue keys until the player renames them. Name the variables and procedures in copied starter programs in the current language. (A copy's name is a reference holding its program's and its robot's; `wordStarter` words the names a starter gives, tested ahead of Phase 8's variables and procedures.)
 - [x] Add deterministic program revision application and cancellation of affected unfinished actions. (Every change of who runs what starts again exactly the entities whose program changes, at the next tick; previews apply the change to the world as it will be, so they name exactly those. `SIM_VERSION` 5.)
 - [x] Add blueprint placement with footprint/path validation and visible starter construction programs. (*Build* places the workshop: open ground, clear of everything and its interaction cells, cutting nobody off now or once the bridges are built, `src/sim/placement.js`. Its site runs the *Workshop builder*, then becomes the workshop.)
@@ -938,3 +939,12 @@ Applied in: 5 (editing and applying), 8 (main layout), 9 (missions stand alone, 
 Asked for while playing: every mission begins with a big briefing over the page, and ends with a win, fireworks bursting behind “Mission complete!”, its reward, and the way on. Next mission (or, after a replay or the last mission, Back to the missions) is the big, glowing button; Keep playing goes back to the island as it is, where the card still offers the next mission. Both are modal dialogs (`src/ui/mission-overlays.js`, `src/ui/fireworks.js`); with reduced motion there are no fireworks and nothing animates. The briefing shows while the mission is at step 0, until the player goes past it; the win once the mission is done, until the player keeps playing.
 
 Applied in: 8 (main layout).
+
+### The editor's versions, and the flyout (17 October 2026)
+
+Asked for while playing, replacing the dropdown at the editor's head (amendment above):
+
+- The editor's head shows the program alone. Versions, folded away until opened, shows its history as a tree (`src/ui/history.js`); each version applied records the version it was made from (`published[].from`, `programs.js`). Tapping a version puts it into the draft, not into the world; changes not applied are kept at the bottom, “Current, not applied yet”, to go back to. A save keeps each program's newest 40 versions, not only those something runs.
+- The overview is a list and no more. The chosen one's details, Edit program, its program's origin with its own copy and the way back, a robot's team, name and settings, and the sandbox's supplies are in its flyout beside the list (`src/ui/flyout.js`), opened from the list or the island, closed by its ×, Escape, or choosing it again. Another program is given from the program library.
+
+Applied in: 5 (editing and applying), 8 (main layout), and 11 (Phase 6's notes).

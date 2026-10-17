@@ -384,13 +384,11 @@ if (want("library")) {
   await shot(shared, "settings-editor-en", PHASE6);
   // Robo 3's own copy of the Wood team's program, open and changed.
   const copy = await openTools(browser, { teams: { r3: "wood-team" }, ticks: 30, chosen: "r3" });
-  await copy.click('.row.selected [data-act="edit"]');
-  await copy.waitForFunction(() => window.islandPage.panel()?.program === "collector");
-  await copy.click('.code-choice [data-choice="copy"]');
+  await copy.click('.flyout [data-setup="copy"]');
   await copy.waitForTimeout(300);
   await copy.screenshot({ path: fileURLToPath(new URL("copy-preview-en.jpg", PHASE6)), type: "jpeg", quality: 82 });
   console.log("  copy-preview-en.jpg");
-  await copy.click('.code-choice [data-choice="ok"]');
+  await copy.click('.flyout [data-setup="ok"]');
   await copy.waitForFunction(() => window.islandPage.panel()?.program === "collector-r3");
   await copy.evaluate(() => {
     window.islandPage.game.step();

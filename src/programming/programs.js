@@ -6,7 +6,7 @@ import { compile } from "./compiler.js";
 // (world.programs), and who runs what (src/sim/bindings.js); the library keeps
 // the blocks. It's plain data, so a save holds it (src/storage/saves.js):
 //
-//   { programs: [{ id, name, starter, draft, published: [{ revision, source }, …], archived? }, …] }
+//   { programs: [{ id, name, starter, draft, base?, kept?, published: [{ revision, source, from? }, …], archived? }, …] }
 //
 // in order of id, where
 // - `name` is a message reference until the player renames the program (PLAN.md
@@ -18,7 +18,15 @@ import { compile } from "./compiler.js";
 //   starter. The world runs one of them, usually the newest: an applied revision
 //   reaches the world at the next tick (game.js), and until then the world runs
 //   the one before. The debugger shows the blocks of the revision the world runs
-//   (sourceAt), never the draft's, so its marks can't land on the wrong block;
+//   (sourceAt), never the draft's, so its marks can't land on the wrong block.
+//   `from` is the revision a revision's draft started from, its parent in the
+//   program's history (a tree: an older version put back into the draft and
+//   applied starts a branch); without it, the one before it;
+// - `base` is the revision the draft started from, when the player put one
+//   into it from the history; without it, the newest;
+// - `kept` is { source, from }, a draft with changes no revision has, kept
+//   when the player put a version from the history into the draft, to go back
+//   to: one at most;
 // - `archived` is true for a program the player has put away: nothing runs it,
 //   and the library lists it apart, to bring back.
 //
@@ -129,17 +137,50 @@ export const sourceAt = (library, id, revision) => programDoc(library, id)?.publ
 // (createWorld's content.programs).
 export const newestPrograms = (library) => library.programs.map((doc) => ({ id: doc.id, revision: latest(doc).revision, source: latest(doc).source }));
 
-// `library` with only the revisions still needed: the newest of each program,
-// and those that `keep(id)` lists, such as the ones a world runs. Every other
-// revision is gone for good: nothing runs it, so no view shows it (a saved game
-// keeps no more, PLAN.md §10). Returns a new library.
+// How many of a program's newest revisions a save keeps, for its history.
+export const HISTORY = 40;
+
+// `library` with only the revisions still needed: each program's newest
+// HISTORY, its history in the editor, and those that `keep(id)` lists, such as
+// the ones a world runs. Older ones are gone for good (a saved game keeps no
+// more, PLAN.md §10); a revision whose parent went names none. Returns a new
+// library.
 export function prunedLibrary(library, keep = () => []) {
   return {
     programs: library.programs.map((doc) => {
-      const wanted = new Set([...keep(doc.id), latest(doc).revision]);
-      return { ...copy(doc), published: copy(doc.published.filter((p) => wanted.has(p.revision))) };
+      const wanted = new Set([...keep(doc.id), ...doc.published.slice(-HISTORY).map((p) => p.revision)]);
+      const published = copy(doc.published.filter((p) => wanted.has(p.revision)));
+      for (const p of published) if (p.from != null && !wanted.has(p.from)) p.from = null;
+      return { ...copy(doc), published };
     }),
   };
+}
+
+// --- The history ------------------------------------------------------------------
+
+// The revision `doc`'s revision at index `i` of `published` started from: its
+// `from`, or the one before it; null for the first, or one whose parent a save
+// let go.
+export const parentOf = (doc, i) => (doc.published[i].from !== undefined ? doc.published[i].from : (doc.published[i - 1]?.revision ?? null));
+
+// The revision `doc`'s draft started from: `base`, or the newest.
+export const baseOf = (doc) => (doc.base != null && doc.published.some((p) => p.revision === doc.base) ? doc.base : latest(doc).revision);
+
+// Puts revision `revision` of program `id` into its draft, to change and
+// apply, or with "kept", the draft kept before; nothing runs it until it's
+// applied. A draft with changes no revision has is kept in its place, to go
+// back to. Returns whether there was such a version.
+export function loadVersion(library, id, revision) {
+  const doc = programDoc(library, id);
+  const from = revision === "kept" ? doc?.kept : doc?.published.find((p) => p.revision === revision);
+  if (!from) return false;
+  const unapplied = !doc.published.some((p) => sameBlocks(p.source, doc.draft));
+  const old = { source: copy(doc.draft), from: baseOf(doc) };
+  doc.draft = copy(from.source);
+  doc.base = revision === "kept" ? from.from : revision;
+  if (unapplied) doc.kept = old;
+  else if (revision === "kept") delete doc.kept;
+  return true;
 }
 
 const isWorkspace = (json) => !!json && typeof json === "object" && !Array.isArray(json);
@@ -159,10 +200,14 @@ export function checkLibrary(library) {
     if ("archived" in doc && doc.archived !== true) problems.push(`${doc.id} is archived as ${doc.archived}`);
     if (!isWorkspace(doc.starter) || !isWorkspace(doc.draft)) problems.push(`${doc.id} has no starter or draft`);
     if (!Array.isArray(doc.published) || !doc.published.length) return problems.push(`${doc.id} has no revisions`);
+    const revision = (r) => r === null || (Number.isInteger(r) && r >= 1);
     doc.published.forEach((p, j) => {
       if (!Number.isInteger(p?.revision) || p.revision < 1 || !isWorkspace(p.source)) problems.push(`${doc.id} has revision ${JSON.stringify(p?.revision)}`);
       else if (j && !(doc.published[j - 1].revision < p.revision)) problems.push(`${doc.id}'s revisions out of order at ${p.revision}`);
+      else if ("from" in p && !(revision(p.from) && (p.from === null || p.from < p.revision))) problems.push(`${doc.id}'s revision ${p.revision} is from ${JSON.stringify(p.from)}`);
     });
+    if ("base" in doc && !revision(doc.base)) problems.push(`${doc.id}'s draft is from ${JSON.stringify(doc.base)}`);
+    if ("kept" in doc && !(isWorkspace(doc.kept?.source) && revision(doc.kept.from))) problems.push(`${doc.id} keeps a draft it can't`);
   });
   return problems;
 }
@@ -191,6 +236,7 @@ export function setDraft(library, id, json) {
 export function resetDraft(library, id, to) {
   const doc = programDoc(library, id);
   doc.draft = copy(to === "starter" ? doc.starter : latest(doc).source);
+  delete doc.base;
 }
 
 // The draft of program `id`, compiled for what will run it: `types`, the robot
@@ -221,6 +267,7 @@ export function applyDraft(library, id, context) {
   if (!program) return { errors, warnings };
   const doc = programDoc(library, id);
   const revision = latest(doc).revision + 1;
-  doc.published.push({ revision, source: copy(doc.draft) });
+  doc.published.push({ revision, source: copy(doc.draft), from: baseOf(doc) });
+  delete doc.base;
   return { command: { type: "publish", program: { id, revision, ...program } }, revision, warnings };
 }

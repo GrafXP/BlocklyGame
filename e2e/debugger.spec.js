@@ -188,14 +188,14 @@ test("a long action keeps its block marked, step after step, and only the first 
   await expect(page.locator('.row[data-row="r1"] .state')).toHaveText("Moving");
 });
 
-test("the chosen one's block shows what it read: numbers on senses, ✓ or ✗ on conditions, in its row too", async ({ page }) => {
+test("the chosen one's block shows what it read: numbers on senses, ✓ or ✗ on conditions, in its flyout too", async ({ page }) => {
   await openIsland(page);
   await open(page, "together");
   await steps(page, 2);
   await island(page, () => window.islandPage.select("sawmill"));
   await page.locator('.together-panel[data-program="planks"]').scrollIntoViewIfNeeded();
   await expect.poll(() => island(page, () => window.islandPage.badges().map((b) => `${b.block}=${b.text}`).sort())).toEqual(["planks-compare=✗", "planks-wood=0"]);
-  const row = page.locator(".row.selected .readings");
+  const row = page.locator(".flyout .readings");
   await expect(row.locator("li")).toHaveText(["wood at sawmill > 0 not true", "wood at sawmill 0"]);
 });
 
@@ -270,7 +270,7 @@ test("opening the editor pauses the world; the draft and the panel outlast a cha
   await openIsland(page);
   await page.getByRole("button", { name: "Run" }).click();
   await island(page, () => window.islandPage.select("r2"));
-  await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
+  await page.locator(".flyout").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Plank courier");
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-site-place").getField("PLACE").setValue("depot"));

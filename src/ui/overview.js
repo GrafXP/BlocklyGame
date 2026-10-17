@@ -3,7 +3,7 @@ import { thingsKey } from "../sim/things.js";
 import { blockChip, blockWords } from "./chips.js";
 import { amounts, describeReason } from "./describe.js";
 import { esc } from "./dom.js";
-import { detailsActions, detailsHtml, identityMark, memoryWords } from "./inspector.js";
+import { identityMark, memoryWords } from "./inspector.js";
 import { blockOf, programName } from "./session.js";
 import { entryIn } from "./snapshot.js";
 
@@ -11,24 +11,20 @@ import { entryIn } from "./snapshot.js";
 // every robot and building, on screen or not, with its program and version, the
 // block it's at as a chip (outlined when it took that block in the latest
 // step), its state, why it waits or stopped, and what its variables hold;
-// then the deposits with what they hold. The chosen one's row opens to show its details (inspector.js),
-// and, where the play offers them, its program, team and settings to change
-// (setup.js). Rows are drawn from the tick's snapshot (snapshot.js), and made
-// again when a building is placed or becomes another.
+// then the deposits with what they hold. It's a list and no more: the chosen
+// one is marked, and its flyout beside the list has its details and what can
+// be changed (flyout.js). Rows are drawn from the tick's snapshot
+// (snapshot.js), and made again when a building is placed or becomes another.
 //
-// The list holds still while the world runs, so its buttons can be pressed:
+// The list holds still while the world runs, so its rows can be pressed:
 // - Each row is made once, and only the parts whose words changed are drawn
-//   again. A button is never replaced while it's there to be pressed: the
-//   rows' heads keep theirs, and the chosen row's buttons are drawn again only
-//   when the choice changes.
-// - A row that isn't chosen keeps one height: its lines are kept, empty or not,
-//   and each is one line, shortened with an ellipsis (the whole of it on hover).
-//   The chosen row's buttons come first, under its name, so its details
-//   changing below them doesn't move them.
+//   again; the rows' heads, which choose, are never replaced.
+// - A row keeps one height: its lines are kept, empty or not, and each is one
+//   line, shortened with an ellipsis (the whole of it on hover).
 export function createOverview(el) {
   let shownWorld = null;
   let shownThings = "";
-  const rows = new Map(); // id → { li, head state, actions, setup, info, details, drawn: { part → markup } }
+  const rows = new Map(); // id → { li, head, state, info, drawn: { part → markup } }
 
   // Draws `part` of row `row` as `markup`, if that's new.
   function draw(row, part, markup) {
@@ -62,11 +58,9 @@ export function createOverview(el) {
   }
 
   return {
-    // Shows `world` as of `snapshot`, with thing `selected` open, its blocks
-    // worded with Blockly's `words`; `setup(id)` gives the chosen one's setup,
-    // and `make` whether a robot or building without a program can be given one
-    // (detailsActions).
-    show(world, snapshot, selected, words, { setup = () => "", make = false } = {}) {
+    // Shows `world` as of `snapshot`, with thing `selected` marked, its blocks
+    // worded with Blockly's `words`.
+    show(world, snapshot, selected, words) {
       if (shownWorld !== world || shownThings !== thingsKey(world)) {
         const things = [...world.entities, ...world.nodes];
         el.innerHTML =
@@ -76,14 +70,14 @@ export function createOverview(el) {
             .map(
               (it) =>
                 `<li class="row" data-row="${esc(it.id)}">` +
-                `<button class="row-head" data-pick="${esc(it.id)}" aria-expanded="false">${identityMark(world, it.id)}<span class="row-name">${esc(display(it.name))}</span><span class="state" hidden></span></button>` +
-                `<div class="row-actions" hidden></div><div class="row-setup"></div><div class="row-info"></div><div class="row-details"></div></li>`,
+                `<button class="row-head" data-pick="${esc(it.id)}" aria-expanded="false" aria-controls="flyout">${identityMark(world, it.id)}<span class="row-name">${esc(display(it.name))}</span><span class="state" hidden></span></button>` +
+                `<div class="row-info"></div></li>`,
             )
             .join("")}</ul>`;
         rows.clear();
         for (const li of el.querySelectorAll(".row")) {
           const $ = (sel) => li.querySelector(sel);
-          rows.set(li.dataset.row, { li, head: $(".row-head"), state: $(".state"), actions: $(".row-actions"), setup: $(".row-setup"), info: $(".row-info"), details: $(".row-details"), drawn: {} });
+          rows.set(li.dataset.row, { li, head: $(".row-head"), state: $(".state"), info: $(".row-info"), drawn: {} });
         }
         shownWorld = world;
         shownThings = thingsKey(world);
@@ -104,16 +98,14 @@ export function createOverview(el) {
             row.state.textContent = word;
           }
         }
-        row.actions.hidden = !chosen;
-        draw(row, "actions", chosen ? detailsActions(entry, { make }) : "");
-        draw(row, "setup", chosen ? setup(id) : "");
         draw(row, "info", infoHtml(world, snapshot, it, entry, words));
-        draw(row, "details", chosen ? detailsHtml(world, id, entry, words) : "");
       }
     },
     // Brings the chosen row into view.
     reveal(id) {
       rows.get(id)?.li.scrollIntoView({ block: "nearest" });
     },
+    // Thing `id`'s row, or null.
+    rowOf: (id) => rows.get(id)?.li ?? null,
   };
 }

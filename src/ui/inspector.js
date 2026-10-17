@@ -8,7 +8,7 @@ import { esc } from "./dom.js";
 import { blockOf } from "./session.js";
 
 // The inspector (PLAN.md §8): what the chosen robot, building or deposit is
-// doing, in words, opened in its row of the overview (overview.js): what it's
+// doing, in words, in its flyout beside the overview (flyout.js): what it's
 // doing and how far it's got, where it is, what it holds against how much
 // room there is, what its block read in this step, how far round its Repeat
 // it is, what its variables hold, which of the player's own blocks it's inside,
@@ -120,13 +120,10 @@ export function detailsHtml(world, id, entry, words) {
     </div>`;
 }
 
-// The chosen thing's buttons, for its snapshot entry `entry` (null for a
-// deposit): Edit program and Close. Edit program is there for every robot and
-// building where the play can make it a program (`make`), and for one that has
-// a program, running, stopped or parked, anywhere. The overview puts them
-// under the thing's name.
+// The chosen thing's Edit program, for its snapshot entry `entry` (null for a
+// deposit): for every robot and building where the play can make it a program
+// (`make`), and for one that has a program, running, stopped or parked,
+// anywhere; else "". The flyout puts it under the thing's name.
 export function detailsActions(entry, { make = false } = {}) {
-  return `<div class="details-actions">${
-    entry && (entry.program || make) ? `<button class="button small primary" data-act="edit">${esc(t("inspector.edit"))}</button>` : ""
-  }<button class="button small" data-act="close">${esc(t("inspector.close"))}</button></div>`;
+  return entry && (entry.program || make) ? `<div class="details-actions"><button class="button primary" data-act="edit">${esc(t("inspector.edit"))}</button></div>` : "";
 }

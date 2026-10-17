@@ -330,7 +330,7 @@ async function islandAt(page, query, ticks, id, panel = null) {
     },
     [ticks, id],
   );
-  if (panel) await page.evaluate(([kind, program, entity]) => window.islandPage.open(kind, program, entity), panel);
+  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
   await frames(page);
 }
 
@@ -346,11 +346,20 @@ async function islandTools(page, query) {
   await frames(page);
 }
 
-// The editor opened for Robo 1 from its Edit program, with another program
-// chosen at its head and waiting for OK.
-async function islandChoice(page, query) {
-  await islandAt(page, query, 20, "r1", ["editor", "collector", "r1"]);
-  await page.locator("#code-program").selectOption("fetch");
+// The editor's Versions open on Robo 1's program: version 2 applied, then
+// version 1 put back into the draft, the changes not applied kept at the
+// bottom.
+async function islandHistory(page, query) {
+  await islandAt(page, query, 20, "r1", ["editor", "collector"]);
+  const times = (n) => page.evaluate((v) => window.islandPage.editor().workspace.getBlockById("collector-times").getField("NUM").setValue(v), n);
+  await times(3);
+  await page.waitForTimeout(400);
+  await page.locator('[data-code="apply"]').click();
+  await page.evaluate(() => window.islandPage.game.step());
+  await times(4);
+  await page.waitForTimeout(400);
+  await page.locator('[data-code="history"]').click();
+  await page.locator('[data-version="1"]').click();
   await frames(page);
 }
 
@@ -525,8 +534,8 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
   expect(await page.evaluate(unmarkedText), "an Apply waiting").toEqual([]);
   await islandTools(page, "&lang=pseudo");
   expect(await page.evaluate(unmarkedText), "the island's setup, library and Build card").toEqual([]);
-  await islandChoice(page, "&lang=pseudo");
-  expect(await page.evaluate(unmarkedText), "the editor's program choice").toEqual([]);
+  await islandHistory(page, "&lang=pseudo");
+  expect(await page.evaluate(unmarkedText), "the editor's versions").toEqual([]);
   // The mission: its card with every hint, a save it can't use, the offer to
   // start again, and the reward; and the title page asking to start over.
   for (const state of PLAY_STATES) {
@@ -582,8 +591,8 @@ for (const [lang, query] of everyLanguage) {
     }
     await islandTools(page, query);
     expect(await page.evaluate(clippedText), "the island's setup, library and Build card").toEqual([]);
-    await islandChoice(page, query);
-    expect(await page.evaluate(clippedText), "the editor's program choice").toEqual([]);
+    await islandHistory(page, query);
+    expect(await page.evaluate(clippedText), "the editor's versions").toEqual([]);
     for (const state of PLAY_STATES) {
       await playAt(page, query, state);
       expect(await page.evaluate(clippedText), `play ${JSON.stringify(state)}`).toEqual([]);
