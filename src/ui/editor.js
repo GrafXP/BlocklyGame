@@ -7,7 +7,7 @@ import { esc } from "./dom.js";
 import { identityMark } from "./inspector.js";
 import { marksFor } from "./marks.js";
 import { createWarnings } from "./problems.js";
-import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged, programContext } from "./session.js";
+import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged, programContext, rules, showProgram } from "./session.js";
 
 // The program editor (PLAN.md §5, "Editing and applying"): the Blockly editor for
 // one program, in a panel over the world. It edits the program's draft, which
@@ -15,7 +15,8 @@ import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged
 // at the next tick boundary, by Step or Run (src/sim/commands.js). Until then the
 // program is marked as waiting to start, and the old revision runs on. Undo
 // changes takes the draft back to the newest revision; Starter program, to what
-// the game gave it.
+// the game gave it; and in a chapter's project or free play, Start from
+// nothing leaves the start block alone.
 //
 // The toolbox offers only what the robots or buildings running the program can
 // do, and its dropdowns only what's on the island (src/blockly/toolboxes.js,
@@ -40,6 +41,7 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
   const library = currentLibrary();
   const doc = programDoc(library, programId);
   const { types, builds } = programContext(programId);
+  const { blocks, blank } = rules();
   host.innerHTML = `<div class="code-head">
       <h2 class="code-title">${esc(display(doc.name))}</h2>
       <p class="code-runners"></p>
@@ -50,15 +52,18 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
         <button class="button small primary" data-code="apply">${esc(t("editor.apply"))}</button>
         <button class="button small" data-code="undo">${esc(t("editor.undo"))}</button>
         <button class="button small" data-code="starter" title="${esc(t("editor.starterTitle"))}">${esc(t("editor.starter"))}</button>
+        ${blank ? `<button class="button small" data-code="blank" title="${esc(t("editor.blankTitle"))}">${esc(t("editor.blank"))}</button>` : ""}
       </div>
     </div>
     <div class="code-host"></div>`;
   const $ = (sel) => host.querySelector(sel);
   const codeHost = $(".code-host");
 
-  // The island and robot or building type the dropdowns offer choices for.
+  // The island and robot or building type the dropdowns offer choices for;
+  // the blocks the play has unlocked, of those they can use.
   const context = { world: currentGame().world, type: types.length === 1 ? types[0] : null, builds };
-  const editor = blockly.createEditor(codeHost, { treatment: DEFAULT_TREATMENT, toolbox: toolboxFor(types, { builds }), state: doc.draft, context, onChange });
+  const toolbox = toolboxFor(types, { builds, blocks });
+  const editor = blockly.createEditor(codeHost, { treatment: DEFAULT_TREATMENT, toolbox: toolbox.contents.length ? toolbox : null, state: doc.draft, context, onChange });
   const warnings = createWarnings(editor.workspace);
   const marks = markerModule.createMarkers(codeHost, editor, blockly.Blockly, { onPick });
 
@@ -152,7 +157,7 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
     } else if (act === "undo" || act === "starter") {
       resetDraft(library, programId, act === "starter" ? "starter" : "applied");
       load(doc.draft);
-    }
+    } else if (act === "blank" && showProgram(programId, "blank")) load(doc.draft);
   }
 
   check();

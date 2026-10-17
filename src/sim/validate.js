@@ -2,7 +2,7 @@ import { checkProgram } from "../programming/runtime.js";
 import { fitsSetting, programFor, roleOf } from "./bindings.js";
 import { SETTINGS, TYPES } from "./entities.js";
 import { walkable } from "./navigation.js";
-import { GOALS } from "./objectives.js";
+import { GOALS, goalProblem } from "./objectives.js";
 import { RECIPES } from "./recipes.js";
 
 // A name: the player's words, or a message reference { key, params? } whose
@@ -127,22 +127,52 @@ export function checkWorld(world) {
     }
   }
 
-  // The mission: goals of known types, each met at a tick that has been, and
-  // the mission done when, and only when, its last goal was.
+  checkMission(world, fail);
+  return problems;
+}
+
+// The mission (objectives.js): its trials' goals of known types; the trial
+// under way one there is, with its own goals, each met or failed at a tick
+// that has been, never both; the trials before it passed in order; and the
+// mission done when, and only when, its last trial was passed.
+function checkMission(world, fail) {
   const { mission } = world;
-  if (mission !== null) {
-    const when = (t) => t === null || (Number.isInteger(t) && t >= 1 && t <= world.tick);
-    if (typeof mission?.id !== "string" || !Array.isArray(mission.goals) || !mission.goals.length || !Array.isArray(mission.reward)) fail("the mission isn't one");
-    else {
-      for (const goal of mission.goals) {
-        if (!GOALS[goal?.type] || typeof goal.id !== "string") fail(`the mission has a goal ${JSON.stringify(goal)}`);
-        else if (!when(goal.done)) fail(`goal ${goal.id} was met at tick ${goal.done}`);
-      }
-      const last = mission.goals.every((g) => g?.done !== null) ? Math.max(...mission.goals.map((g) => g.done)) : null;
-      if (mission.done !== last) fail(`the mission was done at ${mission.done}, its goals at ${last}`);
+  if (mission === null) return;
+  const when = (t) => t === null || (Number.isInteger(t) && t >= 1 && t <= world.tick);
+  const isList = (value) => Array.isArray(value);
+  if (typeof mission?.id !== "string" || !isList(mission.trials) || !mission.trials.length || !isList(mission.goals) || !isList(mission.passed) || !isList(mission.reward)) {
+    fail("the mission isn't one");
+    return;
+  }
+  for (const trial of mission.trials) {
+    if (!isList(trial?.goals) || !trial.goals.length) fail("a trial without goals");
+    else for (const goal of trial.goals) if (goalProblem(goal)) fail(`mission ${mission.id}: ${goalProblem(goal)}`);
+  }
+  if (!Number.isInteger(mission.trial) || mission.trial < 0 || mission.trial >= mission.trials.length) {
+    fail(`the mission is at trial ${mission.trial}`);
+    return;
+  }
+  const specs = mission.trials[mission.trial].goals ?? [];
+  if (mission.goals.length !== specs.length || mission.goals.some((g, i) => g?.id !== specs[i]?.id || g.type !== specs[i].type)) fail(`the goals aren't trial ${mission.trial}'s`);
+  for (const goal of mission.goals) {
+    if (!GOALS.includes(goal?.type)) fail(`the mission has a goal ${JSON.stringify(goal)}`);
+    else if (!when(goal.done) || !when(goal.failed)) fail(`goal ${goal.id} was met at ${goal.done} or failed at ${goal.failed}`);
+    else if (goal.done !== null && goal.failed !== null) fail(`goal ${goal.id} was met and failed`);
+  }
+  const { tally, collected } = mission;
+  const isMap = (value) => !!value && typeof value === "object" && !isList(value);
+  if (!isMap(tally) || ["unloads", "made", "waited"].some((part) => !isMap(tally[part])) || !isMap(collected)) fail("the mission's tally isn't one");
+  if (!mission.passed.every((t, i) => when(t) && t !== null && (i === 0 || mission.passed[i - 1] <= t))) fail(`trials passed at ${mission.passed}`);
+  const allMet = mission.goals.every((g) => g?.done !== null);
+  if (mission.done === null) {
+    if (mission.passed.length !== mission.trial) fail(`${mission.passed.length} trials passed, at trial ${mission.trial}`);
+    if (allMet) fail("every goal is met, but the trial isn't passed");
+  } else {
+    const last = Math.max(...mission.goals.map((g) => g.done));
+    if (mission.trial !== mission.trials.length - 1 || mission.passed.length !== mission.trials.length || !allMet || mission.done !== last || mission.passed.at(-1) !== last) {
+      fail(`the mission was done at ${mission.done}, its goals at ${allMet ? last : "–"}`);
     }
   }
-  return problems;
 }
 
 // Only whole numbers, strings, booleans, null, plain arrays and objects: what

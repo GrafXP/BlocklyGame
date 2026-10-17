@@ -18,6 +18,8 @@ Phase 5 (the bridge slice) is in place: the first mission, **Across the Stream**
 
 Phase 6 (shared roles, type defaults and placement) is in place on the island: robots on a **team** share its program, buildings of a kind share theirs, and any robot or building can have its own; the chosen one's row changes its program and team, makes its own copy, renames a robot and sets its **settings**, which the new *my source*, *my item* and *my destination* blocks read in an action's gap. Every change of program names, before it's made, each robot it will start again, and so does Apply. **Programs** in the bar is the program library. **Build** places a workshop where it fits, without cutting anyone off; robots bring its planks and stone, its site builds it, and it makes kits. Findings are in [docs/phase6.md](docs/phase6.md).
 
+Phase 7 (the main campaign and free play) is in place: **Play** on the title page starts the campaign's twenty-five missions in five chapters, on one island that grows mission by mission: the sawmill, the depot, the bridge, and at last the workshop's first kits. Each mission's toolbox offers only the blocks learned so far. Its card shows the goal with pictures, asks for a prediction before Run and an explanation after success, offers hints that answer the problem in view, a start or the whole program in the editor, and in missions 16–19 two trials one after the other. Missions done can be played again from the title page. **Free play** opens after mission 15, with every program written in the missions, and grows into the **sandbox** after mission 25. `npm run verify:missions` plays every mission's reference solution, alone and in sequence. Phase 5's slice is at `/slice`. Findings are in [docs/phase7.md](docs/phase7.md).
+
 ## Development
 
 | Command | What it does |
@@ -25,13 +27,14 @@ Phase 6 (shared roles, type defaults and placement) is in place on the island: r
 | `npm install` | Installs the pinned dependencies |
 | `npm run dev` | Development server |
 | `npm run build` / `npm run preview` | Production build in `dist/`, and serving it |
-| `npm test` | Node unit tests in `test/` |
-| `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, the bridge slice, and the island with teams, settings, copies and a workshop), after a deliberate change to the simulation and a new `SIM_VERSION` |
+| `npm test` | Node unit tests in `test/`, `verify:missions` among them |
+| `npm run verify:missions` | Plays every mission's reference solution, alone and in sequence, and checks its starters, steps, toolbox, budget, room and words (`scripts/verify-missions.js`) |
+| `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, the bridge slice, the island with teams, settings, copies and a workshop, and the campaign played through by its reference solutions), after a deliberate change to the simulation and a new `SIM_VERSION` |
 | `npx playwright install chromium webkit` | Once: the browsers for the browser tests |
 | `npm run e2e` | Browser tests in `e2e/` (Chromium, WebKit, WebKit as an iPad), against a fresh build |
-| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/`, `docs/phase4/`, `docs/phase5/` and `docs/phase6/`; `npm run shots -- library` for some groups only |
+| `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/`, `docs/phase4/`, `docs/phase5/`, `docs/phase6/` and `docs/phase7/`; `npm run shots -- campaign` for some groups only |
 
-Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`, which `/play` has too) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
+Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`, which `/play`, `/replay`, `/free` and `/slice` have too) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
 
 ## Languages
 
@@ -41,7 +44,7 @@ All text comes from catalogues in `src/i18n/`, one folder per language, listed i
 | --- | --- |
 | `ui.js` | The interface, with `{name}` placeholders and plural forms (`{ one, other }`) |
 | `blocks.js` | The game's blocks, toolbox categories and dropdown choices, for `Blockly.Msg` |
-| `missions.js` | Each mission's title, goal, progress, three hints and reward, keyed by mission |
+| `missions.js` | Each mission's title, goal, what's new, prediction, explanation, three hints, trials, problems and reward, keyed by mission |
 | `blockly.js` | Which of Blockly's catalogues to load, and the game's overrides of it |
 
 Blockly messages the game never shows (plugins it doesn't load, blocks no toolbox offers) are listed by feature in `src/i18n/blockly-unused.js` and may stay in English. Offering one of those blocks means taking its entry out and translating its messages.

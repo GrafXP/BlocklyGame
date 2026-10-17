@@ -86,6 +86,10 @@ export function createClock({ rate = TICKS_PER_SECOND, maxPerFrame = MAX_TICKS_P
 // at the next tick, by Step or by the running clock, and every command is logged
 // with its tick, so the game can be played again (src/sim/replay.js). `trace` is
 // the last tick's (advanceWorld).
+//
+// When a mission's trial is passed and the next one staged, the clock pauses
+// at that tick, so the player sees what changed for the next trial before it
+// runs (docs/campaign-plan.md: “The child sees what changed between them”).
 export function createGame(world, { clock = createClock() } = {}) {
   let queued = [];
   let version = 0; // counted up whenever the queue changes
@@ -99,6 +103,7 @@ export function createGame(world, { clock = createClock() } = {}) {
     if (commands.length) version++;
     for (const command of commands) log.push({ tick: world.tick + 1, command });
     trace = advanceWorld(world, commands);
+    if (trace.passed !== null && !trace.done) clock.pause();
   };
 
   return {
@@ -123,10 +128,14 @@ export function createGame(world, { clock = createClock() } = {}) {
     get queueVersion() {
       return version;
     },
-    // Runs the ticks due at a frame at `now` ms. Returns how many.
+    // Runs the ticks due at a frame at `now` ms, fewer if the clock pauses on
+    // the way. Returns how many.
     frame(now) {
       const ticks = clock.frame(now);
-      for (let i = 0; i < ticks; i++) tick();
+      for (let i = 0; i < ticks; i++) {
+        tick();
+        if (!clock.running) return i + 1;
+      }
       return ticks;
     },
     run: () => clock.run(),
@@ -140,8 +149,8 @@ export function createGame(world, { clock = createClock() } = {}) {
     // takes a new step (tookNewStep), or, with no id, any entity does. Every
     // entity moves on in the same ticks, as if Step were pressed that many times.
     // An entity that can't go on by itself (stopped, or not a robot or building)
-    // counts as none chosen. Stops too when the whole world has stalled, and
-    // after NEXT_BLOCK_TICKS. Returns how many ticks it ran.
+    // counts as none chosen. Stops too when the whole world has stalled, when a
+    // trial is passed, and after NEXT_BLOCK_TICKS. Returns how many ticks it ran.
     nextBlock(id = null, limit = NEXT_BLOCK_TICKS) {
       clock.pause();
       const chosen = world.entities.find((e) => e.id === id);
@@ -149,7 +158,7 @@ export function createGame(world, { clock = createClock() } = {}) {
       for (let n = 1; n <= limit; n++) {
         const before = watched.map((e) => runtimeOf(e)?.active(e) ?? null);
         tick();
-        if (world.stall || watched.some((e, i) => tookNewStep(trace, e.id, before[i]))) return n;
+        if (world.stall || trace.passed !== null || watched.some((e, i) => tookNewStep(trace, e.id, before[i]))) return n;
       }
       return limit;
     },

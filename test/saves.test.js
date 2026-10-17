@@ -35,7 +35,9 @@ function played(ticks = 200, { pending = false } = {}) {
   const queued = pending ? [apply()] : [];
   return { world, library, checkpoint, queued, progress: { completed: [] } };
 }
-const save = (game) => JSON.parse(JSON.stringify(makeSave({ mission: SLICE, ...game })));
+// The slice's save, and what a save of it is read against (src/ui/session.js).
+const save = (game) => JSON.parse(JSON.stringify(makeSave({ content: SLICE.content, mission: "slice", ...game })));
+const SLICE_SAVE = { content: { id: SLICE.content.id, version: SLICE.content.version }, missions: (id) => id === "slice" };
 
 test("a mission saved at a tick and read back goes on exactly as it would have", () => {
   const game = played(150);
@@ -45,7 +47,7 @@ test("a mission saved at a tick and read back goes on exactly as it would have",
   assert.equal(envelope.sim, SIM_VERSION);
   assert.equal(envelope.compiler, COMPILER_VERSION);
   assert.deepEqual(envelope.content, { id: "slice", version: 2 });
-  const read = readSave(envelope, SLICE);
+  const read = readSave(envelope, SLICE_SAVE);
   assert.equal(read.problem, undefined);
   assert.equal(stateHash(read.world), stateHash(game.world));
   assert.deepEqual(read.checkpoint, game.checkpoint);
@@ -60,7 +62,7 @@ test("a save keeps only the revisions the world and the checkpoint run, and each
     programDoc(game.library, "courier").published.map((p) => p.revision),
     [1, 2, 3, 4],
   );
-  const { library } = readSave(save(game), SLICE);
+  const { library } = readSave(save(game), SLICE_SAVE);
   // 1 for the checkpoint, 3 for the world, 4 waiting for the next tick.
   assert.deepEqual(
     programDoc(library, "courier").published.map((p) => p.revision),
@@ -76,10 +78,10 @@ test("a save from another version, of another mission, or damaged anywhere, is l
   const broken = (change) => {
     const s = copy(good);
     change(s);
-    return readSave(s, SLICE).problem;
+    return readSave(s, SLICE_SAVE).problem;
   };
-  assert.equal(readSave(null, SLICE).problem, "format");
-  assert.equal(readSave("text", SLICE).problem, "format");
+  assert.equal(readSave(null, SLICE_SAVE).problem, "format");
+  assert.equal(readSave("text", SLICE_SAVE).problem, "format");
   assert.equal(
     broken((s) => (s.format = "another-game")),
     "format",

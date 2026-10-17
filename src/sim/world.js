@@ -3,12 +3,16 @@ import { startProgram } from "../programming/runtime.js";
 import { finish, progress, tryStart } from "./actions.js";
 import { canRun, fitsSetting, programFor, rebind } from "./bindings.js";
 import { applyCommand } from "./commands.js";
-import { SETTINGS, TYPES } from "./entities.js";
-import { count, makeStore } from "./inventory.js";
-import { checkGoals, createMission } from "./objectives.js";
+import { makeThing } from "./content.js";
+import { TYPES } from "./entities.js";
+import { count } from "./inventory.js";
+import { beginTrial, checkGoals, createMission, recordWait, recordWork } from "./objectives.js";
 import { runtimeOf } from "./runtimes.js";
 import { script } from "./script.js";
-import { cellAt, inside, parseTerrain } from "./terrain.js";
+import { statusOf } from "./status.js";
+import { parseTerrain, setKind } from "./terrain.js";
+
+export { reasonOf, statusOf } from "./status.js";
 
 // The world and its clock (PLAN.md §6). advanceWorld moves the world from tick T
 // to tick T + 1, and nothing else changes it: not the frame rate, timers, dates or
@@ -49,7 +53,10 @@ import { cellAt, inside, parseTerrain } from "./terrain.js";
 // 5: teams, type defaults and own programs; robots' settings; actions whose
 //    place or item a program works out as it runs; the workshop, its kits, and
 //    buildings placed by the player.
-export const SIM_VERSION = 5;
+// 6: missions have trials and count completed work (deliveries, things made,
+//    waits), with exact orders, steady goals and goals that fail; choosing a
+//    missing setting lets a robot stopped for it go on; robots can be added.
+export const SIM_VERSION = 6;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -66,14 +73,12 @@ const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 // (bindings.js). An entity with a program starts at its start; one with a
 // script follows the script; one with `parked` has its program without
 // starting it (src/programming/runtime.js). Robots start with the `settings`
-// content gives them, and nothing chosen for the rest. Content with a `mission`
-// (src/content/missions/) makes a world with that mission's goals to meet.
+// content gives them, and nothing chosen for the rest. A construction site
+// that's `built` has its bridge already. Content with a `mission`
+// (src/content/missions/) makes a world with that mission's goals to meet,
+// from its first trial's stage (objectives.js).
 export function createWorld(content) {
   const terrain = parseTerrain(content.terrain);
-  const cell = ([x, z]) => {
-    if (!inside(terrain, x, z)) throw new Error(`${content.id}: cell ${x}, ${z} is off the map`);
-    return cellAt(terrain, x, z);
-  };
   const places = [...content.entities, ...content.nodes].map((t) => t.id);
   const programs = (content.programs ?? []).map(({ id, source, revision = 1 }) => {
     const { program, errors } = compile(source, { places });
@@ -94,37 +99,15 @@ export function createWorld(content) {
   const entities = content.entities.map((e) => {
     const type = TYPES[e.type];
     if (!type || type.kind === "node") throw new Error(`${content.id}: ${e.id} has no robot or building type "${e.type}"`);
-    const base = { id: e.id, kind: type.kind, type: e.type, name: e.name, own: program(e.program, e.id) };
-    const runner = { action: null, pending: null, error: null, runtime: null };
-    if (type.kind === "robot") {
-      if (e.role != null && !roles.some((r) => r.id === e.role)) throw new Error(`${content.id}: ${e.id} is on team ${e.role}, which there isn't`);
-      const settings = Object.fromEntries(Object.keys(SETTINGS).map((slot) => [slot, e.settings?.[slot] ?? null]));
-      return { ...base, role: e.role ?? null, settings, cell: cell(e.cell), store: makeStore({ items: e.items, total: type.basket }), ...runner };
-    }
-    const blueprint = e.blueprint ?? (e.gap ? "bridge" : null);
-    return {
-      ...base,
-      area: { ...e.area },
-      access: e.access.map(cell),
-      store: makeStore({ items: e.items, caps: e.caps }),
-      ...(blueprint && { blueprint, built: false }),
-      ...(e.gap && { gap: e.gap.map(cell) }),
-      ...runner,
-    };
+    if (e.role != null && !roles.some((r) => r.id === e.role)) throw new Error(`${content.id}: ${e.id} is on team ${e.role}, which there isn't`);
+    return { ...makeThing(terrain, e, content.id), own: program(e.program, e.id) };
   });
   const nodes = content.nodes.map((n) => {
     if (TYPES[n.type]?.kind !== "node") throw new Error(`${content.id}: ${n.id} has no deposit type "${n.type}"`);
-    return {
-      id: n.id,
-      kind: "node",
-      type: n.type,
-      name: n.name,
-      area: { ...n.area },
-      access: n.access.map(cell),
-      store: makeStore({ items: n.items, caps: n.caps }),
-      ...(n.regrow && { regrow: { ...n.regrow } }),
-    };
+    return makeThing(terrain, n, content.id);
   });
+  // Bridges already built.
+  for (const site of entities) if (site.built && site.gap) setKind(terrain, site.gap, "+");
   const world = {
     sim: SIM_VERSION,
     content: { id: content.id, version: content.version },
@@ -159,6 +142,7 @@ export function createWorld(content) {
     }
     e.runtime = startProgram(world.programs.find((p) => p.id === id), { parked: !!given.parked });
   }
+  if (world.mission?.trials[0].stage) beginTrial(world);
   return world;
 }
 
@@ -166,7 +150,7 @@ export function createWorld(content) {
 // the tick's trace, the debugger's account of the tick (it isn't part of the
 // world):
 //
-//   { tick, commands, evaluated, started, ended, waiting, errors, goals, done, states }
+//   { tick, commands, evaluated, started, ended, waiting, errors, goals, passed, done, states }
 //
 // - commands: what each command did, { ok, reason? }.
 // - evaluated: each entity that evaluated a step, { entity, block?, … }: the
@@ -176,8 +160,9 @@ export function createWorld(content) {
 // - started, ended: actions, { entity, type }.
 // - waiting: intents that couldn't start, { entity, reason }.
 // - errors: entities whose program stopped, { entity, reason }.
-// - goals: the ids of the mission's goals met in this tick; done: whether the
-//   mission was done in it, and its reward given (objectives.js).
+// - goals: the ids of the mission's goals met in this tick; passed: the trial
+//   passed in it (its index), the next one staged at its end, or null; done:
+//   whether the mission was done in it, and its reward given (objectives.js).
 // - states: every robot and building after the tick, { entity, state, block }:
 //   statusOf's word and the active block.
 //
@@ -195,9 +180,10 @@ export function createWorld(content) {
 //    ready for it, reserving what it needs, so an earlier one has first pick;
 //    otherwise it waits, with the reason, and is tried again next tick. A wait
 //    for a way somewhere is only tried again once the ways have changed.
-// 6. The mission's goals are checked, against work that has ended; when the
-//    last is met, the mission's reward is given (objectives.js). Then whether
-//    the world has stalled, and the tick is done.
+// 6. The mission's goals are checked, against work that has ended (the
+//    trial's tally, noted in phase 2); when the last of a trial is met, the
+//    next trial is staged, or after the last the mission's reward is given
+//    (objectives.js). Then whether the world has stalled, and the tick is done.
 export function advanceWorld(world, commands = []) {
   const now = world.tick + 1;
   const trace = { tick: now, commands: [], evaluated: [], started: [], ended: [], waiting: [], errors: [] };
@@ -211,6 +197,7 @@ export function advanceWorld(world, commands = []) {
     const state = progress(world, entity, now);
     if (state === "done") {
       trace.ended.push({ entity: entity.id, type: entity.action.type });
+      recordWork(world, entity);
       // A construction site that has become its building starts the program
       // its new type runs; anything else goes on to its next step.
       if (finish(world, entity)) rebind(world, [entity]);
@@ -258,6 +245,7 @@ export function advanceWorld(world, commands = []) {
     } else if (result.wait) {
       entity.pending = { intent, order: pending?.order ?? world.serial++, since: pending?.since ?? now, reason: result.wait, nav: world.nav };
       trace.waiting.push({ entity: entity.id, reason: result.wait });
+      if (intent.type === "pickUp" && result.wait.code === "wait.item") recordWait(world, entity);
     } else {
       entity.pending = null;
       entity.error = blame(entity, result.error);
@@ -265,12 +253,15 @@ export function advanceWorld(world, commands = []) {
     }
   }
 
-  // 6. Goals, stalled? Then the tick is done.
-  const { met, done } = checkGoals(world, now);
+  // 6. Goals, stalled? Then the tick is done. A trial staged or a reward given
+  // here happens at the boundary after this tick, so the clock says so first:
+  // a move they cancel ends where it has got to in this tick (actions.js).
+  world.tick = now;
+  const { met, passed, done } = checkGoals(world, now);
   trace.goals = met;
+  trace.passed = passed;
   trace.done = done;
   world.stall = stalled(world) ? (world.stall ?? { since: now }) : null;
-  world.tick = now;
   trace.states = world.entities.map((e) => ({ entity: e.id, state: statusOf(e), block: runtimeOf(e)?.active(e) ?? null }));
   return trace;
 }
@@ -297,18 +288,3 @@ function growing(node) {
   return !!node.regrow && count(node.store, item) < node.store.caps[item];
 }
 
-// What an entity is doing, in the plan's terms (PLAN.md §8): "error", "waiting"
-// (for the world, on purpose with Wait N Steps, or at a Wait Until), "moving",
-// "working", "ready" (it has more to do, and goes on next tick) or "stopped"
-// (nothing more to do).
-export function statusOf(entity) {
-  if (entity.error) return "error";
-  const runtime = runtimeOf(entity);
-  if (entity.pending || entity.action?.type === "wait" || runtime?.waiting(entity)) return "waiting";
-  if (entity.action?.type === "move") return "moving";
-  if (entity.action) return "working";
-  return runtime && !runtime.finished(entity) ? "ready" : "stopped";
-}
-
-// Why `entity` stopped or waits, a code with values (codes.js), or null.
-export const reasonOf = (entity) => entity.error ?? entity.pending?.reason ?? runtimeOf(entity)?.waiting(entity) ?? null;

@@ -88,6 +88,7 @@ export function detailsHtml(world, id, entry, words) {
   }
   return `<div class="details">
       <p class="kind">${esc(t(KIND[it.kind]))}</p>
+      ${it.kind === "node" ? `<p class="kind">${esc(t("inspector.resourceNote"))}</p>` : ""}
       <dl>${parts.join("")}</dl>
     </div>`;
 }

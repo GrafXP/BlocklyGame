@@ -73,5 +73,22 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | build (a building, the bar's button) | bauen | “Hier bauen”. |
 | turn (a plan) | drehen | |
 | from the next step | ab dem nächsten Schritt | A change waiting for the next step. |
+| chapter | Kapitel | “Kapitel 1 · Auftrag 3”. |
+| missions (the campaign) | Aufträge | The title page's list, “Alle Aufträge”. |
+| trial (a mission's starting variation) | Versuch | “Versuch 1 geschafft!” |
+| goal | Ziel | The card's list of what must happen. Also a setting's name (*Ziel*, destination), which reads the same. |
+| prediction, guess | “Bevor es losgeht”, “Du meinst: …” | Not *getippt*: a *Tipp* is a hint, and *antippen* is to tap. |
+| tell someone (after success) | erzähl es jemandem | |
+| show me a start, the whole program | zeig mir einen Anfang, das ganze Programm | In the Try hint. |
+| start from nothing | ganz leer anfangen | The editor's button. |
+| play again (a mission done) | noch mal spielen | |
+| free play | freies Spiel | Opens after mission 15. |
+| sandbox | Sandkasten | Free play grown, after mission 25. |
+| supplies (a store's, in the sandbox) | Vorräte, Vorrat | As *stock*. |
+| add a robot | Roboter dazuholen | |
+| Collectors (a team) | Sammel-Team | Robots fetching what their own settings say. |
+| trip (a robot's delivery) | Weg | “Wege von Robo 3”. *Fahrt* would mean a vehicle. |
+| Mission 3: Robo 1 (a mission's program) | Auftrag 3: Robo 1 | |
+| plank courier to the depot | Bretterbote zum Lagerhaus | Free play's, with the bridge built. |
 
 Open: whether the game's name is translated (*Robot Island*, *Roboterinsel*). Both catalogues say “Robot Island” until it's decided, before Phase 9 (PLAN.md §8).

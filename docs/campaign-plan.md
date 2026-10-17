@@ -117,7 +117,7 @@ All numerical goals below refer to the mission's marked order or a change since 
 “Can one Repeat block collect two pieces?”
 
 - **Learn:** Repeat does its inside instructions a chosen number of times.
-- **Setup and support:** Robo 1 starts at the grove. Show the two Collect blocks from mission 5 beside a starter `Repeat 2` with one gap. Keep the count fixed at first.
+- **Setup and support:** Robo 1 starts at the grove. Show one Collect block beside a starter `Repeat 2` with one gap. (Two Collects, as first planned, were one stack: dragging it put both into the loop, and the third Collect waited for room in the basket forever.) Keep the count fixed at first.
 - **Player task:** Put Collect inside Repeat. Travel home is already supplied after the loop.
 - **Success:** Two wood are collected and delivered.
 - **Hint / talk:** “What happens once? How many times should it happen?” Point to each basket space as a round finishes.
@@ -513,7 +513,7 @@ World outcomes decide mission completion. Never require the reference solution's
 The island grows across chapters, but each lesson needs a clear, recoverable starting situation.
 
 1. **Preserve the settlement and the child's work.** Keep a mission-start checkpoint. Restart restores the starting world and resets execution while preserving the child's edited programs, as specified in the project's checkpoint policy. Keep unapplied drafts available too. Offer “Back to starter program” separately.
-2. **Make setup changes visible.** If a lesson stages planks, supplies an order, parks unused helpers, or prepares an isolated trial, show that preparation. Do not silently drain the player's unrelated stores to obtain the exact lesson counts.
+2. **Make setup changes visible.** If a lesson stages planks, supplies an order, parks unused helpers, or prepares an isolated trial, show that preparation. Each mission begins with its resources reset, every building empty and every deposit full, so stage on top of that rather than relying on what an earlier mission left.
 3. **Control who can touch lesson resources.** Especially in missions 16–19, give only the relevant producer/consumer active jobs in the mission setup. A count-comparison lesson should not accidentally become a race for reservations. This does not introduce separate clocks or individual Pause controls.
 4. **Budget the whole chain.** Two kits require four planks and two stone; four kits require eight wood, converted to eight planks, plus four stone. Do not count the same material twice or rely on unknown leftovers. Finite stone supplies need explicit top-ups as the campaign progresses.
 5. **Budget destination space too.** Default baskets stay at two. Explicitly author storage capacities, preloaded amounts, and output room for each mission. When introducing four staged planks, ensure the shelf can hold them; when making kits, provide a compatible kit store.
@@ -538,7 +538,7 @@ This plan was grounded in the [phase 2 findings](phase2.md), [phase 3 findings](
 | Variables, set/change/read, visible local values | 26–30 | Phase 8; values local to each entity, reset predictably on restart |
 | Non-recursive procedures and typed inputs | 31–35 | Phase 8; mission 33 needs a destination input, mission 34 a numeric input |
 | Send, matching Wait For Message, inbox display | 36–38 | Phase 8; explicit receive, next-step delivery, one entry thread, no payload/broadcast requirement for this campaign |
-| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | Phase 7; needed for these lessons even when individual blocks already exist. Phase 5's bridge slice has the first of each: a completed-work goal in the world, a fixed hint ladder, a checkpoint with Start again, a saved game, and `missions.js` text ([phase 5 findings](phase5.md)) |
+| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | In place for missions 1–25 (Phase 7, [phase 7 findings](phase7.md)): goals on completed work with exact orders and trials, hints that answer the problem in view, mission-start checkpoints on one growing island, replays apart from it, unlocks per mission, free play and the sandbox, English and German text, and `verify:missions` |
 
 No mission requires AND/OR, recursion, lists, return values, global variables, message payloads, broadcasts, or child-defined object types. These can become future expansion topics. Nested loops appear only in a small guided example and remain optional in later projects.
 

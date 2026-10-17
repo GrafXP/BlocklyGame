@@ -11,11 +11,16 @@ let shown = null; // the path and query of the page that's showing
 // A page is a function of the element to fill, returning its cleanup, and what
 // names it in the browser's tab: a message, or a function giving the words.
 // Pages other than the title page are fetched when first shown, so it opens
-// without Blockly, Three.js or the world. /play is the bridge slice, the mission
-// "slice" (src/ui/island.js).
+// without Blockly, Three.js or the world. /play is the campaign, at the mission
+// it's at, /replay?mission=… a mission played again, /free free play and the
+// sandbox, and /slice Phase 5's bridge slice (src/ui/island.js); the island
+// page names the tab after the mission once it knows which.
 const routes = {
   "/": { page: home },
-  "/play": { page: lazy(() => import("./ui/island.js"), "play"), title: () => missionText("slice.title") },
+  "/play": { page: lazy(() => import("./ui/island.js"), "play"), title: "campaign.title" },
+  "/replay": { page: lazy(() => import("./ui/island.js"), "replay"), title: "campaign.title" },
+  "/free": { page: lazy(() => import("./ui/island.js"), "free"), title: "free.title" },
+  "/slice": { page: lazy(() => import("./ui/island.js"), "slice"), title: () => missionText("slice.title") },
   "/lab": { page: lazy(() => import("./ui/lab.js"), "lab"), title: "lab.title" },
   "/world": { page: lazy(() => import("./ui/world.js"), "world"), title: "world.title" },
   "/island": { page: lazy(() => import("./ui/island.js"), "island"), title: "island.title" },

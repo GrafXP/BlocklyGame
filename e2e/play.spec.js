@@ -3,11 +3,13 @@ import { SLICE } from "../src/content/missions/slice.js";
 import { stateHash } from "../src/sim/replay.js";
 import { advanceWorld, createWorld } from "../src/sim/world.js";
 
-// The Phase 5 acceptance in a browser (PLAN.md §11): the bridge slice at /play.
-// Pause and Step move every program's marker and highlight together; the bridge
-// is built by programs changed in the editor alone; a reload goes on from the
-// same step; Start again keeps the programs; the hints, the reward and the
-// title page's Start over work, in English and German.
+// The Phase 5 acceptance in a browser (PLAN.md §11): the bridge slice, at /slice
+// since Phase 7 made /play the campaign. Pause and Step move every program's
+// marker and highlight together; the bridge is built by programs changed in the
+// editor alone; a reload goes on from the same step; Start again keeps the
+// programs; the hints and the reward work, in English and German. The title
+// page's saved state and Start over are the campaign's now
+// (e2e/campaign.spec.js).
 
 const frames = (page, n = 2) =>
   page.evaluate(
@@ -42,7 +44,7 @@ const stepUntil = (page, done) =>
   );
 
 async function openPlay(page, query = "") {
-  await page.goto(`/play?dev${query}`);
+  await page.goto(`/slice?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag:not([hidden])"));
   await frames(page);
 }
@@ -189,10 +191,6 @@ test("the bridge is built by programs changed in the editor, and the game goes o
   // The reward: Robo 3 has the stone carrier's job, over the bridge.
   await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveText("Stone carrier, version 1");
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "site").built)).toBe(true);
-
-  // The title page says it's done.
-  await page.getByRole("link", { name: "Home" }).click();
-  await expect(page.locator(".home .saved")).toHaveText("Done!");
 });
 
 test("after a change while the world runs, Start again goes back to the start with the programs as applied", async ({ page }) => {
@@ -233,28 +231,6 @@ test("the hints come one at a time; Look chooses the construction site", async (
   await expect(page.locator(".mission-goal")).toHaveText("Baut zusammen unsere Brücke.");
   await expect(page.locator(".mission-hints li")).toHaveCount(3);
   await expect(page.locator(".mission-hints .hint-look strong")).toHaveText("Schau:");
-});
-
-test("Start over on the title page forgets the saved mission and its programs, after asking", async ({ page }) => {
-  await openPlay(page);
-  await steps(page, 30);
-  await fixPrograms(page);
-  await island(page, () => window.islandPage.save());
-  await page.getByRole("link", { name: "Home" }).click();
-  await expect(page.locator(".home .saved")).toHaveText("Saved at step 30.");
-  await page.getByRole("button", { name: "Start over…" }).click();
-  await expect(page.locator(".start-over .ask")).toBeVisible();
-  await page.getByRole("button", { name: "Keep it" }).click();
-  await expect(page.locator(".start-over .ask")).toBeHidden();
-  await page.getByRole("button", { name: "Start over…" }).click();
-  await page.locator(".start-over .ask").getByRole("button", { name: "Start over" }).click();
-  await expect(page.locator(".home .saved")).toHaveText("");
-  await expect(page.locator(".start-over")).toBeHidden();
-  await page.locator('.home a[href^="/play"]').click();
-  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag:not([hidden])"));
-  expect(await tick(page)).toBe(0);
-  expect(await island(page, () => window.islandPage.game.world.programs.map((p) => p.revision))).toEqual([1, 1, 1, 1, 1]);
-  expect(await island(page, () => localStorage.getItem("robot-island:save.slice"))).not.toBeNull(); // saved afresh
 });
 
 test("Robo 3's program can be edited before it runs, and applying it starts Robo 3", async ({ page }) => {
@@ -353,7 +329,7 @@ test("leaving the mission lets go of everything it made, and saves it on the way
   expect(Object.keys(counts)).toEqual(expect.arrayContaining(["editors", "blocklyWorkspaces"]));
   for (const [what, n] of Object.entries(counts)) expect(n, what).toBe(0);
   expect(await page.evaluate(() => typeof window.islandPage)).toBe("undefined");
-  await expect(page.locator(".home .saved")).toHaveText(/^Saved at step \d+\.$/);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("robot-island:save.slice")).world.tick)).toBeGreaterThan(0);
 });
 
 test("a save the game can't use is let go, and the card says so", async ({ page }) => {

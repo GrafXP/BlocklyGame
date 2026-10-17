@@ -201,16 +201,24 @@ test("a robot given a program starts with an empty basket; a building keeps its 
       nodes: [pile(9)],
       programs: { p: program(wait("w", 3)), q: program(collect("k")), m: program(make("mk")) },
     });
+  // Once it has begun its program, what it carries is that program's load.
   const assigned = fresh();
-  run(assigned, 1, { 1: [{ type: "assign", entity: "r1", program: "q" }] });
+  run(assigned, 1);
+  run(assigned, 1, { 2: [{ type: "assign", entity: "r1", program: "q" }] });
   assert.deepEqual(byId(assigned, "r1").store.items, {}, "assigned");
 
   const published = fresh();
   const mk = { id: "m", revision: 2, ...compile(program(make("mk2"))).program };
   const p2 = { id: "p", revision: 2, ...compile(program(wait("w2", 3))).program };
-  run(published, 1, { 1: [{ type: "publish", program: p2 }, { type: "publish", program: mk }] });
+  run(published, 1);
+  run(published, 1, { 2: [{ type: "publish", program: p2 }, { type: "publish", program: mk }] });
   assert.deepEqual(byId(published, "r1").store.items, {}, "a new revision of its program");
   assert.deepEqual(byId(published, "mill").store.items, { wood: 3 }, "a building keeps its stock");
+
+  // Before it has taken a step, it carries what it was given, and keeps it.
+  const unbegun = fresh();
+  run(unbegun, 1, { 1: [{ type: "assign", entity: "r1", program: "q" }] });
+  assert.deepEqual(byId(unbegun, "r1").store.items, { wood: 2 }, "given a program before its first step");
 
   // Start again from a checkpoint puts the programs in without emptying.
   const checkpoint = fresh();
@@ -237,7 +245,7 @@ test("a parked program takes no steps and counts as stopped; a publish keeps it 
   run(world, 1, { 11: [{ type: "publish", program: p2 }] });
   assert.deepEqual([r1.runtime.revision, r1.runtime.parked, r1.store.items], [2, true, { wood: 1 }], "parked, at the new revision, its basket as it was");
   const [trace] = run(world, 1, { 12: [{ type: "assign", entity: "r1", program: "p" }] });
-  assert.deepEqual([r1.runtime.parked, r1.store.items], [undefined, {}], "started, with an empty basket");
+  assert.deepEqual([r1.runtime.parked, r1.store.items], [undefined, { wood: 1 }], "started, keeping what it was given: it hadn't begun");
   assert.deepEqual(trace.evaluated.map((e) => e.block), ["k2"]);
   // A parked program that has begun is a broken world.
   const broken = createWorld({ id: "test", version: 1, terrain: ["~~~~~~~~~~", "~........~", "~~~~~~~~~~"], entities: [{ ...bot("r1", [5, 1], "p"), parked: true }], nodes: [], programs: [{ id: "p", source: program(wait("w", 3)) }] });

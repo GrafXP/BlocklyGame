@@ -36,8 +36,9 @@ export const LAB_TOOLBOX = {
 // The editor offers only the blocks the robot or building whose program it is
 // can use (PLAN.md §7): a robot's actions to robots, a building's to buildings,
 // and Make only to a building with a recipe. A block's dropdowns start at a
-// choice that fits (choices.js). Mission unlocks narrow this further from
-// Phase 7.
+// choice that fits (choices.js). A mission narrows this further to the blocks
+// it and the missions before it unlocked (src/content/missions/campaign.js),
+// each named by its type, and the If with an else as "controls_if_else".
 
 const can = (type, ability) => TYPES[type]?.can?.includes(ability) ?? false;
 const recipes = (type) => TYPES[type]?.recipes ?? [];
@@ -88,11 +89,16 @@ function startingFields(b, type, builds) {
   return first ? { ...b, fields: { [list[0]]: first[1] } } : b;
 }
 
+// The name a toolbox block's unlock goes by.
+export const unlockName = (b) => (b.type === "controls_if" && b.extraState?.hasElse ? "controls_if_else" : b.type);
+
 // The toolbox for a program run by robots or buildings of `types`: the blocks
 // every one of them can use, in categories; a category with none left out.
-// `builds` is what the construction sites running it build, if they do.
-export function toolboxFor(types, { builds = null } = {}) {
-  const usable = (b) => types.every((type) => USE[b.type]?.(type) ?? true);
+// `builds` is what the construction sites running it build, if they do;
+// `blocks`, when given, the unlocks a mission allows (unlockName).
+export function toolboxFor(types, { builds = null, blocks = null } = {}) {
+  const allowed = blocks && new Set(blocks);
+  const usable = (b) => types.every((type) => USE[b.type]?.(type) ?? true) && (!allowed || allowed.has(unlockName(b)));
   return {
     kind: "categoryToolbox",
     contents: GAME.map(([name, style, blocks]) => category(name, style, blocks.filter(usable).map((b) => (types.length === 1 ? startingFields(b, types[0], builds) : b)))).filter(

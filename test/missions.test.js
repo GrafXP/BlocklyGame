@@ -52,10 +52,21 @@ const withMission = (extra, reward = []) =>
 
 test("a world's mission has its goals unmet until they hold; a world without one has none", () => {
   const world = withMission({ program: "b" });
-  assert.deepEqual(world.mission, { id: "m", goals: [{ id: "bridge", type: "built", at: "site", done: null }], reward: [], done: null });
+  const goal = { id: "bridge", type: "built", at: "site" };
+  assert.deepEqual(world.mission, {
+    id: "m",
+    trials: [{ stage: null, goals: [goal] }],
+    trial: 0,
+    passed: [],
+    goals: [{ ...goal, done: null, failed: null }],
+    tally: { unloads: {}, made: {}, waited: {} },
+    collected: {},
+    reward: [],
+    done: null,
+  });
   assert.deepEqual(checkWorld(world), []);
   assert.equal(tinyWorld().mission, null);
-  assert.deepEqual(checkGoals(tinyWorld(), 1), { met: [], done: false });
+  assert.deepEqual(checkGoals(tinyWorld(), 1), { met: [], passed: null, done: false });
   assert.throws(() => createMission({ id: "m", goals: [{ id: "x", type: "wished" }] }), /no goal type "wished"/);
 });
 
@@ -95,7 +106,7 @@ test("the world's rules hold the mission to its goals", () => {
   assert.ok(checkWorld(unknown).some((p) => /goal/.test(p)));
   const future = withMission({ program: "b" });
   future.mission.goals[0].done = 5;
-  assert.ok(checkWorld(future).some((p) => /goal bridge was met at tick 5/.test(p)));
+  assert.ok(checkWorld(future).some((p) => /goal bridge was met at 5/.test(p)));
 });
 
 // --- The bridge slice ---------------------------------------------------------
@@ -110,7 +121,7 @@ test("the slice starts with the collector and sawmill working, the courier going
   );
   assert.equal(byId(world, "r3").runtime.parked, true);
   assert.equal(byId(world, "r1").runtime.parked, undefined);
-  assert.deepEqual(world.mission.goals, [{ id: "bridge", type: "built", at: "site", done: null }]);
+  assert.deepEqual(world.mission.goals, [{ id: "bridge", type: "built", at: "site", done: null, failed: null }]);
   run(world, 50);
   assert.equal(statusOf(byId(world, "site")), "stopped", "its start block has nothing under it");
   assert.equal(statusOf(byId(world, "r3")), "stopped", "Robo 3 waits for its job");
@@ -226,8 +237,8 @@ test("every mission's words are in the English missions catalogue, and nothing e
   );
 });
 
-test("each mission's reference programs compile for what runs them, and point at things there are", () => {
-  for (const mission of MISSIONS) {
+test("the slice's reference programs compile for what runs them, and point at things there are", () => {
+  for (const mission of [SLICE]) {
     const world = createWorld(mission.content);
     assert.ok(world.entities.some((e) => e.id === mission.look) || world.nodes.some((n) => n.id === mission.look), `${mission.id} looks at ${mission.look}`);
     const library = createLibrary(mission.content.programs);

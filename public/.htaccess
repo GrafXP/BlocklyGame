@@ -1,0 +1,39 @@
+# Apache settings for the built game. Vite copies this file into dist/ on every
+# build. The routes in src/main.js are absolute (/play, /lab, …), so dist/ must
+# be the document root of a domain or subdomain, not a folder inside one.
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+
+AddType image/vnd.microsoft.icon .cur
+AddType image/svg+xml .svg
+AddType audio/mpeg .mp3
+
+RewriteEngine On
+# Hidden files such as this one are never served, and absent ones don't fall
+# through to the game. /.well-known/ stays reachable for certificate renewal.
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule (?:^|/)\. - [F,END]
+# Every other address that isn't a file is a page of the game.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [END]
+
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set X-Frame-Options "DENY"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+    # Blockly's media is served from /blockly-media/ (vite.config.js), and it
+    # injects its CSS at runtime, hence style-src 'unsafe-inline'.
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    # Files under /assets/ have a content hash in their names, so they never
+    # change; everything else is checked on each visit so a new build shows.
+    Header always set Cache-Control "public, max-age=31536000, immutable" "expr=%{REQUEST_URI} =~ m#^/assets/#"
+    Header always set Cache-Control "no-cache" "expr=%{REQUEST_URI} !~ m#^/assets/#"
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>

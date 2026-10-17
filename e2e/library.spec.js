@@ -249,7 +249,7 @@ test("the library makes a new program, names it, and puts away only what nothing
 test("the bridge slice offers none of Phase 6's tools", async ({ page }) => {
   await page.goto("/?dev");
   await page.evaluate(() => localStorage.removeItem("robot-island:save.slice"));
-  await page.goto("/play?dev");
+  await page.goto("/slice?dev");
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag:not([hidden])"));
   await choose(page, "r2");
   await expect(page.locator('[data-panel="library"], [data-build]')).toHaveCount(0);

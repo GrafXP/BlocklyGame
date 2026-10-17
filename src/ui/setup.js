@@ -71,18 +71,20 @@ export function createSetup({ onOpenProgram }) {
     asked = { entity, commands, text: previewText(commands, extra), ...extra };
   }
 
-  // The markup of entity `id`'s setup, or "" when there's nothing to set.
-  // `tools` are which of "library" and "settings" the play offers (session.js);
-  // `now` is the world as it is, to tell what changes at the next step.
+  // The markup of thing `id`'s setup, or "" when there's nothing to set.
+  // `tools` are which of "library", "settings" and "stock" (the sandbox's
+  // supplies) the play offers (session.js); `now` is the world as it is, to
+  // tell what changes at the next step.
   function html(id, tools, now) {
     const world = peekWorld();
     const e = world.entities.find((it) => it.id === id);
-    if (!e) return "";
+    const node = world.nodes.find((it) => it.id === id);
     const parts = [];
     const library = tools.includes("library");
-    if (library) parts.push(programHtml(world, e, now?.entities.find((it) => it.id === id)));
-    if (library && isRobot(e)) parts.push(teamHtml(world, e), nameHtml(e));
-    if (tools.includes("settings") && isRobot(e)) parts.push(settingsHtml(e, now?.entities.find((it) => it.id === id)));
+    if (e && library) parts.push(programHtml(world, e, now?.entities.find((it) => it.id === id)));
+    if (e && library && isRobot(e)) parts.push(teamHtml(world, e), nameHtml(e));
+    if (e && tools.includes("settings") && isRobot(e)) parts.push(settingsHtml(e, now?.entities.find((it) => it.id === id)));
+    if (tools.includes("stock") && (e ?? node)?.store.caps) parts.push(stockHtml(e ?? node));
     if (asked?.entity === id && asked.text) {
       parts.push(
         `<div class="setup-preview" role="status"><p>${esc(asked.text)}</p>` +
@@ -157,6 +159,19 @@ export function createSetup({ onOpenProgram }) {
     });
     const note = pending ? `<p class="setup-note pending">${esc(t("settings.pending"))}</p>` : "";
     return `<fieldset class="settings"><legend>${esc(t("settings.title"))}</legend>${rows.join("")}${note}</fieldset>`;
+  }
+
+  // A building's or deposit's supplies, one more or one fewer of each item it
+  // keeps, in the sandbox; the island page handles the buttons (island.js).
+  function stockHtml(thing) {
+    const rows = ITEMS.filter((item) => thing.store.caps[item]).map((item) => {
+      const n = thing.store.items[item] ?? 0;
+      const name = t(`item.${item}`);
+      const button = (act, sign, off) =>
+        `<button class="button small icon" data-sandbox="${act}" data-at="${esc(thing.id)}" data-item="${item}" aria-label="${esc(t(`sandbox.${act}`, { item: name }))}"${off ? " disabled" : ""}>${sign}</button>`;
+      return `<div class="setup-field stock-field">${picture(item, { size: 20 })}<span>${esc(t("inspector.of", { have: n, cap: thing.store.caps[item] }))}</span>${button("less", "−", n === 0)}${button("more", "+", n >= thing.store.caps[item])}</div>`;
+    });
+    return `<fieldset class="settings"><legend>${esc(t("sandbox.stock"))}</legend>${rows.join("")}</fieldset>`;
   }
 
   return {

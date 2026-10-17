@@ -3,6 +3,7 @@ import { ENGLISH } from "../src/i18n/index.js";
 import { LANGUAGES } from "../src/i18n/languages.js";
 import { NOT_WORDS, UNUSED_BLOCKLY } from "../src/i18n/blockly-unused.js";
 import { overrides as germanOverrides } from "../src/i18n/de/blockly.js";
+import { seedCampaign, solveMission } from "./campaign-seed.js";
 
 // The language checks of PLAN.md §12 that need a browser: the title page and the
 // editor lab in each language, chosen by the browser or by the player; a switch
@@ -193,6 +194,7 @@ test.describe("with a German browser", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "de");
     await expect(page).toHaveTitle("Robot Island");
     await expect(page.locator(".tagline")).toHaveText("Programmiere Roboter und Gebäude und erwecke eine Insel wieder zum Leben.");
+    await page.locator(".grown-ups summary").click();
     await expect(page.getByRole("link", { name: "Editor-Labor" })).toBeVisible();
     await expect(page.getByRole("group", { name: "Sprache" }).getByRole("button", { name: "Deutsch" })).toHaveAttribute("aria-pressed", "true");
 
@@ -344,7 +346,7 @@ async function islandTools(page, query) {
   await frames(page);
 }
 
-// The bridge slice at /play, from its start, as `state` asks: `broken`, a save
+// The bridge slice at /slice, from its start, as `state` asks: `broken`, a save
 // it can't use (the card says so); `fixed`, the courier and the site's programs
 // changed in the editor and applied; `ticks` steps on, or until the mission is
 // `done`; `changed`, the courier applied once more after that (the card offers
@@ -355,7 +357,7 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
     localStorage.removeItem("robot-island:save.slice");
     if (b) localStorage.setItem("robot-island:save.slice", JSON.stringify({ format: "robot-island", schema: 0 }));
   }, broken);
-  await page.goto(`/play?dev${query}`);
+  await page.goto(`/slice?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
   const apply = async () => {
     await page.waitForTimeout(400); // the editor saves its draft
@@ -393,9 +395,55 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
 // What the play page shows in each test of its words.
 const PLAY_STATES = [{ hints: 3 }, { broken: true }, { fixed: true, ticks: 60, changed: true }, { fixed: true, done: true }];
 
-// The title page with the mission saved and Start over asking.
+// The campaign's pages, as `state` asks, from a campaign saved at mission
+// `mission` (campaign-seed.js): `hints` of its ladder showing; with `passed`,
+// its whole program shown and applied and the first trial passed; `stuck`, run
+// until everything waits; `chosen`, a robot or building chosen; `done`, solved;
+// or `replay`, a mission done before played again; or free play grown into
+// the sandbox, with the grove chosen and the new island's layout asked for.
+async function campaignAt(page, query, { mission = "m01", hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false } = {}) {
+  await seedCampaign(page, sandbox ? "m25" : mission, { done: sandbox, query });
+  await page.goto(sandbox ? `/free?dev${query}` : replay ? `/replay?dev${query}&mission=${replay}` : `/play?dev${query}`);
+  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  if (passed) {
+    for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
+    await page.locator('[data-mission="whole"]').click();
+    await page.waitForFunction(() => window.islandPage.panel()?.kind === "editor");
+    await page.waitForTimeout(400);
+    await page.locator('[data-code="apply"]').click();
+    await page.evaluate(() => {
+      window.islandPage.close();
+      const game = window.islandPage.game;
+      while (game.world.mission.trial === 0) game.step();
+    });
+  } else for (let i = 0; i < hints; i++) await page.locator(".mission-hint").click();
+  if (stuck) await page.evaluate(() => {
+    const game = window.islandPage.game;
+    while (!game.world.stall && game.world.tick < 2000) game.step();
+  });
+  if (done) await solveMission(page);
+  if (chosen) await page.evaluate((id) => window.islandPage.select(id), chosen);
+  if (sandbox) {
+    await page.evaluate(() => window.islandPage.select("grove"));
+    await page.locator('[data-sandbox="new"]').click();
+  }
+  await frames(page);
+}
+
+const CAMPAIGN_STATES = [
+  { mission: "m01", hints: 3 },
+  { mission: "m10", stuck: true, hints: 2 },
+  { mission: "m16", passed: true },
+  { mission: "m22", chosen: "r1", hints: 1 },
+  { mission: "m25", done: true },
+  { mission: "m06", replay: "m03" },
+  { sandbox: true },
+];
+
+// The title page with the campaign saved at mission 6, every mission done so
+// far listed, and Start over asking.
 async function homeAsking(page, query) {
-  await page.goto(`/?dev${query}`);
+  await seedCampaign(page, "m06", { query });
   await expect(page.locator(".start-over")).toBeVisible();
   await page.locator('[data-home="ask"]').click();
   await frames(page);
@@ -417,8 +465,10 @@ const islandToolboxBlocks = (page) =>
   });
 
 test("the pseudo-language leaves no text unmarked, on the title page, in the editor or in the world", async ({ page }) => {
+  test.slow(); // every page of the game, the campaign's among them
   await page.goto("/?dev&lang=pseudo");
   await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+  await page.waitForSelector(".home .chapter");
   expect(await page.evaluate(unmarkedText)).toEqual([]);
   await page.locator('.home a[href^="/lab"]').click();
   await editorReady(page, "en-XA");
@@ -463,6 +513,10 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
     await playAt(page, "&lang=pseudo", state);
     expect(await page.evaluate(unmarkedText), `play ${JSON.stringify(state)}`).toEqual([]);
   }
+  for (const state of CAMPAIGN_STATES) {
+    await campaignAt(page, "&lang=pseudo", state);
+    expect(await page.evaluate(unmarkedText), `campaign ${JSON.stringify(state)}`).toEqual([]);
+  }
   await homeAsking(page, "&lang=pseudo");
   expect(await page.evaluate(unmarkedText), "the title page asking to start over").toEqual([]);
 });
@@ -472,8 +526,10 @@ const everyLanguage = [...LANGUAGES.map(({ code }) => [code, `&lang=${code}`]), 
 
 for (const [lang, query] of everyLanguage) {
   test(`no text is cut off or runs off the window (${lang})`, async ({ page }) => {
+    test.slow(); // every page of the game, the campaign's among them
     await page.goto(`/?dev${query}`);
     await expect(page.locator("html")).toHaveAttribute("lang", lang);
+    await page.waitForSelector(".home .chapter");
     expect(await page.evaluate(clippedText)).toEqual([]);
     await page.locator('.home a[href^="/lab"]').click();
     await editorReady(page, lang);
@@ -502,6 +558,10 @@ for (const [lang, query] of everyLanguage) {
     for (const state of PLAY_STATES) {
       await playAt(page, query, state);
       expect(await page.evaluate(clippedText), `play ${JSON.stringify(state)}`).toEqual([]);
+    }
+    for (const state of CAMPAIGN_STATES) {
+      await campaignAt(page, query, state);
+      expect(await page.evaluate(clippedText), `campaign ${JSON.stringify(state)}`).toEqual([]);
     }
     await homeAsking(page, query);
     expect(await page.evaluate(clippedText), "the title page asking to start over").toEqual([]);

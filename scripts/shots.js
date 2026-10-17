@@ -5,19 +5,23 @@
 // the title page and in the lab; programs (docs/phase2.md): the world lab's
 // robots and buildings at their blocks, and the editor marking a program's
 // problems; the island in 3D (docs/phase3.md); the island's editor and debugger
-// (docs/phase4.md); the bridge slice at /play (docs/phase5.md); and teams,
+// (docs/phase4.md); the bridge slice at /slice (docs/phase5.md); teams,
 // settings, copies, the program library and placing the workshop
-// (docs/phase6.md). Builds the app, serves it, and writes to docs/phase0/,
-// docs/languages/, docs/phase2/, docs/phase3/, docs/phase4/, docs/phase5/ and
-// docs/phase6/. Run it after changing how the editor or the island looks: npm
-// run shots, or for some groups only: npm run shots -- languages ipad.
+// (docs/phase6.md); and the campaign, free play and the sandbox
+// (docs/phase7.md). Builds the app, serves it, and writes to docs/phase0/,
+// docs/languages/, docs/phase2/ to docs/phase7/. Run it after changing how the
+// editor or the island looks: npm run shots, or for some groups only: npm run
+// shots -- languages ipad.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { build, preview } from "vite";
 import { chromium, webkit, devices } from "@playwright/test";
 import { LANGUAGES as LISTED, SOURCE } from "../src/i18n/languages.js";
+import { missionStart } from "../src/campaign.js";
+import { CAMPAIGN, campaignMission } from "../src/content/missions/campaign.js";
+import { makeSave } from "../src/storage/saves.js";
 
-const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger", "play", "library"];
+const GROUPS = ["treatments", "opacity", "blur", "dropdowns", "frames", "ipad", "languages", "programs", "island", "debugger", "play", "library", "campaign"];
 const asked = process.argv.slice(2);
 for (const group of asked) if (!GROUPS.includes(group)) throw new Error(`No group "${group}"; there are ${GROUPS.join(", ")}.`);
 const want = (group) => !asked.length || asked.includes(group);
@@ -30,6 +34,7 @@ const PHASE3 = new URL("../docs/phase3/", import.meta.url);
 const PHASE4 = new URL("../docs/phase4/", import.meta.url);
 const PHASE5 = new URL("../docs/phase5/", import.meta.url);
 const PHASE6 = new URL("../docs/phase6/", import.meta.url);
+const PHASE7 = new URL("../docs/phase7/", import.meta.url);
 const PORT = 4178;
 const BEHIND = 3.6; // radians round its circuit: the test robot behind the editor, clear of the trees
 // The game follows the browser's language; the pictures choose theirs.
@@ -42,6 +47,7 @@ mkdirSync(PHASE3, { recursive: true });
 mkdirSync(PHASE4, { recursive: true });
 mkdirSync(PHASE5, { recursive: true });
 mkdirSync(PHASE6, { recursive: true });
+mkdirSync(PHASE7, { recursive: true });
 
 await build({ logLevel: "warn" });
 const server = await preview({ preview: { port: PORT, strictPort: true }, logLevel: "warn" });
@@ -267,7 +273,7 @@ if (want("debugger")) {
 // `hints` of its hints showing, and `panel` open on the left.
 async function openPlay(browser, { context = DESKTOP, lang = "en", fixed = false, ticks = 0, chosen = null, hints = 0, panel = null } = {}) {
   const page = await (await browser.newContext(context)).newPage();
-  await page.goto(`${base}/play?dev&lang=${lang}`);
+  await page.goto(`${base}/slice?dev&lang=${lang}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
   if (fixed) await fixSlice(page);
   for (let i = 0; i < hints; i++) await page.click(".mission-hint");
@@ -405,7 +411,109 @@ if (want("library")) {
   await shop.waitForTimeout(900);
   await shot(shop, "workshop-en", PHASE6);
 }
+// The campaign (docs/phase7.md): a page of the campaign saved at mission
+// `mission` (every mission before it done, and it too with `done`), in `lang`:
+// the title page with its missions listed (`home`), a mission at /play, a
+// replay of mission `replay`, or free play (`free`). Then `hints` of the hint
+// ladder, its first prediction pointed at `guess`, the program `panel` open,
+// `run` until the world stalls, the first trial passed (`passed`, by the whole
+// program the hint shows), `solved`, and `chosen` selected.
+async function openCampaign(browser, opts = {}) {
+  const { context = DESKTOP, lang = "en", mission = "m01", done = false, home = false, replay = null, free = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
+  const page = await (await browser.newContext(context)).newPage();
+  const m = campaignMission(mission);
+  const library = { programs: [] };
+  const world = missionStart(m, library);
+  const completed = CAMPAIGN.slice(0, m.n - (done ? 0 : 1)).map((it) => it.id);
+  const save = makeSave({ content: { id: "campaign", version: 1 }, mission, world, library, checkpoint: world, progress: { completed } });
+  await page.goto(`${base}/?dev&lang=${lang}`);
+  await page.evaluate((text) => {
+    localStorage.clear();
+    localStorage.setItem("robot-island:save.campaign", text);
+  }, JSON.stringify(save));
+  if (home) {
+    await page.goto(`${base}/?dev&lang=${lang}`);
+    await page.waitForSelector(".home .chapter");
+    await page.waitForTimeout(400);
+    return page;
+  }
+  await page.goto(`${base}/${free ? "free" : replay ? "replay" : "play"}?dev&lang=${lang}${replay ? `&mission=${replay}` : ""}`);
+  await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  if (guess) {
+    await page.click('[data-mission="point"]');
+    await page.evaluate((id) => window.islandPage.select(id), guess);
+  }
+  if (passed) {
+    for (let i = 0; i < 3; i++) await page.click(".mission-hint");
+    await page.click('[data-mission="whole"]');
+    await page.waitForFunction(() => window.islandPage.panel()?.kind === "editor");
+    await page.waitForTimeout(400);
+    await page.click('[data-code="apply"]');
+    await page.evaluate(() => {
+      window.islandPage.close();
+      const game = window.islandPage.game;
+      while (game.world.mission.trial === 0) game.step();
+    });
+  }
+  if (run) await page.evaluate(() => {
+    const game = window.islandPage.game;
+    while (!game.world.stall && game.world.tick < 2000) game.step();
+  });
+  if (solved) await solveCampaignMission(page, m);
+  for (let i = 0; i < hints; i++) await page.click(".mission-hint");
+  if (chosen) await page.evaluate((id) => window.islandPage.select(id), chosen);
+  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
+  await page.waitForTimeout(900);
+  return page;
+}
+// Mission `m`'s reference solution, applied as the editor applies programs,
+// and steps until it's done.
+async function solveCampaignMission(page, m) {
+  for (const [program, source] of Object.entries(m.reference.programs ?? {})) {
+    if (!(await page.evaluate((p) => window.islandPage.library().programs.some((d) => d.id === p), program))) continue;
+    await page.evaluate((p) => window.islandPage.open("editor", p), program);
+    await page.evaluate((s) => window.islandPage.editor().load(s), source);
+    await page.waitForTimeout(400);
+    await page.click('[data-code="apply"]');
+  }
+  await page.evaluate((commands) => {
+    window.islandPage.close();
+    window.islandPage.choose(commands);
+    const game = window.islandPage.game;
+    while (game.world.mission.done === null && game.world.tick < 3000) game.step();
+  }, m.reference.commands ?? []);
+}
+if (want("campaign")) {
+  console.log("The campaign:");
+  const fresh = await (await browser.newContext(DESKTOP)).newPage();
+  await fresh.goto(`${base}/?dev&lang=en`);
+  await fresh.evaluate(() => localStorage.clear());
+  await fresh.goto(`${base}/?dev&lang=en`);
+  await fresh.waitForTimeout(500);
+  await shot(fresh, "home-en", PHASE7);
+  await shot(await openCampaign(browser, { lang: "de", mission: "m16", home: true }), "home-missions-de", PHASE7);
+  await shot(await openCampaign(browser, { guess: "grove" }), "m01-guess-en", PHASE7);
+  await shot(await openCampaign(browser, { panel: ["editor", "m01"] }), "m01-editor-en", PHASE7);
+  await shot(await openCampaign(browser, { solved: true }), "m01-done-en", PHASE7);
+  await shot(await openCampaign(browser, { mission: "m08", run: true, hints: 2 }), "m08-full-en", PHASE7);
+  for (const lang of ["en", "de"]) await shot(await openCampaign(browser, { lang, mission: "m16", passed: true }), `m16-trial-${lang}`, PHASE7);
+  await shot(await openCampaign(browser, { mission: "m05", hints: 3 }), "m05-hints-en", PHASE7);
+  await shot(await openCampaign(browser, { lang: "de", mission: "m22", chosen: "r1" }), "m22-settings-de", PHASE7);
+  await shot(await openCampaign(browser, { mission: "m25", solved: true, chosen: "workshop" }), "m25-done-en", PHASE7);
+  await shot(await openCampaign(browser, { mission: "m06", replay: "m03" }), "replay-en", PHASE7);
+  await shot(await openCampaign(browser, { mission: "m16", free: true, chosen: "r1" }), "free-en", PHASE7);
+  const sandbox = await openCampaign(browser, { mission: "m25", done: true, free: true, chosen: "grove" });
+  await sandbox.click('[data-sandbox="new"]');
+  await sandbox.waitForTimeout(300);
+  await shot(sandbox, "sandbox-en", PHASE7);
+}
 await browser.close();
+
+if (want("campaign")) {
+  const safari = await webkit.launch();
+  await shot(await openCampaign(safari, { context: IPAD, mission: "m16", passed: true }), "m16-ipad", PHASE7);
+  await safari.close();
+}
 
 if (want("library")) {
   const safari = await webkit.launch();

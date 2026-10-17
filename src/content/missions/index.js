@@ -1,10 +1,26 @@
+import { CAMPAIGN } from "./campaign.js";
 import { SLICE } from "./slice.js";
 
-// The missions there are (PLAN.md §9; docs/campaign-plan.md). For now the bridge
-// slice of Phase 5; the campaign's chapters come with Phase 7, a folder each.
-export const MISSIONS = [SLICE];
+// The missions there are (PLAN.md §9; docs/campaign-plan.md): the campaign's,
+// chapters 1–5 (campaign.js), and Phase 5's bridge slice, mission 15 played on
+// its own, kept for its playtest.
+export const MISSIONS = [SLICE, ...CAMPAIGN];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id) ?? null;
 
-// The keys of mission `mission`'s words in missions.js.
-export const missionKeys = ({ id }) => ["title", "goal", "progress", "hint.look", "hint.think", "hint.try", "reward"].map((part) => `${id}.${part}`);
+// The keys of mission `mission`'s words in missions.js: its title, goal, three
+// hints and reward; a campaign mission's setup (what's new when it begins),
+// the explanation it asks for after success, the prediction it asks for before
+// Run, each trial's starting variation, and the question for each problem its
+// hints answer; the slice's progress.
+export function missionKeys(mission) {
+  const parts = ["title", "goal", "hint.look", "hint.think", "hint.try", "reward"];
+  if (mission === SLICE) parts.push("progress");
+  else {
+    parts.push("setup", "explain");
+    if (mission.predict) parts.push("predict");
+    if (mission.trials?.length > 1) mission.trials.forEach((_, i) => parts.push(`trial.${i + 1}`));
+    for (const { key } of mission.problems ?? []) parts.push(`problem.${key}`);
+  }
+  return parts.map((part) => `${mission.id}.${part}`);
+}

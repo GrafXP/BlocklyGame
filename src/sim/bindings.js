@@ -53,9 +53,11 @@ export function stop(world, entity) {
 // A robot's basket emptied, once its action is stopped and its holds let go. A
 // robot given a program starts with an empty basket (docs/phase5.md), so its
 // program starts as it would at the beginning, not stuck with a load it never
-// asked for.
+// asked for. A robot that hasn't taken a step of the program it had keeps what
+// it carries: that's what its mission gave it, like the wood Robo 1 brings home
+// in mission 3, not a load a program picked up (docs/phase7.md).
 export function emptyBasket(entity) {
-  if (entity.kind === "robot") entity.store.items = {};
+  if (entity.kind === "robot" && entity.runtime?.evaluated) entity.store.items = {};
 }
 
 // Gives `entity` the program it resolves to, from its start, in place of what

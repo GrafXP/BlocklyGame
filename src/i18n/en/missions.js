@@ -1,16 +1,22 @@
-// The missions' words in English, the source language (PLAN.md §8, §9): each
-// mission's title, its goal in one short sentence, how far along it is, its
-// three hints and its reward, keyed by mission id (src/content/missions/).
-// Every other language has these keys, with the same {name} placeholders.
+// The missions' words in English, the source language (PLAN.md §8, §9), keyed
+// by mission id (src/content/missions/). Every other language has these keys,
+// with the same {name} placeholders. For each mission:
 //
-// The hints go from looking, to thinking, to trying (docs/campaign-plan.md,
-// “A consistent hint ladder”). Block words in quotes are the blocks' own, as
-// the editor shows them (blocks.js).
+// - title, and goal: the goal in one short sentence;
+// - setup: what's new when it begins, so the child sees what was prepared;
+// - predict: a question before Run, answered by saying or pointing, or skipped;
+// - explain: a question after success, to talk about, or skip;
+// - hint.look, hint.think, hint.try: the hint ladder, from looking, to
+//   thinking, to trying (docs/campaign-plan.md, “A consistent hint ladder”);
+// - problem.<key>: the Think hint when that problem is in view;
+// - trial.<n>: what's different in each trial, as the card lists them;
+// - reward: what happened, when it's done.
+//
+// Write for children of 7 to 9: short sentences, the glossary's words
+// (docs/glossary.md). Block words in quotes are the blocks' own, as the editor
+// shows them (blocks.js, and Blockly's “repeat”, “if”, “else”).
 export default {
-  // The bridge slice: mission 15 of the campaign. Robo 1 brings wood to the
-  // sawmill, which makes planks; Robo 2 carries planks on, to the depot until
-  // the player sends them to the construction site, which builds the bridge
-  // from four.
+  // The bridge slice: mission 15 of the campaign, played on its own (Phase 5).
   "slice.title": "Across the Stream",
   "slice.goal": "Work together to build our bridge.",
   // For screen readers, beside pictures of the four planks the bridge needs.
@@ -19,4 +25,268 @@ export default {
   "slice.hint.think": "Follow one piece of wood all the way to the bridge. Where does Robo 2 take the planks?",
   "slice.hint.try": "Change Robo 2's “go to” after the pickups to the construction site, and apply. Then put “build bridge” under the construction site's start block, and apply that too.",
   "slice.reward": "The bridge is open! Robo 3 is crossing the stream to fetch stone.",
+
+  // --- Chapter 1: Hello, Helper! ---------------------------------------------
+  "m01.title": "Hello, Helper!",
+  "m01.goal": "Help Robo 1 find the grove.",
+  "m01.setup": "Robo 1 is at the camp. Its program has only a start block.",
+  "m01.predict": "Where will Robo 1 go? Point to it.",
+  "m01.explain": "Tell someone what your block told Robo 1 to do.",
+  "m01.hint.look": "Look at Robo 1's program: press “Open the program”.",
+  "m01.hint.think": "Which block makes a robot walk somewhere? Where must it go, so that it runs?",
+  "m01.hint.try": "Put “go to grove” under “when started”. Press Apply, then Run.",
+  "m01.reward": "Robo 1 found the grove!",
+
+  "m02.title": "One Piece of Wood",
+  "m02.goal": "Put one piece of wood in the basket.",
+  "m02.setup": "Robo 1 is beside the grove. Its basket is empty, with room for two things.",
+  "m02.predict": "What will be in Robo 1's basket when it's done? Say it, then press Run.",
+  "m02.explain": "What changed when Robo 1 collected? What stayed the same?",
+  "m02.hint.look": "Look at Robo 1's basket in its row.",
+  "m02.hint.think": "The robot is already beside the wood. Which block takes one piece?",
+  "m02.hint.try": "Put “collect wood” under “when started”. Apply, then Run.",
+  "m02.reward": "One piece of wood is in the basket.",
+
+  "m03.title": "Bring It Home",
+  "m03.goal": "Bring your wood back to the camp.",
+  "m03.setup": "Robo 1 is at the grove with one piece of wood in its basket.",
+  "m03.predict": "Where must Robo 1 be before it can unload? Point to it.",
+  "m03.explain": "Say your blocks from top to bottom. Why does the order matter?",
+  "m03.hint.look": "Look at the two blocks lying below the start block. They aren't joined to it yet.",
+  "m03.hint.think": "Where must the robot be before it can unload?",
+  "m03.hint.try": "Put “go to camp” under “when started”, and “unload basket” under it. Apply and run.",
+  "m03.reward": "The wood is at the camp, and Robo 1's basket is empty again.",
+
+  "m04.title": "The Mixed-Up Instructions",
+  "m04.goal": "Something is in the wrong place. Help Robo 1 fix it.",
+  "m04.setup": "Robo 1 is at the camp with an empty basket. Its program has every block it needs, but one is in the wrong place.",
+  "m04.predict": "What will Robo 1 do first? Say it, then press Step.",
+  "m04.explain": "Which block was in the wrong place, and how did you find it?",
+  "m04.hint.look": "Press Step, and watch which block Robo 1 is at when it stops.",
+  "m04.hint.think": "Which instruction needs the robot to be at the grove?",
+  "m04.hint.try": "Move “collect wood” so that it comes after “go to grove”. Apply, then Run. “Next block” skips through a long walk.",
+  "m04.problem.place": "Robo 1 tried to collect at the camp. Where does it need to be first?",
+  "m04.reward": "Fixed! One piece of wood reached the camp.",
+
+  "m05.title": "Camp Is Ready",
+  "m05.goal": "Bring two pieces of wood to the camp.",
+  "m05.setup": "Robo 1 is at the camp with an empty basket. This time the whole program is yours to make.",
+  "m05.explain": "Tell someone your instructions in order, from the start block down.",
+  "m05.hint.look": "Look at the pictures: the grove, two pieces of wood, the camp.",
+  "m05.hint.think": "What does Robo 1 do first, and what does it do last?",
+  "m05.hint.try": "Go to the grove, collect twice, go to the camp, and unload. Two trips of one piece work too.",
+  "m05.reward": "The camp has its first supplies!",
+
+  // --- Chapter 2: Do It Again --------------------------------------------------
+  "m06.title": "Again, Please!",
+  "m06.goal": "Collect two pieces with one “repeat” block.",
+  "m06.setup": "Robo 1 is at the grove. Its program has “repeat 2 times” with a gap, and the trip home after it.",
+  "m06.predict": "How many times will Robo 1 collect? Say it, then Run.",
+  "m06.explain": "What happened once? How many times did it happen?",
+  "m06.hint.look": "Look at the gap in “repeat 2 times”: nothing is in it yet.",
+  "m06.hint.think": "What should happen once? How many times should it happen?",
+  "m06.hint.try": "Put the “collect wood” into the gap of “repeat”.",
+  "m06.reward": "One block, two pieces of wood!",
+
+  "m07.title": "A Whole Trip Again",
+  "m07.goal": "Bring three pieces, one trip at a time.",
+  "m07.setup": "Robo 1 is at the camp. Its program makes one whole trip. A “repeat 3 times” lies below it.",
+  "m07.predict": "How many trips will Robo 1 make with the program as it is? Say it.",
+  "m07.explain": "Which blocks happen on every trip?",
+  "m07.hint.look": "Watch one trip: Robo 1 walks, collects, walks back and unloads.",
+  "m07.hint.think": "Which parts must happen on every trip?",
+  "m07.hint.try": "Put the whole trip, from “go to grove” to “unload basket”, inside “repeat 3 times”, and put the repeat under the start block.",
+  "m07.reward": "Three trips, three pieces of wood!",
+
+  "m08.title": "Two Basket Spaces",
+  "m08.goal": "Bring four pieces without overfilling the basket.",
+  "m08.setup": "Robo 1 is at the camp with an empty basket. Its program collects three times on every trip.",
+  "m08.predict": "What will happen at the third “collect”? Say it, then Run.",
+  "m08.explain": "Why did Robo 1 wait at the third “collect”?",
+  "m08.hint.look": "Look at Robo 1's basket when it stops. How many spaces are full?",
+  "m08.hint.think": "A basket holds two things. How many can one trip bring?",
+  "m08.hint.try": "Take one “collect wood” out of the repeat, so that every trip collects two.",
+  "m08.problem.full": "The basket is full. What must happen before another collection?",
+  "m08.reward": "Four pieces, in two full baskets!",
+
+  "m09.title": "A Repeat Inside a Repeat",
+  "m09.goal": "Make two trips, with two pieces on each trip.",
+  "m09.setup": "Robo 1 is at the camp. The trips are ready, but the collecting is missing. A “repeat 2 times” and a “collect wood” lie below.",
+  "m09.predict": "How many pieces will Robo 1 collect on each trip? Say it.",
+  "m09.explain": "Which repeat counts the trips, and which counts the pieces?",
+  "m09.hint.look": "Look at the gap between “go to grove” and “go to camp”.",
+  "m09.hint.think": "Two pieces for this trip, then the next trip begins. Which repeat does which?",
+  "m09.hint.try": "Put “collect wood” inside the small repeat, then put the small repeat between “go to grove” and “go to camp”.",
+  "m09.reward": "A repeat inside a repeat: two trips, two pieces each!",
+
+  "m10.title": "The Loop Detective",
+  "m10.goal": "Robo 1 collects wood but never brings it home. Find out why.",
+  "m10.setup": "Robo 1 is at the camp. Its program should make three trips, with one piece on each.",
+  "m10.explain": "What was repeated, and what was left until the very end?",
+  "m10.hint.look": "Run it, and look at the basket when Robo 1 stops.",
+  "m10.hint.think": "What is repeated? What is left until the very end?",
+  "m10.hint.try": "Move “go to camp” and “unload basket” inside the repeat, after “collect wood”.",
+  "m10.problem.full": "The basket is full, and Robo 1 is still in the loop. Is the way home inside the repeat?",
+  "m10.reward": "Case solved! Three deliveries reached the camp. Here is your delivery badge.",
+
+  // --- Chapter 3: A Working Island ------------------------------------------
+  "m11.title": "Wake Up the Sawmill",
+  "m11.goal": "Turn one piece of wood into a plank.",
+  "m11.setup": "The sawmill is here! It has one piece of wood. Its program has only a start block.",
+  "m11.predict": "Who will do the making? Point to it.",
+  "m11.explain": "Who made the plank, and what did it use?",
+  "m11.hint.look": "Look at the sawmill. Open its program.",
+  "m11.hint.think": "Which thing does the making: a robot, or the sawmill?",
+  "m11.hint.try": "Put “make planks” under the sawmill's start block. Apply and run. Making takes a while: the block stays lit.",
+  "m11.reward": "The sawmill is awake! It made its first plank.",
+
+  "m12.title": "The Plank Courier",
+  "m12.goal": "Take two planks from the sawmill to the depot.",
+  "m12.setup": "The depot is here. The sawmill has two planks ready, and Robo 1 is at the camp.",
+  "m12.predict": "Where will the planks end up? Point to it.",
+  "m12.explain": "What's the difference between “collect” and “pick up”?",
+  "m12.hint.look": "Look at the gap in “repeat 2 times”.",
+  "m12.hint.think": "“Collect” finds raw materials. Which block takes something a building has made?",
+  "m12.hint.try": "Put “pick up planks” into the repeat. Apply and run.",
+  "m12.reward": "Two planks are at the depot.",
+
+  "m13.title": "Two Jobs at Once",
+  "m13.goal": "Bring wood while the sawmill gets ready to make planks.",
+  "m13.setup": "The sawmill is empty, and its program is ready to make two planks. Robo 1's program brings two pieces of wood, but to the camp.",
+  "m13.predict": "Who can bring the sawmill its wood? Point to it.",
+  "m13.explain": "When you pressed Step, which programs moved?",
+  "m13.hint.look": "Look at the sawmill's row. What is it waiting for?",
+  "m13.hint.think": "The sawmill is waiting for wood. Who can bring it?",
+  "m13.hint.try": "In Robo 1's program, change “go to camp” to “go to sawmill”. Apply and run, then pause and open “All programs”.",
+  "m13.problem.hungry": "The sawmill is waiting for wood. Where is Robo 1 taking its wood?",
+  "m13.reward": "Two jobs at once: wood in, planks out!",
+
+  "m14.title": "Keep It Going",
+  "m14.goal": "Keep bringing wood while your friends make planks and carry them.",
+  "m14.setup": "Robo 2 is here to carry planks! The sawmill and Robo 2 work again and again. Robo 1's program makes one trip.",
+  "m14.predict": "What will happen after Robo 1's first trip? Say it.",
+  "m14.explain": "When you pressed Pause, did everyone stop together?",
+  "m14.hint.look": "Watch Robo 1 after its first trip: it stops. Soon the sawmill waits too.",
+  "m14.hint.think": "What should happen after this delivery?",
+  "m14.hint.try": "Put Robo 1's whole trip inside “forever”. Apply and run. A worker waiting for supplies can still be doing the right job.",
+  "m14.reward": "The planks keep coming: four reached the depot!",
+
+  "m15.title": "Across the Stream",
+  "m15.goal": "Work together to build our bridge.",
+  "m15.setup": "The construction site needs four planks for the bridge. Robo 2 still takes its planks to the depot, and “build bridge” lies beside the site's start block. Robo 3 waits at the camp.",
+  "m15.explain": "Follow one piece of wood all the way to the bridge, and tell someone.",
+  "m15.hint.look": "Look at the construction site. What does it need, and who brings it?",
+  "m15.hint.think": "Follow one piece of wood all the way to the bridge. Where does Robo 2 take the planks?",
+  "m15.hint.try": "Change Robo 2's “go to depot” to the construction site, and apply. Then put “build bridge” under the site's start block, and apply that too.",
+  "m15.reward": "The bridge is open! Robo 3 is crossing the stream to fetch stone. Free play is open too.",
+
+  // --- Chapter 4: Look Before You Act ---------------------------------------
+  "m16.title": "How Many Are Ready?",
+  "m16.goal": "Look at the sawmill's stock, and take what is ready.",
+  "m16.setup": "Robo 2 waits at the sawmill, and only Robo 2 has a job. There are two trials: first one plank on the shelf, then two.",
+  "m16.trial.1": "One plank at the sawmill",
+  "m16.trial.2": "Two planks at the sawmill",
+  "m16.predict": "How many times will Robo 2 pick up in the first trial? Say it.",
+  "m16.explain": "Where did the number in “repeat” come from?",
+  "m16.hint.look": "Look at the sawmill's shelf, and at “planks at sawmill” lying below the program.",
+  "m16.hint.think": "The number comes from the shelf. How can the repeat ask the shelf?",
+  "m16.hint.try": "Put “planks at sawmill” into the number gap of “repeat”. The repeat reads it once, when the loop starts.",
+  "m16.problem.fewer": "Robo 2 is waiting for a plank that isn't there. How many were on the shelf?",
+  "m16.reward": "Right both times: Robo 2 took exactly what was ready.",
+
+  "m17.title": "Only When We Need It",
+  "m17.goal": "Make a plank only when the shelf has fewer than two.",
+  "m17.setup": "The sawmill has wood, and only the sawmill has a job. Trial one: one plank on the shelf. Trial two: two planks.",
+  "m17.trial.1": "One plank on the shelf: make one more",
+  "m17.trial.2": "Two planks on the shelf: make none",
+  "m17.predict": "Will the sawmill make a plank in the first trial? And in the second?",
+  "m17.explain": "How did the sawmill decide whether to make a plank?",
+  "m17.hint.look": "Look at the condition in “if”: planks at sawmill < 2.",
+  "m17.hint.think": "Is the shelf below the line? What should happen only then?",
+  "m17.hint.try": "Put “make planks” inside “if”, under its condition. One “if” checks once.",
+  "m17.reward": "The sawmill makes planks only when they're needed.",
+
+  "m18.title": "This Job or That Job",
+  "m18.goal": "If the sawmill has a plank, take it to the depot. If not, bring the sawmill wood.",
+  "m18.setup": "Robo 2 is at the camp, and only Robo 2 has a job. Trial one: one plank at the sawmill. Trial two: none.",
+  "m18.trial.1": "One plank at the sawmill",
+  "m18.trial.2": "No planks at the sawmill",
+  "m18.predict": "Which path will run in the first trial? And in the second?",
+  "m18.explain": "Which path ran each time, and why?",
+  "m18.hint.look": "Look at “else”: it's empty. The trip with wood lies below.",
+  "m18.hint.think": "Which path will run this time? What should Robo 2 do when there's no plank?",
+  "m18.hint.try": "Put the wood trip, from “go to grove” to “unload basket”, into “else”.",
+  "m18.reward": "One check, and the right job each time!",
+
+  "m19.title": "Wait for a Full Load",
+  "m19.goal": "Wait until two planks are ready, then take both.",
+  "m19.setup": "Robo 2 is at the camp. The sawmill makes two planks, one after the other. In the second trial it starts later.",
+  "m19.trial.1": "The sawmill starts at once",
+  "m19.trial.2": "The sawmill starts later",
+  "m19.predict": "When should Robo 2 set off for the sawmill?",
+  "m19.explain": "What had to be true before the trip started?",
+  "m19.hint.look": "Watch Robo 2 at the sawmill. Does it stand there, waiting for planks?",
+  "m19.hint.think": "What should be true before the trip starts?",
+  "m19.hint.try": "Put “wait until planks at sawmill ≥ 2” above “go to sawmill”.",
+  "m19.problem.early": "Robo 2 got there too early and had to wait. What should it wait for, and where?",
+  "m19.reward": "Robo 2 waited for a full load, both times.",
+
+  "m20.title": "Just Enough Planks",
+  "m20.goal": "Keep two planks ready when Robo 2 takes some away.",
+  "m20.setup": "Robo 1 brings wood. Robo 2 will take one plank away, twice, once two are ready. The sawmill has an empty “forever”; an “if” and “make planks” lie below.",
+  "m20.explain": "When did the sawmill look at its shelf again?",
+  "m20.hint.look": "Look at the sawmill's shelf after Robo 2 takes a plank.",
+  "m20.hint.think": "When does the program look again? What should it check each time?",
+  "m20.hint.try": "Put “make planks” inside “if”, and put the “if” inside “forever”.",
+  "m20.reward": "Two planks are always ready: the island keeps a reserve!",
+
+  // --- Chapter 5: Give Everyone a Job ---------------------------------------
+  "m21.title": "Two Helpers, One Plan",
+  "m21.goal": "Give both helpers the same stone job.",
+  "m21.setup": "Robo 1 and Robo 3 are on the Stone team. A stone carrier program is in Programs, but nobody runs it yet.",
+  "m21.predict": "Will both robots always be at the same block? Say what you think.",
+  "m21.explain": "They shared the instructions. Were they always at the same block?",
+  "m21.hint.look": "Open Programs, and find the stone carrier.",
+  "m21.hint.think": "How can one program reach both robots on the Stone team?",
+  "m21.hint.try": "In Programs, press “Give to…” at the stone carrier, choose “Team: Stone team”, and press OK.",
+  "m21.reward": "One plan, two helpers: four stones reached the depot.",
+
+  "m22.title": "Same Plan, Different Places",
+  "m22.goal": "One helper brings wood. The other brings stone.",
+  "m22.setup": "Robo 1 and Robo 3 share the Collector program. It uses “my source”, “my item” and “my destination”, but nothing is chosen in their settings yet.",
+  "m22.predict": "What will happen while nothing is chosen? Say it.",
+  "m22.explain": "The plan was the same. Which choices belonged to each robot?",
+  "m22.hint.look": "Tap Robo 1, and look at its settings.",
+  "m22.hint.think": "The plan is the same. Which choices belong to this robot?",
+  "m22.hint.try": "Give Robo 1 the grove, wood and the depot. Give Robo 3 the stone pit, stone and the depot.",
+  "m22.reward": "Same plan, different jobs: wood and stone at the depot.",
+
+  "m23.title": "One Edit Helps Everyone",
+  "m23.goal": "Teach both collectors to carry two pieces on a trip.",
+  "m23.setup": "Robo 1 and Robo 3 share the Collector again, with their settings. It collects one piece on each trip.",
+  "m23.predict": "If you change the program once, who will it change for?",
+  "m23.explain": "Who used your change? Did you have to make it twice?",
+  "m23.hint.look": "Open the Collector program. The editor says who Apply changes it for.",
+  "m23.hint.think": "Who will use this change?",
+  "m23.hint.try": "Put “collect my item” inside “repeat 2 times”, and apply once.",
+  "m23.reward": "One edit, and both helpers carry full baskets!",
+
+  "m24.title": "A Special Job for One",
+  "m24.goal": "Keep one collector working. Give Robo 3 a job of one trip.",
+  "m24.setup": "Robo 1 and Robo 3 share a Collector that works forever.",
+  "m24.predict": "If you change the shared program, who will change?",
+  "m24.explain": "Was your change for everyone, or just for Robo 3?",
+  "m24.hint.look": "Tap Robo 3, and look at where its program comes from.",
+  "m24.hint.think": "Is this change for everyone, or just for this helper?",
+  "m24.hint.try": "Tap Robo 3 and choose “Make its own copy”. In the copy, take the trip out of “forever” and throw “forever” away. Apply.",
+  "m24.reward": "Robo 3 made its one trip, and Robo 1 kept working.",
+
+  "m25.title": "Our First Workshop",
+  "m25.goal": "Bring the workshop what it needs to make two kits.",
+  "m25.setup": "The workshop is open! One kit takes two planks and one stone. The sawmill has four planks ready, and the stone pit has stone. A plank courier and a stone carrier are in Programs.",
+  "m25.explain": "How did each piece of the recipe reach the workshop?",
+  "m25.hint.look": "Look at the workshop. What does one kit need?",
+  "m25.hint.think": "Can all three pieces of a kit fit in one basket?",
+  "m25.hint.try": "Give Robo 2 the plank courier and Robo 3 the stone carrier, and send them both to the workshop.",
+  "m25.reward": "The workshop made its first kits! The sandbox is open.",
 };

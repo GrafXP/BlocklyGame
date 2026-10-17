@@ -8,6 +8,8 @@ import { bindWorldInput } from "../render/input.js";
 import { createIslandView } from "../render/island-view.js";
 import { createMeter } from "../render/meter.js";
 import { QUALITIES } from "../render/stage.js";
+import { LAYOUT, LAYOUT_CHOICES } from "../content/free.js";
+import { nextMission } from "../content/missions/campaign.js";
 import { FACINGS, layout } from "../sim/placement.js";
 import { RECIPES } from "../sim/recipes.js";
 import { stateHash } from "../sim/replay.js";
@@ -17,14 +19,33 @@ import { loadLocal, saveLocal } from "../storage/local.js";
 import { blockIcon } from "./chips.js";
 import { bindClock, clockMarkup, showClock } from "./clock.js";
 import { amounts, describeReason } from "./describe.js";
-import { esc, html, isDev } from "./dom.js";
+import { esc, go, html, isDev } from "./dom.js";
 import { openEditor } from "./editor.js";
 import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
 import { createLibraryPanel } from "./library.js";
 import { createMissionCard } from "./mission.js";
 import { createOverview } from "./overview.js";
-import { blockOf, blueprints, checkPlace, currentLibrary, dismissNotice, libraryChanges, newGame, peekWorld, placeBuilding, savePlay, tools, usePlay } from "./session.js";
+import {
+  addRobot,
+  blockOf,
+  blueprints,
+  checkPlace,
+  choose,
+  currentLibrary,
+  dismissNotice,
+  libraryChanges,
+  newFreeIsland,
+  newGame,
+  nextCampaignMission,
+  peekWorld,
+  placeBuilding,
+  rules,
+  savePlay,
+  setStock,
+  showProgram,
+  usePlay,
+} from "./session.js";
 import { createSetup } from "./setup.js";
 import { entryIn, takeSnapshot } from "./snapshot.js";
 import { declutter } from "./tags.js";
@@ -76,9 +97,20 @@ const VIEW_BUTTONS = [
 // the start, for this visit.
 export const island = (el) => islandPage(el, "island");
 
+// The campaign (PLAN.md §9, §11 Phase 7): the mission it's at, saved on the
+// device as it's played.
+export const play = (el) => islandPage(el, "campaign");
+
+// A mission done before, played again on its own: the one the address names
+// (?mission=m03), or the replay in hand.
+export const replay = (el) => islandPage(el, "replay", { mission: new URLSearchParams(location.search).get("mission") });
+
+// Free play, and the sandbox it grows into (src/content/free.js).
+export const free = (el) => islandPage(el, "free");
+
 // The bridge slice (PLAN.md §11, Phase 5), the mission of
 // src/content/missions/slice.js, saved on the device as it's played.
-export const play = (el) => islandPage(el, "slice");
+export const slice = (el) => islandPage(el, "slice");
 
 // The island in 3D: play `key`'s world (session.js) on its clock, drawn from
 // the world as it stands, with the debugger round it. Robots and buildings can
@@ -96,29 +128,37 @@ export const play = (el) => islandPage(el, "slice");
 // program library, in the panel on the left (library.js); and Build, which
 // places a building where the player taps, its plan drawn green where it fits
 // and red where it doesn't, with the reason.
-function islandPage(el, key) {
+function islandPage(el, key, { mission: asked = null } = {}) {
   const bin = createBin();
-  const playing = usePlay(key);
+  const playing = usePlay(key, { mission: asked });
   const { mission } = playing;
-  const offers = tools();
+  const ruled = rules();
+  const offers = ruled.tools;
   const canBuild = offers.includes("build") && blueprints().length > 0;
-  if (!keptFor.has(key)) keptFor.set(key, fresh());
-  const kept = keptFor.get(key);
+  const keeps = ["campaign", "replay", "free", "slice"].includes(key); // whether the play is saved on the device
+  // What's kept is the play's, and a mission's own: the next mission starts
+  // with nothing chosen and no hints shown.
+  const keptKey = mission ? `${key}:${mission.id}` : key;
+  if (!keptFor.has(keptKey)) keptFor.set(keptKey, fresh());
+  const kept = keptFor.get(keptKey);
   let game = playing.game;
   game.pause();
   let selected = null;
   let hoverAt; // undefined: nothing new; null: the pointer left; { x, y }
+  const title = mission ? missionText(`${mission.id}.title`) : key === "free" ? t(ruled.sandbox ? "sandbox.title" : "free.title") : t("island.title");
+  document.title = t("page.title", { page: title, app: t("app.name") });
 
   const $ = html(
     el,
     `<div class="island-page${mission ? " playing" : ""}">
       <header class="island-bar">
         <a class="button small" href="/${location.search}" data-link>${t("nav.home")}</a>
-        <h1>${esc(mission ? missionText(`${mission.id}.title`) : t("island.title"))}</h1>
+        <h1>${esc(title)}</h1>
         ${clockMarkup(mission ? { resetTitle: t("clock.resetMission") } : {})}
         <button class="button small" data-panel="together" aria-pressed="false">${t("together.open")}</button>
         ${offers.includes("library") ? `<button class="button small" data-panel="library" aria-pressed="false">${t("library.open")}</button>` : ""}
         ${canBuild ? `<button class="button small" data-build="open" aria-pressed="false">${t("build.open")}</button>` : ""}
+        ${ruled.sandbox ? `<button class="button small" data-sandbox="robot">${t("sandbox.addRobot")}</button><button class="button small" data-sandbox="new" aria-expanded="false">${t("sandbox.new")}</button>` : ""}
         ${languageChoice({ group: "segmented language-choice" })}
       </header>
       <div class="island-main">
@@ -137,6 +177,25 @@ function islandPage(el, key) {
             <button class="button small" data-build="cancel">${esc(t("build.cancel"))}</button>
           </div>
         </section>`
+            : ""
+        }
+        ${
+          ruled.sandbox
+            ? `<form class="sandbox-card" hidden aria-label="${esc(t("sandbox.new"))}">
+          <p>${esc(t("sandbox.newAsk"))}</p>
+          ${Object.entries(LAYOUT_CHOICES)
+            .map(
+              ([part, values]) =>
+                `<label>${esc(t(`sandbox.${part}`))} <select name="${part}">${values
+                  .map((v) => `<option value="${v}"${v === LAYOUT[part] ? " selected" : ""}>${esc(typeof v === "number" ? String(v) : t(`sandbox.${part}.${v}`))}</option>`)
+                  .join("")}</select></label>`,
+            )
+            .join("")}
+          <div class="build-actions">
+            <button class="button small primary" type="submit">${esc(t("sandbox.create"))}</button>
+            <button class="button small" type="button" data-sandbox="cancel">${esc(t("sandbox.cancel"))}</button>
+          </div>
+        </form>`
             : ""
         }
         <section class="editor-panel side-panel" hidden>
@@ -175,8 +234,11 @@ function islandPage(el, key) {
 
   // --- Choosing -------------------------------------------------------------
   // Chooses thing `id`, or nothing, and shows it at once unless `draw` is false.
+  // While the mission's card asks the player to point at their guess, the
+  // choice is the guess too.
   function select(id, draw = true) {
     const exists = id && [...game.world.entities, ...game.world.nodes].some((e) => e.id === id);
+    if (exists) card?.pointed(id);
     if ((exists ? id : null) !== selected) setup.reset();
     selected = exists ? id : null;
     view.select(selected);
@@ -199,6 +261,20 @@ function islandPage(el, key) {
       else if (build === "place") place();
       return;
     }
+    const sandbox = e.target.closest("[data-sandbox]")?.dataset.sandbox;
+    if (sandbox) {
+      if (sandbox === "robot") {
+        const id = addRobot();
+        if (id) refresh();
+      } else if (sandbox === "new" || sandbox === "cancel") showLayout(sandbox === "new" && $(".sandbox-card").hidden);
+      else if (sandbox === "more" || sandbox === "less") {
+        const { at, item } = e.target.closest("[data-sandbox]").dataset;
+        const have = peekWorld().entities.concat(peekWorld().nodes).find((it) => it.id === at)?.store.items[item] ?? 0;
+        setStock(at, item, Math.max(0, have + (sandbox === "more" ? 1 : -1)));
+        refresh();
+      }
+      return;
+    }
     const pick = e.target.closest("[data-pick]");
     const act = e.target.closest("[data-act]")?.dataset.act;
     const panelAct = e.target.closest("[data-panel]")?.dataset.panel;
@@ -217,6 +293,25 @@ function islandPage(el, key) {
       if (selected && setup.handle(e, selected)) refresh();
     });
   }
+
+  // --- The sandbox's new island ------------------------------------------------
+  // The layout to start from: robots, supplies, the bridge and the workshop
+  // (src/content/free.js). Starting it lays the island out anew, keeping the
+  // programs, and opens the page again on it.
+  function showLayout(open) {
+    const form = $(".sandbox-card");
+    if (!form) return;
+    form.hidden = !open;
+    $('[data-sandbox="new"]').setAttribute("aria-expanded", String(open));
+  }
+  bin.on(el, "submit", (e) => {
+    if (!e.target.closest(".sandbox-card")) return;
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const layout = Object.fromEntries(Object.keys(LAYOUT_CHOICES).map((part) => [part, part === "robots" ? Number(data.get(part)) : data.get(part)]));
+    newFreeIsland(layout);
+    go(location.pathname + location.search, "replace");
+  });
   bin.on(document, "keydown", (e) => {
     if (e.key === "Escape" && placing) stopPlacing();
     else if (e.key === "Escape" && selected && !e.target.closest?.(".side-panel, .setup")) select(null);
@@ -357,12 +452,27 @@ function islandPage(el, key) {
   const card = mission
     ? createMissionCard($(".mission-card"), bin, {
         mission,
-        hints: kept.hints,
-        onHints: (n) => (kept.hints = n),
+        kept: (kept.card ??= {}),
+        replay: key === "replay",
+        next: key === "campaign" && !!nextMission(mission),
         onLook: (id) => select(id),
+        onOpen: (program) => openPanel({ kind: "editor", program }),
+        // A start or the whole program, put into the editor's draft: the
+        // editor open on it is closed first, keeping what it holds, then
+        // opened again on the new draft.
+        onShow: (program, which) => {
+          if (panel?.kind === "editor") closePanel();
+          if (showProgram(program, which)) openPanel({ kind: "editor", program });
+        },
         onRestart: () => {
           game = newGame();
           showWorld(false);
+        },
+        // On to the next mission, which opens the page again; after a replay,
+        // or the campaign's last mission, back to the title page.
+        onNext: () => {
+          if (key === "campaign" && nextCampaignMission()) go(`/play${location.search}`, "replace");
+          else go(`/${location.search}`);
         },
         onDismiss: () => {
           dismissNotice();
@@ -479,7 +589,7 @@ function islandPage(el, key) {
       if (shown && shown.world !== w) select(null, false);
       snapshot = takeSnapshot(w, currentLibrary());
       resized = showTags(w, snapshot);
-      overview.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, offers, w) });
+      overview.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w) });
       panel?.view.show(w, snapshot, selected);
       if (canBuild) $(".build-pending").hidden = !game.pending.some((c) => c.type === "place");
       const stall = $(".stall");
@@ -502,7 +612,7 @@ function islandPage(el, key) {
   // just before the page goes isn't lost.
   let saved = null; // { world, tick, changes, done, time } at the last save
   function save(now = performance.now()) {
-    if (!mission) return;
+    if (!keeps) return;
     panel?.view.flush?.();
     savePlay();
     saved = { world: game.world, tick: game.world.tick, changes: libraryChanges(), done: game.world.mission?.done ?? null, time: now };
@@ -514,7 +624,7 @@ function islandPage(el, key) {
     if (saved && saved.world === w && saved.tick === w.tick && saved.changes === libraryChanges()) return;
     if (!saved || !game.clock.running || saved.done !== (w.mission?.done ?? null) || now - saved.time >= SAVE_EVERY) save(now);
   }
-  if (mission) {
+  if (keeps) {
     bin.on(window, "pagehide", () => save());
     bin.add(() => save());
   }
@@ -549,7 +659,7 @@ function islandPage(el, key) {
   bin.frames((now) => {
     const began = performance.now();
     game.frame(now);
-    if (mission) saveIfChanged(now);
+    if (keeps) saveIfChanged(now);
     if (hoverAt !== undefined) {
       if (placing) {
         if (hoverAt && !placing.pinned) aim(hoverAt.x, hoverAt.y, false);
@@ -594,6 +704,11 @@ function islandPage(el, key) {
       },
       select,
       library: () => currentLibrary(),
+      // The player's choices `commands` (session.js), made at the next step.
+      choose(commands) {
+        choose(commands);
+        refresh();
+      },
       snapshot: () => snapshot,
       // Opens the editor of program `program`, or All programs; resolves once
       // it's open.

@@ -15,17 +15,38 @@ export default {
   "page.title": "{page} · {app}",
 
   "home.tagline": "Program robots and buildings to bring an island back to life.",
-  // Under the button of the first mission, whose title is the button's words.
-  "home.playNote": "Phase 5: the first mission. Four programs work together to build the bridge.",
+  "home.play": "Play",
+  // The button once the missions have begun: the mission they're at.
+  "home.continue": "Mission {n}: {title}",
+  "home.playNote": "Twenty-five missions, from a first instruction to a team of robots.",
   // How far the mission got, when it's saved on this device.
   "home.saved": "Saved at step {tick}.",
   "home.completed": "Done!",
-  // Starting the mission over deletes the saved game and every change to its
-  // programs, for the next player. It asks first.
+  // Starting over deletes the saved missions, free play and every change to
+  // their programs, for the next player. It asks first.
   "home.startOver": "Start over…",
-  "home.startOverAsk": "Start the mission over? The saved game and every change to its programs will be gone.",
+  "home.startOverAsk": "Start the missions over from mission 1? The saved game, free play and every change to your programs will be gone.",
   "home.startOverYes": "Start over",
   "home.startOverNo": "Keep it",
+  // Every mission, by chapter; those done can be played again on their own.
+  "home.missions": "Choose a mission",
+  "home.chapter": "Chapter {n}: {title}",
+  "home.replay": "Play again",
+  // A mission not reached yet.
+  "home.locked": "Not yet",
+  // The mission the campaign is at, on the mission map.
+  "home.here": "You're here",
+  // With ?dev, for testing: a mission not reached yet, played on its own.
+  "home.try": "Try it",
+  "home.devOpen": "Test mode: every mission is open, and plays on its own.",
+  "home.free": "Free play",
+  "home.freeNote": "Your own island, with the blocks you've learned.",
+  "home.freeLocked": "Free play opens after mission 15.",
+  "home.sandbox": "Sandbox",
+  "home.sandboxNote": "Choose how the island starts, add robots, and build workshops.",
+  // The earlier phases' pages, for grown-ups.
+  "home.prototypes": "Prototypes",
+  "home.sliceNote": "Phase 5: mission 15 on its own, for its playtest.",
   "home.island": "Island",
   "home.islandNote": "Phase 6 prototype: the island in 3D. Watch its programs, step through them and change them; share a program in a team, give each robot its settings, and build a workshop.",
   "home.lab": "Editor lab",
@@ -113,6 +134,8 @@ export default {
   "inspector.building": "Building",
   // A grove or stone pit, where robots collect wood or stone.
   "inspector.resource": "Resource",
+  // Said of a resource when it's chosen: it does nothing by itself.
+  "inspector.resourceNote": "Robots collect from it. It has no program.",
   // A robot's basket: what's in it, then how full it is.
   "inspector.basket": "Basket",
   // How many there are of how many there's room for: "2 of 4".
@@ -155,6 +178,9 @@ export default {
   "editor.affects": "Apply changes it for {names}, from the next step.",
   // A program nothing runs, such as a new one, or a copy no one has yet.
   "editor.noRunners": "Nothing runs it yet. Apply it, then give it to a robot or building.",
+  // Keeps only the start block, for making a program from nothing.
+  "editor.blank": "Start from nothing",
+  "editor.blankTitle": "Keep only the start block. “Undo changes” brings your blocks back.",
   // Every running program side by side, with where each robot is in it.
   "together.open": "All programs",
   "together.title": "All programs",
@@ -303,6 +329,97 @@ export default {
   "mission.discarded": "The saved game couldn't be used, so the mission starts from the beginning.",
   "mission.unsaved": "This device won't keep the game: after a reload, it starts from the beginning.",
   "mission.ok": "OK",
+  // Above the mission's title: where it is in the campaign.
+  "mission.chapter": "Chapter {chapter} · Mission {n}",
+  // A mission done before, played again on its own. {n}: its number.
+  "mission.replaying": "You're playing mission {n} again. Your island and your programs in the missions stay as they are.",
+  // For screen readers: the list of the mission's goals, and of its trials.
+  "mission.goals": "Goals",
+  "mission.trials": "Trials",
+  // A trial: the same programs, starting from another variation, such as one
+  // plank and then two. {n}: its number.
+  "mission.trialLabel": "Trial {n}:",
+  // Shown, with the world paused, when a trial is passed. {what}: the next
+  // trial's variation, such as “Two planks at the sawmill”.
+  "mission.trialPassed": "Trial {n} passed! Next: {what}. Press Run.",
+  // Opens the program the mission is about in the editor.
+  "mission.open": "Open the program",
+  // The prediction before Run: said aloud, or by pointing at something on the
+  // island, or skipped. Nothing is written.
+  "mission.predictLabel": "Before you run:",
+  "mission.point": "Point to it",
+  "mission.pointing": "Tap it on the island, or tap its label.",
+  "mission.said": "I said it",
+  "mission.skip": "Skip",
+  // {name}: what the player pointed at.
+  "mission.guess": "Your guess: {name}",
+  // After success: something to tell someone, or skip.
+  "mission.explainLabel": "Tell someone:",
+  "mission.explained": "Done",
+  "mission.next": "Next mission",
+  // After a mission played again, or the campaign's last mission.
+  "mission.toMissions": "Back to the missions",
+  // When everything has stopped short of the goal. Never an interruption.
+  "mission.stuck": "Everything has stopped, but the goal isn't reached yet. A hint can help.",
+  // In the Try hint: blocks put into the editor, to apply or change.
+  "mission.start": "Show me a start",
+  "mission.whole": "Show me the whole program",
+  // When the mission has several programs to change. {name}: the program's.
+  "mission.wholeOf": "Show me the whole program: {name}",
+  // The Look hint when a robot or building's program stopped. {name}: it;
+  // {reason}: why, such as “Not in the right place for this: Collect”.
+  "problem.error": "Look at {name}. Its program stopped: {reason}",
+
+  // The mission's goals on its card, each beside pictures. {place}, {robot}:
+  // names; {item}: an item, such as “Wood”; {have} of {need}: how far it is.
+  "goal.reached": "{robot} → {place}",
+  "goal.holds": "Basket of {robot}: {have} of {need}",
+  "goal.delivered": "{place} · {item}: {have} of {need}",
+  "goal.deliveredBy": "{robot} → {place}: {have} of {need}",
+  "goal.trips": "Trips by {robot}: {have} of {need}",
+  "goal.made": "{place} · {item} made: {have} of {need}",
+  // A goal of making none at all: {have} made so far.
+  "goal.madeNone": "{place} · {item} made: {have}, and none are wanted",
+  "goal.built": "{place} builds the bridge",
+  // Keeping a number on a shelf: {have} now, {need} to keep.
+  "goal.steady": "{place} · {item}: {have}, keep it at {need}",
+  // Notes under a goal.
+  "goal.exact": "Exactly this many, then the job stops.",
+  "goal.load": "Two at a time, in full baskets.",
+  "goal.noWait": "{robot} sets off only when everything is ready.",
+  "goal.steadyNote": "Keep it so for a while after {name} has finished.",
+  "goal.failed": "Not this time. Start again to try once more.",
+
+  // The campaign, free play and the sandbox.
+  "campaign.title": "Missions",
+  "chapter.1": "Hello, Helper!",
+  "chapter.2": "Do It Again",
+  "chapter.3": "A Working Island",
+  "chapter.4": "Look Before You Act",
+  "chapter.5": "Give Everyone a Job",
+  "free.title": "Free play",
+  "sandbox.title": "Sandbox",
+  "sandbox.addRobot": "Add a robot",
+  "sandbox.new": "New island…",
+  "sandbox.newAsk": "Start the island again, laid out as you choose. Your programs stay.",
+  // The layout's choices, each a label and its options.
+  "sandbox.robots": "Robots",
+  "sandbox.supplies": "Supplies",
+  "sandbox.supplies.some": "Some",
+  "sandbox.supplies.plenty": "Plenty",
+  "sandbox.bridge": "Bridge",
+  "sandbox.bridge.built": "Built",
+  "sandbox.bridge.toBuild": "Still to build",
+  "sandbox.workshop": "Workshop",
+  "sandbox.workshop.built": "Built",
+  "sandbox.workshop.none": "Build it yourself",
+  "sandbox.create": "Start this island",
+  "sandbox.cancel": "Cancel",
+  // A building's or deposit's supplies, changed one at a time in the sandbox.
+  // {item}: an item, such as “Wood”.
+  "sandbox.stock": "Supplies",
+  "sandbox.more": "One more: {item}",
+  "sandbox.less": "One fewer: {item}",
 
   // What a robot or building is doing, in a word.
   "state.ready": "Ready",
@@ -426,6 +543,8 @@ export default {
   // The starter programs' names, until the player gives them others.
   "programName.collector": "Wood collector",
   "programName.courier": "Plank courier",
+  // The same, taking its planks to the depot rather than the construction site.
+  "programName.courierDepot": "Plank courier to the depot",
   "programName.stones": "Stone carrier",
   "programName.planks": "Plank maker",
   "programName.bridge": "Bridge builder",
@@ -438,10 +557,15 @@ export default {
   // A copy made in the program library.
   "programName.duplicate": "Copy of {program}",
   "programName.new": "New program {n}",
+  // A mission's program, by its number and who runs it or what it is: “Mission
+  // 3: Robo 1”, “Mission 21: Stone carrier”.
+  "programName.mission": "Mission {n}: {name}",
   // The teams: named groups of robots that share one program.
   "role.woodTeam": "Wood team",
   "role.plankTeam": "Plank team",
   "role.stoneTeam": "Stone team",
+  // A team of robots each fetching what its own settings say.
+  "role.collectors": "Collectors",
 
   "notFound.title": "Not found",
   "notFound.text": "There's no such page.",

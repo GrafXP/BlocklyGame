@@ -2,12 +2,15 @@ import { COMPILER_VERSION } from "../programming/compiler.js";
 import { checkProgram, startProgram } from "../programming/runtime.js";
 import { canRun, emptyBasket, fitsSetting, programFor, rebind, roleOf, startResolved, stop } from "./bindings.js";
 import { reason } from "./codes.js";
+import { insertById, makeThing } from "./content.js";
 import { ITEMS, SETTINGS, TYPES } from "./entities.js";
 import { makeStore, setCount } from "./inventory.js";
+import { walkable } from "./navigation.js";
 import { checkPlacement, freeId, isRequest, placedName } from "./placement.js";
 import { RECIPES } from "./recipes.js";
 import { runtimeOf } from "./runtimes.js";
 import { script } from "./script.js";
+import { cellAt, inside } from "./terrain.js";
 import { thing } from "./things.js";
 
 // The player's commands, applied at a tick boundary, first thing in a tick
@@ -37,6 +40,11 @@ import { thing } from "./things.js";
 //   { type: "place", blueprint, x, z, facing, program }
 //                                             a construction site for a building
 //                                             (placement.js), running `program`
+//   { type: "add", robot: { id, name, cell: [x, z] } }
+//                                             a new robot (the sandbox's), on a
+//                                             cell robots can walk on, with no
+//                                             team or settings yet, running its
+//                                             type's program if there is one
 //   { type: "script", entity, steps, loop }   give `entity` a script to run, from its start
 //   { type: "restart", entity }              start `entity`'s program or script again
 //   { type: "stock", at, item, count }       set a store's count (the sandbox's resource settings)
@@ -68,6 +76,11 @@ const robot = (world, id) => {
 const copy = (value) => JSON.parse(JSON.stringify(value));
 // Program ids are the game's own; block ids are Blockly's, any characters.
 const isId = (value) => typeof value === "string" && /^[A-Za-z0-9_-]+$/.test(value);
+// A name: the player's words, or a message reference { key, params? } whose
+// params are numbers, words or names (src/sim/validate.js checks the same).
+const isName = (name) =>
+  (typeof name === "string" && name.trim().length > 0 && name.length <= NAME_LENGTH) ||
+  (!!name && typeof name === "object" && typeof name.key === "string" && (name.params === undefined || Object.values(name.params).every((v) => typeof v === "number" || isName(v))));
 const hasProgram = (world, id) => id === null || world.programs.some((p) => p.id === id);
 
 // The longest name the player can give a robot, in characters.
@@ -161,6 +174,21 @@ const COMMANDS = {
     const changes = Object.entries(settings);
     if (!changes.every(([slot, value]) => slot in SETTINGS && fitsSetting(world, slot, value))) return false;
     for (const [slot, value] of changes) e.settings[slot] = value;
+    // A robot stopped because the setting it read wasn't chosen, or held an
+    // item it can't collect, goes on now that one is: its program is still at
+    // that block, which it tries again next tick.
+    const fixed = (slot) => e.settings[slot] !== null && changes.some(([s]) => s === slot);
+    if ((e.error?.code === "error.setting" && fixed(e.error.setting)) || (e.error?.code === "error.collect" && fixed("item"))) e.error = null;
+    return true;
+  },
+  add(world, { robot: given }) {
+    if (!isId(given?.id) || thing(world, given.id) || !isName(given.name) || !Array.isArray(given.cell)) return false;
+    const [x, z] = given.cell;
+    if (!Number.isInteger(x) || !Number.isInteger(z) || !inside(world.terrain, x, z) || !walkable(world)[cellAt(world.terrain, x, z)]) return false;
+    const e = makeThing(world.terrain, { id: given.id, type: "helper", name: copy(given.name), cell: [x, z] });
+    insertById(world.entities, e);
+    // Every robot runs what its type does, if a program is set for that.
+    rebind(world, [e]);
     return true;
   },
   name(world, { entity, name }) {

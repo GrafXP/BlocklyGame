@@ -83,19 +83,103 @@ a {
   outline-offset: 2px;
 }
 
+/* The title page (src/ui/home.js): a game's menu for children, under a sky
+   over the island. The way into the campaign is the big green button; below
+   it the mission map, a card for each chapter in a colour of its own, its
+   missions as tiles to press. */
+.home-screen {
+  --sun-x: calc(100% - 64px);
+  --sun-y: 64px;
+  --sun: 30px;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at var(--sun-x) var(--sun-y), #ffe27a 0 var(--sun), #fff3bf 0 calc(var(--sun) + 12px), transparent 0),
+    linear-gradient(180deg, #8fd3ff 0, #c4eaff 260px, #eaf7ff 520px, var(--paper) 900px);
+}
+
+/* On a phone the sun keeps to the corner, clear of the title. */
+@media (max-width: 600px) {
+  .home-screen {
+    --sun-x: calc(100% - 18px);
+    --sun-y: 18px;
+    --sun: 22px;
+  }
+}
+
+/* Two clouds, drifting slowly. */
+.home-screen::before,
+.home-screen::after {
+  content: "";
+  position: absolute;
+  width: 84px;
+  height: 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    26px -14px 0 6px #fff,
+    54px -2px 0 0 #fff;
+  opacity: 0.85;
+  animation: home-cloud 26s ease-in-out infinite alternate;
+}
+
+.home-screen::before {
+  top: 92px;
+  left: 6%;
+}
+
+.home-screen::after {
+  top: 190px;
+  right: 14%;
+  scale: 0.7;
+  animation-duration: 34s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes home-cloud {
+  to {
+    translate: 48px 0;
+  }
+}
+
 .home {
+  position: relative;
+  z-index: 1; /* over the clouds */
+  max-width: 44rem;
   text-align: center;
-  padding-top: max(4rem, env(safe-area-inset-top));
+  padding-top: max(2.5rem, env(safe-area-inset-top));
+}
+
+.home-icon {
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 8px 10px rgb(23 64 122 / 0.25));
+  animation: home-bob 3s ease-in-out infinite;
+}
+
+@keyframes home-bob {
+  50% {
+    translate: 0 -7px;
+  }
 }
 
 .home h1 {
-  margin: 0.5rem 0 0.25rem;
-  font-size: 2.4rem;
+  margin: 0.4rem 0 0.1rem;
+  font-size: clamp(2.4rem, 9vw, 3.6rem);
+  font-weight: 900;
+  line-height: 1.3;
+  color: #17407a;
+  text-shadow:
+    0 3px 0 #ffd166,
+    0 8px 16px rgb(23 64 122 / 0.22);
 }
 
 .home .tagline {
-  margin: 0 0 2rem;
-  color: var(--ink-soft);
+  margin: 0 0 1.75rem;
+  color: #2c3e57;
+  font-size: 1.1rem;
 }
 
 .home .note {
@@ -108,14 +192,312 @@ a {
   color: #1d6b3a;
 }
 
-/* Starting the mission over, which asks first (src/ui/home.js). */
-.home .start-over {
-  margin: -0.25rem 0 1.5rem;
+/* The big buttons: chunky, with an edge underneath that they press down onto. */
+.home .button.play,
+.home .button.free {
+  border: 0;
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+  transition:
+    translate 0.08s,
+    box-shadow 0.08s;
 }
 
+.home .button.play {
+  gap: 0.75rem;
+  min-height: 64px;
+  max-width: 100%;
+  padding: 0.6rem 1.75rem 0.6rem 0.75rem;
+  background: linear-gradient(#2fb257, #1d8f43);
+  font-size: 1.35rem;
+  box-shadow:
+    0 6px 0 #156a31,
+    0 12px 22px rgb(21 106 49 / 0.35);
+}
+
+.home .play-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  color: #1d8f43;
+}
+
+.home .play-icon svg {
+  width: 26px;
+  height: 26px;
+  margin-inline-start: 3px;
+  fill: currentColor;
+}
+
+.home .button.free {
+  min-height: 52px;
+  margin-top: 2rem;
+  padding: 0.5rem 1.6rem;
+  background: linear-gradient(#139bb0, #0c7f90);
+  font-size: 1.2rem;
+  box-shadow: 0 5px 0 #08606d;
+}
+
+.home .button.play:hover,
+.home .button.free:hover {
+  filter: brightness(1.06);
+}
+
+.home .button.play:active {
+  translate: 0 4px;
+  box-shadow:
+    0 2px 0 #156a31,
+    0 4px 10px rgb(21 106 49 / 0.3);
+}
+
+.home .button.free:active {
+  translate: 0 3px;
+  box-shadow: 0 2px 0 #08606d;
+}
+
+.home .free[hidden],
 .home .start-over[hidden],
 .home .start-over .ask[hidden] {
   display: none;
+}
+
+/* The mission map: a card for each chapter, its missions as tiles. */
+.home .missions {
+  margin: 2.75rem 0 0;
+  text-align: start;
+}
+
+.home .missions h2 {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #17407a;
+}
+
+.home .dev-note {
+  margin: -0.5rem 0 1rem;
+  text-align: center;
+}
+
+.home .chapters {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.home .chapter {
+  --hue: #24823f;
+  --hue-soft: #e4f5e8;
+  --hue-edge: #b9dfc3;
+  --hue-ink: #1e6b37;
+  overflow: hidden;
+  border: 3px solid var(--hue);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: 0 6px 0 rgb(29 38 51 / 0.08);
+}
+
+.home .chapter-2 {
+  --hue: #2a6bb8;
+  --hue-soft: #e3effc;
+  --hue-edge: #b8d1ef;
+  --hue-ink: #215896;
+}
+
+.home .chapter-3 {
+  --hue: #b85a0a;
+  --hue-soft: #fdeedd;
+  --hue-edge: #f0cfac;
+  --hue-ink: #934808;
+}
+
+.home .chapter-4 {
+  --hue: #7446c2;
+  --hue-soft: #efe8fa;
+  --hue-edge: #d5c5ef;
+  --hue-ink: #5f37a3;
+}
+
+.home .chapter-5 {
+  --hue: #c2335f;
+  --hue-soft: #fbe6ec;
+  --hue-edge: #f0bccb;
+  --hue-ink: #a3284f;
+}
+
+.home .chapter h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0.55rem 1rem 0.6rem;
+  background: var(--hue);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.home .chapter-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.05rem 0.6rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.2);
+  font-size: 0.95rem;
+}
+
+.home .chapter-stars svg {
+  width: 1.15em;
+  height: 1.15em;
+  fill: #ffd166;
+}
+
+.home .chapter ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.25rem), 1fr));
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.9rem 0.9rem 1.1rem;
+  list-style: none;
+}
+
+.home .chapter li {
+  display: flex;
+  min-width: 0;
+}
+
+.home .tile {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.7rem 0.4rem 0.6rem;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--hue-soft);
+  box-shadow: 0 4px 0 var(--hue-edge);
+  color: var(--ink);
+  text-align: center;
+  text-decoration: none;
+  transition:
+    translate 0.1s,
+    box-shadow 0.1s;
+}
+
+.home a.tile:hover {
+  translate: 0 -2px;
+  box-shadow: 0 6px 0 var(--hue-edge);
+}
+
+.home a.tile:active {
+  translate: 0 3px;
+  box-shadow: 0 1px 0 var(--hue-edge);
+}
+
+.home a.tile:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.home .tile-n {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: var(--hue);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.18);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.home .tile-title {
+  max-width: 100%;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.home .tile-state {
+  margin-top: auto;
+  color: var(--hue-ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.home .tile-state svg {
+  width: 1.1em;
+  height: 1.1em;
+  margin-inline-end: 0.2em;
+  vertical-align: -0.2em;
+  fill: currentColor;
+}
+
+.home li.done .tile-state svg {
+  fill: #f2b705;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.25));
+}
+
+/* The mission the campaign is at: golden, and glowing. */
+.home li.current .tile {
+  border-color: #ffb703;
+  background: #fff4cc;
+  box-shadow: 0 4px 0 #e09a00;
+  animation: home-glow 1.4s ease-in-out infinite alternate;
+}
+
+.home li.current .tile-n {
+  background: #e8890c;
+}
+
+.home li.current .tile-state {
+  color: #9a5200;
+}
+
+@keyframes home-glow {
+  to {
+    box-shadow:
+      0 4px 0 #e09a00,
+      0 0 0 5px rgb(255 183 3 / 0.35);
+  }
+}
+
+/* Not reached yet: grey, with a padlock. With ?dev, open, with a dashed edge. */
+.home li.later .tile,
+.home li.open .tile {
+  background: #efece6;
+  box-shadow: 0 4px 0 #dcd7cd;
+  color: #5a6070;
+}
+
+.home li.later .tile-n {
+  background: #a9a397;
+}
+
+.home li.later .tile-state,
+.home li.open .tile-state {
+  color: #5a6070;
+}
+
+.home li.open .tile {
+  border: 2px dashed var(--hue);
+}
+
+/* Starting the campaign over, which asks first. */
+.home .start-over {
+  margin: 2rem 0 0;
 }
 
 .home .start-over .ask {
@@ -134,6 +516,56 @@ a {
 .home .start-over .ask p {
   flex-basis: 100%;
   margin: 0 0 0.25rem;
+}
+
+/* The prototypes, folded away for the grown-ups; open with ?dev. */
+.home .grown-ups {
+  max-width: 34rem;
+  margin: 2.5rem auto 0;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.6);
+}
+
+.home .grown-ups summary {
+  color: var(--ink-soft);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.home .grown-ups[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.home .grown-ups .note {
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 480px) {
+  .home .chapter ol {
+    gap: 0.5rem;
+    padding: 0.7rem 0.6rem 0.9rem;
+  }
+
+  .home .tile-title {
+    font-size: 0.86rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-screen::before,
+  .home-screen::after,
+  .home-icon,
+  .home li.current .tile {
+    animation: none;
+  }
+
+  .home .button.play,
+  .home .button.free,
+  .home .tile {
+    transition: none;
+  }
 }
 
 /* A pill of choices; with words too long for one line, a rounded box. */
