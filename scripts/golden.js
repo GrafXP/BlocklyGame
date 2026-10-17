@@ -5,7 +5,7 @@
 // them again: npm run golden.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { baseWorld, enterMission, playMission, referenceCommands } from "../src/campaign.js";
+import { missionStart, playMission, referenceCommands } from "../src/campaign.js";
 import { ISLAND } from "../src/content/island.js";
 import { CAMPAIGN } from "../src/content/missions/campaign.js";
 import { SLICE } from "../src/content/missions/slice.js";
@@ -101,19 +101,18 @@ export function record(name) {
   return { format: GOLDEN_FORMAT, sim: SIM_VERSION, content: world.content, scenario: name, ticks, log, hashes, final: world };
 }
 
-// The campaign played through by its reference solutions (src/campaign.js),
-// each mission beginning on the island the one before left: for every mission,
-// the step it was done in and the world's hash then. test/campaign.test.js
-// plays it again.
+// Every mission of the campaign played from its start by its reference
+// solution (src/campaign.js): for each, the step it was done in and the world's
+// hash then. test/campaign.test.js plays them again.
 export function recordCampaign() {
-  const world = baseWorld();
-  const library = { programs: [] };
+  let content = null;
   const missions = CAMPAIGN.map((mission) => {
-    enterMission(world, library, mission);
+    const { world, library } = missionStart(mission);
+    content = world.content;
     playMission(world, referenceCommands(world, library, mission), mission.steps);
     return { id: mission.id, done: world.mission.done, hash: stateHash(world) };
   });
-  return { format: GOLDEN_FORMAT, sim: SIM_VERSION, compiler: COMPILER_VERSION, content: world.content, missions };
+  return { format: GOLDEN_FORMAT, sim: SIM_VERSION, compiler: COMPILER_VERSION, content, missions };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -126,6 +125,6 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
   mkdirSync(new URL("campaign/", dir), { recursive: true });
   const campaign = recordCampaign();
-  writeFileSync(new URL("campaign/sequence.json", dir), `${JSON.stringify(campaign)}\n`);
+  writeFileSync(new URL("campaign/missions.json", dir), `${JSON.stringify(campaign)}\n`);
   console.log(`campaign: ${campaign.missions.length} missions, last done at step ${campaign.missions.at(-1).done}, final ${campaign.missions.at(-1).hash}`);
 }

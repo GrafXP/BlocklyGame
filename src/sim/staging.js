@@ -8,16 +8,15 @@ import { areaCells, cellAt, setKind } from "./terrain.js";
 import { thing } from "./things.js";
 
 // Setting the scene for a mission, and for each of its trials (PLAN.md §9,
-// “Settlement and checkpoints”; docs/campaign-plan.md, “Checkpoints,
-// resources, and reliable goals”). The campaign plays on one island that grows
-// from mission to mission, and each mission starts from the island as the one
-// before left it, its resources reset: every building empty and every deposit
-// full, as the island's catalogue starts them (decided 17 October 2026). A
-// mission's setup changes only what its lesson needs, and the player sees each
-// change: things that arrive, the robots it's about at their places with their
-// baskets, staged stock, room made in a store, the programs it gives out.
-// Everything else stays as the player left it: names, settings, the bridge
-// once it's built.
+// “Missions stand alone”; docs/campaign-plan.md, “Checkpoints, resources, and
+// reliable goals”). The campaign's island grows from mission to mission, and
+// a mission's setup is written as what it changes on the island the mission
+// before starts with: things that arrive, the robots it's about at their
+// places with their baskets, staged stock, room made in a store, the programs
+// it gives out. Its resources are reset: every building empty and every
+// deposit full, as the island's catalogue starts them. Every mission starts
+// from the setups up to it made in turn, nothing played between
+// (src/campaign.js), so nothing the player did carries into it.
 //
 // A stage is plain data, as content writes it; each part is optional:
 //

@@ -191,6 +191,11 @@ export default {
   // Keeps only the start block, for making a program from nothing.
   "editor.blank": "Start from nothing",
   "editor.blankTitle": "Keep only the start block. “Undo changes” brings your blocks back.",
+  // The program of the robot or building the editor was opened for, at the
+  // editor's head: chosen from those it can run, or a new one. {name}: its
+  // name.
+  "editor.for": "Program for {name}",
+  "editor.newProgram": "New program",
   // Every running program side by side, with where each robot is in it.
   "together.open": "All programs",
   "together.title": "All programs",
@@ -226,9 +231,8 @@ export default {
   "library.ok": "OK",
   "library.cancel": "Cancel",
 
-  // The chosen robot or building's program, team and settings, in the
-  // inspector.
-  "setup.program": "Program",
+  // The chosen robot's team and settings, in the inspector; and in the editor,
+  // the program of the robot or building it was opened for.
   "setup.team": "Team",
   "setup.noTeam": "No team",
   "setup.noProgram": "No program",
@@ -237,8 +241,6 @@ export default {
   "setup.own": "Its own program",
   "setup.fromTeam": "Shared by its team: {team}",
   "setup.fromType": "For every building like this",
-  // Others running the same program. {names}: their names, as a list.
-  "setup.alsoRuns": "Also run by: {names}",
   "setup.copy": "Make its own copy",
   "setup.back": "Back to the shared program",
   "setup.rename": "Rename",
@@ -269,6 +271,9 @@ export default {
   "preview.nobody": "Nobody runs anything different because of this.",
   // Making a robot's own copy of the program it shares. {name}: the robot.
   "preview.copy": "{name} gets its own copy of {program}. Change the copy, and only {name} changes.",
+  // A new program, with nothing but its start block, for the robot or building
+  // the editor is open for. {name}: its name.
+  "preview.new": "{name} gets a new program from the next step, with only its start block.",
 
   // Placing a building: the player chooses where it goes, and robots bring
   // what its construction site needs.
@@ -351,7 +356,7 @@ export default {
   // Above the mission's title: where it is in the campaign.
   "mission.chapter": "Chapter {chapter} · Mission {n}",
   // A mission done before, played again on its own. {n}: its number.
-  "mission.replaying": "You're playing mission {n} again. Your island and your programs in the missions stay as they are.",
+  "mission.replaying": "You're playing mission {n} again, from the beginning. The other missions stay as they are.",
   // For screen readers: the list of the mission's goals, and of its trials.
   "mission.goals": "Goals",
   "mission.trials": "Trials",

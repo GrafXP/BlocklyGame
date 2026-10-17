@@ -63,8 +63,10 @@ export function createOverview(el) {
 
   return {
     // Shows `world` as of `snapshot`, with thing `selected` open, its blocks
-    // worded with Blockly's `words`; `setup(id)` gives the chosen one's setup.
-    show(world, snapshot, selected, words, { setup = () => "" } = {}) {
+    // worded with Blockly's `words`; `setup(id)` gives the chosen one's setup,
+    // and `make` whether a robot or building without a program can be given one
+    // (detailsActions).
+    show(world, snapshot, selected, words, { setup = () => "", make = false } = {}) {
       if (shownWorld !== world || shownThings !== thingsKey(world)) {
         const things = [...world.entities, ...world.nodes];
         el.innerHTML =
@@ -103,7 +105,7 @@ export function createOverview(el) {
           }
         }
         row.actions.hidden = !chosen;
-        draw(row, "actions", chosen ? detailsActions(entry) : "");
+        draw(row, "actions", chosen ? detailsActions(entry, { make }) : "");
         draw(row, "setup", chosen ? setup(id) : "");
         draw(row, "info", infoHtml(world, snapshot, it, entry, words));
         draw(row, "details", chosen ? detailsHtml(world, id, entry, words) : "");

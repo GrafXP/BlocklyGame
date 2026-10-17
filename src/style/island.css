@@ -819,6 +819,22 @@
   hyphens: auto;
 }
 
+/* The program of the robot or building the editor was opened for
+   (src/ui/program-choice.js), above the program's name. */
+.code-choice {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.code-choice .setup-field {
+  margin-top: 0;
+}
+
+.code-choice label .identity {
+  margin-inline-end: 4px;
+}
+
 .code-runners,
 .code-state,
 .code-problems {
@@ -967,8 +983,9 @@
   font-size: 0.75rem;
 }
 
-/* The chosen row's program, team, name and settings (src/ui/setup.js): one
-   field to a line, its label above, so German's longer words fit. */
+/* The chosen row's team, name and settings (src/ui/setup.js), and the editor's
+   program choice (program-choice.js): one field to a line, its label above, so
+   German's longer words fit. */
 .setup {
   margin-top: 6px;
   padding-top: 6px;

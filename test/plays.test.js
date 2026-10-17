@@ -2,14 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { missionStart, referenceCommands } from "../src/campaign.js";
 import { CAMPAIGN, campaignMission } from "../src/content/missions/campaign.js";
-import { latest, programDoc, sameBlocks, setDraft } from "../src/programming/programs.js";
+import { programDoc, sameBlocks, setDraft } from "../src/programming/programs.js";
 import { makeSave } from "../src/storage/saves.js";
 import { byId } from "./helpers.js";
 
 // Phase 7's plays in the session (src/ui/session.js), as the pages use them:
-// the campaign from mission 1, going on from one mission to the next and saved
-// as it goes; a mission played again on its own; free play once mission 15 is
-// done, and the sandbox after 25.
+// the campaign from mission 1, going on from one mission to the next, each
+// from its own start, and saved as it goes; a mission played again on its
+// own; free play once mission 15 is done, and the sandbox after 25.
 
 function memoryStorage() {
   const items = new Map();
@@ -27,12 +27,13 @@ const withStorage = async (fn) => {
 };
 
 // The campaign saved at the start of mission `id`, every mission before it
-// done: as if the player had played that far.
-function saveCampaignAt(id) {
+// done: as if the player had played that far. `change(save)` changes the save
+// first.
+function saveCampaignAt(id, change = () => {}) {
   const mission = campaignMission(id);
-  const library = { programs: [] };
-  const world = missionStart(mission, library);
+  const { world, library } = missionStart(mission);
   const save = makeSave({ content: { id: "campaign", version: 1 }, mission: id, world, library, checkpoint: world, progress: { completed: CAMPAIGN.slice(0, mission.n - 1).map((m) => m.id) } });
+  change(save);
   globalThis.localStorage.setItem("robot-island:save.campaign", JSON.stringify(save));
 }
 
@@ -71,7 +72,7 @@ test("the campaign starts at mission 1, with only its blocks, and the program li
     assert.deepEqual(session.unlocked().free, false);
   }));
 
-test("a mission done goes on to the next, on the island it left, the library going along; a reload goes on from there", () =>
+test("a mission done goes on to the next from its start, keeping nothing of the one before; a reload goes on from there", () =>
   withStorage(async () => {
     const session = await reload();
     const play = session.usePlay("campaign");
@@ -79,14 +80,13 @@ test("a mission done goes on to the next, on the island it left, the library goi
     solve(session, play);
     assert.equal(session.savePlay(), true);
     assert.deepEqual(session.campaignStatus().completed, ["m01"]);
-    const grove = byId(play.game.world, "r1").cell;
     assert.equal(session.nextCampaignMission(), true);
     assert.equal(play.mission.id, "m02");
-    assert.equal(byId(play.game.world, "r1").cell, grove, "Robo 1 is still at the grove");
-    assert.equal(play.game.world.tick, 0);
+    assert.deepEqual(play.game.world, missionStart(campaignMission("m02")).world, "mission 2's start, whatever mission 1 left");
     assert.deepEqual(
       play.library.programs.map((p) => p.id),
-      ["m01", "m02"],
+      ["m02"],
+      "its own programs alone",
     );
     assert.deepEqual(session.rules().blocks, ["robot_go_to", "robot_collect"]);
 
@@ -94,6 +94,19 @@ test("a mission done goes on to the next, on the island it left, the library goi
     assert.equal(again.mission.id, "m02");
     assert.deepEqual(again.progress.completed, ["m01"]);
     assert.deepEqual(again.game.world, play.game.world);
+  }));
+
+test("a mission done and saved isn't played again after a reload: the next one starts", () =>
+  withStorage(async () => {
+    const session = await reload();
+    solve(session, session.usePlay("campaign"));
+    assert.equal(session.savePlay(), true);
+    const after = await reload();
+    assert.deepEqual(after.campaignStatus(), { mission: campaignMission("m02"), done: false, completed: ["m01"], tick: 0, saved: true }, "as the title page shows it");
+    const play = after.usePlay("campaign");
+    assert.equal(play.mission.id, "m02");
+    assert.deepEqual(play.game.world, missionStart(campaignMission("m02")).world);
+    assert.deepEqual(play.progress.completed, ["m01"]);
   }));
 
 test("Start again in a mission with trials goes back to its first, keeping the player's programs but not the trials' own", () =>
@@ -123,38 +136,40 @@ test("a mission played again is a world and library of its own: the campaign doe
     solve(session, replay);
     session.savePlay();
     assert.equal(JSON.stringify(campaign.library), before, "the campaign's programs are as they were");
-    assert.notEqual(replay.library, campaign.library);
-    assert.equal(session.usePlay("replay", { mission: "m03" }), replay, "the same replay, asked for again");
-    assert.notEqual(session.usePlay("replay", { mission: "m02" }), replay, "another mission's replay starts afresh");
+    assert.deepEqual(
+      replay.library.programs.map((p) => p.id),
+      ["m03"],
+      "the replay's programs are mission 3's own",
+    );
+    const other = session.usePlay("replay", { mission: "m02" });
+    assert.notEqual(other, replay, "another mission's replay starts afresh");
+    other.game.step();
+    assert.equal(session.usePlay("replay", { mission: "m02" }), other, "the same replay, asked for again before it's done");
+    solve(session, other);
+    const fresh = session.usePlay("replay", { mission: "m02" });
+    assert.notEqual(fresh, other, "and once it's done, afresh");
+    assert.equal(fresh.game.world.tick, 0);
   }));
 
-test("after a reload, a mission whose program was later changed to name a newer place is played again with its starter", () =>
+test("a campaign saved before every mission stood alone keeps its progress, and its mission starts afresh with its own programs", () =>
   withStorage(async () => {
-    saveCampaignAt("m22");
+    const early = missionStart(campaignMission("m03")).library.programs;
+    saveCampaignAt("m05", (save) => {
+      save.schema = 2;
+      save.library.programs = [...early, ...save.library.programs];
+      save.world.tick = 40;
+    });
     const session = await reload();
-    const campaign = session.usePlay("campaign");
-    // Mission 3's program, reused to take wood to the depot, which mission 3's island hasn't got.
-    const depot = JSON.parse(JSON.stringify(campaignMission("m03").reference.programs.m03).replace('"PLACE":"camp"', '"PLACE":"depot"'));
-    setDraft(campaign.library, "m03", depot);
-    assert.ok(session.applyProgram("m03").command);
-    campaign.game.step();
-    // On to mission 23, whose checkpoint runs only the new revision.
-    solve(session, campaign);
-    assert.equal(session.nextCampaignMission(), true);
-    session.savePlay();
-    const after = await reload();
+    assert.deepEqual(session.campaignStatus(), { mission: campaignMission("m05"), done: false, completed: ["m01", "m02", "m03", "m04"], tick: 0, saved: true });
+    const play = session.usePlay("campaign");
+    assert.equal(play.notice, null);
+    assert.deepEqual([play.mission.id, play.game.world.tick], ["m05", 0]);
     assert.deepEqual(
-      programDoc(after.usePlay("campaign").library, "m03").published.map((p) => p.revision),
-      [2],
-      "the save kept only the revision that runs",
+      play.library.programs.map((p) => p.id),
+      ["m05"],
     );
-    const replay = after.usePlay("replay", { mission: "m03" });
-    assert.equal(replay.mission.id, "m03");
-    const r1 = byId(replay.game.world, "r1");
-    assert.equal(r1.runtime.program, "m03");
-    assert.ok(sameBlocks(latest(programDoc(replay.library, "m03")).source, campaignMission("m03").programs[0].source), "its starter, as a revision of the replay's own");
-    assert.equal(after.savePlay(), true);
-    assert.equal((await reload()).usePlay("replay").notice, null, "and the replay's save reads back");
+    assert.equal(session.savePlay(), true);
+    assert.equal(JSON.parse(globalThis.localStorage.getItem("robot-island:save.campaign")).schema, 3);
   }));
 
 test("the sandbox's new island keeps every program's blocks as the library has them, whatever the layout", () =>
@@ -174,7 +189,7 @@ test("the sandbox's new island keeps every program's blocks as the library has t
     }
   }));
 
-test("free play opens after mission 15 with the blocks learned so far and the player's programs, and grows into the sandbox after 25", () =>
+test("free play opens after mission 15 with the blocks learned so far and programs of its own, and grows into the sandbox after 25", () =>
   withStorage(async () => {
     saveCampaignAt("m16");
     const session = await reload();
@@ -185,8 +200,8 @@ test("free play opens after mission 15 with the blocks learned so far and the pl
     const rules = session.rules();
     assert.deepEqual(rules.tools, ["library"]);
     assert.ok(rules.blocks.includes("building_build") && !rules.blocks.includes("sense_stock"));
-    assert.ok(programDoc(free.library, "m15"), "the courier from mission 15");
-    assert.ok(programDoc(free.library, "collector"), "and free play's own starters");
+    assert.equal(programDoc(free.library, "m15"), null, "the missions' programs stay in them");
+    assert.ok(programDoc(free.library, "collector"), "free play has its own");
     assert.deepEqual(session.blueprints(), [], "no building to place yet");
     assert.equal(session.savePlay(), true);
   }));
@@ -208,7 +223,7 @@ test("the sandbox adds robots, sets supplies and starts the island anew as the p
     free.game.step();
     assert.equal(byId(free.game.world, "r4").kind, "robot");
     assert.equal(byId(free.game.world, "grove").store.items.wood, 3);
-    setDraft(free.library, "collector", JSON.parse(JSON.stringify(latest(programDoc(free.library, "m01")).source)));
+    setDraft(free.library, "collector", JSON.parse(JSON.stringify(campaignMission("m01").reference.programs.m01)));
     session.applyProgram("collector");
     const layout = { robots: 5, supplies: "plenty", bridge: "toBuild", workshop: "built" };
     const fresh = session.newFreeIsland(layout);
@@ -268,8 +283,7 @@ test("starting over forgets the campaign, free play and any replay", () =>
 
 test("a reference solution is applied as the editor applies programs: a publish for each, at the next step", () => {
   const m = campaignMission("m15");
-  const library = { programs: [] };
-  const world = missionStart(m, library);
+  const { world, library } = missionStart(m);
   const commands = referenceCommands(world, library, m);
   assert.deepEqual(
     commands.map((c) => [c.type, c.program?.id ?? c.entity]),

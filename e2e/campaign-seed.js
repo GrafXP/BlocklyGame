@@ -13,11 +13,10 @@ import { makeSave } from "../src/storage/saves.js";
 // its starters worded in that language, as the game words them.
 export async function seedCampaign(page, id, { done = false, query = "" } = {}) {
   const mission = campaignMission(id);
-  const library = { programs: [] };
   const code = /[?&]lang=([\w-]+)/.exec(query)?.[1] ?? "en";
   const { ui } = await loadMessages(code);
   const word = (name) => translate(ui, code === "pseudo" ? "en" : code, name.key, name.params);
-  const world = missionStart(mission, library, { word });
+  const { world, library } = missionStart(mission, { word });
   const completed = CAMPAIGN.slice(0, mission.n - (done ? 0 : 1)).map((m) => m.id);
   const save = makeSave({ content: { id: "campaign", version: 1 }, mission: id, world, library, checkpoint: world, progress: { completed } });
   await page.goto(`/?dev${query}`);

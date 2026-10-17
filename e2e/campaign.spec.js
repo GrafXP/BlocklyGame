@@ -86,6 +86,7 @@ test("a fresh player starts at mission 1: the card asks for a guess, the editor 
   await expect(page.locator(".clock .ticks")).toHaveText("Steps: 0");
   const grove = await island(page, () => window.islandPage.game.world.nodes.find((n) => n.id === "grove").access);
   expect(grove).toContain(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "r1").cell));
+  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id)), "mission 2's own programs alone").toEqual(["m02"]);
 
   await page.reload();
   await ready(page);
@@ -183,23 +184,24 @@ test("the title page's mission map: stars for the missions done, the one the cam
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
 });
 
-test("a mission done before can be played again on its own, and the campaign stays as it was", async ({ page }) => {
+test("a mission done before can be played again from its start, and the campaign stays as it was", async ({ page }) => {
   await seedCampaign(page, "m05");
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
   await page.locator(".chapter li").nth(2).getByRole("link", { name: "Play again" }).click();
   await ready(page);
   await expect(page).toHaveURL(/\/replay\?mission=m03/);
-  await expect(page.locator(".mission-replay")).toHaveText("You're playing mission 3 again. Your island and your programs in the missions stay as they are.");
+  await expect(page.locator(".mission-replay")).toHaveText("You're playing mission 3 again, from the beginning. The other missions stay as they are.");
+  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id))).toEqual(["m03"]);
   await solveMission(page);
   await frames(page);
   await page.getByRole("button", { name: "Back to the missions" }).click();
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
   const campaign = await page.evaluate(() => JSON.parse(localStorage.getItem("robot-island:save.campaign")));
   expect(campaign.mission).toBe("m05");
-  expect(campaign.library.programs.find((p) => p.id === "m03").published.length).toBe(1);
+  expect(campaign.library.programs.map((p) => p.id)).toEqual(["m05"]);
 });
 
-test("free play opens after mission 15 with the player's programs, and grows into the sandbox after 25", async ({ page }) => {
+test("free play opens after mission 15 with programs of its own, and grows into the sandbox after 25", async ({ page }) => {
   await seedCampaign(page, "m16");
   await expect(page.locator(".home .free")).toHaveText("Free play");
   await page.locator(".home .free").click();
@@ -207,7 +209,9 @@ test("free play opens after mission 15 with the player's programs, and grows int
   await expect(page.locator(".island-bar h1")).toHaveText("Free play");
   await expect(page.locator('[data-panel="library"]')).toBeVisible();
   await expect(page.locator('[data-build], [data-sandbox]')).toHaveCount(0);
-  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id))).toEqual(expect.arrayContaining(["collector", "m01", "m15"]));
+  const programs = await island(page, () => window.islandPage.library().programs.map((p) => p.id));
+  expect(programs).toContain("collector");
+  expect(programs.filter((id) => /^m\d/.test(id)), "the missions' programs stay in them").toEqual([]);
 
   await seedCampaign(page, "m25", { done: true });
   await expect(page.locator(".home .free")).toHaveText("Sandbox");

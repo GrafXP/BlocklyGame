@@ -1,7 +1,7 @@
 // Checks every mission of the campaign headlessly (PLAN.md §9, Verification;
-// §11, Phase 7): npm run verify:missions. For each mission, alone from its
-// checkpoint and as part of the whole sequence, with the mission's own
-// toolbox and resources:
+// §11, Phase 7): npm run verify:missions. For each mission, from its start
+// (src/campaign.js: every mission stands alone), with its own toolbox and
+// resources:
 //
 // - its starter programs alone don't do it: the lesson needs the child;
 // - its reference solution does, every trial, within the mission's steps,
@@ -10,19 +10,14 @@
 // - its toolbox offers every block the solution uses, its goals' stores have
 //   room for what they count, and the deposits hold its budget (missionProblems);
 // - its words are in every listed language.
-//
-// In sequence, each mission begins on the island the reference solution of
-// the one before left, the library carrying every program on, so leftover
-// stock, shared edits and unlocks can't break the next lesson.
 import { pathToFileURL } from "node:url";
-import { baseWorld, enterMission, missionProblems, missionStart, playMission, referenceCommands } from "../src/campaign.js";
+import { missionProblems, missionStart, playMission, referenceCommands } from "../src/campaign.js";
 import { CAMPAIGN } from "../src/content/missions/campaign.js";
 import { missionKeys } from "../src/content/missions/index.js";
 import { LANGUAGES } from "../src/i18n/languages.js";
 import { checkWorld } from "../src/sim/validate.js";
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
-const emptyLibrary = () => ({ programs: [] });
 
 // Plays `mission` from checkpoint `world` with `library`, the reference
 // applied at the first step, checking the world's rules each tick. Returns
@@ -40,32 +35,21 @@ function playReference(mission, world, library, rules) {
   return { done, ticks: world.tick, problems };
 }
 
-// Every mission alone and in sequence. Returns { problems, rows }: what's
-// wrong, and for each mission the steps its reference took alone and in
-// sequence. `rules` checks the world's rules after every tick (slower).
+// Every mission from its start. Returns { problems, rows }: what's wrong, and
+// for each mission the steps its reference took. `rules` checks the world's
+// rules after every tick (slower).
 export async function verifyCampaign({ rules = true } = {}) {
   const problems = [];
   const rows = [];
 
   for (const mission of CAMPAIGN) {
-    const library = emptyLibrary();
-    const checkpoint = missionStart(mission, library);
+    const { world: checkpoint, library } = missionStart(mission);
     problems.push(...missionProblems(mission, checkpoint), ...checkWorld(checkpoint).map((p) => `${mission.id} checkpoint: ${p}`));
     const starter = copy(checkpoint);
     if (playMission(starter, [], mission.steps)) problems.push(`${mission.id}: its starter programs do it alone, at step ${starter.tick}`);
-    const alone = playReference(mission, copy(checkpoint), copy(library), rules);
-    problems.push(...alone.problems);
-    rows.push({ id: mission.id, steps: mission.steps, alone: alone.done ? alone.ticks : null });
-  }
-
-  const world = baseWorld();
-  const library = emptyLibrary();
-  for (const mission of CAMPAIGN) {
-    enterMission(world, library, mission);
-    problems.push(...missionProblems(mission, world).map((p) => `in sequence, ${p}`));
-    const run = playReference(mission, world, library, rules);
-    problems.push(...run.problems.map((p) => `in sequence, ${p}`));
-    rows.find((r) => r.id === mission.id).sequence = run.done ? run.ticks : null;
+    const run = playReference(mission, copy(checkpoint), copy(library), rules);
+    problems.push(...run.problems);
+    rows.push({ id: mission.id, steps: mission.steps, ticks: run.done ? run.ticks : null });
   }
 
   for (const { code } of LANGUAGES) {
@@ -77,10 +61,10 @@ export async function verifyCampaign({ rules = true } = {}) {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { problems, rows } = await verifyCampaign();
-  for (const { id, steps, alone, sequence } of rows) console.log(`${id}  alone ${String(alone ?? "–").padStart(4)}  in sequence ${String(sequence ?? "–").padStart(4)}  of ${steps} steps`);
+  for (const { id, steps, ticks } of rows) console.log(`${id}  ${String(ticks ?? "–").padStart(4)} of ${steps} steps`);
   if (problems.length) {
     console.error(`\n${problems.length} problem${problems.length === 1 ? "" : "s"}:`);
     for (const p of problems) console.error(`  ${p}`);
     process.exitCode = 1;
-  } else console.log(`\nAll ${rows.length} missions verified, alone and in sequence.`);
+  } else console.log(`\nAll ${rows.length} missions verified.`);
 }

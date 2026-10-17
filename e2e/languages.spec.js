@@ -330,7 +330,7 @@ async function islandAt(page, query, ticks, id, panel = null) {
     },
     [ticks, id],
   );
-  if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
+  if (panel) await page.evaluate(([kind, program, entity]) => window.islandPage.open(kind, program, entity), panel);
   await frames(page);
 }
 
@@ -343,6 +343,14 @@ async function islandTools(page, query) {
   await page.locator('.lib-program[data-program="fetch"] [data-lib="give"]').click();
   await page.locator('[data-build="open"]').click();
   await page.evaluate(() => window.islandPage.aimAt(14, 8));
+  await frames(page);
+}
+
+// The editor opened for Robo 1 from its Edit program, with another program
+// chosen at its head and waiting for OK.
+async function islandChoice(page, query) {
+  await islandAt(page, query, 20, "r1", ["editor", "collector", "r1"]);
+  await page.locator("#code-program").selectOption("fetch");
   await frames(page);
 }
 
@@ -513,6 +521,8 @@ test("the pseudo-language leaves no text unmarked, on the title page, in the edi
   expect(await page.evaluate(unmarkedText), "an Apply waiting").toEqual([]);
   await islandTools(page, "&lang=pseudo");
   expect(await page.evaluate(unmarkedText), "the island's setup, library and Build card").toEqual([]);
+  await islandChoice(page, "&lang=pseudo");
+  expect(await page.evaluate(unmarkedText), "the editor's program choice").toEqual([]);
   // The mission: its card with every hint, a save it can't use, the offer to
   // start again, and the reward; and the title page asking to start over.
   for (const state of PLAY_STATES) {
@@ -568,6 +578,8 @@ for (const [lang, query] of everyLanguage) {
     }
     await islandTools(page, query);
     expect(await page.evaluate(clippedText), "the island's setup, library and Build card").toEqual([]);
+    await islandChoice(page, query);
+    expect(await page.evaluate(clippedText), "the editor's program choice").toEqual([]);
     for (const state of PLAY_STATES) {
       await playAt(page, query, state);
       expect(await page.evaluate(clippedText), `play ${JSON.stringify(state)}`).toEqual([]);

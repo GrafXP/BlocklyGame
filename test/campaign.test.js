@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { toolboxFor } from "../src/blockly/toolboxes.js";
-import { baseWorld, enterMission, missionStart, playMission, referenceCommands } from "../src/campaign.js";
+import { missionStart, playMission, referenceCommands } from "../src/campaign.js";
 import { CAMPAIGN, campaignMission, mainProgram, unlockedBlocks } from "../src/content/missions/campaign.js";
 import { thingOf } from "../src/content/missions/island.js";
 import { program as write } from "../src/content/missions/write.js";
@@ -13,13 +13,13 @@ import { SIM_VERSION } from "../src/sim/world.js";
 import { verifyCampaign } from "../scripts/verify-missions.js";
 import { byId } from "./helpers.js";
 
-// The campaign of Phase 7 (PLAN.md §9; docs/campaign-plan.md): missions 1–25
-// on one island that grows. Every mission's reference solution does it, alone
-// and in sequence, and its starters alone don't (verify:missions); the
-// campaign played through gives the recorded worlds; each lesson's deliberate
-// mistake fails as the lesson says; and the island, the player's programs,
-// names and settings carry on from one mission to the next, while its
-// resources start afresh with each mission.
+// The campaign (PLAN.md §9; docs/campaign-plan.md): forty missions, each
+// standing alone, a start set and its goals. Every mission's reference
+// solution does it from its start, and its starters alone don't
+// (verify:missions); each mission played so gives the recorded world; each
+// lesson's deliberate mistake fails as the lesson says; and every mission
+// starts with its own programs alone and its resources as the island starts
+// them, the same every time.
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
 const mission = (id) => campaignMission(id);
@@ -29,28 +29,25 @@ const mission = (id) => campaignMission(id);
 // Returns the world after the mission's steps, or once it's done.
 function playWith(id, { programs = {}, commands = [] } = {}) {
   const m = mission(id);
-  const library = { programs: [] };
-  const world = missionStart(m, library);
+  const { world, library } = missionStart(m);
   const commandsOf = referenceCommands(world, library, { ...m, reference: { programs, commands } });
   playMission(world, commandsOf, m.steps);
   return world;
 }
 
-test("every mission is verified: its reference does it alone and in sequence, its starters don't, within its steps, toolbox, budget and words", async () => {
+test("every mission is verified: its reference does it from its start, its starters don't, within its steps, toolbox, budget and words", async () => {
   const { problems, rows } = await verifyCampaign();
   assert.deepEqual(problems, []);
   assert.equal(rows.length, 40);
-  for (const row of rows) assert.ok(row.alone !== null && row.sequence !== null, row.id);
+  for (const row of rows) assert.ok(row.ticks !== null, row.id);
 });
 
-test("the campaign played through by its reference solutions gives the recorded worlds, mission for mission", () => {
-  const golden = JSON.parse(readFileSync(new URL("./golden/campaign/sequence.json", import.meta.url), "utf8"));
+test("every mission played from its start by its reference solution gives the recorded world", () => {
+  const golden = JSON.parse(readFileSync(new URL("./golden/campaign/missions.json", import.meta.url), "utf8"));
   assert.equal(golden.sim, SIM_VERSION, "recorded with another SIM_VERSION: npm run golden");
   assert.equal(golden.compiler, COMPILER_VERSION, "recorded with another COMPILER_VERSION: npm run golden");
-  const world = baseWorld();
-  const library = { programs: [] };
   for (const [i, m] of CAMPAIGN.entries()) {
-    enterMission(world, library, m);
+    const { world, library } = missionStart(m);
     playMission(world, referenceCommands(world, library, m), m.steps);
     assert.deepEqual({ id: m.id, done: world.mission.done, hash: stateHash(world) }, golden.missions[i], `the worlds part at ${m.id}`);
   }
@@ -143,64 +140,35 @@ test("mission 25: a whole kit's three pieces don't fit in one basket, so one tri
   assert.equal(world.mission.tally.made["workshop|kit"], 1);
 });
 
-// --- The island and the player's work carry on ----------------------------------------------
+// --- Every mission stands alone --------------------------------------------------------
 
-test("each mission begins on the island the one before left: the bridge, names and settings stay, and the resources start afresh", () => {
-  const world = baseWorld();
-  const library = { programs: [] };
-  const camp = [];
-  let kits = 0;
+test("every mission starts with its own programs alone, every building empty and every deposit full, but for what its lesson stages", () => {
+  const ids = (list) => list.map((p) => p.id).sort();
   for (const m of CAMPAIGN) {
-    enterMission(world, library, m);
-    assert.deepEqual(checkWorld(world), [], `${m.id}'s checkpoint`);
+    const { world, library } = missionStart(m);
+    assert.deepEqual(checkWorld(world), [], `${m.id}'s start`);
     assert.equal(world.tick, 0);
-    // Every building empty and every deposit full, but for the stock the
-    // mission stages for its lesson.
+    assert.deepEqual(ids(library.programs), ids(m.programs), `${m.id}'s library`);
+    assert.ok(world.programs.every((p) => m.programs.some((it) => it.id === p.id)), `${m.id} has no other mission's programs`);
     const staged = new Set(Object.keys({ ...m.setup.stock, ...m.trials?.[0].stage?.stock }));
     for (const t of [...world.entities, ...world.nodes]) {
       if (t.kind !== "robot" && !staged.has(t.id)) assert.deepEqual(t.store.items, thingOf(t.id)?.items ?? {}, `${m.id}: ${t.id} starts afresh`);
     }
-    if (m.id === "m02") {
-      // Named in mission 1, by the player.
-      byId(world, "r1").name = "Blinky";
-    }
-    if (m.id === "m23") assert.deepEqual(byId(world, "r3").settings, { source: "quarry", item: "stone", destination: "depot" }, "mission 22's settings carry on");
-    playMission(world, referenceCommands(world, library, m), m.steps);
-    camp.push(byId(world, "camp").store.items.wood ?? 0);
-    if (m.id === "m25") kits = byId(world, "workshop").store.items.kit;
   }
-  assert.equal(byId(world, "r1").name, "Blinky");
-  assert.deepEqual(camp.slice(0, 10), [0, 0, 1, 1, 2, 2, 3, 4, 4, 3], "the camp holds only what each mission of chapters 1 and 2 brought");
-  assert.equal(byId(world, "site").built, true, "the bridge, from mission 15 on");
-  assert.equal(kits, 2, "the first kits, at mission 25");
-  assert.ok(CAMPAIGN.every((m) => m.programs.every((p) => library.programs.some((d) => d.id === p.id))), "every mission's programs are in the library");
 });
 
-test("whatever the mission before left in the stores, the next begins with them as the island starts them", () => {
-  const library = { programs: [] };
-  const world = missionStart(mission("m12"), library);
-  byId(world, "depot").store.items.plank = 39;
-  byId(world, "camp").store.items = { wood: 20, stone: 3 };
-  byId(world, "grove").store.items = { wood: 2 };
-  byId(world, "r1").name = "Blinky";
-  enterMission(world, library, mission("m13"));
-  assert.deepEqual(byId(world, "depot").store.items, {}, "the depot is empty");
-  assert.deepEqual(byId(world, "camp").store.items, {}, "and the camp");
-  assert.deepEqual(byId(world, "grove").store.items, { wood: 12 }, "the grove is full");
-  assert.equal(byId(world, "r1").name, "Blinky", "the player's names stay");
-});
-
-test("a mission played again on its own starts from its checkpoint, whatever the campaign has become", () => {
-  const library = { programs: [] };
-  const world = missionStart(mission("m03"), library);
+test("a mission's start set is the island its setup and those before it build, the same every time", () => {
+  const { world } = missionStart(mission("m03"));
   assert.deepEqual(
     world.entities.map((e) => e.id),
     ["camp", "r1"],
     "chapter 1's island",
   );
-  assert.deepEqual(byId(world, "r1").store.items, { wood: 1 });
+  assert.deepEqual(byId(world, "r1").store.items, { wood: 1 }, "with the wood mission 2 was about");
   assert.equal(world.mission.id, "m03");
-  assert.deepEqual(copy(world), copy(missionStart(mission("m03"), { programs: [] })), "the same every time");
+  assert.deepEqual(copy(world), copy(missionStart(mission("m03")).world), "the same every time");
+  assert.equal(byId(missionStart(mission("m16")).world, "site").built, true, "the bridge, after mission 15");
+  assert.ok(byId(missionStart(mission("m26")).world, "workshop"), "the workshop, from mission 25");
 });
 
 // --- What each mission offers -----------------------------------------------------------

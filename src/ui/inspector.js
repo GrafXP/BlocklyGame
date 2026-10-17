@@ -13,7 +13,7 @@ import { blockOf } from "./session.js";
 // room there is, what its block read in this step, how far round its Repeat
 // it is, what its variables hold, which of the player's own blocks it's inside,
 // and the messages in its inbox (PLAN.md §11, Phase 8). A robot or building's
-// program can be opened from here.
+// program is opened from here, or a new one made for it.
 
 const KIND = { robot: "inspector.robot", building: "inspector.building", node: "inspector.resource" };
 
@@ -121,10 +121,12 @@ export function detailsHtml(world, id, entry, words) {
 }
 
 // The chosen thing's buttons, for its snapshot entry `entry` (null for a
-// deposit): Edit program for a robot or building that has a program, running,
-// stopped or parked, and Close. The overview puts them under the thing's name.
-export function detailsActions(entry) {
+// deposit): Edit program and Close. Edit program is there for every robot and
+// building where the play can make it a program (`make`), and for one that has
+// a program, running, stopped or parked, anywhere. The overview puts them
+// under the thing's name.
+export function detailsActions(entry, { make = false } = {}) {
   return `<div class="details-actions">${
-    entry?.program ? `<button class="button small primary" data-act="edit">${esc(t("inspector.edit"))}</button>` : ""
+    entry && (entry.program || make) ? `<button class="button small primary" data-act="edit">${esc(t("inspector.edit"))}</button>` : ""
   }<button class="button small" data-act="close">${esc(t("inspector.close"))}</button></div>`;
 }

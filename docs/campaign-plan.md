@@ -6,6 +6,8 @@ This is a new campaign design for the game described in [PLAN.md](../PLAN.md). I
 
 The campaign follows one growing island: make camp, learn to carry materials, open the sawmill, build the bridge, and restore the workshop district. The final project is to prepare the island for a welcome celebration by running a small, dependable production network.
 
+Every mission stands alone (decided 17 October 2026): a start set on that island and its goals. Nothing of the child's play in another mission carries into it, neither programs nor stock nor names; once a mission is done, the next starts afresh. Carrying work over confused children of 7–9.
+
 ## Learning and pacing
 
 - **Missions 1–25 form the main learning journey.** A child who finishes them has programmed sequences, loops, decisions, and cooperating workers. Mission 25 is a satisfying achievement in its own right.
@@ -54,9 +56,9 @@ Use the existing three helpers and building categories throughout. Shelters, sig
 
 ## Mission cards
 
-The quoted sentence is proposed child-facing mission text. The other fields are authoring notes. Unless stated otherwise, a mission follows the previous one and uses already learned blocks. Earlier programs may be supplied as working helpers, but their contribution must be visible. Only the program or small section being taught should need editing.
+The quoted sentence is proposed child-facing mission text. The other fields are authoring notes. Unless stated otherwise, a mission follows the previous one and uses already learned blocks. Earlier programs may be supplied again as working helpers, among the mission's own starters, but their contribution must be visible. Only the program or small section being taught should need editing.
 
-All numerical goals below refer to the mission's marked order or a change since its starting checkpoint, not to unrelated stock left over from earlier missions. Exact-order lessons use dedicated destination stock and account for deliveries still in progress before showing success.
+All numerical goals below refer to the mission's marked order or a change since its start. Exact-order lessons use dedicated destination stock and account for deliveries still in progress before showing success.
 
 ### Chapter 1 — Hello, Helper!
 
@@ -469,7 +471,7 @@ All numerical goals below refer to the mission's marked order or a change since 
 “Use your team's plan to deliver four kits for our celebration.”
 
 - **Learn:** Extend, explain, and repair a cooperating system; no new feature in the finale.
-- **Setup and support:** Carry forward the rehearsal's programs. Prepare a visible four-kit order, at least eight wood and four stone, and enough storage. Keep all required routes open. Use a longer familiar courier route as a visible test variation, not a surprise hazard.
+- **Setup and support:** Supply the rehearsal's programs again, as this mission's starters. Prepare a visible four-kit order, at least eight wood and four stone, and enough storage. Keep all required routes open. Use a longer familiar courier route as a visible test variation, not a surprise hazard.
 - **Player task:** Adapt the plan for four kits, use counters/routines/messages where helpful, and watch supplies flow without manually moving items or restarting workers to make progress.
 - **Success:** Four newly made kits reach the depot. Each recipe's materials are accounted for, and the production network completes the order under both the normal and slower-courier rehearsal conditions. Ordinary temporary waits are allowed.
 - **Hint / talk:** “Show one thing your program remembers, repeats, decides, or tells a friend.” Celebrate the restored island and preserve the child's programs in sandbox. Do not require every advanced block family in one solution.
@@ -510,17 +512,17 @@ World outcomes decide mission completion. Never require the reference solution's
 
 ## Checkpoints, resources, and reliable goals
 
-The island grows across chapters, but each lesson needs a clear, recoverable starting situation.
+The island grows across chapters, but each lesson needs a clear, recoverable starting situation, and every mission stands alone.
 
-1. **Preserve the settlement and the child's work.** Keep a mission-start checkpoint. Restart restores the starting world and resets execution while preserving the child's edited programs, as specified in the project's checkpoint policy. Keep unapplied drafts available too. Offer “Back to starter program” separately.
-2. **Make setup changes visible.** If a lesson stages planks, supplies an order, parks unused helpers, or prepares an isolated trial, show that preparation. Each mission begins with its resources reset, every building empty and every deposit full, so stage on top of that rather than relying on what an earlier mission left.
+1. **Start each mission from its own start set.** A mission's setup says what it adds to the island before it; its start is the base island with every setup up to it made in turn, nothing played between, and its programs are its own starters alone. Restart restores that start and resets execution while preserving the child's edited programs and unapplied drafts, as specified in the project's checkpoint policy. Offer “Back to starter program” separately. Once the mission is done, the next starts afresh: nothing of this one is kept but that it was done.
+2. **Make setup changes visible.** If a lesson stages planks, supplies an order, parks unused helpers, or prepares an isolated trial, show that preparation. Each mission begins with its resources reset, every building empty and every deposit full, so stage on top of that.
 3. **Control who can touch lesson resources.** Especially in missions 16–19, give only the relevant producer/consumer active jobs in the mission setup. A count-comparison lesson should not accidentally become a race for reservations. This does not introduce separate clocks or individual Pause controls.
 4. **Budget the whole chain.** Two kits require four planks and two stone; four kits require eight wood, converted to eight planks, plus four stone. Do not count the same material twice or rely on unknown leftovers. Finite stone supplies need explicit top-ups as the campaign progresses.
 5. **Budget destination space too.** Default baskets stay at two. Explicitly author storage capacities, preloaded amounts, and output room for each mission. When introducing four staged planks, ensure the shelf can hold them; when making kits, provide a compatible kit store.
 6. **Judge completed actions.** Do not award a delivery when a robot starts unloading. For exact orders, check the destination, completed deliveries, and remaining/in-progress actions so an imminent extra delivery does not pass unnoticed. A halted final program is appropriate for finite-order lessons, not a requirement for every continuous system.
 7. **Exercise both condition outcomes.** Missions 16–19 use visible small trials with a reset between them. Explain what changed. Do not reject a child with an undisclosed test case or require a timing trick.
 8. **Observe stable behavior where needed.** Mission 20 needs sufficient ongoing supply to expose overproduction, storage above the two-plank target, and observation after refills and pending jobs settle. The final missions must run long enough to finish the requested kits; intermediate empty shelves and visible resource waits are normal.
-9. **Keep earlier replays separate.** Use the programs, targets, and unlocks from that mission's saved checkpoint. A replay must not replace the main settlement with an earlier version.
+9. **Keep earlier replays separate.** A replay starts from that mission's start, with its own starters and unlocks, and never changes the campaign.
 
 ## Implementation dependencies and handoff
 
@@ -538,7 +540,7 @@ This plan was grounded in the [phase 2 findings](phase2.md), [phase 3 findings](
 | Variables, set/change/read, visible local values | 26–30 | In place (Phase 8, [phase 8 findings](phase8.md)): Blockly's Set, Change and Get, whole numbers local to each entity, 0 at every start, shown beside each robot |
 | Non-recursive procedures and typed inputs | 31–35 | In place (Phase 8): “my block …” with one input, a place or a number as its blocks use it, traced into and out of |
 | Send, matching Wait For Message, inbox display | 36–38 | In place (Phase 8): seven named messages to one robot or building, delivered at the next step, inboxes of four, the inbox in the inspector |
-| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | In place for missions 1–25 (Phase 7, [phase 7 findings](phase7.md)): goals on completed work with exact orders and trials, hints that answer the problem in view, mission-start checkpoints on one growing island, replays apart from it, unlocks per mission, free play and the sandbox, English and German text, and `verify:missions` |
+| Mission objectives, hints, checkpoints, replay, progressive unlocks, translated text | All | In place for missions 1–25 (Phase 7, [phase 7 findings](phase7.md)): goals on completed work with exact orders and trials, hints that answer the problem in view, every mission standing alone from its own start set on the growing island, replays from the same start, unlocks per mission, free play and the sandbox, English and German text, and `verify:missions` |
 
 No mission requires AND/OR, recursion, lists, return values, global variables, message payloads, broadcasts, or child-defined object types. These can become future expansion topics. Nested loops appear only in a small guided example and remain optional in later projects.
 
@@ -553,7 +555,7 @@ When implementation reaches campaign authoring, prepare:
 - At least one reference program per participating entity, including supplied helper programs, with a resource budget and a generous simulation-step completion bound.
 - A small visible reward, next-mission transition, and isolated replay state.
 
-Reference programs should be run using the real simulation and the mission's actual toolbox. Check the full sequence as well as isolated missions so leftover stock, shared edits, and unlocks do not break the next lesson. This document specifies the intended content; it does not supply or claim to have tested executable mission definitions.
+Reference programs should be run using the real simulation and the mission's actual toolbox, from the mission's start. Since every mission stands alone, nothing an earlier mission's play leaves can break the next lesson. This document specifies the intended content; it does not supply or claim to have tested executable mission definitions.
 
 ### Relationship to the original rollout
 

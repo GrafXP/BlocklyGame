@@ -208,6 +208,7 @@ In the first release, settings are a fixed set of named slots per entity kind: S
 
 ### Editing and applying
 
+- Every robot and building has an Edit program button. It opens the program the entity runs; one that runs none is given a new program of its own, a start block, and the editor opens on that. At the editor's head, a dropdown chooses the entity's program from the programs it can run, or a new one, with its own copy and the way back to the shared program beside it; the editor then shows the program chosen (decided 17 October 2026).
 - Entering edit mode pauses the entire world.
 - Editing saves a draft; it does not change published running code.
 - Apply validates and compiles a new published version.
@@ -328,7 +329,7 @@ Define ordinary game blocks with Blockly JSON definitions and small extensions f
 - World view with selection outlines, entity labels, inventory indicators, and destination markers.
 - Top mission card with the goal in one short sentence and pictures, objective progress, and the hint ladder (Beginner support).
 - Global Run/Pause, Step, Step to Next Block, speed, tick counter, and Restart Mission controls.
-- Entity inspector with program assignment, stock/basket contents, settings, and current status.
+- Entity inspector with Edit program, team, stock/basket contents, settings, and current status. The program itself is chosen at the editor's head (Section 5).
 - Blockly editor in a partially transparent overlay panel, with the 3D world still visible behind it on larger screens. Editing pauses the world (Section 5); the camera still moves, and while the world is paused the renderer draws only when the view changes.
 - Execution overview available throughout play and stepping.
 
@@ -442,11 +443,11 @@ Missions 1–25 are the main learning journey and a complete achievement in them
 
 The campaign keeps to the game's own rules (docs/campaign-plan.md, World rules): Go To chooses a named place, never a grid direction; a basket holds two items; the sawmill turns one wood into one plank; the bridge takes four planks; a kit takes two planks and one stone. A change to any of these changes the missions too.
 
-**Settlement and checkpoints.** Missions operate on one settlement state, adding authored terrain access, entities, and unlocks at mission boundaries. Resources do not carry over: each mission begins with every building's store empty and every deposit full, then stages what its lesson needs (decided 17 October 2026, docs/phase7.md). Store a checkpoint at the start of each mission. Restart restores that mission's world while preserving edited programs and unapplied drafts, so a corrected solution can be retried; each program also offers “Back to starter program”. Replaying an earlier mission uses an isolated checkpoint and the program library saved with it, because current programs may reference entities or blocks that do not yet exist in the earlier mission. A replay awards progress without overwriting the current settlement.
+**Missions stand alone.** Each mission is a start set and its goals, nothing more: nothing the player did in another mission carries into it, neither programs, stock, positions, names nor settings (decided 17 October 2026: carrying work over confused children of 7–9). The island still grows across the chapters as authored content: a mission's setup is written as what it adds to the island before it (terrain access, entities, unlocks), and its start set is the base island with every setup up to it made in turn, nothing played between (`src/campaign.js`, `missionStart`), so the bridge is there after mission 15 and the workshop from 25. Each mission begins with every building's store empty and every deposit full, then stages what its lesson needs, and its program library holds its own starter programs alone. Its start is its checkpoint. Restart restores that mission's world while preserving edited programs and unapplied drafts, so a corrected solution can be retried; each program also offers “Back to starter program”. A mission's state is kept, and saved, only until it is done: then the next mission starts afresh, and nothing of the one before is kept but that it was done. Replaying an earlier mission starts it from its start, apart from the campaign, and a finished replay is let go the same way. A replay awards progress without changing the campaign.
 
 **Reliable lessons.** The campaign's rules for checkpoints, resources, and goals are requirements on mission definitions:
 
-- Setup changes are visible: staged stock, supplied orders, parked helpers. Every mission starts its stores afresh, so none depends on what an earlier one left.
+- Setup changes are visible: staged stock, supplied orders, parked helpers. Every mission starts from its own start set, so none depends on what an earlier one left.
 - Where a race for reservations would muddle a lesson, only the entities it is about have active jobs (missions 16–19). There are still no separate clocks or individual Pause controls.
 - Every mission budgets its whole chain and its storage: materials, preloaded amounts, capacities, and output room, without counting a material twice or relying on unknown leftovers. Baskets stay at two items.
 - Objectives judge completed actions, not started ones. An exact order also checks deliveries still under way, so an imminent extra delivery cannot pass unnoticed.
@@ -455,7 +456,7 @@ The campaign keeps to the game's own rules (docs/campaign-plan.md, World rules):
 
 **Mission definitions.** Each mission definition contains its starting additions, the narrow new unlock on top of earlier blocks (filtered per robot or building, Section 7), its trials, objective predicates, three hints, starter programs, reference programs for every participating entity, a resource budget, a step bound for completion, and its reward and transition. Objectives inspect actual world outcomes and never require one exact block arrangement, fixed block IDs, variable names, or workspace positions. A mission's text (goal, hints, reward, prediction and explanation prompts, and accessible goal descriptions) lives in each language's `missions.js`, and its definition refers to that text by key.
 
-**Verification.** Run each reference solution headlessly with the mission's actual toolbox and resources, for every trial and within its step bound, both alone from its checkpoint and as part of the whole sequence, so leftover stock, shared edits, and unlocks cannot break the next lesson. Keep the campaign and sandbox on the same simulation and runtime. Sandbox adds blueprint placement, robot creation, and resource settings through normal tick-boundary commands.
+**Verification.** Run each reference solution headlessly from the mission's start, with its actual toolbox and resources, for every trial and within its step bound. Since missions stand alone, that is the only way a mission is played; there is no sequence to check. Keep the campaign and sandbox on the same simulation and runtime. Sandbox adds blueprint placement, robot creation, and resource settings through normal tick-boundary commands.
 
 ## 10. Data, persistence, and project layout
 
@@ -675,7 +676,7 @@ The slice is an implementation milestone. In the campaign, chapters 1–3 (Phase
 ### Phase 6 — Shared roles, type defaults, and placement
 
 - [x] Implement the program library, robot role defaults, and building-type defaults. (On the island at `/island`: docs/phase6.md. Roles are *teams* to the player; who runs what is world state, `src/sim/bindings.js`, resolved own → team → type. *Programs* in the bar is the library: edit, give, copy, rename, put away, new.)
-- [x] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs. (In the chosen robot's or building's row, `src/ui/setup.js`. Go To, Collect and Pick Up take a value in a gap, a shadow until a setting covers it; `COMPILER_VERSION` 2. Robots only: no mission needs a building's Target Stock.)
+- [x] Add individual overrides, per-entity settings, assignment previews that name every affected robot, and copy/return-to-default actions. Settings plug into action inputs (Go To my Destination, Collect my Item), as mission 22 needs. (In the chosen robot's or building's row, `src/ui/setup.js`; since 17 October 2026 the program, its own copy and the way back are chosen at the editor's head instead, `src/ui/program-choice.js`. Go To, Collect and Pick Up take a value in a gap, a shadow until a setting covers it; `COMPILER_VERSION` 2. Robots only: no mission needs a building's Target Stock.)
 - [x] Keep authored robot and program names as catalogue keys until the player renames them. Name the variables and procedures in copied starter programs in the current language. (A copy's name is a reference holding its program's and its robot's; `wordStarter` words the names a starter gives, tested ahead of Phase 8's variables and procedures.)
 - [x] Add deterministic program revision application and cancellation of affected unfinished actions. (Every change of who runs what starts again exactly the entities whose program changes, at the next tick; previews apply the change to the world as it will be, so they name exactly those. `SIM_VERSION` 5.)
 - [x] Add blueprint placement with footprint/path validation and visible starter construction programs. (*Build* places the workshop: open ground, clear of everything and its interaction cells, cutting nobody off now or once the bridges are built, `src/sim/placement.js`. Its site runs the *Workshop builder*, then becomes the workshop.)
@@ -688,12 +689,12 @@ Acceptance: two collectors share code but keep separate runtime state/settings. 
 - [x] Implement data-driven objectives (completed actions; exact orders that check deliveries under way), unlocks, trials, three-level hints, checkpoints, rewards, and mission transitions. (The campaign at `/play`: docs/phase7.md. Goals read a tally of the trial's finished work, `src/sim/objectives.js`; an exact order is judged once the work is over, and one too many fails it. Trials are staged in the world, the clock pausing between them. Hints answer the problem in view. `SIM_VERSION` 6.)
 - [x] Add the teaching interface the mission cards rely on: a persistent goal card with pictures, an optional prediction before Run and explanation after success, “Show me a start”, and the choice of a blank workspace. (A prediction said aloud or by pointing at the island; “Show me a start” and “Show me the whole program” in the Try hint; *Start from nothing* in the chapter projects and free play.)
 - [x] Author chapters 1–3 (missions 1–15) as the campaign plan's authoring package describes, with their text in English and German. Hold the playtest gates after missions 5, 10, and 15 (docs/campaign-plan.md, Playtest gates). (`src/content/missions/chapter1.js`–`chapter3.js`. The gates need children and are still to hold; German awaits a fluent speaker's review.)
-- [x] Open free play after mission 15, with the blocks learned so far and an unlocked program library. (`/free`: the island with its teams at work and every program the player wrote in the missions.)
+- [x] Open free play after mission 15, with the blocks learned so far and an unlocked program library. (`/free`: the island with its teams at work and programs of its own; since missions stand alone, the missions' programs stay in them.)
 - [x] Author chapters 4–5 (missions 16–25), including the paired trials of missions 16–19 and the workshop project of mission 25. Hold the playtest gates after missions 20 and 25, and grow free play into the sandbox after mission 25. (The sandbox adds Build, robots, supplies and a choice of layout. The gates are still to hold.)
-- [x] Preserve settlement changes between missions and isolate earlier-mission replay. (Each mission begins on the island the one before left, its setup changing only what its lesson needs, `src/sim/staging.js`. A replay starts from the setups alone with a copy of the player's library, not the library saved with that mission: docs/phase7.md.)
-- [x] Add `verify:missions`: every mission's reference solutions, for each trial and within its step bound, alone and in sequence, with its toolbox, resource and storage budget, and text keys in every listed language. (`scripts/verify-missions.js`, also run by `npm test`; it checks too that each mission's starters alone don't do it. A golden file holds the whole sequence's worlds.)
+- [x] Grow the island between missions and isolate earlier-mission replay. (Each mission's setup changes only what its lesson needs, `src/sim/staging.js`. Since 17 October 2026 every mission, played in the campaign or again, starts from the setups up to it with its own programs alone, and nothing of another mission's play: Section 9, Missions stand alone.)
+- [x] Add `verify:missions`: every mission's reference solutions, for each trial and within its step bound, from its start, with its toolbox, resource and storage budget, and text keys in every listed language. (`scripts/verify-missions.js`, also run by `npm test`; it checks too that each mission's starters alone don't do it. A golden file holds each mission's world once its reference has done it. It checked the whole sequence too, until missions came to stand alone.)
 
-Acceptance: a fresh player can complete missions 1–25 in sequence, restarting without losing edited code. The settlement expands visibly: new buildings and robots, the bridge at mission 15, and the workshop's first kits at mission 25. Free play opens after mission 15 and grows after mission 25. `verify:missions` passes for every mission alone and for the whole sequence.
+Acceptance: a fresh player can complete missions 1–25 in sequence, restarting without losing edited code. The settlement expands visibly: new buildings and robots, the bridge at mission 15, and the workshop's first kits at mission 25. Free play opens after mission 15 and grows after mission 25. `verify:missions` passes for every mission.
 
 ### Phase 8 — Variables, reusable routines, coordination, and chapters 6–8
 
@@ -703,7 +704,7 @@ Acceptance: a fresh player can complete missions 1–25 in sequence, restarting 
 - [x] Author chapters 6–8 (missions 26–40) in English and German, and extend the reference solution runner, including the finale's normal and slower-courier conditions. Hold the playtest gates after missions 30, 35, and 40. (`src/content/missions/chapter6.js`–`chapter8.js`; mission 40's two trials are the normal run and the kit courier starting at the grove. The gates need children and are still to hold.)
 - [x] Exercise shared routines and resource competition with several active entities. (Three robots sharing a block of their own compete for one pile, `test/memory.test.js`; missions 39 and 40 run five programs at once.)
 
-Acceptance: children can express reusable delivery routines and supply requests. Variable scopes remain local to an entity. Messages arrive at the documented tick and never create hidden concurrent threads. A fresh player can continue from mission 25 to the end of the campaign. (`verify:missions` passes for all forty missions, alone and in sequence; `SIM_VERSION` and `COMPILER_VERSION` are unchanged, and a world that doesn't use the new blocks runs as before.)
+Acceptance: children can express reusable delivery routines and supply requests. Variable scopes remain local to an entity. Messages arrive at the documented tick and never create hidden concurrent threads. A fresh player can continue from mission 25 to the end of the campaign. (`verify:missions` passes for all forty missions; `SIM_VERSION` and `COMPILER_VERSION` are unchanged, and a world that doesn't use the new blocks runs as before.)
 
 ### Phase 9 — Robust saves and offline shell
 
@@ -757,7 +758,7 @@ Use Node tests for behaviour that must be independent of the browser:
 - Shared code preserves separate counters, call stacks, destinations, and instruction positions.
 - Save/load mid-action or mid-procedure preserves future execution.
 - Published/draft revisions and source IDs remain coherent after edits/imports/migrations.
-- Every authored mission completes with its reference solutions, toolbox, and budgeted resources, for every trial and within its step bound, alone and as part of the whole campaign sequence.
+- Every authored mission completes from its start with its reference solutions, toolbox, and budgeted resources, for every trial and within its step bound.
 - Objectives count completed actions only, and an exact order fails while an extra delivery is under way.
 - No-op loops, missing targets, blocked routes, and full message queues yield readable states.
 - Every listed language has exactly English's keys (interface, blocks, missions), the same `{name}` placeholders, the same `%n` inputs in each block message, and the plural forms `Intl.PluralRules` reports for that language.
@@ -796,7 +797,7 @@ These are development targets, not measured claims. Select and record a specific
 | Risk | Control |
 | --- | --- |
 | Deep game features arrive before an understandable core | Complete the bridge slice and playtest before authoring the campaign |
-| Forty missions are too much content to author and keep working | One authoring package per mission; `verify:missions` over every mission alone and in sequence; chapters 6–8 can follow the first release if scope must shrink |
+| Forty missions are too much content to author and keep working | One authoring package per mission, each standing alone; `verify:missions` over every mission; chapters 6–8 can follow the first release if scope must shrink |
 | A lesson depends on leftover stock, a reservation race, or a hidden test | Visible staging, budgeted chains and storage, active jobs only for the entities a lesson is about, and visible trials (Section 9) |
 | Several programs compete for one stock item | Atomic reservations, deterministic queues, conservation tests |
 | Single stepping disagrees with live play | One advanceWorld function; tick-based actions; equivalent-state tests |
@@ -849,7 +850,7 @@ The plan was checked against GyroRocket's source and lockfile and against the pu
 | Program settings | Mission 8 needs per-robot sources, but parameters were neither designed nor given blocks | Fixed setting slots with “my Source”-style blocks; no child-defined parameters | 5, 7, 10 |
 | Assignment precedence | Override, role, and type defaults had no stated order | Override → role → type/chassis | 5 |
 | Mission concepts | Mission 7 introduced If/Else, comparisons, and Forever together, against the one-concept rule; Wait Until was in no mission | Forever moves to mission 4; mission 7 teaches conditions, with Wait Until as an alternative | 9 |
-| Earlier-mission replay | Which program library a replay uses was undefined | Use the library saved with that checkpoint; add “Back to starter program” | 9 |
+| Earlier-mission replay | Which program library a replay uses was undefined | Use the library saved with that checkpoint; add “Back to starter program”. Superseded 17 October 2026: every mission, replayed or not, starts with its own starters alone | 9 |
 | Child-facing terms | “Wait N Ticks” uses an engine term | “Wait N Steps”, matching the Step button | 7 |
 | Full inboxes | The policy was undefined | Send waits visibly; nothing is dropped | 7 |
 | Retired blocks | Blockly cannot load unregistered block types | Keep retired definitions registered and hidden until migrated | 7 |
@@ -888,7 +889,7 @@ The 12-mission campaign is replaced by the 40-mission campaign in [docs/campaign
 - Phase 7 builds the mission infrastructure and chapters 1–5; Phase 8 adds variables, procedures, and messages with chapters 6–8. Phase 5's bridge slice stays as an implementation milestone and the first supervised playtest. Phases 9–11 are unchanged.
 - No mission needs AND/OR, arithmetic, message broadcasts or payloads, Has Message, return values, recursion, lists, or global variables, so they leave the first release's block families. Procedures take one input, a place or a number; messages go to one named recipient.
 - Settings must plug into action inputs (mission 22), and mission 25 needs the workshop and its kit recipe; both are in Phase 6.
-- Missions gain trials, resource and storage budgets, step bounds, completed-action objectives, three-level hints, and a “Show me a start” option. `verify:missions` checks the whole sequence as well as each mission.
+- Missions gain trials, resource and storage budgets, step bounds, completed-action objectives, three-level hints, and a “Show me a start” option. `verify:missions` checks each mission (and checked the whole sequence, until missions came to stand alone on 17 October 2026).
 - The campaign's playtest gates, after missions 5, 10, 15, 20, 25, 30, 35, and 40, join the Phase 5 playtest.
 
 Applied in: the introduction, 1 (working decisions), 3 (first release, the bridge chain), 4 (resource rules), 5 (settings), 7 (block families, messages), 8 (main layout, beginner support), 9 (campaign and sandbox), 10 (data contracts, layout), 11 (Phases 5, 6, 7, 8, and 10), 12 (checks and completion), 13 (risks), 14, and 15 (a note on its mission numbers).
@@ -918,6 +919,15 @@ Applied in: 6 (tick phases), 7 (memory, reuse and coordination), and 11 (Phase 8
 Two decisions made while building the campaign (docs/phase7.md):
 
 - A robot given a program keeps what it carries when it hasn't yet taken a step of the program it had. Mission 3 starts Robo 1 with the wood from mission 2; emptying its basket on Apply undid the lesson. A robot that has begun its program is still emptied.
-- A mission played again starts from its checkpoint as the setups before it build it, with a copy of the player's current library, rather than the library saved when the mission was first played (Section 9). Each mission's programs have ids of their own, so the copy holds the child's solution from then unless it was changed later. Keeping a library for every checkpoint is left for Phase 9's IndexedDB saves.
+- A mission played again starts from its checkpoint as the setups before it build it, with a copy of the player's current library, rather than the library saved when the mission was first played (Section 9). Each mission's programs have ids of their own, so the copy holds the child's solution from then unless it was changed later. Keeping a library for every checkpoint is left for Phase 9's IndexedDB saves. (Superseded on 17 October 2026: a replay starts with the mission's own starters alone.)
 
 Applied in: 5 (editing and applying), and 11 (Phase 7's notes).
+
+### Missions stand alone, and programs open from their robot (17 October 2026)
+
+Two changes asked for while playing chapters 1–8:
+
+- Every mission stands alone: a start set and its goals. Nothing of another mission's play carries into it: no programs, stock, positions, names or settings. Its library holds its own starter programs, so no program of another mission can be opened or given. Once it's done, the next mission starts afresh and the one before is let go but for being done; a mission's state is kept, and saved, only until then. A replay starts from the mission's start, and a finished one is let go too. Free play has its own programs. The island still grows as authored content: each mission's start set is the setups up to it, made one after another with nothing played between. `verify:missions` and the golden file check every mission from its start; the sequence check is gone. Saves are schema 3; a campaign saved at schema 2 keeps its progress, and its mission starts afresh.
+- Every robot and building has Edit program. It opens what the entity runs, or gives one that runs none a new program of its own. The program is chosen at the editor's head, from those the entity can run or a new one, with its own copy and the way back to the shared program; the row keeps the team, name and settings. The editor follows the entity to the program it runs.
+
+Applied in: 5 (editing and applying), 8 (main layout), 9 (missions stand alone, reliable lessons, verification), 11 (Phases 6, 7 and 8), 12, 13, and 15.

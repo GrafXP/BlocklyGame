@@ -27,12 +27,18 @@ import { SIM_VERSION } from "../sim/world.js";
 //
 // A save is read back only by a game of the same versions: before Phase 9's
 // migrations, one from another version is let go and the play starts afresh
-// (PLAN.md §11, Phase 5). Every part is checked before the game uses any of it.
+// (PLAN.md §11, Phase 5); but a save of schema 2 is read, and the session
+// keeps no more of a mission's than its progress (src/ui/session.js). Every
+// part is checked before the game uses any of it.
 
 export const SAVE_FORMAT = "robot-island";
 // 2: a play's save names its content and its mission apart, for the campaign
 //    and free play.
-export const SAVE_SCHEMA = 2;
+// 3: every mission stands alone, its library holding its own programs (decided
+//    17 October 2026); in a save of 2 a mission's library holds every mission's
+//    before it.
+export const SAVE_SCHEMA = 3;
+const READ_SCHEMAS = [2, SAVE_SCHEMA];
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
 
@@ -56,7 +62,7 @@ export function makeSave({ content, mission = null, world, library, checkpoint, 
 
 // Save `save`, read for a play of `content` ({ id, version }) whose missions
 // are those `missions(id)` accepts (null: a play without missions). Returns {
-// mission, world, library, checkpoint, progress }, or { problem } when it can't
+// schema, mission, world, library, checkpoint, progress }, or { problem } when it can't
 // be used, which names the first part that's wrong: "format", "version"
 // (another schema, simulation or compiler), "mission" (another content, another
 // version of it, or a mission it hasn't), "library", "world", "checkpoint" or
@@ -64,7 +70,7 @@ export function makeSave({ content, mission = null, world, library, checkpoint, 
 // "progress".
 export function readSave(save, { content, missions = null }) {
   if (!save || typeof save !== "object" || save.format !== SAVE_FORMAT) return { problem: "format" };
-  if (save.schema !== SAVE_SCHEMA || save.sim !== SIM_VERSION || save.compiler !== COMPILER_VERSION) return { problem: "version" };
+  if (!READ_SCHEMAS.includes(save.schema) || save.sim !== SIM_VERSION || save.compiler !== COMPILER_VERSION) return { problem: "version" };
   const ref = { id: content.id, version: content.version };
   if (canonicalJson(save.content) !== canonicalJson(ref)) return { problem: "mission" };
   if (missions ? typeof save.mission !== "string" || !missions(save.mission) : save.mission !== null) return { problem: "mission" };
@@ -80,7 +86,7 @@ export function readSave(save, { content, missions = null }) {
   if (checkpoint.tick > world.tick) return { problem: "checkpoint" };
   if (!programsMatch(world, library) || !programsMatch(checkpoint, library)) return { problem: "programs" };
   if (!Array.isArray(progress?.completed) || !progress.completed.every((id) => typeof id === "string")) return { problem: "progress" };
-  return { mission: save.mission, world, library, checkpoint, progress: { completed: [...progress.completed] } };
+  return { schema: save.schema, mission: save.mission, world, library, checkpoint, progress: { completed: [...progress.completed] } };
 }
 
 // Whether every program `world` runs is what its revision's blocks in `library`

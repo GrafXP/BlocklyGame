@@ -11,7 +11,7 @@ import { TERRAIN } from "./island.js";
 //
 // The island starts as it was in the campaign by then: three robots on their
 // teams, the sawmill making planks, the bridge built, and in the sandbox a
-// workshop. The player's programs from the missions join its library.
+// workshop. It has programs of its own; those of the missions stay in them.
 
 // How the island starts: robots, 1 to 5; supplies "some" or "plenty"; the
 // bridge "built" or "toBuild"; the workshop "built" or "none" (the sandbox's

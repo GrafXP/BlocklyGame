@@ -378,11 +378,13 @@ if (want("library")) {
   await shot(shared, "settings-editor-en", PHASE6);
   // Robo 3's own copy of the Wood team's program, open and changed.
   const copy = await openTools(browser, { teams: { r3: "wood-team" }, ticks: 30, chosen: "r3" });
-  await copy.click('[data-setup="copy"]');
+  await copy.click('.row.selected [data-act="edit"]');
+  await copy.waitForFunction(() => window.islandPage.panel()?.program === "collector");
+  await copy.click('.code-choice [data-choice="copy"]');
   await copy.waitForTimeout(300);
   await copy.screenshot({ path: fileURLToPath(new URL("copy-preview-en.jpg", PHASE6)), type: "jpeg", quality: 82 });
   console.log("  copy-preview-en.jpg");
-  await copy.click('[data-setup="ok"]');
+  await copy.click('.code-choice [data-choice="ok"]');
   await copy.waitForFunction(() => window.islandPage.panel()?.program === "collector-r3");
   await copy.evaluate(() => {
     window.islandPage.game.step();
@@ -423,10 +425,9 @@ async function openCampaign(browser, opts = {}) {
   const { context = DESKTOP, lang = "en", mission = "m01", done = false, home = false, replay = null, free = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
   const page = await (await browser.newContext(context)).newPage();
   const m = campaignMission(mission);
-  const library = { programs: [] };
   // The starters' names worded in `lang`, as the game words them.
   const { ui } = await loadMessages(lang);
-  const world = missionStart(m, library, { word: (name) => translate(ui, lang === "pseudo" ? "en" : lang, name.key, name.params) });
+  const { world, library } = missionStart(m, { word: (name) => translate(ui, lang === "pseudo" ? "en" : lang, name.key, name.params) });
   const completed = CAMPAIGN.slice(0, m.n - (done ? 0 : 1)).map((it) => it.id);
   const save = makeSave({ content: { id: "campaign", version: 1 }, mission, world, library, checkpoint: world, progress: { completed } });
   await page.goto(`${base}/?dev&lang=${lang}`);

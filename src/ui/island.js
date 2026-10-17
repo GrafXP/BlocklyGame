@@ -37,6 +37,7 @@ import {
   libraryChanges,
   newFreeIsland,
   newGame,
+  newProgramFor,
   nextCampaignMission,
   peekWorld,
   placeBuilding,
@@ -117,15 +118,19 @@ export const slice = (el) => islandPage(el, "slice");
 // be looked at from any side and chosen by tapping them, their labels, or their
 // rows in the overview, which lists every one with the block it's at and why it
 // waits; the chosen one's row says more. A robot or building's program opens in
-// the editor on the left, over the world; All programs shows every running
-// program there instead, with everyone's markers. Every view shows the same
-// tick: one snapshot (snapshot.js) is taken after the frame's ticks and drawn by
-// all. A mission's card sits above the overview, and the mission is saved as
-// it's played, at tick boundaries.
+// the editor on the left, over the world, from its Edit program button: there
+// it can be given another, or a new one, and the editor follows it to the
+// program it runs. One that runs none is given a new program as the editor
+// opens. All programs shows every running program there instead, with
+// everyone's markers. Every view shows the same tick: one snapshot
+// (snapshot.js) is taken after the frame's ticks and drawn by all. A mission's
+// card sits above the overview, and the mission is saved as it's played, at
+// tick boundaries.
 //
 // Phase 6's tools, where the play offers them (session.js, tools): the chosen
-// row's program, team, own copy, name and settings (setup.js); Programs, the
-// program library, in the panel on the left (library.js); and Build, which
+// robot or building's program, chosen in the editor, and its own copy
+// (program-choice.js); a robot's team, name and settings (setup.js); Programs,
+// the program library, in the panel on the left (library.js); and Build, which
 // places a building where the player taps, its plan drawn green where it fits
 // and red where it doesn't, with the reason.
 function islandPage(el, key, { mission: asked = null } = {}) {
@@ -135,6 +140,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   const ruled = rules();
   const offers = ruled.tools;
   const canBuild = offers.includes("build") && blueprints().length > 0;
+  const giving = offers.includes("library"); // whether robots and buildings can be given programs
   const keeps = ["campaign", "replay", "free", "slice"].includes(key); // whether the play is saved on the device
   // What's kept is the play's, and a mission's own: the next mission starts
   // with nothing chosen and no hints shown.
@@ -280,10 +286,8 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     const panelAct = e.target.closest("[data-panel]")?.dataset.panel;
     if (pick) select(pick.closest(".row-head") && pick.dataset.pick === selected ? null : pick.dataset.pick);
     else if (act === "close") select(null);
-    else if (act === "edit") {
-      const program = entryIn(snapshot, selected)?.program;
-      if (program) openPanel({ kind: "editor", program });
-    } else if (panelAct === "close") closePanel();
+    else if (act === "edit") editFor(selected);
+    else if (panelAct === "close") closePanel();
     else if (panelAct === "together") (panel?.kind === "together" ? closePanel() : openPanel({ kind: "together" }));
     else if (panelAct === "library") (panel?.kind === "library" ? closePanel() : openPanel({ kind: "library" }));
   });
@@ -448,7 +452,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
 
   // --- The overview, and the mission's card above it -------------------------
   const overview = createOverview($(".overview"));
-  const setup = createSetup({ onOpenProgram: (program) => openPanel({ kind: "editor", program }) });
+  const setup = createSetup();
   const card = mission
     ? createMissionCard($(".mission-card"), bin, {
         mission,
@@ -484,13 +488,16 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   // --- The panel on the left: the editor, or every program together ---------
   const sidePanel = $(".side-panel");
   const panelBody = $(".panel-body");
-  let panel = null; // { kind, program?, view }
+  let panel = null; // { kind, program?, entity?, view }
   let opening = 0; // the latest panel asked for, while Blockly is fetched
+  let wanted = null; // that panel, until it's open
   async function openPanel(want) {
     const ticket = ++opening;
+    wanted = want;
     if (want.kind === "editor") game.pause(); // editing pauses the world (PLAN.md §5)
     const blockly = await loadBlockly();
     if (!bin.open || ticket !== opening) return;
+    wanted = null;
     closePanel(false);
     sidePanel.hidden = false;
     sidePanel.dataset.kind = want.kind;
@@ -498,7 +505,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     const onPick = (id) => select(id);
     const pane =
       want.kind === "editor"
-        ? openEditor(panelBody, { blockly, markers, programId: want.program, onPick })
+        ? openEditor(panelBody, { blockly, markers, programId: want.program, entity: want.entity ?? null, onPick })
         : want.kind === "library"
           ? createLibraryPanel(panelBody, { onEdit: (program) => openPanel({ kind: "editor", program }) })
           : createTogether(panelBody, { blockly, markers, onPick });
@@ -508,7 +515,10 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     refresh();
   }
   function closePanel(forget = true) {
-    if (forget) opening++;
+    if (forget) {
+      opening++;
+      wanted = null;
+    }
     panel?.view.dispose();
     panel = null;
     if (forget) kept.panel = null;
@@ -519,6 +529,25 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     opening++;
     panel?.view.dispose();
   });
+  // Opens the editor on what robot or building `id` runs, for it, where the play
+  // offers giving programs (program-choice.js). Given none, it's given a new
+  // one of its own there.
+  function editFor(id) {
+    const e = peekWorld().entities.find((it) => it.id === id);
+    let program = e?.runtime?.kind === "program" ? e.runtime.program : null;
+    if (e && !program && giving) program = newProgramFor(id);
+    if (program) openPanel({ kind: "editor", program, entity: giving ? id : null });
+  }
+  // The editor opened for a robot or building goes over to the program it
+  // runs, once that's another, chosen at the editor's head or anywhere else.
+  function follow() {
+    const at = wanted ?? panel;
+    if (at?.kind !== "editor" || !at.entity) return;
+    const e = peekWorld().entities.find((it) => it.id === at.entity);
+    const runs = e?.runtime?.kind === "program" ? e.runtime.program : null;
+    if (runs && runs !== at.program) openPanel({ kind: "editor", program: runs, entity: at.entity });
+  }
+
   function showPanelState() {
     $('[data-panel="together"]').setAttribute("aria-pressed", String(panel?.kind === "together"));
     $('[data-panel="library"]')?.setAttribute("aria-pressed", String(panel?.kind === "library"));
@@ -589,7 +618,8 @@ function islandPage(el, key, { mission: asked = null } = {}) {
       if (shown && shown.world !== w) select(null, false);
       snapshot = takeSnapshot(w, currentLibrary());
       resized = showTags(w, snapshot);
-      overview.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w) });
+      overview.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w), make: giving });
+      follow();
       panel?.view.show(w, snapshot, selected);
       if (canBuild) $(".build-pending").hidden = !game.pending.some((c) => c.type === "place");
       const stall = $(".stall");
@@ -710,14 +740,14 @@ function islandPage(el, key, { mission: asked = null } = {}) {
         refresh();
       },
       snapshot: () => snapshot,
-      // Opens the editor of program `program`, or All programs; resolves once
-      // it's open.
-      async open(kind, program) {
-        await openPanel({ kind, program });
+      // Opens the editor of program `program`, for robot or building `entity`
+      // if it's given, or All programs; resolves once it's open.
+      async open(kind, program, entity = null) {
+        await openPanel({ kind, program, entity });
         showWorld(false);
       },
       close: () => closePanel(),
-      panel: () => (panel ? { kind: panel.kind, program: panel.program ?? null } : null),
+      panel: () => (panel ? { kind: panel.kind, program: panel.program ?? null, entity: panel.entity ?? null } : null),
       // The world as it will be at the next step, and the library panel's
       // programs as it shows them.
       peek: () => peekWorld(),

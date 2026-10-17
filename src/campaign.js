@@ -9,80 +9,62 @@ import { enter } from "./sim/staging.js";
 import { thing } from "./sim/things.js";
 import { advanceWorld, createWorld } from "./sim/world.js";
 
-// The campaign's worlds (PLAN.md §9, “Settlement and checkpoints”): one island
-// that each mission takes over from the one before, the player's program
-// library going along with it. Used by the game (src/ui/session.js), by the
-// tests, and by scripts/verify-missions.js, which plays every mission's
-// reference solution alone and in sequence.
+// The campaign's worlds (PLAN.md §9, “Missions stand alone”): each mission
+// is a start set and its goals, nothing more. Nothing the player did in another
+// mission carries into it, neither programs nor stock nor names (decided 17
+// October 2026: carrying work over confused children of 7–9). Used by the game
+// (src/ui/session.js), by the tests, and by scripts/verify-missions.js, which
+// plays every mission's reference solution from its start.
 //
-// - The island before mission 1 is BASE (src/content/missions/island.js).
-// - enterMission makes a mission begin on the island as the one before left
-//   it: its starter programs join the library, its setup is made, and its
-//   first trial staged. The world at that moment is the mission's checkpoint,
-//   which Start again goes back to.
-// - missionStart builds a mission's checkpoint without playing the missions
-//   before it, their setups one after another: an earlier mission replayed on
-//   its own, and the reference solutions run alone, start there.
+// The island before mission 1 is BASE (src/content/missions/island.js). A
+// mission's setup is written as what it changes on the island of the mission
+// before (src/sim/staging.js), so its start set is the island with the setup
+// of every mission up to it made in turn, nothing played between: the bridge
+// is there from mission 16, the workshop from 25. Its library holds its own
+// starter programs alone.
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
 
 // The island before mission 1.
 export const baseWorld = () => createWorld(BASE);
 
-// Mission `mission`'s starter programs added to `library`, those it hasn't
-// got: worded by `word` as they're copied in (src/programming/programs.js,
-// wordStarter). A program the player had already keeps its blocks.
-export function addMissionPrograms(library, mission, { word = null } = {}) {
-  for (const { id, name, source } of mission.programs) {
-    if (programDoc(library, id)) continue;
-    newProgram(library, { newId: id, name, source: word ? wordStarter(source, word) : copy(source) });
-  }
+// A library of mission `mission`'s starter programs, worded by `word` as
+// they're copied in (src/programming/programs.js, wordStarter).
+function missionLibrary(mission, { word = null } = {}) {
+  const library = { programs: [] };
+  for (const { id, name, source } of mission.programs) newProgram(library, { newId: id, name, source: word ? wordStarter(source, word) : copy(source) });
+  return library;
 }
 
-// The programs a world with things `places` can run from `library`: each
-// program's newest revision that compiles there. In an earlier mission played
-// again, a program changed later can name a place that isn't on the island
-// yet; then an older revision runs. A saved library keeps only the revisions
-// something ran (src/storage/saves.js), so when none of those fits, the
-// program's starter does, put into `library` as its next revision, which a save
-// then keeps. A program whose starter doesn't fit either is left out.
-export function compiledPrograms(library, places) {
+// The programs of `library` a world with things `places` can run, compiled:
+// one whose blocks don't compile there is left out.
+function compiledPrograms(library, places) {
   return library.programs.flatMap((doc) => {
-    for (const { revision, source } of [...doc.published].reverse()) {
-      const { program } = compile(source, { places });
-      if (program) return [{ id: doc.id, revision, ...program }];
-    }
-    const { program } = compile(doc.starter, { places });
-    if (!program) return [];
-    const revision = latest(doc).revision + 1;
-    doc.published.push({ revision, source: copy(doc.starter) });
-    return [{ id: doc.id, revision, ...program }];
+    const { revision, source } = latest(doc);
+    const { program } = compile(source, { places });
+    return program ? [{ id: doc.id, revision, ...program }] : [];
   });
 }
 
-// Mission `mission` begins on `world`, the island as the mission before left
-// it, with the player's `library`: its programs are added to the library, the
-// world gets every program it can run, its resources are reset, the setup is
-// made (src/sim/staging.js) and the first trial staged. Changes and returns
-// `world`.
-export function enterMission(world, library, mission, { word = null } = {}) {
-  addMissionPrograms(library, mission, { word });
+// Mission `mission`'s setup made on `world`, with `library` its programs: the
+// world gets every one it can run and no other, its resources are reset, the
+// setup is made (src/sim/staging.js) and the first trial staged.
+function enterMission(world, library, mission) {
   const places = [...new Set([...world.entities, ...world.nodes].map((t) => t.id).concat(mission.setup.add ?? []))];
   enter(world, mission.setup, { things: THINGS, programs: compiledPrograms(library, places), restock: true });
   world.mission = createMission({ id: mission.id, trials: mission.trials, goals: mission.goals, reward: mission.reward ?? [] });
   beginTrial(world);
-  return world;
 }
 
-// Mission `mission`'s checkpoint without the missions before it played: the
-// island before mission 1 with the setup of each mission up to this one made in
-// turn, nothing happening between. `library` is the player's, or one of every
-// mission's starters up to this one; starters it hasn't got yet join it worded
-// by `word`, as enterMission's do.
-export function missionStart(mission, library, { word = null } = {}) {
+// Mission `mission`'s start: { world, library }, the world its checkpoint,
+// which Start again goes back to, and the library its own starter programs,
+// worded by `word`. The same every time.
+export function missionStart(mission, { word = null } = {}) {
   const world = baseWorld();
-  for (const m of CAMPAIGN.slice(0, mission.n)) enterMission(world, library, m, { word });
-  return world;
+  for (const m of CAMPAIGN.slice(0, mission.n - 1)) enterMission(world, missionLibrary(m), m);
+  const library = missionLibrary(mission, { word });
+  enterMission(world, library, mission);
+  return { world, library };
 }
 
 // --- The reference solutions ----------------------------------------------------
