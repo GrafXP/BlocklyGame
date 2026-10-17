@@ -25,6 +25,7 @@ import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
 import { createLibraryPanel } from "./library.js";
 import { createMissionCard } from "./mission.js";
+import { createMissionOverlays } from "./mission-overlays.js";
 import { createOverview } from "./overview.js";
 import {
   addRobot,
@@ -125,7 +126,8 @@ export const slice = (el) => islandPage(el, "slice");
 // everyone's markers. Every view shows the same tick: one snapshot
 // (snapshot.js) is taken after the frame's ticks and drawn by all. A mission's
 // card sits above the overview, and the mission is saved as it's played, at
-// tick boundaries.
+// tick boundaries. A mission begins with its briefing over the page, and ends
+// with the win, fireworks and the way on (mission-overlays.js).
 //
 // Phase 6's tools, where the play offers them (session.js, tools): the chosen
 // robot or building's program, chosen in the editor, and its own copy
@@ -472,18 +474,38 @@ function islandPage(el, key, { mission: asked = null } = {}) {
           game = newGame();
           showWorld(false);
         },
-        // On to the next mission, which opens the page again; after a replay,
-        // or the campaign's last mission, back to the title page.
-        onNext: () => {
-          if (key === "campaign" && nextCampaignMission()) go(`/play${location.search}`, "replace");
-          else go(`/${location.search}`);
-        },
+        onNext: goOn,
         onDismiss: () => {
           dismissNotice();
           refresh();
         },
       })
     : null;
+  // The briefing and the win. The world pauses as the win opens, and goes on
+  // as it was if the player keeps playing.
+  let wonWhileRunning = false;
+  const overlays = mission
+    ? createMissionOverlays($(".island-page"), bin, {
+        mission,
+        kept: kept.overlays?.play === playing ? kept.overlays : (kept.overlays = { play: playing }),
+        replay: key === "replay",
+        next: key === "campaign" && !!nextMission(mission),
+        onWin: () => {
+          wonWhileRunning = game.clock.running;
+          game.pause();
+        },
+        onKeep: () => {
+          if (wonWhileRunning) game.run();
+        },
+        onNext: goOn,
+      })
+    : null;
+  // On to the next mission, which opens the page again; after a replay, or
+  // the campaign's last mission, back to the title page.
+  function goOn() {
+    if (key === "campaign" && nextCampaignMission()) go(`/play${location.search}`, "replace");
+    else go(`/${location.search}`);
+  }
 
   // --- The panel on the left: the editor, or every program together ---------
   const sidePanel = $(".side-panel");
@@ -626,6 +648,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
       stall.hidden = !w.stall;
       stall.textContent = w.stall ? describeReason(w, { code: "stall" }) : "";
       card?.show(w, { notice: playing.notice, changed: playing.changed });
+      overlays?.show(w);
       shown = { ...now, selected };
     }
     if (drew || resized) placeTags();
@@ -776,6 +799,8 @@ function islandPage(el, key, { mission: asked = null } = {}) {
       // The play shown: its key, the mission's state, and its notice; and
       // saving it now, as the page does by itself.
       play: () => ({ key, mission: game.world.mission, notice: playing.notice, progress: playing.progress }),
+      // Which of the mission's big windows is open: "briefing", "win", or null.
+      overlay: () => overlays?.open() ?? null,
       save: () => save(),
     };
     bin.add(() => delete window.islandPage);

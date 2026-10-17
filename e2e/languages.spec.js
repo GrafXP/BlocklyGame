@@ -3,7 +3,7 @@ import { ENGLISH } from "../src/i18n/index.js";
 import { LANGUAGES } from "../src/i18n/languages.js";
 import { NOT_WORDS, UNUSED_BLOCKLY } from "../src/i18n/blockly-unused.js";
 import { overrides as germanOverrides } from "../src/i18n/de/blockly.js";
-import { seedCampaign, solveMission } from "./campaign-seed.js";
+import { letsGo, seedCampaign, solveMission } from "./campaign-seed.js";
 
 // The language checks of PLAN.md §12 that need a browser: the title page and the
 // editor lab in each language, chosen by the browser or by the player; a switch
@@ -367,6 +367,7 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
   }, broken);
   await page.goto(`/slice?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  await letsGo(page);
   const apply = async () => {
     await page.waitForTimeout(400); // the editor saves its draft
     await page.locator('[data-code="apply"]').click();
@@ -406,13 +407,15 @@ const PLAY_STATES = [{ hints: 3 }, { broken: true }, { fixed: true, ticks: 60, c
 // The campaign's pages, as `state` asks, from a campaign saved at mission
 // `mission` (campaign-seed.js): `hints` of its ladder showing; with `passed`,
 // its whole program shown and applied and the first trial passed; `stuck`, run
-// until everything waits; `chosen`, a robot or building chosen; `done`, solved;
-// or `replay`, a mission done before played again; or free play grown into
-// the sandbox, with the grove chosen and the new island's layout asked for.
-async function campaignAt(page, query, { mission = "m01", hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
+// until everything waits; `chosen`, a robot or building chosen; `done`, solved,
+// with the win showing; or `replay`, a mission done before played again; or
+// free play grown into the sandbox, with the grove chosen and the new island's
+// layout asked for. With `briefing`, the mission's briefing is left showing.
+async function campaignAt(page, query, { mission = "m01", briefing = false, hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
   await seedCampaign(page, sandbox ? "m25" : mission, { done: sandbox, query });
   await page.goto(sandbox ? `/free?dev${query}` : replay ? `/replay?dev${query}&mission=${replay}` : `/play?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  if (!briefing) await letsGo(page);
   if (passed) {
     for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
     await page.locator('[data-mission="whole"]').click();
@@ -440,6 +443,7 @@ async function campaignAt(page, query, { mission = "m01", hints = 0, passed = fa
 }
 
 const CAMPAIGN_STATES = [
+  { mission: "m16", briefing: true },
   { mission: "m01", hints: 3 },
   { mission: "m10", stuck: true, hints: 2 },
   { mission: "m16", passed: true },

@@ -29,6 +29,10 @@ import { picture, placePicture } from "./pictures.js";
 //   program starts from its start while the rest has moved on, so a change is
 //   best watched from the mission's checkpoint (PLAN.md §9).
 //
+// The mission's start and its end have big windows of their own over the page,
+// the briefing and the win (mission-overlays.js); the card stays beside the
+// island throughout, with the way on once the mission is done.
+//
 // Phase 5's bridge slice keeps its strip of planks filling towards the bridge
 // (`mission.progress`); the campaign's missions show their goals instead.
 
@@ -119,6 +123,18 @@ function goalView(world, goal) {
   if (goal.type === "steady") notes.push(goal.after ? t("goal.steadyNote", { name: nameOf(world, goal.after) }) : t("goal.steadyAlone"));
   if (goal.type === "remembers") notes.push(t("goal.remembersNote"));
   return { pictures, label, note: failed ? t("goal.failed") : notes.join(" "), done, failed };
+}
+
+// The items of a list of `goals` of `world`'s mission, as the card and the
+// briefing (mission-overlays.js) show them: pictures, words and a note, and
+// whether each is met or failed.
+export function goalsMarkup(world, goals) {
+  return goals
+    .map((goal) => {
+      const v = goalView(world, goal);
+      return `<li class="goal${v.done ? " met" : ""}${v.failed ? " failed" : ""}"><span class="goal-pictures" aria-hidden="true">${v.pictures}</span><span class="goal-words">${esc(v.label)}${v.note ? `<small>${esc(v.note)}</small>` : ""}</span></li>`;
+    })
+    .join("");
 }
 
 // The card in `el` for `mission`. `kept` holds what the card remembers across
@@ -260,16 +276,7 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
       problem = JSON.parse(shown.problem);
 
       if (isSlice) showStrip(w, done, before);
-      else
-        draw(
-          ".mission-goals",
-          (m?.goals ?? [])
-            .map((goal) => {
-              const v = goalView(w, goal);
-              return `<li class="goal${v.done ? " met" : ""}${v.failed ? " failed" : ""}"><span class="goal-pictures" aria-hidden="true">${v.pictures}</span><span class="goal-words">${esc(v.label)}${v.note ? `<small>${esc(v.note)}</small>` : ""}</span></li>`;
-            })
-            .join(""),
-        );
+      else draw(".mission-goals", goalsMarkup(w, m?.goals ?? []));
       if (trials.length > 1 && m) {
         draw(
           ".mission-trials",

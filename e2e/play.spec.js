@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { SLICE } from "../src/content/missions/slice.js";
 import { stateHash } from "../src/sim/replay.js";
+import { letsGo } from "./campaign-seed.js";
 import { advanceWorld, createWorld } from "../src/sim/world.js";
 
 // The Phase 5 acceptance in a browser (PLAN.md §11): the bridge slice, at /slice
@@ -47,6 +48,7 @@ async function openPlay(page, query = "") {
   await page.goto(`/slice?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag:not([hidden])"));
   await frames(page);
+  await letsGo(page);
 }
 const open = async (page, kind, program) => {
   await island(page, ([k, p]) => window.islandPage.open(k, p), [kind, program]);
@@ -308,10 +310,15 @@ test("the overview holds still while the world runs, and its buttons stay there 
   }
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "site").action?.type), "the bridge is being built by now").toBe("make");
 
-  // And the buttons can be pressed while it runs.
+  // And the buttons can be pressed while it runs: on past the bridge, whose
+  // win pauses the world, and Keep playing runs it again.
   await island(page, () => window.islandPage.select("r1"));
-  const from = await tick(page);
   await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.locator(".win")).toBeVisible();
+  expect(await island(page, () => window.islandPage.game.clock.running), "the win pauses the world").toBe(false);
+  await page.locator(".win").getByRole("button", { name: "Keep playing" }).click();
+  await expect(page.locator(".win")).toBeHidden();
+  const from = await tick(page);
   await expect.poll(() => tick(page)).toBeGreaterThan(from + 5);
   await page.locator(".row.selected").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Wood collector");

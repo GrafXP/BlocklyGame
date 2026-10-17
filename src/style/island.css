@@ -1354,3 +1354,236 @@
   margin: 0;
   z-index: 1;
 }
+
+/* The mission's briefing and its win (src/ui/mission-overlays.js): big windows
+   over the whole page, the island dimmed behind them; on the win, fireworks
+   on a canvas behind the window. */
+.briefing,
+.win {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.briefing[open],
+.win[open] {
+  display: grid;
+  place-items: center;
+}
+
+.briefing::backdrop {
+  background: rgb(16 32 56 / 0.5);
+}
+
+.win::backdrop {
+  background: rgb(10 16 40 / 0.66);
+}
+
+.briefing-panel,
+.win-panel {
+  position: relative;
+  width: min(36rem, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 28px 32px 26px;
+  border: 4px solid #f6b73c;
+  border-radius: 28px;
+  background: #fffbf0;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.4);
+  text-align: center;
+}
+
+.briefing-chapter,
+.win-mission {
+  margin: 0;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.briefing h2 {
+  margin: 2px 0 8px;
+  font-size: 2.1rem;
+  line-height: 1.25;
+}
+
+.briefing-replay {
+  margin: 0 0 10px;
+  color: #3b2a7a;
+  font-size: 0.95rem;
+}
+
+.briefing-goal {
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.briefing-setup {
+  margin: 0 0 14px;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}
+
+.briefing .briefing-goals {
+  margin: 0 0 20px;
+  padding: 8px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  text-align: start;
+}
+
+.briefing-goals[hidden] {
+  display: none;
+}
+
+.briefing .goal-words {
+  font-size: 1rem;
+}
+
+/* The way in and the way on: the title page's big green button. */
+.briefing-go,
+.win-next {
+  min-height: 64px;
+  padding: 0.6rem 2.4rem;
+  border: 0;
+  background: linear-gradient(#2fb257, #1d8f43);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+  box-shadow:
+    0 6px 0 #156a31,
+    0 12px 22px rgb(21 106 49 / 0.35);
+}
+
+.briefing-go:hover,
+.win-next:hover {
+  filter: brightness(1.06);
+}
+
+.win .fireworks {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.win-panel {
+  margin-top: 40px;
+  border-color: #2f9e5b;
+  background: #f0fbf4;
+  overflow: visible;
+}
+
+.win-star {
+  width: 96px;
+  height: 96px;
+  margin: -76px auto 4px;
+  color: #ffc21a;
+  filter: drop-shadow(0 4px 0 #c98a00) drop-shadow(0 0 18px rgb(255 210 63 / 0.8));
+}
+
+.win-star svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.win h2 {
+  margin: 0 0 4px;
+  color: #1d6b3a;
+  font-size: 2.4rem;
+  line-height: 1.25;
+}
+
+.win-reward {
+  margin: 0 0 22px;
+  font-size: 1.15rem;
+}
+
+.win-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Next mission: the biggest thing on the window, and glowing. */
+.win-next {
+  min-height: 72px;
+  padding-inline: 2.6rem 2rem;
+  font-size: 1.55rem;
+}
+
+.win-next svg {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  fill: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .briefing[open] .briefing-panel,
+  .win[open] .win-panel {
+    animation: overlay-in 0.4s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  }
+
+  .win[open] .win-star {
+    animation: star-pop 0.7s 0.15s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  }
+
+  .win-next {
+    animation: next-glow 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes star-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2) rotate(-90deg);
+  }
+}
+
+@keyframes next-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 6px 0 #156a31,
+      0 0 0 0 rgb(47 178 87 / 0.6);
+  }
+  50% {
+    box-shadow:
+      0 6px 0 #156a31,
+      0 0 0 16px rgb(47 178 87 / 0);
+  }
+}
+
+@media (max-width: 30rem) {
+  .briefing-panel,
+  .win-panel {
+    padding: 22px 18px 20px;
+  }
+
+  .briefing h2 {
+    font-size: 1.7rem;
+  }
+
+  .win h2 {
+    font-size: 1.9rem;
+  }
+}

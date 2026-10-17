@@ -269,6 +269,11 @@ if (want("debugger")) {
   await changed.waitForTimeout(300);
   await shot(changed, "editor-applied", PHASE4);
 }
+// Past the mission's briefing (src/ui/mission-overlays.js), if it's showing.
+async function letsGo(page) {
+  if ((await page.evaluate(() => window.islandPage?.overlay())) === "briefing") await page.click('.briefing [data-overlay="go"]');
+}
+
 // The bridge slice at /play, from its start: with the courier's and the site's
 // programs fixed in the editor when `fixed`, `ticks` steps on, `chosen` selected,
 // `hints` of its hints showing, and `panel` open on the left.
@@ -276,6 +281,7 @@ async function openPlay(browser, { context = DESKTOP, lang = "en", fixed = false
   const page = await (await browser.newContext(context)).newPage();
   await page.goto(`${base}/slice?dev&lang=${lang}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  await letsGo(page);
   if (fixed) await fixSlice(page);
   for (let i = 0; i < hints; i++) await page.click(".mission-hint");
   await page.evaluate(
@@ -420,9 +426,10 @@ if (want("library")) {
 // replay of mission `replay`, or free play (`free`). Then `hints` of the hint
 // ladder, its first prediction pointed at `guess`, the program `panel` open,
 // `run` until the world stalls, the first trial passed (`passed`, by the whole
-// program the hint shows), `solved`, and `chosen` selected.
+// program the hint shows), `solved` (with the win showing), and `chosen`
+// selected. With `briefing`, the mission's briefing is left showing.
 async function openCampaign(browser, opts = {}) {
-  const { context = DESKTOP, lang = "en", mission = "m01", done = false, home = false, replay = null, free = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
+  const { context = DESKTOP, lang = "en", mission = "m01", done = false, home = false, replay = null, free = false, briefing = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
   const page = await (await browser.newContext(context)).newPage();
   const m = campaignMission(mission);
   // The starters' names worded in `lang`, as the game words them.
@@ -443,6 +450,7 @@ async function openCampaign(browser, opts = {}) {
   }
   await page.goto(`${base}/${free ? "free" : replay ? "replay" : "play"}?dev&lang=${lang}${replay ? `&mission=${replay}` : ""}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
+  if (!briefing) await letsGo(page);
   if (guess) {
     await page.click('[data-mission="point"]');
     await page.evaluate((id) => window.islandPage.select(id), guess);

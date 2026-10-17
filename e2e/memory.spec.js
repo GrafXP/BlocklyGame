@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { seedCampaign, solveMission } from "./campaign-seed.js";
+import { letsGo, seedCampaign, solveMission } from "./campaign-seed.js";
 
 // Phase 8 in a browser (PLAN.md §11): variables with their values beside the
 // robot, blocks of one's own that the debugger follows in and out of, and
@@ -21,6 +21,7 @@ const island = (page, fn, arg) => page.evaluate(fn, arg);
 const ready = async (page) => {
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag:not([hidden])"));
   await frames(page);
+  await letsGo(page);
 };
 const open = async (page, query = "") => {
   await page.goto(`/play?dev${query}`);

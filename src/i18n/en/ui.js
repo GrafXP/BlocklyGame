@@ -383,6 +383,16 @@ export default {
   "mission.next": "Next mission",
   // After a mission played again, or the campaign's last mission.
   "mission.toMissions": "Back to the missions",
+  // The mission's briefing, a big window as it starts: its goal and what's
+  // set up, and one button to begin.
+  "briefing.go": "Let's go!",
+  // The win, a big window with fireworks once the mission is done. Its big
+  // button is “Next mission” (or “Back to the missions”); this one closes the
+  // window and goes on with the island as it is. {n}: the mission's number;
+  // {title}: its title.
+  "win.title": "Mission complete!",
+  "win.mission": "Mission {n}: {title}",
+  "win.keep": "Keep playing",
   // When everything has stopped short of the goal. Never an interruption.
   "mission.stuck": "Everything has stopped, but the goal isn't reached yet. A hint can help.",
   // In the Try hint: blocks put into the editor, to apply or change.

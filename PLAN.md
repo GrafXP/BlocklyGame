@@ -328,6 +328,7 @@ Define ordinary game blocks with Blockly JSON definitions and small extensions f
 
 - World view with selection outlines, entity labels, inventory indicators, and destination markers.
 - Top mission card with the goal in one short sentence and pictures, objective progress, and the hint ladder (Beginner support).
+- A mission's two big moments, each a window over the whole page: the briefing as it starts (its title, goal, setup and goals with pictures, and Let's go), and the win once it's done (fireworks behind “Mission complete!”, the reward, a large glowing Next mission and a smaller Keep playing). The win pauses the world; Keep playing runs it again if it was running (decided 17 October 2026).
 - Global Run/Pause, Step, Step to Next Block, speed, tick counter, and Restart Mission controls.
 - Entity inspector with Edit program, team, stock/basket contents, settings, and current status. The program itself is chosen at the editor's head (Section 5).
 - Blockly editor in a partially transparent overlay panel, with the 3D world still visible behind it on larger screens. Editing pauses the world (Section 5); the camera still moves, and while the world is paused the renderer draws only when the view changes.
@@ -931,3 +932,9 @@ Two changes asked for while playing chapters 1–8:
 - Every robot and building has Edit program. It opens what the entity runs, or gives one that runs none a new program of its own. The program is chosen at the editor's head, from those the entity can run or a new one, with its own copy and the way back to the shared program; the row keeps the team, name and settings. The editor follows the entity to the program it runs.
 
 Applied in: 5 (editing and applying), 8 (main layout), 9 (missions stand alone, reliable lessons, verification), 11 (Phases 6, 7 and 8), 12, 13, and 15.
+
+### The briefing and the win (17 October 2026)
+
+Asked for while playing: every mission begins with a big briefing over the page, and ends with a win, fireworks bursting behind “Mission complete!”, its reward, and the way on. Next mission (or, after a replay or the last mission, Back to the missions) is the big, glowing button; Keep playing goes back to the island as it is, where the card still offers the next mission. Both are modal dialogs (`src/ui/mission-overlays.js`, `src/ui/fireworks.js`); with reduced motion there are no fireworks and nothing animates. The briefing shows while the mission is at step 0, until the player goes past it; the win once the mission is done, until the player keeps playing.
+
+Applied in: 8 (main layout).

@@ -27,10 +27,18 @@ export async function seedCampaign(page, id, { done = false, query = "" } = {}) 
   await page.goto(`/?dev${query}`);
 }
 
-// Solves the mission the island page shows, as a player would: each program
-// its reference changes loaded into the editor and applied, then its choices
-// made, and steps until it's done. Returns the step it was done at.
+// Goes past the mission's briefing, if it's showing, as Let's go does
+// (src/ui/mission-overlays.js).
+export async function letsGo(page) {
+  if ((await page.evaluate(() => window.islandPage?.overlay())) === "briefing") await page.locator('.briefing [data-overlay="go"]').click();
+}
+
+// Solves the mission the island page shows, as a player would: past its
+// briefing, each program its reference changes loaded into the editor and
+// applied, then its choices made, and steps until it's done. Returns the step
+// it was done at.
 export async function solveMission(page) {
+  await letsGo(page);
   const id = await page.evaluate(() => window.islandPage.play().mission.id);
   const { reference } = campaignMission(id);
   // Its names worded in the page's language, as “Show me the whole program”
