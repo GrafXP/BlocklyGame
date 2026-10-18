@@ -127,8 +127,8 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await expect(page.locator(".island-bar h1")).toHaveText("One Piece of Wood");
   await page.getByRole("link", { name: "Home" }).click();
   await expect(page.locator(".home .play")).toHaveText("Mission 2: One Piece of Wood");
-  await expect(page.locator(".chapter li.done")).toHaveCount(1);
-  await expect(page.locator(".chapter li.done")).toContainText("Hello, Helper!");
+  await expect(page.locator(".missions .chapter li.done")).toHaveCount(1);
+  await expect(page.locator(".missions .chapter li.done")).toContainText("Hello, Helper!");
 });
 
 test("a mission with trials pauses when one is passed, saying what changes next, then goes on to the next; the win's Next mission goes on too", async ({ page }) => {
@@ -202,25 +202,25 @@ test("a project offers a start, and starting from nothing; “Undo changes” br
 test("the title page's mission map: stars for the missions done, the one the campaign is at to go on with, the rest locked; with ?dev every one opens on its own", async ({ page }) => {
   await seedCampaign(page, "m05");
   await page.goto("/");
-  await expect(page.locator(".chapter")).toHaveCount(8);
-  await expect(page.locator(".chapter-1 h3")).toHaveText("Chapter 1: Hello, Helper!4/5");
-  await expect(page.locator(".chapter li.done")).toHaveCount(4);
-  await expect(page.locator(".chapter li.done").first()).toContainText("Play again");
-  await expect(page.locator(".chapter li.current")).toHaveText(["5Camp Is ReadyYou're here"]);
-  await expect(page.locator(".chapter li.later")).toHaveCount(35);
-  await expect(page.locator(".chapter li.later a")).toHaveCount(0);
+  await expect(page.locator(".missions .chapter")).toHaveCount(8);
+  await expect(page.locator(".missions .chapter-1 h3")).toHaveText("Chapter 1: Hello, Helper!4/5");
+  await expect(page.locator(".missions .chapter li.done")).toHaveCount(4);
+  await expect(page.locator(".missions .chapter li.done").first()).toContainText("Play again");
+  await expect(page.locator(".missions .chapter li.current")).toHaveText(["5Camp Is ReadyYou're here"]);
+  await expect(page.locator(".missions .chapter li.later")).toHaveCount(35);
+  await expect(page.locator(".missions .chapter li.later a")).toHaveCount(0);
   await expect(page.locator(".dev-note")).toHaveCount(0);
   await expect(page.locator(".grown-ups")).not.toHaveAttribute("open");
-  await page.locator(".chapter li.current a").click();
+  await page.locator(".missions .chapter li.current a").click();
   await expect(page).toHaveURL(/\/play$/);
   await expect(page.locator(".island-bar h1")).toHaveText("Camp Is Ready");
 
   await page.goto("/?dev");
   await expect(page.locator(".dev-note")).toBeVisible();
   await expect(page.locator(".grown-ups")).toHaveAttribute("open");
-  await expect(page.locator(".chapter li.later")).toHaveCount(0);
-  await expect(page.locator(".chapter li.open")).toHaveCount(35);
-  await page.locator('.chapter li[value="12"]').getByRole("link", { name: "Try it" }).click();
+  await expect(page.locator(".missions .chapter li.later")).toHaveCount(0);
+  await expect(page.locator(".missions .chapter li.open")).toHaveCount(35);
+  await page.locator('.missions .chapter li[value="12"]').getByRole("link", { name: "Try it" }).click();
   await ready(page);
   await expect(page).toHaveURL(/\/replay\?mission=m12&dev$/);
   await expect(page.locator(".mission-chapter")).toHaveText("Chapter 3 · Mission 12");
@@ -231,7 +231,7 @@ test("the title page's mission map: stars for the missions done, the one the cam
 test("a mission done before can be played again from its start, and the campaign stays as it was", async ({ page }) => {
   await seedCampaign(page, "m05");
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
-  await page.locator(".chapter li").nth(2).getByRole("link", { name: "Play again" }).click();
+  await page.locator(".missions .chapter li").nth(2).getByRole("link", { name: "Play again" }).click();
   await ready(page);
   await expect(page).toHaveURL(/\/replay\?mission=m03/);
   await expect(page.locator(".mission-replay")).toHaveText("You're playing mission 3 again, from the beginning. The other missions stay as they are.");
@@ -285,7 +285,7 @@ test("Start over on the title page forgets the campaign, free play and replays, 
   await page.locator(".start-over .ask").getByRole("button", { name: "Start over" }).click();
   await expect(page.locator(".home .play")).toHaveText("Play");
   await expect(page.locator(".start-over")).toBeHidden();
-  await expect(page.locator(".chapter li.done")).toHaveCount(0);
-  await expect(page.locator(".chapter li.current")).toContainText("You're here");
+  await expect(page.locator(".missions .chapter li.done")).toHaveCount(0);
+  await expect(page.locator(".missions .chapter li.current")).toContainText("You're here");
   expect(await page.evaluate(() => localStorage.getItem("robot-island:save.campaign"))).toBeNull();
 });

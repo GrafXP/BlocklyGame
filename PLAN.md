@@ -962,3 +962,13 @@ Asked for after playing on an iPad, where the bar along the top took two lines a
 - Panels, the flyout, the menus and the bubbles slide or pop in, and appear at once with reduced motion. The browser tests run with reduced motion, so they measure where things come to rest.
 
 Applied in: 8 (main layout).
+
+### The campaign's second plan, phase 1 (18 October 2026)
+
+The second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) was reviewed against the engine and corrected (its “Review and delivery phases”), and is built in ten delivery phases alongside this campaign, which stays at `/play` until the second has everything this one teaches.
+
+- Phase 1 is in place: the second campaign's infrastructure, and its chapters 1–2 (missions 1–10), at `/play2`, with a save and progress of its own and a map among the prototypes on the title page. Its missions are `c2-m001`… (`src/content/missions/v2/`): each says what its focus program opens with (Build, the start block alone; Repair; Change; Explore), stands alone with a complete setup, and names the missions it needs, a requirement on one not built yet standing for the last built below it. The toolbox offers what a mission and the missions it needs introduced. The first time it's opened, this campaign's progress on the device counts for the same lessons.
+- “Show me a start” and “Show me the whole program” keep a draft with changes not applied in the history, to go back to (`giveDraft`, `src/programming/programs.js`), in both campaigns.
+- `npm run verify:missions` plays both campaigns, and checks the second's authoring rules: a Build mission's program is the start block alone, a Repair or Change starter doesn't already do the mission, and through mission 40 the reference changes the focus program alone.
+
+Applied in: 9 (campaign and sandbox).

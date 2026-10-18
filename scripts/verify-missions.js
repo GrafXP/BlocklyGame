@@ -1,19 +1,22 @@
-// Checks every mission of the campaign headlessly (PLAN.md §9, Verification;
-// §11, Phase 7): npm run verify:missions. For each mission, from its start
-// (src/campaign.js: every mission stands alone), with its own toolbox and
-// resources:
+// Checks every mission of both campaigns headlessly (PLAN.md §9, Verification;
+// §11, Phase 7; docs/campaign-planv2.md): npm run verify:missions. For each
+// mission, from its start (src/campaign.js: every mission stands alone), with
+// its own toolbox and resources:
 //
-// - its starter programs alone don't do it: the lesson needs the child;
+// - its starter programs alone don't do it: the lesson needs the child (and a
+//   Repair or Change lesson's program needs its fault fixed, or its change);
 // - its reference solution does, every trial, within the mission's steps,
 //   taking no more raw materials than its budget, the world keeping its rules
 //   after every tick;
 // - its toolbox offers every block the solution uses, its goals' stores have
-//   room for what they count, and the deposits hold its budget (missionProblems);
+//   room for what they count, and the deposits hold its budget; a
+//   second-campaign mission keeps that plan's authoring rules (missionProblems);
 // - its words are in every listed language.
 import { pathToFileURL } from "node:url";
 import { missionProblems, missionStart, playMission, referenceCommands } from "../src/campaign.js";
 import { CAMPAIGN } from "../src/content/missions/campaign.js";
 import { missionKeys } from "../src/content/missions/index.js";
+import { CAMPAIGN2 } from "../src/content/missions/v2/index.js";
 import { LANGUAGES } from "../src/i18n/languages.js";
 import { checkWorld } from "../src/sim/validate.js";
 
@@ -35,14 +38,14 @@ function playReference(mission, world, library, rules) {
   return { done, ticks: world.tick, problems };
 }
 
-// Every mission from its start. Returns { problems, rows }: what's wrong, and
-// for each mission the steps its reference took. `rules` checks the world's
-// rules after every tick (slower).
-export async function verifyCampaign({ rules = true } = {}) {
+// Every mission of `missions`, both campaigns' unless said, from its start.
+// Returns { problems, rows }: what's wrong, and for each mission the steps its
+// reference took. `rules` checks the world's rules after every tick (slower).
+export async function verifyCampaign({ rules = true, missions = [...CAMPAIGN, ...CAMPAIGN2] } = {}) {
   const problems = [];
   const rows = [];
 
-  for (const mission of CAMPAIGN) {
+  for (const mission of missions) {
     const { world: checkpoint, library } = missionStart(mission);
     problems.push(...missionProblems(mission, checkpoint), ...checkWorld(checkpoint).map((p) => `${mission.id} checkpoint: ${p}`));
     const starter = copy(checkpoint);
@@ -54,7 +57,7 @@ export async function verifyCampaign({ rules = true } = {}) {
 
   for (const { code } of LANGUAGES) {
     const words = (await import(`../src/i18n/${code}/missions.js`)).default;
-    for (const mission of CAMPAIGN) for (const key of missionKeys(mission)) if (!(key in words)) problems.push(`${code}: no words for ${key}`);
+    for (const mission of missions) for (const key of missionKeys(mission)) if (!(key in words)) problems.push(`${code}: no words for ${key}`);
   }
   return { problems, rows };
 }

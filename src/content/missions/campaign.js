@@ -63,9 +63,11 @@ export const unlockedBlocks = (mission) => [...new Set(CAMPAIGN.slice(0, mission
 // The first mission whose completion opens `what` ("free" or "sandbox").
 export const opener = (what) => CAMPAIGN.find((m) => m.unlocks === what);
 
-// The program mission `mission` is about, which its card opens: the first of
+// The program mission `mission` is about, which its card opens: its focus,
+// when it names one (the second campaign's do, v2/index.js); else the first of
 // its programs its reference solution changes, else its first.
 export const mainProgram = (mission) => {
+  if (mission.focus) return mission.focus;
   const changed = Object.keys(mission.reference?.programs ?? {});
   return mission.programs?.find((p) => changed.includes(p.id))?.id ?? mission.programs?.[0]?.id ?? null;
 };

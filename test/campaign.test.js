@@ -36,7 +36,7 @@ function playWith(id, { programs = {}, commands = [] } = {}) {
 }
 
 test("every mission is verified: its reference does it from its start, its starters don't, within its steps, toolbox, budget and words", async () => {
-  const { problems, rows } = await verifyCampaign();
+  const { problems, rows } = await verifyCampaign({ missions: CAMPAIGN });
   assert.deepEqual(problems, []);
   assert.equal(rows.length, 40);
   for (const row of rows) assert.ok(row.ticks !== null, row.id);

@@ -10,8 +10,10 @@ import { languageChoice } from "./language-choice.js";
 // played on its own as one done is, so testing one leaves the campaign as it
 // is. Below the map: free play once mission 15 is done, which becomes the
 // sandbox after mission 25; Start over, for the next player of a playtest; the
-// languages; and, folded away but for ?dev, the prototypes of the phases so
-// far: the bridge slice, the island in 3D, the editor lab and the world lab. Its one listener
+// languages; and, folded away but for ?dev, the second campaign as far as it's
+// built (docs/campaign-planv2.md), with its own map, and the prototypes of the
+// phases so far: the bridge slice, the island in 3D, the editor lab and the
+// world lab. Its one listener
 // is on its own element, and goes with it: the title page holds nothing that
 // outlives it (src/lifecycle.js).
 
@@ -62,6 +64,9 @@ export function home(el) {
         ${languageChoice({ button: "button small" })}
         <details class="grown-ups"${isDev() ? " open" : ""}>
           <summary>${esc(t("home.prototypes"))}</summary>
+          <a class="button small" href="${link("/play2")}" data-link>${esc(t("home.campaign2"))}</a>
+          <p class="note">${t("home.campaign2Note")}</p>
+          <div class="chapters chapters2"></div>
           <a class="button small" href="${link("/slice")}" data-link>${esc(missionText("slice.title"))}</a>
           <p class="note">${t("home.sliceNote")}</p>
           <a class="button small" href="${link("/island")}" data-link>${t("home.island")}</a>
@@ -76,45 +81,57 @@ export function home(el) {
   );
 
   // Mission `m`'s tile in state `state` (STATES): a link to play it, unless
-  // it's locked.
-  function tile(m, state) {
+  // it's locked; the one the campaign is at plays at `at`, its page.
+  function tile(m, state, at) {
     const { icon, words } = STATES[state];
     const inside =
       `<span class="tile-n">${m.n}</span>` +
       `<span class="tile-title">${esc(missionText(`${m.id}.title`))}</span>` +
       `<span class="tile-state">${ICONS[icon]}${esc(t(words))}</span>`;
-    const to = state === "current" ? "/play" : `/replay?mission=${m.id}`;
+    const to = state === "current" ? at : `/replay?mission=${m.id}`;
     return `<li value="${m.n}" class="${state}">${state === "later" ? `<div class="tile">${inside}</div>` : `<a class="tile" href="${link(to)}" data-link>${inside}</a>`}</li>`;
   }
 
-  // How far the campaign got, from the session, fetched only now: the title
+  // Every chapter of `chapters` ([{ n, title, missions }]) on a map, with how
+  // many of its missions are done (`done`, a set of ids); mission `at` is
+  // the one the campaign is at, played at page `page`.
+  function map(chapters, done, at, page) {
+    const stateOf = (m) => (done.has(m.id) ? "done" : m === at ? "current" : isDev() ? "open" : "later");
+    return chapters
+      .map(({ n, title, missions }) => {
+        const stars = missions.filter((m) => done.has(m.id)).length;
+        return (
+          `<section class="chapter chapter-${n}">` +
+          `<h3><span class="chapter-title">${esc(t("home.chapter", { n, title }))}</span><span class="chapter-stars">${ICONS.star}${stars}/${missions.length}</span></h3>` +
+          `<ol>${missions.map((m) => tile(m, stateOf(m), page)).join("")}</ol></section>`
+        );
+      })
+      .join("");
+  }
+
+  // How far the campaigns got, from the session, fetched only now: the title
   // page opens without the simulation.
   let session = null;
   let campaign = null;
+  let campaign2 = null;
   function show() {
     const status = session.campaignStatus();
+    const status2 = session.campaignStatus("campaign2");
     const open = session.unlocked();
     const at = status?.mission ?? campaign.CAMPAIGN[0];
     $(".play-words").textContent = status ? t("home.continue", { n: at.n, title: missionText(`${at.id}.title`) }) : t("home.play");
     $(".saved").textContent = !status ? "" : status.done ? t("home.completed") : status.saved && status.tick ? t("home.saved", { tick: status.tick }) : "";
-    $(".start-over").hidden = !status;
+    $(".start-over").hidden = !status && !status2;
     asking(false);
 
     // Every chapter's missions on the map, with how many of them are done.
-    const done = new Set(status?.completed ?? []);
-    const dev = isDev();
-    const stateOf = (m) => (done.has(m.id) ? "done" : m === at ? "current" : dev ? "open" : "later");
-    $(".chapters").innerHTML = Array.from({ length: campaign.CHAPTER_COUNT }, (_, i) => i + 1)
-      .map((n) => {
-        const missions = campaign.chapterMissions(n);
-        const stars = missions.filter((m) => done.has(m.id)).length;
-        return (
-          `<section class="chapter chapter-${n}">` +
-          `<h3><span class="chapter-title">${esc(t("home.chapter", { n, title: t(`chapter.${n}`) }))}</span><span class="chapter-stars">${ICONS.star}${stars}/${missions.length}</span></h3>` +
-          `<ol>${missions.map((m) => tile(m, stateOf(m))).join("")}</ol></section>`
-        );
-      })
-      .join("");
+    const chapters = Array.from({ length: campaign.CHAPTER_COUNT }, (_, i) => i + 1).map((n) => ({ n, title: t(`chapter.${n}`), missions: campaign.chapterMissions(n) }));
+    $(".missions .chapters").innerHTML = map(chapters, new Set(status?.completed ?? []), at, "/play");
+
+    // The second campaign's, among the prototypes.
+    const done2 = status2?.completed ?? [];
+    const chapters2 = campaign2.CHAPTERS2.map(({ chapter, missions }) => ({ n: chapter, title: t(`chapter2.${chapter}`), missions }));
+    $(".chapters2").innerHTML = map(chapters2, new Set(done2), status2?.mission ?? campaign2.firstOpen(done2), "/play2");
 
     // Free play, once the bridge is built; the sandbox once the workshop works.
     const free = $(".free");
@@ -126,10 +143,11 @@ export function home(el) {
     $(".start-over .ask").hidden = !on;
     $('[data-home="ask"]').setAttribute("aria-expanded", String(on));
   }
-  Promise.all([import("./session.js"), import("../content/missions/campaign.js")]).then(([s, c]) => {
+  Promise.all([import("./session.js"), import("../content/missions/campaign.js"), import("../content/missions/v2/index.js")]).then(([s, c, c2]) => {
     if (gone) return;
     session = s;
     campaign = c;
+    campaign2 = c2;
     show();
   });
   $(".home").addEventListener("click", (e) => {

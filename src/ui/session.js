@@ -4,8 +4,9 @@ import { CAMPAIGN, campaignMission, nextMission, opener, unlockedBlocks } from "
 import { BASE } from "../content/missions/island.js";
 import { missionById } from "../content/missions/index.js";
 import { SLICE } from "../content/missions/slice.js";
+import { CAMPAIGN2, blocksFor, campaign2Mission, creditFromV1, firstOpen, isCampaign2Mission, nextOf, opener2 } from "../content/missions/v2/index.js";
 import { workspace } from "../content/build.js";
-import { missionStart } from "../campaign.js";
+import { missionBlocks, missionStart } from "../campaign.js";
 import { createGame } from "../game.js";
 import { display, ref } from "../i18n/index.js";
 import { blockIndex, readWorkspace } from "../programming/adapter.js";
@@ -17,12 +18,12 @@ import {
   copyProgram,
   createLibrary,
   freeProgramId,
+  giveDraft,
   latest,
   newProgram,
   newestPrograms,
   programDoc,
   renameProgram,
-  setDraft,
   sourceAt,
   wordStarter,
 } from "../programming/programs.js";
@@ -45,9 +46,14 @@ import { makeSave, readSave } from "../storage/saves.js";
 //   nothing of the one before is kept but that it was done. Saved on the device
 //   as it's played, so a mission not yet done goes on where it was after a
 //   reload; one that was done goes on to the next.
-// - "replay": a mission done before, played again from its start apart from
-//   the campaign. Saved too, until it's done again: opened after that, it
-//   starts afresh.
+// - "campaign2": the second campaign (docs/campaign-planv2.md), as far as it's
+//   built, alongside the first until the switch-over: the same, with a save
+//   and progress of its own, going on over its map (v2/index.js). The first
+//   time, the first campaign's progress on the device counts for the missions
+//   that are the same (creditFromV1).
+// - "replay": a mission of either campaign done before, played again from its
+//   start apart from the campaign. Saved too, until it's done again: opened
+//   after that, it starts afresh.
 // - "free": free play, the island without a mission, open after mission 15,
 //   the sandbox after mission 25 (src/content/free.js), with programs of its
 //   own. Saved too.
@@ -80,14 +86,27 @@ import { makeSave, readSave } from "../storage/saves.js";
 
 const CAMPAIGN_CONTENT = { id: BASE.id, version: BASE.version };
 const isCampaignMission = (id) => !!campaignMission(id);
+const isAnyCampaignMission = (id) => isCampaignMission(id) || isCampaign2Mission(id);
 
 // What each saved play's save is checked against (src/storage/saves.js).
 const SAVES = {
   slice: { content: { id: SLICE.content.id, version: SLICE.content.version }, missions: (id) => id === SLICE.id },
   campaign: { content: CAMPAIGN_CONTENT, missions: isCampaignMission },
-  replay: { content: CAMPAIGN_CONTENT, missions: isCampaignMission },
+  campaign2: { content: CAMPAIGN_CONTENT, missions: isCampaign2Mission },
+  replay: { content: CAMPAIGN_CONTENT, missions: isAnyCampaignMission },
   free: { content: FREE_CONTENT, missions: null },
 };
+
+// The campaigns' plays, and how each goes from one mission to the next with
+// `completed` done: the first's in a line (campaign.js), the second's over its
+// map (v2/index.js).
+const CAMPAIGNS = {
+  campaign: { mission: campaignMission, next: (mission) => nextMission(mission) },
+  campaign2: { mission: campaign2Mission, next: (mission, completed) => nextOf(mission, completed) },
+};
+
+// Whether play `key` is a campaign's.
+export const isCampaignPlay = (key) => key in CAMPAIGNS;
 
 const plays = new Map();
 let current = null;
@@ -97,7 +116,7 @@ let changes = 0; // counted up whenever a library or a play changes, for views t
 // time it's asked for, from its save if it has one. For a replay, `mission`
 // names the mission: one already in hand of another, or done, starts afresh.
 export function usePlay(key, { mission = null } = {}) {
-  if (key === "replay" && isCampaignMission(mission)) {
+  if (key === "replay" && isAnyCampaignMission(mission)) {
     if (!plays.has("replay")) plays.set("replay", makePlay("replay"));
     const held = plays.get("replay");
     if (held.mission?.id !== mission || held.game.world.mission?.done != null) startReplay(mission);
@@ -120,6 +139,14 @@ function makePlay(key) {
   if (key === "campaign") {
     // A mission done and saved isn't played again: the next one starts.
     const p = savedPlay(key, () => missionPlay(key, CAMPAIGN[0]));
+    goOn(p);
+    return p;
+  }
+  if (key === "campaign2") {
+    const p = savedPlay(key, () => {
+      const completed = creditFromV1(campaignStatus("campaign")?.completed ?? []);
+      return missionPlay(key, firstOpen(completed) ?? CAMPAIGN2.at(-1), { completed });
+    });
     goOn(p);
     return p;
   }
@@ -241,35 +268,40 @@ function missionPlay(key, mission, progress = { completed: [] }) {
   return { ...playOf(key, mission, {}, library, world), progress: { completed: [...progress.completed] } };
 }
 
-// The campaign's progress, in this visit or saved: { mission, done, completed,
-// saved }: the mission it's at, whether that one is done, every mission done at
-// least once, and whether the device keeps it. Null before it has begun. A
-// mission saved once it was done is already the next, as goOn makes it.
-export function campaignStatus() {
-  const p = plays.get("campaign");
+// Campaign `key`'s progress ("campaign", or "campaign2"), in this visit or
+// saved: { mission, done, completed, saved }: the mission it's at, whether
+// that one is done, every mission done at least once, and whether the device
+// keeps it. Null before it has begun. A mission saved once it was done is
+// already the next, as goOn makes it.
+export function campaignStatus(key = "campaign") {
+  const track = CAMPAIGNS[key];
+  const p = plays.get(key);
   if (p) {
     const done = p.game.world.mission?.done != null;
     const completed = done && !p.progress.completed.includes(p.mission.id) ? [...p.progress.completed, p.mission.id] : p.progress.completed;
     return { mission: p.mission, done, completed, tick: p.game.world.tick, saved: !p.unsaved };
   }
-  const read = readSave(loadLocal(saveName("campaign")), SAVES.campaign);
+  const read = readSave(loadLocal(saveName(key)), SAVES[key]);
   if (!read || read.problem) return null;
-  const mission = campaignMission(read.mission);
+  const mission = track.mission(read.mission);
   const old = read.schema < 3; // started afresh, as savedPlay does
   const done = !old && read.world.mission?.done != null;
   const completed = done && !read.progress.completed.includes(mission.id) ? [...read.progress.completed, mission.id] : read.progress.completed;
-  const next = done && nextMission(mission);
+  const next = done && track.next(mission, completed);
   if (next) return { mission: next, done: false, completed, tick: 0, saved: true };
   return { mission, done, completed, tick: old ? 0 : read.world.tick, saved: true };
 }
 
-// What the campaign has opened: free play after mission 15, the sandbox after
-// 25, and the blocks learned so far; the furthest mission done, or null.
+// What the campaigns have opened: free play after mission 15 of either, the
+// sandbox after 25, and the blocks learned so far; the first campaign's
+// furthest mission done, or null.
 export function unlocked() {
-  const completed = campaignStatus()?.completed ?? [];
-  const furthest = CAMPAIGN.filter((m) => completed.includes(m.id)).at(-1) ?? null;
-  const has = (what) => completed.includes(opener(what).id);
-  return { furthest, free: has("free"), sandbox: has("sandbox"), settings: completed.includes("m22"), blocks: furthest ? unlockedBlocks(furthest) : [] };
+  const first = campaignStatus("campaign")?.completed ?? [];
+  const second = campaignStatus("campaign2")?.completed ?? [];
+  const furthest = CAMPAIGN.filter((m) => first.includes(m.id)).at(-1) ?? null;
+  const has = (what) => first.includes(opener(what).id) || second.includes(opener2(what)?.id);
+  const blocks = [...(furthest ? unlockedBlocks(furthest) : []), ...CAMPAIGN2.filter((m) => second.includes(m.id)).flatMap(blocksFor)];
+  return { furthest, free: has("free"), sandbox: has("sandbox"), settings: first.includes("m22") || second.includes("c2-m082"), blocks: [...new Set(blocks)] };
 }
 
 // Campaign play `p` goes on to the next mission, once the one it's at is done:
@@ -278,27 +310,34 @@ export function unlocked() {
 function goOn(p) {
   if (p.game.world.mission?.done == null) return false;
   if (!p.progress.completed.includes(p.mission.id)) p.progress.completed.push(p.mission.id);
-  const next = nextMission(p.mission);
+  const next = CAMPAIGNS[p.key].next(p.mission, p.progress.completed);
   if (!next) return false;
   p.game.pause();
-  Object.assign(p, missionPlay("campaign", next, p.progress), { notice: p.notice, unsaved: p.unsaved });
+  Object.assign(p, missionPlay(p.key, next, p.progress), { notice: p.notice, unsaved: p.unsaved });
   changes++;
   return true;
 }
 
-// The campaign goes on to the next mission, once the one it's at is done.
+// The mission campaign play `key` goes on to once the one it's at is done, or
+// null when there's none.
+export function upcomingMission(key) {
+  const p = plays.get(key);
+  return p && CAMPAIGNS[key] ? CAMPAIGNS[key].next(p.mission, p.progress.completed) : null;
+}
+
+// Campaign `key` goes on to the next mission, once the one it's at is done.
 // Returns whether it did.
-export function nextCampaignMission() {
-  const p = plays.get("campaign");
+export function nextCampaignMission(key = "campaign") {
+  const p = plays.get(key);
   if (!p || !goOn(p)) return false;
   if (current === p) savePlay();
   return true;
 }
 
-// Starts a replay of mission `id` from its start, in place of any other.
-// Returns its play.
+// Starts a replay of mission `id`, of either campaign, from its start, in
+// place of any other. Returns its play.
 export function startReplay(id) {
-  const p = missionPlay("replay", campaignMission(id));
+  const p = missionPlay("replay", campaignMission(id) ?? campaign2Mission(id));
   if (current === plays.get("replay")) current = p;
   plays.set("replay", p);
   changes++;
@@ -373,8 +412,8 @@ export function rules(p = play()) {
     const tools = ["library", ...(open.settings ? ["settings"] : []), ...(open.sandbox ? ["build"] : [])];
     return { tools, blocks: ["island_when_started", ...open.blocks], blank: true, sandbox: open.sandbox };
   }
-  if (!CAMPAIGN.includes(p.mission)) return { tools: p.mission?.tools ?? [], blocks: null, blank: false, sandbox: false };
-  return { tools: TOOLS.filter((tool) => MISSION_TOOLS.includes(tool) || p.mission.tools?.includes(tool)), blocks: unlockedBlocks(p.mission), blank: !!p.mission.project, sandbox: false };
+  if (!isAnyCampaignMission(p.mission?.id)) return { tools: p.mission?.tools ?? [], blocks: null, blank: false, sandbox: false };
+  return { tools: TOOLS.filter((tool) => MISSION_TOOLS.includes(tool) || p.mission.tools?.includes(tool)), blocks: missionBlocks(p.mission), blank: !!p.mission.project, sandbox: false };
 }
 export const tools = () => rules().tools;
 
@@ -544,7 +583,8 @@ export function putAway(id, away = true) {
 // “Show me a start”): "start", the mission's partial program; "whole", its
 // reference solution; or "blank", the start block alone, for starting from
 // nothing. Like any edit, it runs once applied; “Undo changes” goes back to
-// what runs. Returns whether there was such a program.
+// what runs, and a draft with changes not applied is kept in the history
+// (giveDraft). Returns whether there was such a program.
 export function showProgram(id, which) {
   const p = play();
   const doc = programDoc(p.library, id);
@@ -554,7 +594,7 @@ export function showProgram(id, which) {
   // starters do, worded in the player's language as it's shown.
   const source = given ? wordStarter(given, display) : which === "blank" ? startOnly(doc.draft) : null;
   if (!source) return false;
-  setDraft(p.library, id, source);
+  giveDraft(p.library, id, source);
   changes++;
   return true;
 }
@@ -631,10 +671,10 @@ export function forgetPlay(key) {
   changes++;
 }
 
-// Forgets the campaign, and with it free play and any replay: the next visit
-// starts at mission 1.
+// Forgets both campaigns, and with them free play and any replay: the next
+// visit starts at mission 1.
 export function forgetCampaign() {
-  for (const key of ["campaign", "replay", "free"]) forgetPlay(key);
+  for (const key of ["campaign", "campaign2", "replay", "free"]) forgetPlay(key);
 }
 
 // The player has read the play's notice.

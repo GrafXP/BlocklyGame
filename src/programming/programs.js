@@ -231,6 +231,18 @@ export function setDraft(library, id, json) {
   programDoc(library, id).draft = copy(json);
 }
 
+// Puts `source` into program `id`'s draft, as a mission's help gives it (a
+// start, the whole program, the start block alone): nothing runs it until it's
+// applied. A draft with changes no revision has is kept, to go back to from the
+// history, as loadVersion keeps one (docs/campaign-planv2.md: an example
+// never overwrites a draft).
+export function giveDraft(library, id, source) {
+  const doc = programDoc(library, id);
+  if (!doc.published.some((p) => sameBlocks(p.source, doc.draft))) doc.kept = { source: copy(doc.draft), from: baseOf(doc) };
+  doc.draft = copy(source);
+  delete doc.base;
+}
+
 // The draft of program `id` back to `to`: "applied", its newest revision, or
 // "starter", what the game gave it. Like any edit, it runs only once applied.
 export function resetDraft(library, id, to) {

@@ -9,7 +9,6 @@ import { createIslandView } from "../render/island-view.js";
 import { createMeter } from "../render/meter.js";
 import { QUALITIES } from "../render/stage.js";
 import { LAYOUT, LAYOUT_CHOICES } from "../content/free.js";
-import { nextMission } from "../content/missions/campaign.js";
 import { FACINGS, layout } from "../sim/placement.js";
 import { RECIPES } from "../sim/recipes.js";
 import { stateHash } from "../sim/replay.js";
@@ -37,6 +36,7 @@ import {
   choose,
   currentLibrary,
   dismissNotice,
+  isCampaignPlay,
   libraryChanges,
   newFreeIsland,
   newGame,
@@ -48,6 +48,7 @@ import {
   savePlay,
   setStock,
   showProgram,
+  upcomingMission,
   usePlay,
 } from "./session.js";
 import { createSetup } from "./setup.js";
@@ -106,6 +107,10 @@ export const island = (el) => islandPage(el, "island");
 // device as it's played.
 export const play = (el) => islandPage(el, "campaign");
 
+// The second campaign (docs/campaign-planv2.md), as far as it's built: the
+// mission it's at, saved on the device as it's played, apart from the first.
+export const play2 = (el) => islandPage(el, "campaign2");
+
 // A mission done before, played again on its own: the one the address names
 // (?mission=m03), or the replay in hand.
 export const replay = (el) => islandPage(el, "replay", { mission: new URLSearchParams(location.search).get("mission") });
@@ -149,7 +154,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   const offers = ruled.tools;
   const canBuild = offers.includes("build") && blueprints().length > 0;
   const giving = offers.includes("library"); // whether robots and buildings can be given programs
-  const keeps = ["campaign", "replay", "free", "slice"].includes(key); // whether the play is saved on the device
+  const keeps = ["campaign", "campaign2", "replay", "free", "slice"].includes(key); // whether the play is saved on the device
   // What's kept is the play's, and a mission's own: the next mission starts
   // with nothing chosen and no hints shown.
   const keptKey = mission ? `${key}:${mission.id}` : key;
@@ -576,7 +581,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
         mission,
         kept: (kept.card ??= {}),
         replay: key === "replay",
-        next: key === "campaign" && !!nextMission(mission),
+        next: isCampaignPlay(key) && !!upcomingMission(key),
         coach: $(".mission-coach"),
         progress: $(".bar-goals"),
         // A hint asked for from its offer opens the panel that shows it.
@@ -609,7 +614,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
         mission,
         kept: kept.overlays?.play === playing ? kept.overlays : (kept.overlays = { play: playing }),
         replay: key === "replay",
-        next: key === "campaign" && !!nextMission(mission),
+        next: isCampaignPlay(key) && !!upcomingMission(key),
         onWin: () => {
           wonWhileRunning = game.clock.running;
           game.pause();
@@ -623,7 +628,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   // On to the next mission, which opens the page again; after a replay, or
   // the campaign's last mission, back to the title page.
   function goOn() {
-    if (key === "campaign" && nextCampaignMission()) go(`/play${location.search}`, "replace");
+    if (isCampaignPlay(key) && nextCampaignMission(key)) go(`${location.pathname}${location.search}`, "replace");
     else go(`/${location.search}`);
   }
 

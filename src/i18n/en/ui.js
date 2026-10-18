@@ -53,6 +53,10 @@ export default {
   "home.labNote": "Phase 0 prototype: the editor over the 3D world.",
   "home.world": "World lab",
   "home.worldNote": "Phase 2 prototype: robots and buildings running their programs on the world clock.",
+  // The second campaign, played apart from the first until it is ready
+  // (docs/campaign-planv2.md), with its missions by chapter.
+  "home.campaign2": "The new campaign",
+  "home.campaign2Note": "Being built: in its missions, you write each program yourself. It keeps its own progress.",
   "nav.home": "Home",
   // Labels the list of languages, each shown in its own language.
   "language.choose": "Language",
@@ -446,6 +450,9 @@ export default {
   "chapter.6": "Remember the Job",
   "chapter.7": "Make Your Own Blocks",
   "chapter.8": "Talk and Work Together",
+  // The second campaign's chapters (docs/campaign-planv2.md).
+  "chapter2.1": "Hello, Helper!",
+  "chapter2.2": "Do It Again",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",
