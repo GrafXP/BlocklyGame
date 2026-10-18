@@ -1,5 +1,6 @@
 import { display, formatList, t } from "../i18n/index.js";
 import { esc } from "./dom.js";
+import { icon, iconButton, num } from "./icons.js";
 import { identityMark } from "./inspector.js";
 import { COMMANDS, canRunProgram, choose, createProgram, currentLibrary, duplicateProgram, libraryChanged, nameProgram, peekWorld, programUse, putAway } from "./session.js";
 import { changeWords } from "./setup.js";
@@ -18,7 +19,7 @@ import { changeWords } from "./setup.js";
 
 export function createLibraryPanel(host, { onEdit }) {
   host.innerHTML = `<div class="library-head"><h2>${esc(t("library.title"))}</h2>
-      <button class="button small primary" data-lib="new">${esc(t("library.new"))}</button></div>
+      <button type="button" class="button small primary" data-lib="new">${icon("plus", 18)}${esc(t("library.new"))}</button></div>
     <div class="library-list"></div>`;
   const list = host.querySelector(".library-list");
   let giving = null; // { program, target, text }: a Give to… open
@@ -53,20 +54,24 @@ export function createLibraryPanel(host, { onEdit }) {
     const running = world.programs.find((p) => p.id === doc.id);
     const revision = running?.revision ?? doc.published.at(-1).revision;
     const names = use.runners.map((id) => world.entities.find((e) => e.id === id));
+    // Who runs it, by mark and name, the sentence for screen readers.
     const runners = names.length
-      ? `<p class="lib-runners">${names.map((e) => identityMark(world, e.id)).join("")}${esc(t("editor.runners", { names: formatList(names.map((e) => display(e.name))) }))}</p>`
+      ? `<p class="lib-who" aria-hidden="true">${names.map((e) => `<span class="who">${identityMark(world, e.id)}${esc(display(e.name))}</span>`).join("")}</p>` +
+        `<p class="lib-runners vh">${esc(t("editor.runners", { names: formatList(names.map((e) => display(e.name))) }))}</p>`
       : `<p class="lib-runners">${esc(t("library.unused"))}</p>`;
     const shared = [
-      ...use.roles.map((id) => t("library.forTeam", { team: display(world.roles.find((r) => r.id === id).name) })),
-      ...use.types.map((type) => t("library.forType", { type: typeName(type) })),
-    ].map((words) => `<p class="lib-for">${esc(words)}</p>`);
+      ...use.roles.map((id) => ["team", t("library.forTeam", { team: display(world.roles.find((r) => r.id === id).name) })]),
+      ...use.types.map((type) => ["has", t("library.forType", { type: typeName(type) })]),
+    ].map(([name, words]) => `<p class="lib-for">${icon(name, 16)}<span>${esc(words)}</span></p>`);
     const unused = !use.runners.length && !use.roles.length && !use.types.length;
     const title =
       renaming === doc.id
         ? `<form class="lib-rename" data-lib="name" data-program="${esc(doc.id)}"><label for="lib-name">${esc(t("library.name"))}</label>` +
-          `<input id="lib-name" name="name" maxlength="40" value="${esc(display(doc.name))}" autocomplete="off">` +
-          `<button class="button small primary" type="submit">${esc(t("library.ok"))}</button> <button class="button small" type="button" data-lib="cancel-name">${esc(t("library.cancel"))}</button></form>`
-        : `<h3><span class="lib-name">${esc(display(doc.name))}</span> <span class="together-version">${esc(t("together.version", { revision }))}</span></h3>`;
+          `<span class="lib-rename-line"><input id="lib-name" name="name" maxlength="40" value="${esc(display(doc.name))}" autocomplete="off">` +
+          `<button type="submit" class="button icon small primary" aria-label="${esc(t("library.ok"))}" title="${esc(t("library.ok"))}">${icon("check")}</button>` +
+          iconButton("close", t("library.cancel"), { attrs: `data-lib="cancel-name"`, className: "small" }) +
+          `</span></form>`
+        : `<h3><span class="lib-name">${esc(display(doc.name))}</span> ${num(revision, t("together.version", { revision }))}</h3>`;
     let give = "";
     if (giving?.program === doc.id) {
       const options = targets(world, doc.id).map(([value, words]) => `<option value="${esc(value)}"${value === giving.target ? " selected" : ""}>${esc(words)}</option>`);
@@ -74,16 +79,17 @@ export function createLibraryPanel(host, { onEdit }) {
         `<div class="lib-give"><label for="lib-target">${esc(t("library.giveTo", { program: display(doc.name) }))}</label>` +
         `<select id="lib-target" data-lib="target">${options.join("")}</select>` +
         (giving.text ? `<p class="setup-preview-text" role="status">${esc(giving.text)}</p>` : "") +
-        `<button class="button small primary" data-lib="give-ok">${esc(t("library.ok"))}</button> <button class="button small" data-lib="give-cancel">${esc(t("library.cancel"))}</button></div>`;
+        `<span class="lib-give-buttons">${iconButton("check", t("library.ok"), { attrs: `data-lib="give-ok"`, className: "small primary" })}${iconButton("close", t("library.cancel"), { attrs: `data-lib="give-cancel"`, className: "small" })}</span></div>`;
     }
+    const action = (name, act, words, extra = "") => iconButton(name, words, { attrs: `data-lib="${act}"${extra}`, className: "small" });
     return (
       `<li class="lib-program" data-program="${esc(doc.id)}">${title}${runners}${shared.join("")}` +
       `<div class="lib-actions">` +
-      `<button class="button small" data-lib="edit">${esc(t("library.edit"))}</button>` +
-      `<button class="button small" data-lib="give" aria-expanded="${giving?.program === doc.id}">${esc(t("library.give"))}</button>` +
-      `<button class="button small" data-lib="duplicate">${esc(t("library.duplicate"))}</button>` +
-      `<button class="button small" data-lib="rename">${esc(t("library.rename"))}</button>` +
-      `<button class="button small" data-lib="archive"${unused ? "" : ` disabled title="${esc(t("library.archiveTitle"))}"`}>${esc(t("library.archive"))}</button>` +
+      action("blocks", "edit", t("library.edit")) +
+      action("give", "give", t("library.give"), ` aria-expanded="${giving?.program === doc.id}"`) +
+      action("copy", "duplicate", t("library.duplicate")) +
+      action("pencil", "rename", t("library.rename")) +
+      (unused ? action("archive", "archive", t("library.archive")) : iconButton("archive", t("library.archive"), { attrs: `data-lib="archive" disabled`, className: "small", title: t("library.archiveTitle") })) +
       `</div>${give}</li>`
     );
   }
@@ -97,7 +103,7 @@ export function createLibraryPanel(host, { onEdit }) {
       `<ul class="lib-programs">${kept.map((doc) => programHtml(world, doc)).join("")}</ul>` +
       (away.length
         ? `<details class="lib-archived"${list.querySelector(".lib-archived")?.open ? " open" : ""}><summary>${esc(t("library.archived", { count: away.length }))}</summary><ul>` +
-          away.map((doc) => `<li data-program="${esc(doc.id)}"><span>${esc(display(doc.name))}</span> <button class="button small" data-lib="restore">${esc(t("library.restore"))}</button></li>`).join("") +
+          away.map((doc) => `<li data-program="${esc(doc.id)}"><span>${esc(display(doc.name))}</span> ${iconButton("restore", t("library.restore"), { attrs: `data-lib="restore"`, className: "small" })}</li>`).join("") +
           `</ul></details>`
         : "");
     if (html === drawn) return;

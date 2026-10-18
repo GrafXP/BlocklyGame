@@ -2,6 +2,7 @@ import { display, formatList, t } from "../i18n/index.js";
 import { DEFAULT_TREATMENT } from "../blockly/treatments.js";
 import { sourceAt } from "../programming/programs.js";
 import { esc } from "./dom.js";
+import { icon, num } from "./icons.js";
 import { identityMark } from "./inspector.js";
 import { marksFor } from "./marks.js";
 import { currentLibrary, programName } from "./session.js";
@@ -66,10 +67,12 @@ export function createTogether(host, { blockly, markers: markerModule, onPick })
 
   function headHtml(world, program) {
     const names = program.runners.map((id) => display(world.entities.find((e) => e.id === id).name));
+    const pending = t("overview.pending", { revision: program.newest });
     return (
-      `<h3>${esc(display(programName(program.id)))} <span class="together-version">${esc(t("together.version", { revision: program.revision }))}</span></h3>` +
-      `<p class="together-runners">${program.runners.map((id) => identityMark(world, id)).join("")}${esc(t("editor.runners", { names: formatList(names) }))}</p>` +
-      (program.newest > program.revision ? `<p class="row-pending">${esc(t("overview.pending", { revision: program.newest }))}</p>` : "")
+      `<h3>${esc(display(programName(program.id)))} ${num(program.revision, t("together.version", { revision: program.revision }))}</h3>` +
+      `<p class="together-who" aria-hidden="true">${program.runners.map((id, i) => `<span class="who">${identityMark(world, id)}${esc(names[i])}</span>`).join("")}</p>` +
+      `<p class="together-runners vh">${esc(t("editor.runners", { names: formatList(names) }))}</p>` +
+      (program.newest > program.revision ? `<p class="row-pending" title="${esc(pending)}">${icon("pending", 14)}<span class="num" aria-hidden="true">${program.newest}</span><span class="vh">${esc(pending)}</span></p>` : "")
     );
   }
 

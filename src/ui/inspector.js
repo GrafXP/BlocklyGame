@@ -5,6 +5,8 @@ import { identityOf } from "../render/identity.js";
 import { blockChip } from "./chips.js";
 import { amounts, describeAction, messageWords, placeName, progressOf } from "./describe.js";
 import { esc } from "./dom.js";
+import { icon } from "./icons.js";
+import { picture } from "./pictures.js";
 import { blockOf } from "./session.js";
 
 // The inspector (PLAN.md §8): what the chosen robot, building or deposit is
@@ -23,16 +25,29 @@ export function identityMark(world, id) {
   return it ? `<span class="identity ${it.shape}" style="--identity:${it.colour}" aria-hidden="true"></span>` : "";
 }
 
-function row(label, value) {
-  return value ? `<div class="inspector-row"><dt>${esc(label)}</dt><dd>${value}</dd></div>` : "";
+// A line of the details: its icon `name`, with `label` for screen readers and
+// on hover, and its value.
+function row(name, label, value) {
+  return value ? `<div class="inspector-row"><dt title="${esc(label)}">${icon(name, 18)}<span class="vh">${esc(label)}</span></dt><dd>${value}</dd></div>` : "";
+}
+
+// “3 of 4” as a fraction, “3/4”, with the words for screen readers and on hover.
+const fraction = (have, cap) => `<span class="count" title="${esc(t("inspector.of", { have, cap }))}">${esc(formatNumber(have))}/${esc(formatNumber(cap))}</span>`;
+
+// What `counts` holds, as each item's picture and number: “[wood] 3 [plank] 1”;
+// "" when it holds nothing.
+export function itemsMarkup(counts, size = 18) {
+  return ITEMS.filter((item) => counts[item])
+    .map((item) => `<span class="item-count">${picture(item, { size })}${esc(formatNumber(counts[item]))}</span>`)
+    .join("");
 }
 
 // What `place`, a building or deposit, holds of each item it can, against how
-// much.
+// much: its picture and the fraction.
 function stock(place) {
   const caps = place.store.caps ?? {};
   const lines = ITEMS.filter((item) => caps[item]).map(
-    (item) => `<li><span>${esc(t(`item.${item}`))}</span> <span class="count">${esc(t("inspector.of", { have: place.store.items[item] ?? 0, cap: caps[item] }))}</span></li>`,
+    (item) => `<li>${picture(item, { size: 20 })}<span class="vh">${esc(t(`item.${item}`))}</span> ${fraction(place.store.items[item] ?? 0, caps[item])}</li>`,
   );
   return lines.length ? `<ul class="stock">${lines.join("")}</ul>` : "";
 }
@@ -98,24 +113,26 @@ export function detailsHtml(world, id, entry, words) {
     const doing = describeAction(world, it);
     const done = progressOf(world, it);
     const bar = done ? `<progress max="${done.total}" value="${done.done}"></progress>` : `<progress class="idle" max="1" value="0"></progress>`;
-    parts.push(row(t("world.doing"), `${esc(doing || t("world.nothing"))}${bar}`));
+    parts.push(row("doing", t("world.doing"), `${esc(doing || t("world.nothing"))}${bar}`));
   }
   if (it.kind === "robot") {
     const at = thingAt(world, it.cell);
-    parts.push(row(t("world.where"), at ? esc(display(at.name)) : "–"));
+    parts.push(row("where", t("world.where"), at ? esc(display(at.name)) : "–"));
     const held = Object.values(it.store.items).reduce((a, b) => a + b, 0);
-    parts.push(row(t("inspector.basket"), `<span class="basket"><span>${esc(amounts(it.store.items))}</span> <span class="count">${esc(t("inspector.of", { have: held, cap: it.store.total }))}</span></span>`));
-  } else parts.push(row(t("world.has"), stock(it)));
+    parts.push(row("basket", t("inspector.basket"), `<span class="basket"><span title="${esc(amounts(it.store.items))}">${itemsMarkup(it.store.items)}<span class="vh">${esc(amounts(it.store.items))}</span></span> ${fraction(held, it.store.total)}</span>`));
+  } else parts.push(row("has", t("world.has"), stock(it)));
   if (entry) {
-    parts.push(row(t("inspector.reads"), readings(world, entry, words)));
-    if (entry.round) parts.push(row(t("inspector.loop"), esc(t("inspector.round", { count: entry.round.count, times: entry.round.times }))));
-    if (entry.memory.length) parts.push(row(t("inspector.memory"), memoryHtml(entry)));
-    if (entry.inside.length) parts.push(row(t("inspector.inside"), esc(entry.inside.map((f) => routineName(entry, f.routine)).join(" › "))));
-    if (entry.listens || entry.inbox.length) parts.push(row(t("inspector.inbox"), inboxHtml(world, entry)));
+    parts.push(row("reads", t("inspector.reads"), readings(world, entry, words)));
+    if (entry.round) parts.push(row("loop", t("inspector.loop"), esc(t("inspector.round", { count: entry.round.count, times: entry.round.times }))));
+    if (entry.memory.length) parts.push(row("memory", t("inspector.memory"), memoryHtml(entry)));
+    if (entry.inside.length) parts.push(row("inside", t("inspector.inside"), esc(entry.inside.map((f) => routineName(entry, f.routine)).join(" › "))));
+    if (entry.listens || entry.inbox.length) parts.push(row("inbox", t("inspector.inbox"), inboxHtml(world, entry)));
   }
+  // What kind of thing it is goes without saying on screen: its mark and its
+  // name say it. Screen readers hear it.
   return `<div class="details">
-      <p class="kind">${esc(t(KIND[it.kind]))}</p>
-      ${it.kind === "node" ? `<p class="kind">${esc(t("inspector.resourceNote"))}</p>` : ""}
+      <p class="kind vh">${esc(t(KIND[it.kind]))}</p>
+      ${it.kind === "node" ? `<p class="kind vh">${esc(t("inspector.resourceNote"))}</p>` : ""}
       <dl>${parts.join("")}</dl>
     </div>`;
 }
@@ -125,5 +142,5 @@ export function detailsHtml(world, id, entry, words) {
 // (`make`), and for one that has a program, running, stopped or parked,
 // anywhere; else "". The flyout puts it under the thing's name.
 export function detailsActions(entry, { make = false } = {}) {
-  return entry && (entry.program || make) ? `<div class="details-actions"><button class="button primary" data-act="edit">${esc(t("inspector.edit"))}</button></div>` : "";
+  return entry && (entry.program || make) ? `<div class="details-actions"><button type="button" class="button primary" data-act="edit">${icon("blocks")}${esc(t("inspector.edit"))}</button></div>` : "";
 }

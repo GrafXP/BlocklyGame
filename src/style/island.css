@@ -1,38 +1,192 @@
-/* The island in 3D (src/ui/island.js): the clock along the top, and below it
-   the world filling the window, with labels over it, the overview on the right,
-   the editor or every program on the left when open, and the view's own
-   controls at the bottom left. */
+/* The island in 3D (src/ui/island.js): the world filling the window, and over
+   it, floating, only what's asked for (PLAN.md §8, amendment of 18 October
+   2026). Along the top, one line that never wraps: home and the mission's
+   title on the left, with its goals as pictures; the panels' icons and the
+   settings on the right. At the bottom, the clock in the middle and the
+   camera on the left. Everything else slides in when asked for, or when the
+   game has something to say: the mission's panel below its title, the
+   overview on the right, the chosen one's flyout beside it, the editor or
+   every program on the left, and bubbles over the island for what the
+   mission asks. */
 
 .island-page {
+  --gap: 12px;
+  --edge-l: max(var(--gap), env(safe-area-inset-left));
+  --edge-r: max(var(--gap), env(safe-area-inset-right));
+  --edge-b: max(var(--gap), env(safe-area-inset-bottom));
+  --bar-top: max(10px, env(safe-area-inset-top));
+  /* Where the cards start, below the bar; and the room kept at the bottom for
+     the clock. */
+  --top: calc(var(--bar-top) + 62px);
+  --dock: 88px;
+  --hud: rgb(255 255 255 / 0.95);
+  --hud-shadow: 0 4px 16px rgb(16 32 56 / 0.18);
+  --card-shadow: 0 10px 30px rgb(16 32 56 / 0.24);
   position: fixed;
   inset: 0;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
   background: #a9dcf7;
 }
 
-.island-bar {
-  flex: none;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
-  background: rgb(255 255 255 / 0.92);
-  border-bottom: 1px solid var(--line);
-  z-index: 2;
+/* Whatever is hidden on the page is gone, whatever display it has otherwise. */
+.island-page [hidden] {
+  display: none !important;
 }
 
-.island-bar h1 {
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: 1.3rem;
+/* --- The bar along the top -------------------------------------------------- */
+
+.island-bar {
+  position: absolute;
+  top: var(--bar-top);
+  left: var(--edge-l);
+  right: var(--edge-r);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none; /* the world between its two ends can still be dragged */
 }
+
+.island-bar > * {
+  pointer-events: auto;
+}
+
+.bar-start,
+.bar-end {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--hud);
+  box-shadow: var(--hud-shadow);
+}
+
+.bar-start {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.bar-end {
+  flex: none;
+}
+
+.island-bar .button.icon:not([aria-pressed="true"], [aria-expanded="true"]) {
+  border-color: transparent;
+  background: transparent;
+}
+
+.island-bar .button.icon:hover:not([aria-pressed="true"], [aria-expanded="true"]),
+.title-button:hover {
+  background: #eef2f7;
+}
+
+.bar-title {
+  min-width: 0;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.bar-title > .title-text {
+  display: block;
+  padding: 0 14px 0 6px;
+}
+
+/* The mission's title opens its panel: the title, its goals as pictures, and
+   a chevron that turns as it opens. */
+.title-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 10px 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.title-button[aria-expanded="true"] {
+  background: #fff1cc;
+}
+
+.title-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.title-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.title-button .icon-chevron {
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .title-button .icon-chevron {
+    transition: transform 0.2s;
+  }
+}
+
+.title-button[aria-expanded="true"] .icon-chevron {
+  transform: rotate(180deg);
+}
+
+.bar-goals {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-goals:empty {
+  display: none;
+}
+
+.goal-mini,
+.bar-goals {
+  white-space: nowrap;
+}
+
+.goal-mini {
+  display: flex;
+  gap: 1px;
+}
+
+.goal-mini.met::after {
+  content: "✓";
+  margin-inline-start: 2px;
+  color: #1d6b3a;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.bar-goals .mission-arrow {
+  margin: 0 2px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 760px) {
+  .bar-goals {
+    display: none;
+  }
+}
+
+/* --- The world -------------------------------------------------------------- */
 
 .island-main {
-  position: relative;
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
@@ -71,11 +225,6 @@
   pointer-events: auto;
   cursor: pointer;
   will-change: transform;
-}
-
-/* A label off screen, or under the panel on the left. */
-.tag[hidden] {
-  display: none;
 }
 
 .tag .identity {
@@ -132,189 +281,179 @@
     #b42318;
 }
 
-.island-main .stall {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: min(36rem, calc(100% - 24px));
-  margin: 0;
-  z-index: 1;
-}
+/* --- Bubbles over the island ------------------------------------------------ */
 
-/* The column on the right: a mission's card (src/ui/mission.js), when there is
-   one, above the overview, which scrolls in the room left. */
-.island-side {
+/* What the game says without being asked, just above the clock, where the
+   player is about to press, between whatever is open, one above another: the
+   world stalled, a building on its way, the Build card, the sandbox's new
+   island, and the mission's bubbles (src/ui/mission.js). */
+.coach {
   position: absolute;
-  top: 12px;
-  right: max(12px, env(safe-area-inset-right));
-  bottom: 12px;
+  top: var(--top);
+  bottom: calc(var(--edge-b) + var(--dock));
+  left: calc(var(--coach-l, 0px) + var(--edge-l));
+  right: calc(var(--coach-r, 0px) + var(--edge-r));
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: min(320px, 42%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.island-side > * {
-  pointer-events: auto;
-}
-
-/* The overview (src/ui/overview.js): a row for every robot, building and
-   deposit, the chosen one marked; its details are in its flyout. */
-.overview {
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow: auto;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.94);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
-}
-
-/* The mission's card: the goal with pictures, how far it has got, the hints,
-   and the reward when it's done. It keeps its height; the overview gives way. */
-.mission-card {
-  flex: none;
-  max-height: 55%;
-  overflow: auto;
-  padding: 10px 12px;
-  border: 2px solid #f6b73c;
-  border-radius: var(--radius);
-  background: rgb(255 251 240 / 0.97);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
-}
-
-.mission-card.done {
-  border-color: #2f9e5b;
-  background: rgb(240 251 244 / 0.97);
-}
-
-.mission-title {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.mission-goal {
-  margin: 2px 0 6px;
-  font-weight: 600;
-}
-
-.mission-progress {
-  display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
+  pointer-events: none;
 }
 
-.mission-progress .picture {
-  flex: none;
-}
-
-.mission-arrow {
-  margin: 0 4px;
-  color: var(--ink-soft);
-}
-
-.mission-building {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-}
-
-/* Kept in its place until the building starts, so the overview below doesn't
-   move when it does. */
-.mission-building.idle {
-  visibility: hidden;
-}
-
-.mission-building[hidden],
-.mission-again[hidden],
-.mission-notice[hidden],
-.mission-hint[hidden] {
+/* Once the mission says everything has stopped, with its hint, the world's
+   own word for it goes without saying. */
+.coach:has(.coach-stuck:not([hidden])) .stall {
   display: none;
 }
 
-.mission-building progress {
-  display: block;
-  width: 100%;
-  height: 6px;
-  margin-top: 2px;
+.coach > *,
+.mission-coach > * {
+  pointer-events: auto;
 }
 
-.mission-done {
+.mission-coach {
+  display: contents;
+}
+
+.coach .stall,
+.coach .build-pending,
+.coach-bubble {
+  max-width: min(32rem, 100%);
   margin: 0;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--hud);
+  box-shadow: var(--hud-shadow);
+  font-size: 0.95rem;
 }
 
-.mission-card.done .mission-done {
-  margin-top: 6px;
-  padding: 6px 8px;
-  border-radius: 8px;
+.coach-bubble p {
+  margin: 0 0 6px;
+}
+
+.coach-bubble .button {
+  margin: 2px 6px 0 0;
+}
+
+.coach .stall,
+.coach-stuck,
+.mission-notice {
+  background: #fff4d6;
+  color: #4d2f00;
+}
+
+.coach .build-pending,
+.mission-predict,
+.mission-again {
+  background: #e3edfb;
+  color: #123d7d;
+}
+
+.mission-passed,
+.mission-explain {
   background: #d6f2df;
   color: #134a29;
 }
 
-.mission-card.done .mission-done strong::before {
-  content: "✓ ";
+.mission-passed {
+  font-weight: 700;
 }
 
-.mission-hints {
-  margin: 6px 0 0;
+.mission-stuck {
+  margin: 0 0 6px;
+}
+
+/* With the mission's panel open, its own Hint button is the one to press. */
+.island-main:has(.mission-panel:not([hidden])) .coach-hint {
+  display: none;
+}
+
+/* The way on, once the mission is done: the bubble is its button. */
+.mission-next {
   padding: 0;
-  list-style: none;
+  background: none;
+  box-shadow: none;
 }
 
-.mission-hints li {
-  margin-top: 4px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid var(--line);
-  font-size: 0.9rem;
+.mission-next .button {
+  margin: 0;
+  min-height: 52px;
+  padding-inline: 1.4rem 1.1rem;
+  border: 0;
+  background: linear-gradient(#34b85c, #1d8f43);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  box-shadow:
+    0 4px 0 #156a31,
+    var(--hud-shadow);
 }
 
-.mission-hints .button {
-  margin-top: 4px;
+/* --- The mission's panel ----------------------------------------------------- */
+
+/* Below the mission's title, when asked for (src/ui/mission.js): the goal with
+   pictures, how far it has got, the trials, the hints, and the reward when
+   it's done. */
+.mission-panel {
+  position: absolute;
+  top: var(--top);
+  left: var(--edge-l);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100% - 2 * var(--gap)));
+  max-height: calc(100% - var(--top) - var(--dock));
 }
 
-.mission-hint {
-  margin-top: 8px;
+.mission-card {
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 14px 14px;
+  border: 3px solid #f6b73c;
+  border-radius: 20px;
+  background: #fffbf0;
+  box-shadow: var(--card-shadow);
 }
 
-.mission-again {
-  margin-top: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: #e3edfb;
-  color: #123d7d;
-  font-size: 0.85rem;
+.mission-card.done {
+  border-color: #2f9e5b;
+  background: #f0fbf4;
 }
 
-.mission-again p {
-  margin: 0 0 4px;
+.mission-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -2px -6px 0 0;
 }
 
-.mission-notice {
-  margin-top: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: #fff1cc;
-  color: #4d2f00;
-  font-size: 0.85rem;
+.mission-head .button.icon {
+  border-color: transparent;
+  background: transparent;
 }
 
-.mission-notice p {
-  margin: 0 0 4px;
-}
-
-/* The campaign's card (src/ui/mission.js): where the mission is in the
-   campaign, what's new, each goal beside its pictures, the trials, the
-   prediction before Run, the explanation after, and the way on. */
 .mission-chapter {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+.mission-title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.mission-goal {
+  margin: 4px 0 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .mission-setup,
@@ -329,6 +468,42 @@
   border-radius: 8px;
   background: #ece6fb;
   color: #3b2a7a;
+}
+
+.mission-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.mission-progress .picture {
+  flex: none;
+}
+
+.mission-arrow {
+  display: inline-grid;
+  place-items: center;
+  margin: 0 4px;
+  color: var(--ink-soft);
+}
+
+.mission-building {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
+/* Kept in its place until the building starts, so the panel doesn't move when
+   it does. */
+.mission-building.idle {
+  visibility: hidden;
+}
+
+.mission-building progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 2px;
 }
 
 .mission-goals,
@@ -403,40 +578,48 @@
   color: var(--ink-soft);
 }
 
-.mission-passed,
-.mission-predict,
-.mission-explain,
-.mission-stuck {
-  margin: 8px 0 0;
+.mission-actions {
+  margin-top: 10px;
+}
+
+.mission-done {
+  margin: 0;
+}
+
+.mission-card.done .mission-done {
+  margin-top: 8px;
   padding: 6px 8px;
   border-radius: 8px;
-  font-size: 0.86rem;
-}
-
-.mission-passed {
   background: #d6f2df;
   color: #134a29;
-  font-weight: 600;
 }
 
-.mission-predict {
-  background: #e3edfb;
-  color: #123d7d;
+.mission-card.done .mission-done strong::before {
+  content: "✓ ";
 }
 
-.mission-explain {
-  background: #eaf6ee;
-  color: #134a29;
+.mission-hints {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.mission-stuck {
-  background: #fff1cc;
-  color: #4d2f00;
+.mission-hints li {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 0.9rem;
 }
 
-.mission-predict p,
-.mission-explain p {
-  margin: 0 0 4px;
+.mission-hints .button {
+  margin-top: 4px;
+}
+
+.hint-buttons {
+  display: block;
+  margin-top: 2px;
 }
 
 .mission-predict .button,
@@ -445,36 +628,21 @@
   margin: 2px 4px 0 0;
 }
 
-.mission-passed[hidden],
-.mission-predict[hidden],
-.mission-explain[hidden],
-.mission-next[hidden],
-.mission-stuck[hidden] {
-  display: none;
-}
-
-.mission-actions {
-  margin-top: 8px;
-}
-
-.mission-next {
-  margin-top: 8px;
-}
-
-.hint-buttons {
-  display: block;
-  margin-top: 2px;
+.mission-hint {
+  margin-top: 10px;
 }
 
 /* A hint on offer once everything has come to a standstill: noticed, never
    pushed. */
-.mission-hint.offer {
+.mission-hint.offer,
+.coach-hint {
   border-color: #f6b73c;
   box-shadow: 0 0 0 3px rgb(246 183 60 / 0.35);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mission-hint.offer {
+  .mission-hint.offer,
+  .coach-hint {
     animation: offer 1.6s ease-in-out 3;
   }
 }
@@ -485,25 +653,56 @@
   }
 }
 
-.overview .hint {
-  margin: 0 0 8px;
+/* --- The overview ------------------------------------------------------------ */
+
+/* On the right, when asked for (src/ui/overview.js): a row for every robot,
+   building and deposit, the chosen one marked; its details are in its
+   flyout. */
+.drawer {
+  position: absolute;
+  top: var(--top);
+  right: var(--edge-r);
+  bottom: var(--edge-b);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  width: min(300px, calc(100% - 2 * var(--gap)));
+  border-radius: 20px;
+  background: var(--hud);
+  box-shadow: var(--card-shadow);
 }
 
-.overview .hint[hidden] {
-  display: none;
+.drawer-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 4px 16px;
+  border-bottom: 1px solid var(--line);
 }
 
-.overview .everyone {
-  margin: 0 0 6px;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-  font-weight: 600;
+.drawer-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.drawer-head .button.icon {
+  border-color: transparent;
+  background: transparent;
+}
+
+.drawer .overview {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px 12px;
 }
 
 .rows {
   display: grid;
-  /* As wide as the overview, however long a line: a row that isn't chosen
-     shortens its lines with an ellipsis rather than widening the column. */
+  /* As wide as the overview, however long a line: a row shortens its lines
+     with an ellipsis rather than widening the column. */
   grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   margin: 0;
@@ -513,9 +712,9 @@
 
 .row {
   min-width: 0;
-  padding: 4px 8px 6px;
+  padding: 2px 8px 6px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--card);
 }
 
@@ -535,7 +734,7 @@
   background: none;
   color: var(--ink);
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   text-align: start;
   cursor: pointer;
 }
@@ -556,45 +755,65 @@
   hyphens: auto;
 }
 
+/* A state as its icon in a coloured circle (src/ui/icons.js). */
 :is(.row, .flyout) .state {
+  display: inline-grid;
   flex: none;
-  padding: 0 8px;
-  border-radius: 999px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   background: #eef1f5;
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: #4b5563;
+}
+
+:is(.row, .flyout) .state.ready {
+  background: #e4f4e8;
+  color: #1d8f43;
 }
 
 :is(.row, .flyout) .state.waiting {
   background: #fff1cc;
-  color: #6b4100;
+  color: #a26a00;
 }
 
 :is(.row, .flyout) .state.error {
   background: #fde2e0;
-  color: #8f1b12;
+  color: #b42318;
 }
 
 :is(.row, .flyout) .state.moving,
 :is(.row, .flyout) .state.working {
   background: #dcebfb;
-  color: #123d7d;
+  color: #1d5fbf;
 }
 
-.row-program {
+.row-program,
+.row-pending {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
-  overflow: hidden;
+  min-width: 0;
   color: var(--ink-soft);
   font-size: 0.8rem;
+}
+
+.row-program-name {
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .row-pending {
-  margin: 2px 0 0;
+  margin-top: 2px;
   color: #123d7d;
-  font-size: 0.8rem;
-  font-weight: 600;
+}
+
+.row-pending .num {
+  background: #dcebfb;
+  color: #123d7d;
 }
 
 .row-block {
@@ -622,10 +841,11 @@
 }
 
 /* A row holds still while the world runs (src/ui/overview.js): the block and
-   the reason keep their lines when empty, and a row that isn't chosen keeps
-   each line to one, the whole of it on hover. */
+   the reason keep their lines when empty, and each line is one, the whole of
+   it on hover. */
 .row-block {
   min-height: 1.9em; /* a chip's line */
+  height: 1.9em;
   padding-inline: 4px; /* room for the outline of a block taken in this step */
 }
 
@@ -633,40 +853,46 @@
   min-height: 1.45em;
 }
 
-.row :is(.row-block, .why, .row-has) {
+.row :is(.row-block, .why) {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.row .row-block {
-  height: 1.9em;
+.row-has {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
 }
 
-.row .state[hidden] {
-  display: none;
+/* Items as their pictures with their numbers. */
+.item-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-/* The chosen one's flyout (src/ui/flyout.js), beside the list, level with its
-   row (src/ui/island.js): its name, Edit program, its setup and details. On a
-   narrow screen it lies over the list instead. */
+/* --- The chosen one's flyout ------------------------------------------------- */
+
+/* On the right, below the bar; with the overview open, beside it, level with
+   its row (src/ui/island.js): its name and state, Edit program, its details
+   under icons, and its setup. */
 .flyout {
   position: absolute;
-  top: 12px;
-  right: calc(max(12px, env(safe-area-inset-right)) + min(320px, 42%) + 10px);
-  width: 300px;
-  max-height: calc(100% - 24px);
+  top: var(--top);
+  right: calc(var(--aside, 0px) + var(--edge-r));
+  z-index: 3;
+  width: min(300px, calc(100% - 2 * var(--gap)));
+  max-height: calc(100% - var(--top) - var(--dock));
   overflow: auto;
-  padding: 10px 12px 12px;
-  border: 2px solid #f6b73c;
-  border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.97);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.22);
-  z-index: 1;
-}
-
-.flyout[hidden] {
-  display: none;
+  padding: 8px 12px 12px;
+  border: 3px solid #f6b73c;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--card-shadow);
 }
 
 .flyout-head {
@@ -679,7 +905,7 @@
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -693,29 +919,21 @@
 
 .flyout-title .identity {
   flex: none;
+  margin-inline-end: 0;
 }
 
 .flyout-close {
-  flex: none;
-  min-width: 34px;
-  padding: 0;
-  font-size: 1.2rem;
-  line-height: 1;
+  margin-inline-end: -6px;
+  border-color: transparent;
+  background: transparent;
 }
 
 .flyout .details-actions {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .flyout .details-actions .button {
   width: 100%;
-}
-
-@media (max-width: 44rem) {
-  .flyout {
-    right: max(12px, env(safe-area-inset-right));
-    width: min(320px, calc(100% - 24px));
-  }
 }
 
 /* Kept in its place while there's nothing to show progress of. */
@@ -723,25 +941,21 @@
   visibility: hidden;
 }
 
-/* The chosen one's details. */
 .details {
   margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--line);
-}
-
-.details .kind {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.8rem;
 }
 
 .details dl {
-  margin: 4px 0 0;
+  margin: 0;
 }
 
+/* A line of the details: its icon, then what it says. */
 .inspector-row {
-  padding: 5px 0;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 6px 0;
   border-top: 1px solid var(--line);
 }
 
@@ -750,12 +964,15 @@
 }
 
 .details dt {
+  display: grid;
+  place-items: center;
+  padding-top: 1px;
   color: var(--ink-soft);
-  font-size: 0.8rem;
 }
 
 .details dd {
-  margin: 2px 0 0;
+  margin: 0;
+  min-width: 0;
 }
 
 .details progress {
@@ -767,6 +984,7 @@
 
 .details .count {
   color: var(--ink-soft);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -779,12 +997,31 @@
   list-style: none;
 }
 
-.details .stock li,
+.details .stock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.details .stock li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .details .memory li,
 .details .basket {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
+}
+
+.details .basket > span:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  min-height: 20px;
 }
 
 .details .memory strong {
@@ -802,333 +1039,35 @@
   margin-top: 8px;
 }
 
-/* The panel on the left (src/ui/island.js): the program editor
-   (src/ui/editor.js) or every program together (src/ui/together.js), over the
-   world, which shows through its background (src/style/editor.css). */
-.side-panel {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  min-width: 320px;
-  background: rgb(var(--panel-rgb) / var(--panel-alpha));
-  border-right: 1px solid rgb(var(--toolbox-rgb) / 0.9);
-  box-shadow: 4px 0 18px rgb(0 0 0 / 0.12);
-  z-index: 2;
-}
-
-.side-panel[hidden] {
-  display: none;
-}
-
-.panel-body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.panel-close {
-  position: absolute;
-  top: 8px;
-  right: 14px;
-  z-index: 3;
-}
-
-.side-panel .panel-handle {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: -10px;
-  width: 20px;
-  cursor: ew-resize;
-  z-index: 80;
-  touch-action: none;
-}
-
-.side-panel .panel-handle::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 7px;
-  width: 6px;
-  height: 56px;
-  margin-top: -28px;
-  border-radius: 3px;
-  background: rgb(var(--toolbox-rgb));
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
-}
-
-.side-panel .panel-handle:focus-visible::after {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* The editor's heading: the program, who runs it, its state and the actions. */
-.code-head,
-.together-head {
-  flex: none;
-  padding: 10px 14px 8px;
-  padding-inline-end: 96px; /* clear of the Close button */
-  background: rgb(var(--toolbox-rgb) / var(--toolbox-alpha));
-  border-bottom: 1px solid rgb(0 0 0 / 0.08);
-}
-
-.code-head h2,
-.together-head h2 {
-  margin: 0;
-  font-size: 1.1rem;
-  hyphens: auto;
-}
-
-/* The program's history (src/ui/history.js), folded away under the head:
-   every version as a tree, oldest at the top, branches indented. */
-.code-history {
-  margin-top: 8px;
-  max-height: 14rem;
-  overflow: auto;
-  padding: 6px 8px;
-  border: 1px solid rgb(0 0 0 / 0.1);
-  border-radius: 10px;
-  background: rgb(255 255 255 / 0.9);
-}
-
-.code-history[hidden] {
-  display: none;
-}
-
-.history-hint {
-  margin: 0 0 4px;
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-}
-
-.history-tree,
-.history-branch {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.history-branch {
-  margin-inline-start: 14px;
-  padding-inline-start: 8px;
-  border-inline-start: 2px solid #c9c2b2;
-}
-
-.history-entry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 8px;
-  width: 100%;
-  min-height: 32px;
-  margin: 2px 0;
-  padding: 4px 8px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: none;
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-align: start;
-  cursor: pointer;
-}
-
-.history-entry:hover {
-  background: #f1ede4;
-}
-
-.history-entry:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.history-entry small {
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-  font-weight: 500;
-}
-
-/* The version the draft came from. */
-.history-entry.base {
-  border-color: #f6b73c;
-  background: #fff6de;
-}
-
-/* Changes not applied, kept to go back to. */
-.history-entry.kept {
-  border-style: dashed;
-  border-color: #2f6fd6;
-  color: #123d7d;
-}
-
-.history-count {
-  min-width: 1.4em;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #eef1f5;
-  font-size: 0.8rem;
-}
-
-.code-runners,
-.code-state,
-.code-problems {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
-}
-
-.code-runners {
-  color: var(--ink-soft);
-}
-
-.code-runners .identity,
-.together-runners .identity {
-  margin-inline-end: 4px;
-}
-
-.code-runners .identity:last-of-type,
-.together-runners .identity:last-of-type {
-  margin-inline-end: 8px;
-}
-
-.code-state {
-  font-weight: 600;
-}
-
-.code-problems:empty {
-  display: none;
-}
-
-.code-problems {
-  color: #8f1b12;
-}
-
-.code-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.code-actions .button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.code-host {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
-
-/* Every program together: a list of panels, each as tall as its blocks. */
-.together-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 8px 10px 16px;
-}
-
-.together-empty {
-  margin: 12px 14px;
-}
-
-.together-panel {
-  margin-bottom: 10px;
-  border: 1px solid rgb(0 0 0 / 0.1);
-  border-radius: 10px;
-  background: rgb(255 255 255 / 0.35);
-}
-
-.together-panel-head {
-  padding: 6px 10px;
-  border-bottom: 1px solid rgb(0 0 0 / 0.08);
-}
-
-.together-panel-head h3 {
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.together-version {
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.together-runners {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-}
-
-.together-blocks {
-  position: relative;
-  min-height: 60px;
-}
-
-/* The view's controls, and the graphics setting. */
-.island-tools {
-  position: absolute;
-  left: calc(var(--side, 0px) + max(12px, env(safe-area-inset-left)));
-  /* Between the panel on the left and the overview on the right. */
-  right: calc(min(320px, 42%) + 24px);
-  bottom: max(12px, env(safe-area-inset-bottom));
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  z-index: 1;
-  pointer-events: none; /* the world between the controls can still be dragged */
-}
-
-.island-tools > * {
-  pointer-events: auto;
-}
-
-.view-controls {
-  display: flex;
-  gap: 6px;
-}
-
-.button.icon {
-  min-width: 44px;
-  padding: 0;
-  background: rgb(255 255 255 / 0.94);
-}
-
-.quality {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 4px 4px 10px;
-  border-radius: 20px;
-  background: rgb(255 255 255 / 0.94);
-}
-
-.quality .segmented {
-  background: var(--card);
-}
-
-.counters {
-  margin: 0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: rgb(255 255 255 / 0.85);
-  font-size: 0.75rem;
-}
-
-/* The chosen one's setup in its flyout (src/ui/setup.js): one field to a
-   line, its label above, so German's longer words fit. */
+/* The chosen one's setup in its flyout (src/ui/setup.js). */
 .setup {
   margin-top: 6px;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px solid var(--line);
+}
+
+.setup-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.setup-line .setup-buttons {
+  margin: 0;
+}
+
+.setup-from {
+  display: flex;
+  flex: 1 1 8rem;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.setup-from .icon {
+  flex: none;
 }
 
 .setup-field {
@@ -1145,6 +1084,25 @@
   font-size: 0.8rem;
 }
 
+/* The team: its icon, then its choice, beside Rename. */
+.setup-field.setup-team {
+  display: flex;
+  flex: 1 1 10rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.setup-team label {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+}
+
+.setup-team select {
+  flex: 1;
+}
+
 .setup-field select,
 .setup-rename input,
 .lib-give select,
@@ -1154,7 +1112,7 @@
   min-height: 36px;
   padding: 4px 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--card);
   color: var(--ink);
   font: inherit;
@@ -1189,10 +1147,6 @@
   hyphens: auto;
 }
 
-.setup-note .identity {
-  margin-inline-end: 4px;
-}
-
 .setup-note.pending {
   color: #123d7d;
   font-weight: 600;
@@ -1209,7 +1163,7 @@
   margin: 8px 0 0;
   padding: 4px 8px 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .setup .settings legend {
@@ -1223,6 +1177,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 6px;
+  width: 100%;
   margin-top: 6px;
 }
 
@@ -1240,32 +1195,381 @@
 .setup-preview {
   margin-top: 8px;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #e3edfb;
   color: #123d7d;
   font-size: 0.85rem;
 }
 
 .setup-preview p {
-  margin: 0 0 6px;
+  margin: 0;
 }
 
-/* The program library (src/ui/library.js), in the panel on the left. */
+/* A building's or deposit's supplies, one more or fewer, in the sandbox. */
+.stock-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stock-field span {
+  flex: 1;
+}
+
+/* --- The panel on the left -------------------------------------------------- */
+
+/* The program editor (src/ui/editor.js), every program together
+   (src/ui/together.js) or the program library (src/ui/library.js), over the
+   world, which shows through its background (src/style/editor.css). */
+.side-panel {
+  position: absolute;
+  top: var(--top);
+  bottom: var(--edge-b);
+  left: var(--edge-l);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  max-width: calc(100% - 2 * var(--gap));
+  overflow: hidden;
+  border: 1px solid rgb(var(--toolbox-rgb) / 0.9);
+  border-radius: 20px;
+  background: rgb(var(--panel-rgb) / var(--panel-alpha));
+  box-shadow: var(--card-shadow);
+}
+
+.panel-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  z-index: 3;
+  border-color: transparent;
+  background: rgb(255 255 255 / 0.7);
+}
+
+.side-panel .panel-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  cursor: ew-resize;
+  z-index: 80;
+  touch-action: none;
+}
+
+.side-panel .panel-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 6px;
+  height: 56px;
+  margin-top: -28px;
+  border-radius: 3px;
+  background: rgb(var(--toolbox-rgb));
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+.side-panel .panel-handle:focus-visible::after {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The editor's head: the program and its version, who runs it, and the
+   actions as icons. */
+.code-head,
+.together-head,
 .library-head {
   flex: none;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 12px;
-  padding: 10px 14px 8px;
-  padding-inline-end: 96px; /* clear of the Close button */
+  padding: 10px 14px 10px;
+  padding-inline-end: 60px; /* clear of the Close button */
   background: rgb(var(--toolbox-rgb) / var(--toolbox-alpha));
   border-bottom: 1px solid rgb(0 0 0 / 0.08);
 }
 
+.code-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 32px;
+}
+
+.code-head h2,
+.together-head h2,
 .library-head h2 {
   margin: 0;
   font-size: 1.1rem;
+  hyphens: auto;
+}
+
+.code-title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The version, in a bubble whose look says its state: running, changed,
+   waiting for the next step, not started, or wrong. */
+.code-version {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  height: 26px;
+  padding: 0 10px 0 7px;
+  border-radius: 999px;
+  background: #d6f2df;
+  color: #134a29;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.code-version[data-state="changed"] {
+  background: #fff1cc;
+  color: #6b4100;
+}
+
+.code-version[data-state="pending"] {
+  background: #dcebfb;
+  color: #123d7d;
+}
+
+.code-version[data-state="parked"] {
+  background: #eef1f5;
+  color: var(--ink-soft);
+}
+
+.code-version[data-state="problems"] {
+  background: #fde2e0;
+  color: #8f1b12;
+}
+
+/* Who runs it, by mark and name; blue once Apply would start them again. */
+.code-who,
+.lib-who,
+.together-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.code-who.affects {
+  color: #123d7d;
+}
+
+.who {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.who .identity {
+  margin-inline-end: 4px;
+}
+
+.code-problems {
+  margin: 4px 0 0;
+  color: #8f1b12;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.code-problems:empty {
+  display: none;
+}
+
+.code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.code-actions .button.icon:not([aria-expanded="true"]) {
+  background: rgb(255 255 255 / 0.9);
+}
+
+/* Apply glows while the draft has changes to apply. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-code="apply"]:not(:disabled) {
+    animation: apply-glow 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes apply-glow {
+  50% {
+    box-shadow: 0 0 0 6px rgb(47 111 214 / 0.25);
+  }
+}
+
+/* How many versions there are, on the Versions button's corner. */
+.history-toggle {
+  position: relative;
+}
+
+.history-toggle .history-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.code-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The program's history (src/ui/history.js), folded away under the head:
+   every version as a number, oldest at the top, branches indented. */
+.code-history {
+  margin-top: 8px;
+  max-height: 14rem;
+  overflow: auto;
+  padding: 4px 6px;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.9);
+}
+
+.history-tree,
+.history-branch {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-branch {
+  margin-inline-start: 14px;
+  padding-inline-start: 8px;
+  border-inline-start: 2px solid #c9c2b2;
+}
+
+.history-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 34px;
+  margin: 2px 0;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.history-entry .num {
+  font-size: 0.85rem;
+}
+
+.history-entry:hover {
+  background: #f1ede4;
+}
+
+.history-entry:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.history-mark {
+  display: inline-grid;
+  place-items: center;
+}
+
+.history-mark.running {
+  color: #1d8f43;
+}
+
+.history-mark.editing,
+.history-mark.changed {
+  color: #a26a00;
+}
+
+/* The version the draft came from. */
+.history-entry.base {
+  border-color: #f6b73c;
+  background: #fff6de;
+}
+
+/* Changes not applied, kept to go back to. */
+.history-entry.kept {
+  border-style: dashed;
+  border-color: #2f6fd6;
+  color: #123d7d;
+}
+
+/* Every program together: a list of panels, each as tall as its blocks. */
+.together-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px 16px;
+}
+
+.together-empty {
+  margin: 12px 14px;
+}
+
+.together-panel {
+  margin-bottom: 10px;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+.together-panel-head {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+}
+
+.together-panel-head h3,
+.lib-program h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.95rem;
+  hyphens: auto;
+}
+
+.together-blocks {
+  position: relative;
+  min-height: 60px;
+}
+
+/* The program library (src/ui/library.js), in the panel on the left. */
+.library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
 }
 
 .library-list {
@@ -1286,14 +1590,8 @@
 .lib-program {
   padding: 6px 10px 8px;
   border: 1px solid rgb(0 0 0 / 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
   background: rgb(255 255 255 / 0.75);
-}
-
-.lib-program h3 {
-  margin: 0;
-  font-size: 0.95rem;
-  hyphens: auto;
 }
 
 .lib-runners,
@@ -1303,25 +1601,23 @@
   font-size: 0.8rem;
 }
 
-.lib-runners .identity {
-  margin-inline-end: 4px;
-}
-
 .lib-for {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #123d7d;
   font-weight: 600;
+}
+
+.lib-for .icon {
+  flex: none;
 }
 
 .lib-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   margin-top: 6px;
-}
-
-.lib-actions .button:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 
 .lib-give,
@@ -1330,7 +1626,7 @@
   gap: 4px;
   margin-top: 8px;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #e3edfb;
   color: #123d7d;
   font-size: 0.85rem;
@@ -1343,13 +1639,19 @@
   color: var(--ink);
 }
 
-.lib-give p {
-  margin: 0;
+.lib-rename-line,
+.lib-give-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.lib-give .button,
-.lib-rename .button {
-  justify-self: start;
+.lib-rename-line input {
+  flex: 1;
+}
+
+.lib-give p {
+  margin: 0;
 }
 
 .lib-archived {
@@ -1376,44 +1678,167 @@
   margin-top: 4px;
 }
 
-/* Who Apply starts again, while the draft has changes. */
-.code-affects {
-  margin: 2px 0 0;
-  color: #123d7d;
-  font-size: 0.85rem;
-  font-weight: 600;
+/* --- Menus ------------------------------------------------------------------- */
+
+/* Menus open from their icon and close at the next tap anywhere else: the
+   settings below the gear, and the view's controls above the camera. */
+.menu {
+  z-index: 5;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--card-shadow);
 }
 
-.code-affects:empty {
-  display: none;
+.settings-menu {
+  position: absolute;
+  top: var(--top);
+  right: var(--edge-r);
+  max-width: calc(100% - 2 * var(--gap));
+  padding: 10px 12px 12px;
 }
 
-.code-affects .identity {
-  margin-inline-end: 4px;
+.menu-label {
+  margin: 0 0 4px;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
-/* Placing a building (src/ui/island.js): what to do, why it fits or doesn't,
-   and the buttons, at the top of the world, between the panel and the
-   overview. */
+.settings-menu .segmented {
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+}
+
+.settings-menu .segmented + .menu-label {
+  margin-top: 12px;
+}
+
+/* --- Along the bottom: the camera and the clock ------------------------------- */
+
+.island-tools {
+  position: absolute;
+  left: calc(var(--side, 0px) + var(--edge-l));
+  right: calc(var(--aside, 0px) + var(--edge-r));
+  bottom: var(--edge-b);
+  z-index: 2;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 8px;
+  pointer-events: none; /* the world between the controls can still be dragged */
+}
+
+.island-tools > * {
+  pointer-events: auto;
+}
+
+.view-tools {
+  justify-self: start;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-tools > .button.icon:not([aria-expanded="true"]) {
+  border-color: transparent;
+  background: var(--hud);
+  box-shadow: var(--hud-shadow);
+}
+
+.view-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px;
+}
+
+.view-controls .button.icon {
+  border-color: transparent;
+  background: transparent;
+}
+
+.view-controls .button.icon:hover {
+  background: #eef2f7;
+}
+
+.transport {
+  justify-self: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--hud);
+  box-shadow: var(--hud-shadow);
+}
+
+.transport .button.icon:not(.run),
+.transport .speed {
+  border-color: transparent;
+  background: transparent;
+}
+
+.transport .speed {
+  background: #eef2f7;
+}
+
+/* With ?dev, the frame meter, in the settings. */
+/* Between the editor and the overview there may be little room: the clock
+   draws closer, the count of steps goes, and the camera rises above it. */
+@container (max-width: 460px) {
+  .clock {
+    gap: 2px;
+  }
+
+  .transport .button.icon {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .clock .run {
+    width: 50px;
+    min-width: 50px;
+    height: 50px;
+  }
+
+  .clock .ticks {
+    display: none;
+  }
+
+  .view-tools {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+  }
+
+  .transport {
+    grid-column: 1 / -1;
+    padding-inline: 4px;
+  }
+}
+
+.counters {
+  margin: 12px 0 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #eef2f7;
+  font-size: 0.72rem;
+}
+
+/* --- Placing a building, and the sandbox's new island ------------------------ */
+
+/* In the column of bubbles (src/ui/island.js): what to do, why it fits or
+   doesn't, and the buttons. */
 .build-card,
 .sandbox-card {
-  position: absolute;
-  top: 12px;
-  left: calc(var(--side, 0px) + 12px);
-  right: calc(min(320px, 42%) + 24px);
-  width: min(26rem, calc(100% - var(--side, 0px) - min(320px, 42%) - 36px));
-  margin-inline: auto;
-  padding: 10px 12px;
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
-  background: rgb(255 255 255 / 0.96);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 0.16);
-  z-index: 1;
-}
-
-/* The sandbox's new island: how it's laid out (src/ui/island.js). */
-.sandbox-card[hidden] {
-  display: none;
+  width: min(26rem, 100%);
+  padding: 10px 14px 12px;
+  border: 3px solid var(--accent);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--card-shadow);
 }
 
 .sandbox-card p {
@@ -1431,22 +1856,6 @@
 .sandbox-card select {
   min-height: 32px;
   font: inherit;
-}
-
-/* A building's or deposit's supplies, one more or fewer, in the sandbox. */
-.stock-field {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.stock-field span {
-  flex: 1;
-}
-
-.build-card[hidden],
-.build-pending[hidden] {
-  display: none;
 }
 
 .build-ask {
@@ -1470,33 +1879,67 @@
 .build-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin-top: 8px;
 }
 
-.build-actions .button:disabled {
-  opacity: 0.45;
-  cursor: default;
+/* --- Sliding in ---------------------------------------------------------------- */
+
+/* What opens comes in from where it lives, and grows from its own edge so it
+   never reaches past the window on its way. */
+@media (prefers-reduced-motion: no-preference) {
+  .drawer:not([hidden]),
+  .flyout:not([hidden]) {
+    transform-origin: right top;
+    animation: slide-in 0.22s ease-out;
+  }
+
+  .side-panel:not([hidden]) {
+    transform-origin: left top;
+    animation: slide-in 0.22s ease-out;
+  }
+
+  .mission-panel:not([hidden]) {
+    transform-origin: left top;
+    animation: drop-in 0.22s ease-out;
+  }
+
+  .settings-menu:not([hidden]) {
+    transform-origin: right top;
+    animation: drop-in 0.18s ease-out;
+  }
+
+  .view-controls:not([hidden]) {
+    transform-origin: center bottom;
+    animation: drop-in 0.18s ease-out;
+  }
+
+  .coach > :not([hidden]),
+  .mission-coach > :not([hidden]) {
+    transform-origin: center bottom;
+    animation: drop-in 0.25s cubic-bezier(0.2, 1.3, 0.4, 1);
+  }
 }
 
-.island-main .build-pending {
-  padding: 8px 12px;
-  border: 1px solid #8fb3e8;
-  border-radius: var(--radius);
-  background: #e3edfb;
-  color: #123d7d;
-  position: absolute;
-  top: 56px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: min(36rem, calc(100% - 24px));
-  margin: 0;
-  z-index: 1;
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.92);
+  }
 }
 
-/* The mission's briefing and its win (src/ui/mission-overlays.js): big windows
-   over the whole page, the island dimmed behind them; on the win, fireworks
-   on a canvas behind the window. */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+/* --- The mission's briefing and its win ---------------------------------------- */
+
+/* Big windows over the whole page (src/ui/mission-overlays.js), the island
+   dimmed behind them; on the win, fireworks on a canvas behind the window. */
 .briefing,
 .win {
   width: 100%;
@@ -1576,10 +2019,6 @@
   border-radius: 16px;
   background: #fff;
   text-align: start;
-}
-
-.briefing-goals[hidden] {
-  display: none;
 }
 
 .briefing .goal-words {

@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { setSpeed } from "./ui.js";
 import { SLICE } from "../src/content/missions/slice.js";
 import { stateHash } from "../src/sim/replay.js";
 import { letsGo } from "./campaign-seed.js";
+import { openDrawer, openMenu } from "./ui.js";
 import { advanceWorld, createWorld } from "../src/sim/world.js";
 
 // The Phase 5 acceptance in a browser (PLAN.md §11): the bridge slice, at /slice
@@ -125,7 +127,7 @@ test("the mission's card says the goal, and each Step moves and highlights all f
   await expect(page.locator(".together-panel")).toHaveCount(programs.length);
   for (const n of [1, 2, 3, 4]) {
     await page.getByRole("button", { name: "Step", exact: true }).click();
-    await expect(page.locator(".clock .ticks")).toHaveText(`Steps: ${n}`);
+    await expect(page.locator(".clock .ticks")).toHaveText(String(n));
     const want = await running(page);
     for (const program of programs) {
       await page.locator(`.together-panel[data-program="${program}"]`).scrollIntoViewIfNeeded();
@@ -143,7 +145,7 @@ test("the mission's card says the goal, and each Step moves and highlights all f
   expect(await island(page, () => window.islandPage.hash())).toBe(nodeHash(4));
 
   // Run, then Pause: paused, the world stands still however many frames pass.
-  await page.getByRole("button", { name: "4×" }).click();
+  await setSpeed(page, 4);
   await page.getByRole("button", { name: "Run" }).click();
   await expect.poll(() => tick(page)).toBeGreaterThan(30);
   await page.getByRole("button", { name: "Pause" }).click();
@@ -161,7 +163,7 @@ test("the bridge is built by programs changed in the editor, and the game goes o
   await fixPrograms(page);
   // A while of play at 4×, then steps (quicker, and the same) to the first two
   // planks at the site.
-  await page.getByRole("button", { name: "4×" }).click();
+  await setSpeed(page, 4);
   await page.getByRole("button", { name: "Run" }).click();
   await expect.poll(() => tick(page)).toBeGreaterThan(20);
   await page.getByRole("button", { name: "Pause" }).click();
@@ -175,14 +177,15 @@ test("the bridge is built by programs changed in the editor, and the game goes o
   await frames(page);
   expect(await island(page, () => ({ tick: window.islandPage.game.world.tick, hash: window.islandPage.hash() }))).toEqual(before);
   expect(await island(page, () => window.islandPage.game.clock.running)).toBe(false);
-  await expect(page.locator(".clock .ticks")).toHaveText(`Steps: ${before.tick}`);
+  await expect(page.locator(".clock .ticks")).toHaveText(String(before.tick));
   await expect(page.locator(".mission-progress")).toHaveAttribute("aria-label", "Planks at the construction site: 2 of 4");
-  await expect(page.locator('.row[data-row="r2"] .row-program')).toHaveText("Plank courier, version 2");
+  await expect(page.locator('.row[data-row="r2"] .row-program')).toHaveAttribute("title", "Plank courier, version 2");
 
   await page.getByRole("button", { name: "Run" }).click();
   await expect.poll(() => tick(page)).toBeGreaterThan(before.tick + 10);
   await page.getByRole("button", { name: "Pause" }).click();
   await stepUntil(page, (w) => w.entities.find((e) => e.id === "site").action?.type === "make");
+  await openDrawer(page, "mission");
   await expect(page.locator(".mission-building")).toBeVisible();
   await stepUntil(page, (w) => w.mission.done !== null);
   await expect(page.locator(".mission-card")).toHaveClass(/done/);
@@ -191,7 +194,7 @@ test("the bridge is built by programs changed in the editor, and the game goes o
   const { mission } = await island(page, () => window.islandPage.play());
   expect(mission.done).toBeLessThanOrEqual(SLICE.steps);
   // The reward: Robo 3 has the stone carrier's job, over the bridge.
-  await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveText("Stone carrier, version 1");
+  await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveAttribute("title", "Stone carrier, version 1");
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "site").built)).toBe(true);
 });
 
@@ -205,16 +208,17 @@ test("after a change while the world runs, Start again goes back to the start wi
   await island(page, () => window.islandPage.close());
   await expect(page.locator(".mission-again")).toBeVisible();
   await page.locator(".mission-again").getByRole("button", { name: "Start again" }).click();
-  await expect(page.locator(".clock .ticks")).toHaveText("Steps: 0");
+  await expect(page.locator(".clock .ticks")).toHaveText("0");
   await expect(page.locator(".mission-again")).toBeHidden();
   const programs = await island(page, () => window.islandPage.game.world.programs.map((p) => `${p.id} ${p.revision}`));
   expect(programs).toContain("courier 2");
   await page.getByRole("button", { name: "Step", exact: true }).click();
-  await expect(page.locator('.row[data-row="r2"] .row-program')).toHaveText("Plank courier, version 2");
+  await expect(page.locator('.row[data-row="r2"] .row-program')).toHaveAttribute("title", "Plank courier, version 2");
 });
 
 test("the hints come one at a time; Look chooses the construction site", async ({ page }) => {
   await openPlay(page);
+  await openDrawer(page, "mission");
   await page.getByRole("button", { name: "Hint" }).click();
   await expect(page.locator(".mission-hints li")).toHaveText(["Look: Look at the construction site. What does it need, and who brings it? Show me"]);
   expect(await island(page, () => window.islandPage.selected)).toBe("site");
@@ -228,6 +232,7 @@ test("the hints come one at a time; Look chooses the construction site", async (
   await expect(page.locator(".mission-hints .hint-try")).toContainText("build bridge");
   await expect(page.locator(".mission-hint")).toBeHidden();
   // A change of language keeps them, in the new words.
+  await openMenu(page, "settings");
   await page.getByRole("button", { name: "Deutsch" }).click();
   await expect(page.locator(".island-bar h1")).toHaveText("Über den Bach");
   await expect(page.locator(".mission-goal")).toHaveText("Baut zusammen unsere Brücke.");
@@ -238,9 +243,10 @@ test("the hints come one at a time; Look chooses the construction site", async (
 test("Robo 3's program can be edited before it runs, and applying it starts Robo 3", async ({ page }) => {
   await openPlay(page);
   await steps(page, 5);
+  await openDrawer(page, "overview");
   await page.locator('.row-head[data-pick="r3"]').click();
   await expect(page.locator('.row[data-row="r3"] .state')).toHaveText("Stopped");
-  await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveText("Stone carrier, version 1");
+  await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveAttribute("title", "Stone carrier, version 1");
   await page.locator(".flyout").getByRole("button", { name: "Edit program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Stone carrier");
   await expect(page.locator(".code-state")).toHaveText("Not started yet. Change it and apply, and it starts.");
@@ -248,7 +254,7 @@ test("Robo 3's program can be edited before it runs, and applying it starts Robo
   await expect(page.locator(".code-state")).toHaveText("Changed. Apply to start it.");
   await page.locator('[data-code="apply"]').click();
   await page.getByRole("button", { name: "Step", exact: true }).click();
-  await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveText("Stone carrier, version 2");
+  await expect(page.locator('.row[data-row="r3"] .row-program')).toHaveAttribute("title", "Stone carrier, version 2");
   await expect(page.locator('.row[data-row="r3"] .state')).not.toHaveText("Stopped");
   await expect(page.locator(".code-state")).toHaveText("Version 2 is running.");
 });

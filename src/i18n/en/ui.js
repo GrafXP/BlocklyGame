@@ -56,6 +56,8 @@ export default {
   "nav.home": "Home",
   // Labels the list of languages, each shown in its own language.
   "language.choose": "Language",
+  // The island page's menu of the language and the graphics.
+  "menu.settings": "Settings",
 
   // The editor lab: a test bench for how the editor looks over the 3D world.
   "lab.title": "Editor lab",
@@ -332,6 +334,8 @@ export default {
   "clock.speed": "Speed",
   // A playback speed, such as 0.5×, 1×, 2×.
   "clock.speedValue": "{speed}×",
+  // The speed button's name: each press goes on to the next speed.
+  "clock.speedIs": "Speed: {speed}×",
   "clock.ticks": "Steps: {tick}",
   // What “Start again” does in a mission.
   "clock.resetMission": "Back to the start of the mission. Your programs stay as you applied them.",

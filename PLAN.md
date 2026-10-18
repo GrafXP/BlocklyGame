@@ -327,11 +327,12 @@ Define ordinary game blocks with Blockly JSON definitions and small extensions f
 
 ### Main layout
 
-- World view with selection outlines, entity labels, inventory indicators, and destination markers.
-- Top mission card with the goal in one short sentence and pictures, objective progress, and the hint ladder (Beginner support).
+- World view filling the window, with selection outlines, entity labels, inventory indicators, and destination markers. Everything else floats over it, and most of it is folded away until asked for, or until the game has something to say (amendment of 18 October 2026).
+- One line along the top that never wraps: home and the mission's title, with its goals as pictures, on the left; icons for the overview, Programs Together, the program library, Build, the sandbox's tools and the settings (language, graphics) on the right.
+- Mission card with the goal in one short sentence and pictures, objective progress, and the hint ladder (Beginner support), opened below the mission's title. What it asks or offers by itself (the prediction, a trial passed, the offer of a hint, Start again, the way on) comes in a bubble above the clock while it holds.
 - A mission's two big moments, each a window over the whole page: the briefing as it starts (its title, goal, setup and goals with pictures, and Let's go), and the win once it's done (fireworks behind “Mission complete!”, the reward, a large glowing Next mission and a smaller Keep playing). The win pauses the world; Keep playing runs it again if it was running (decided 17 October 2026).
-- Global Run/Pause, Step, Step to Next Block, speed, tick counter, and Restart Mission controls.
-- Execution overview as a list, one row per robot, building and deposit. Choosing one, in the list or in the world, opens its flyout beside its row: name and state, Edit program, where its program comes from with its own copy and the way back to the shared one, team, name and settings, stock or basket, and current status.
+- Global Run/Pause, Step, Step to Next Block, speed, tick counter, and Restart Mission controls, as icons in one bar at the bottom; the view's own controls fold away behind a camera button.
+- Execution overview as a list, one row per robot, building and deposit, opened on the right from its icon. Choosing one, in the list or in the world, slides in its flyout, beside its row when the list is open: name and state, Edit program, stock or basket and current status, where its program comes from with its own copy and the way back to the shared one, and team, name and settings.
 - Blockly editor in a partially transparent overlay panel, with the 3D world still visible behind it on larger screens. Editing pauses the world (Section 5); the camera still moves, and while the world is paused the renderer draws only when the view changes.
 - Execution overview available throughout play and stepping.
 
@@ -948,3 +949,16 @@ Asked for while playing, replacing the dropdown at the editor's head (amendment 
 - The overview is a list and no more. The chosen one's details, Edit program, its program's origin with its own copy and the way back, a robot's team, name and settings, and the sandbox's supplies are in its flyout beside the list (`src/ui/flyout.js`), opened from the list or the island, closed by its ×, Escape, or choosing it again. Another program is given from the program library.
 
 Applied in: 5 (editing and applying), 8 (main layout), and 11 (Phase 6's notes).
+
+### The island page's layout (18 October 2026)
+
+Asked for after playing on an iPad, where the bar along the top took two lines and the mission card, the overview and the flyout covered a third of the island at once: most of the page is hidden until it's needed or asked for, and words give way to icons and numbers wherever they can (`src/ui/island.js`, `src/style/island.css`).
+
+- The world fills the window. Along the top, one line that never wraps: home and the mission's title, with its goals as pictures that fill as they're met, on the left; the panels' icons and the settings' gear on the right. The language and the graphics are in the settings.
+- The clock is one bar at the bottom: Start again, Run and Pause (the biggest, green, amber while it pauses), Step, Next block, one speed button that goes on to the next speed with each press, and the steps as a number. The view's controls fold away behind a camera button at the bottom left.
+- The mission's card opens below its title. What it asks or offers by itself comes in a bubble above the clock while it holds: the prediction before Run, a trial passed, the offer of a hint when everything has stopped (which gives the hint and opens the card at it), the offer to start again, a notice, the explanation, and the way on once it's done. The world's own word that everything waits gives way to the mission's offer of a hint.
+- The overview opens on the right from its icon. The chosen one's flyout slides in on the right, beside the overview when it's open; its details are lines under icons, and its setup comes last.
+- Buttons that can be icons are icons, named in words for screen readers and on hover (`src/ui/icons.js`). A version is a number in a bubble whose colour and icon say its state: “Version 1 is running” is a green bubble with ▶ 1. A state is an icon, an amount an item's picture with its number, a stock or a basket a fraction. The sentences stay, for screen readers.
+- Panels, the flyout, the menus and the bubbles slide or pop in, and appear at once with reduced motion. The browser tests run with reduced motion, so they measure where things come to rest.
+
+Applied in: 8 (main layout).

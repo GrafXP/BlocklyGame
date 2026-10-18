@@ -1,6 +1,7 @@
 import { t } from "../i18n/index.js";
 import { baseOf, loadVersion, parentOf, programDoc, sameBlocks, sourceAt } from "../programming/programs.js";
 import { esc } from "./dom.js";
+import { icon } from "./icons.js";
 import { currentLibrary } from "./session.js";
 
 // The history of the program in the editor (PLAN.md §5), folded away under the
@@ -33,9 +34,17 @@ export function createHistory(el, programId) {
     });
     const base = baseOf(doc);
     const changed = !sameBlocks(doc.draft, sourceAt(currentLibrary(), programId, base));
-    const entry = (revision, marks, { kept = false } = {}) =>
-      `<button class="history-entry${revision === base && !kept ? " base" : ""}${kept ? " kept" : ""}" data-version="${kept ? "kept" : revision}">` +
-      `<span>${esc(kept ? t("history.kept") : t("history.version", { revision }))}</span>${marks.map((m) => `<small>${esc(m)}</small>`).join("")}</button>`;
+    // A version as its number in a bubble, and its marks as icons: running,
+    // in the editor, changed. Its name says the same in words.
+    const entry = (revision, marks, { kept = false, from = null } = {}) => {
+      const words = (kept ? [t("history.kept"), t("history.keptFrom", { revision: from })] : [t("history.version", { revision }), ...marks.map(([, m]) => m)]).join(", ");
+      return (
+        `<button type="button" class="history-entry${revision === base && !kept ? " base" : ""}${kept ? " kept" : ""}" data-version="${kept ? "kept" : revision}" aria-label="${esc(words)}" title="${esc(words)}">` +
+        (kept ? `${icon("pencil", 16)}<span class="num">${esc(String(from))}</span>` : `<span class="num">${revision}</span>`) +
+        marks.map(([name]) => `<span class="history-mark ${name}">${icon(name === "running" ? "play" : "pencil", 14)}</span>`).join("") +
+        `</button>`
+      );
+    };
     // The line of versions from index `i`: each with the branches made from it
     // indented under it, then on with the newest made from it.
     const line = (i) => {
@@ -44,16 +53,16 @@ export function createHistory(el, programId) {
         const { revision } = doc.published[at];
         const made = children.get(revision) ?? [];
         const marks = [];
-        if (revision === running) marks.push(t("history.running"));
-        if (revision === base) marks.push(t(changed ? "history.editingChanged" : "history.editing"));
+        if (revision === running) marks.push(["running", t("history.running")]);
+        if (revision === base) marks.push([changed ? "changed" : "editing", t(changed ? "history.editingChanged" : "history.editing")]);
         const branches = made.slice(0, -1).map((b) => `<ul class="history-branch">${line(b)}</ul>`);
         items.push(`<li>${entry(revision, marks)}${branches.join("")}</li>`);
         at = made.at(-1);
       }
       return items.join("");
     };
-    const kept = doc.kept ? `<li>${entry(null, [t("history.keptFrom", { revision: doc.kept.from })], { kept: true })}</li>` : "";
-    return `<p class="history-hint">${esc(t("history.hint"))}</p><ul class="history-tree">${roots.map(line).join("")}${kept}</ul>`;
+    const kept = doc.kept ? `<li>${entry(null, [], { kept: true, from: doc.kept.from })}</li>` : "";
+    return `<p class="history-hint vh">${esc(t("history.hint"))}</p><ul class="history-tree" title="${esc(t("history.hint"))}">${roots.map(line).join("")}${kept}</ul>`;
   }
 
   return {

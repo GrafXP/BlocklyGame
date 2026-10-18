@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openDrawer, openMenu } from "./ui.js";
 
 // The Phase 6 acceptance in a browser (PLAN.md §11), on the island: two robots
 // on one team share code but keep their own runtimes and settings; a robot's
@@ -44,6 +45,8 @@ async function choose(page, id) {
   await frames(page);
 }
 const setup = (page) => page.locator(".flyout .setup");
+// The names of the elements `locator` finds, as screen readers hear them.
+const labels = (locator) => locator.evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
 // The chosen robot or building's Edit program, pressed; resolves once the
 // editor is open on program `program`.
 async function editProgram(page, program) {
@@ -211,7 +214,7 @@ test("a building that doesn't fit says why; one that fits becomes a construction
   });
   await frames(page);
   await expect(page.locator('.tag[data-pick="workshop"]')).toContainText("Workshop");
-  await expect(page.locator('.row[data-row="workshop"] .row-program')).toHaveText("Kit maker, version 1");
+  await expect(page.locator('.row[data-row="workshop"] .row-program')).toHaveAttribute("title", "Kit maker, version 1");
   await island(page, () => {
     const game = window.islandPage.game;
     game.queue({ type: "stock", at: "workshop", item: "plank", count: 2 });
@@ -251,18 +254,20 @@ test("the library makes a new program, names it, and puts away only what nothing
   await page.locator("#setup-name").press("Enter");
   await steps(page, 1);
   await expect(page.locator('.tag[data-pick="r1"] .tag-name')).toHaveText("Blinky");
+  await openMenu(page, "settings");
   await page.getByRole("group", { name: "Language" }).getByRole("button", { name: "Deutsch" }).click();
   await page.waitForFunction(() => document.documentElement.lang === "de" && window.islandPage && document.querySelector(".tag:not([hidden])"));
   await frames(page);
   await expect(page.locator('.tag[data-pick="r1"] .tag-name')).toHaveText("Blinky");
   await expect(page.locator('.tag[data-pick="r2"] .tag-name')).toHaveText("Robo 2");
-  await expect(page.locator('[data-panel="library"]')).toHaveText("Programme");
+  await expect(page.locator('[data-panel="library"]')).toHaveAttribute("aria-label", "Programme");
 });
 
 test("the overview is a list; choosing in it or on the island opens the chosen one's flyout, with Edit program, which gives one that runs nothing a new program", async ({ page }) => {
   await openIsland(page);
   const flyout = page.locator(".flyout");
   await expect(flyout).toBeHidden();
+  await openDrawer(page, "overview");
   await page.locator('.row-head[data-pick="r2"]').click();
   await expect(flyout).toBeVisible();
   await expect(flyout.locator("h2")).toHaveText("Robo 2");
@@ -311,30 +316,34 @@ test("Versions shows the program's history as a tree; a version goes into the dr
   await steps(page, 1);
   await times(5);
   await page.waitForTimeout(400);
-  await expect(page.locator('[data-code="history"]')).toHaveText("Versions 3");
+  // Versions: an icon with how many on its corner; each version a number,
+  // and in words for screen readers.
+  await expect(page.locator('[data-code="history"]')).toHaveAttribute("aria-label", "Versions");
+  await expect(page.locator('[data-code="history"] .history-count')).toHaveText("3");
   await page.locator('[data-code="history"]').click();
   await expect(history).toBeVisible();
-  await expect(history.locator(".history-entry")).toHaveText(["Version 1", "Version 2", "Version 3runningin the editor, changed"]);
+  await expect(history.locator(".history-entry .num")).toHaveText(["1", "2", "3"]);
+  await expect.poll(() => labels(history.locator(".history-entry"))).toEqual(["Version 1", "Version 2", "Version 3, running, in the editor, changed"]);
 
   // Version 1 into the draft: not running; the changes kept at the bottom.
   await history.locator('[data-version="1"]').click();
   expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-times").getFieldValue("NUM"))).toBe(2);
   await expect(page.locator(".code-state")).toHaveText("Changed. Apply to run it; until then, version 3 keeps running.");
-  await expect(history.locator(".history-entry")).toHaveText(["Version 1in the editor", "Version 2", "Version 3running", "Current, not applied yetfrom version 3"]);
+  await expect.poll(() => labels(history.locator(".history-entry"))).toEqual(["Version 1, in the editor", "Version 2", "Version 3, running", "Current, not applied yet, from version 3"]);
   expect((await entity(page, "r1")).runtime.revision, "nothing runs it yet").toBe(3);
 
   // Applied from version 1: a branch, versions 2 and 3 indented under it.
   await times(1);
   await apply();
   await steps(page, 1);
-  await expect(history.locator(".history-branch .history-entry")).toHaveText(["Version 2", "Version 3"]);
-  await expect(history.locator(":scope > .history-tree > li > .history-entry")).toHaveText(["Version 1", "Version 4runningin the editor", "Current, not applied yetfrom version 3"]);
+  await expect.poll(() => labels(history.locator(".history-branch .history-entry"))).toEqual(["Version 2", "Version 3"]);
+  await expect.poll(() => labels(history.locator(":scope > .history-tree > li > .history-entry"))).toEqual(["Version 1", "Version 4, running, in the editor", "Current, not applied yet, from version 3"]);
 
   // And back to the kept changes.
   await history.locator('[data-version="kept"]').click();
   expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("collector-times").getFieldValue("NUM"))).toBe(5);
   await expect(history.locator(".history-entry.kept")).toHaveCount(0);
-  await expect(history.locator(".history-entry.base")).toHaveText("Version 3in the editor, changed");
+  await expect(history.locator(".history-entry.base")).toHaveAttribute("aria-label", "Version 3, in the editor, changed");
 });
 
 test("the bridge slice offers none of Phase 6's tools", async ({ page }) => {

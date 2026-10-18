@@ -1,22 +1,22 @@
 import { SPEEDS } from "../game.js";
 import { t } from "../i18n/index.js";
-import { esc } from "./dom.js";
+import { icon, iconButton } from "./icons.js";
 
-// The world clock's controls (PLAN.md §6, §8): Run and Pause, Step, Next block,
-// the speeds, the steps so far, and Start again, the same on every page that
-// shows the world. `resetTitle` says what Start again does, where it needs
-// saying.
+// The world clock's controls (PLAN.md §6, §8): Start again, Run and Pause,
+// Step, Next block, the speed, and the steps so far, the same on every page
+// that shows the world. Each is an icon, with its words as its name and
+// tooltip; the speed is one button that goes on to the next speed with each
+// press, and the steps a number. `resetTitle` says what Start again does, where
+// it needs saying.
 
 export const clockMarkup = ({ resetTitle = "" } = {}) =>
   `<div class="clock">
-    <button class="button primary small" data-act="run"></button>
-    <button class="button small" data-act="step">${t("clock.step")}</button>
-    <button class="button small" data-act="next" title="${esc(t("clock.nextTitle"))}">${t("clock.next")}</button>
-    <div class="segmented" role="group" aria-label="${esc(t("clock.speed"))}">
-      ${SPEEDS.map((s) => `<button data-speed="${s}">${t("clock.speedValue", { speed: s })}</button>`).join("")}
-    </div>
-    <output class="ticks" aria-live="off"></output>
-    <button class="button small" data-act="reset"${resetTitle ? ` title="${esc(resetTitle)}"` : ""}>${t("world.reset")}</button>
+    ${iconButton("restart", t("world.reset"), { attrs: `data-act="reset"`, title: resetTitle || t("world.reset") })}
+    <button type="button" class="button icon run" data-act="run"></button>
+    ${iconButton("step", t("clock.step"), { attrs: `data-act="step"` })}
+    ${iconButton("next", t("clock.next"), { attrs: `data-act="next"`, title: t("clock.nextTitle") })}
+    <button type="button" class="button speed" data-act="speed"></button>
+    <output class="ticks">${icon("steps", 16)}<span class="ticks-n"></span></output>
   </div>`;
 
 // Binds the controls in `el` to the game `game()` gives. Next block steps until
@@ -28,21 +28,42 @@ export function bindClock(bin, el, { game, reset, changed, chosen = () => null }
     const button = e.target.closest("button");
     if (!button) return;
     const g = game();
-    if (button.dataset.speed) g.clock.setSpeed(Number(button.dataset.speed));
-    else if (button.dataset.act === "run") (g.clock.running ? g.pause : g.run)();
-    else if (button.dataset.act === "step") g.step();
-    else if (button.dataset.act === "next") g.nextBlock(chosen());
-    else if (button.dataset.act === "reset") reset();
+    const act = button.dataset.act;
+    if (act === "speed") g.clock.setSpeed(SPEEDS[(SPEEDS.indexOf(g.clock.speed) + 1) % SPEEDS.length]);
+    else if (act === "run") (g.clock.running ? g.pause : g.run)();
+    else if (act === "step") g.step();
+    else if (act === "next") g.nextBlock(chosen());
+    else if (act === "reset") reset();
     changed();
   });
 }
 
-// Shows `game`'s clock on the controls in `el`.
+// Shows `game`'s clock on the controls in `el`, changing only what's new.
 export function showClock(el, game) {
-  el.querySelector(".clock .ticks").textContent = t("clock.ticks", { tick: game.world.tick });
+  const ticks = el.querySelector(".clock .ticks");
+  const tick = String(game.world.tick);
+  const n = ticks.querySelector(".ticks-n");
+  if (n.textContent !== tick) {
+    n.textContent = tick;
+    const words = t("clock.ticks", { tick: game.world.tick });
+    ticks.setAttribute("aria-label", words);
+    ticks.title = words;
+  }
   const run = el.querySelector('.clock [data-act="run"]');
-  const label = game.clock.running ? t("clock.pause") : t("clock.run");
-  if (run.textContent !== label) run.textContent = label;
-  run.setAttribute("aria-pressed", String(game.clock.running));
-  for (const b of el.querySelectorAll(".clock [data-speed]")) b.setAttribute("aria-pressed", String(Number(b.dataset.speed) === game.clock.speed));
+  const running = String(game.clock.running);
+  if (run.getAttribute("aria-pressed") !== running) {
+    const label = game.clock.running ? t("clock.pause") : t("clock.run");
+    run.innerHTML = icon(game.clock.running ? "pause" : "play", 28);
+    run.setAttribute("aria-label", label);
+    run.title = label;
+    run.setAttribute("aria-pressed", running);
+  }
+  const speed = el.querySelector('.clock [data-act="speed"]');
+  const value = t("clock.speedValue", { speed: game.clock.speed });
+  if (speed.textContent !== value) {
+    speed.textContent = value;
+    const words = t("clock.speedIs", { speed: game.clock.speed });
+    speed.setAttribute("aria-label", words);
+    speed.title = words;
+  }
 }

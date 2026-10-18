@@ -3,15 +3,17 @@ import { thingsKey } from "../sim/things.js";
 import { blockChip, blockWords } from "./chips.js";
 import { amounts, describeReason } from "./describe.js";
 import { esc } from "./dom.js";
-import { identityMark, memoryWords } from "./inspector.js";
+import { icon } from "./icons.js";
+import { identityMark, itemsMarkup, memoryWords } from "./inspector.js";
 import { blockOf, programName } from "./session.js";
 import { entryIn } from "./snapshot.js";
 
 // The execution overview (PLAN.md §8, "Every program is observable"): a row for
 // every robot and building, on screen or not, with its program and version, the
 // block it's at as a chip (outlined when it took that block in the latest
-// step), its state, why it waits or stopped, and what its variables hold;
-// then the deposits with what they hold. It's a list and no more: the chosen
+// step), its state as an icon, why it waits or stopped, and what its variables
+// hold; then the deposits with their items as pictures and numbers. It opens
+// on the right when asked for (island.js). It's a list and no more: the chosen
 // one is marked, and its flyout beside the list has its details and what can
 // be changed (flyout.js). Rows are drawn from the tick's snapshot
 // (snapshot.js), and made again when a building is placed or becomes another.
@@ -33,18 +35,26 @@ export function createOverview(el) {
     row.drawn[part] = markup;
   }
 
-  // The lines under the head: its program and version, a newer version waiting
-  // for the next step, its block, and why it waits or stopped; a deposit's
-  // stock. A robot or building with a program always has its block and reason
-  // lines, empty or not.
+  // The lines under the head: its program with its version in a bubble, a
+  // newer version waiting for the next step, its block, and why it waits or
+  // stopped; a deposit's stock, as pictures with their numbers. Each says it
+  // in words to screen readers and on hover. A robot or building with a
+  // program always has its block and reason lines, empty or not.
   function infoHtml(world, snapshot, it, entry, words) {
-    if (!entry) return `<p class="row-has" title="${esc(amounts(it.store.items))}">${esc(amounts(it.store.items))}</p>`;
+    if (!entry) {
+      const has = amounts(it.store.items);
+      return `<p class="row-has" title="${esc(has)}">${itemsMarkup(it.store.items) || esc(has)}<span class="vh">${esc(has)}</span></p>`;
+    }
     if (!entry.program) return "";
     const parts = [];
-    const program = t("overview.program", { program: display(programName(entry.program)), revision: entry.revision });
-    parts.push(`<p class="row-program" title="${esc(program)}">${esc(program)}</p>`);
+    const name = display(programName(entry.program));
+    const program = t("overview.program", { program: name, revision: entry.revision });
+    parts.push(`<p class="row-program" title="${esc(program)}"><span class="row-program-name" aria-hidden="true">${esc(name)}</span><span class="num" aria-hidden="true">${entry.revision}</span><span class="vh">${esc(program)}</span></p>`);
     const newest = snapshot.programs.find((p) => p.id === entry.program)?.newest;
-    if (newest > entry.revision) parts.push(`<p class="row-pending">${esc(t("overview.pending", { revision: newest }))}</p>`);
+    if (newest > entry.revision) {
+      const pending = t("overview.pending", { revision: newest });
+      parts.push(`<p class="row-pending" title="${esc(pending)}">${icon("pending", 14)}<span class="num" aria-hidden="true">${newest}</span><span class="vh">${esc(pending)}</span></p>`);
+    }
     const node = entry.block ? blockOf(entry.program, entry.revision, entry.block) : null;
     const chip = node ? blockChip(node, words, entry.fresh ? { className: "fresh", title: t("world.evaluated") } : {}) : "";
     parts.push(`<div class="row-block"${node ? ` title="${esc(blockWords(node, words))}"` : ""}>${chip}</div>`);
@@ -64,8 +74,6 @@ export function createOverview(el) {
       if (shownWorld !== world || shownThings !== thingsKey(world)) {
         const things = [...world.entities, ...world.nodes];
         el.innerHTML =
-          `<p class="hint">${esc(t("inspector.hint"))}</p>` +
-          `<h2 class="everyone">${esc(t("inspector.everyone"))}</h2>` +
           `<ul class="rows">${things
             .map(
               (it) =>
@@ -82,7 +90,6 @@ export function createOverview(el) {
         shownWorld = world;
         shownThings = thingsKey(world);
       }
-      el.querySelector(".hint").hidden = !!selected;
       for (const [id, row] of rows) {
         const it = [...world.entities, ...world.nodes].find((e) => e.id === id);
         const entry = entryIn(snapshot, id);
@@ -90,13 +97,14 @@ export function createOverview(el) {
         const className = `row ${entry ? entry.state : "node"}${chosen ? " selected" : ""}`;
         if (row.li.className !== className) row.li.className = className;
         row.head.setAttribute("aria-expanded", String(chosen));
-        if (entry) {
+        // Its state as an icon, the word on hover and for screen readers.
+        if (entry && (row.state.dataset.state !== entry.state || row.state.hidden)) {
           const word = t(`state.${entry.state}`);
-          if (row.state.textContent !== word || row.state.hidden) {
-            row.state.hidden = false;
-            row.state.className = `state ${entry.state}`;
-            row.state.textContent = word;
-          }
+          row.state.hidden = false;
+          row.state.className = `state ${entry.state}`;
+          row.state.title = word;
+          row.state.dataset.state = entry.state;
+          row.state.innerHTML = `${icon(entry.state, 14)}<span class="vh">${esc(word)}</span>`;
         }
         draw(row, "info", infoHtml(world, snapshot, it, entry, words));
       }

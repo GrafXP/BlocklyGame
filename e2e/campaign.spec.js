@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { letsGo, seedCampaign, solveMission } from "./campaign-seed.js";
+import { openDrawer } from "./ui.js";
 
 // The Phase 7 acceptance in a browser (PLAN.md §11): the campaign at /play,
 // from a fresh player's mission 1 on to the next, each mission beginning with
@@ -87,7 +88,11 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await page.locator('.tag[data-pick="grove"]').click();
   await expect(page.locator(".mission-predict")).toHaveText("Your guess: Grove");
 
+  // The mission's panel opens from its title, with the program to open.
+  await expect(page.locator(".mission-panel")).toBeHidden();
+  await openDrawer(page, "mission");
   await page.getByRole("button", { name: "Open the program" }).click();
+  await expect(page.locator(".mission-panel")).toBeHidden(); // it would lie over the editor
   await expect(page.locator(".code-title")).toHaveText("Mission 1: Robo 1");
   expect(await toolbox(page)).toEqual({ Robot: ["robot_go_to"] });
   expect(await solveMission(page)).toBeLessThanOrEqual(150);
@@ -107,12 +112,12 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await expect(page.locator(".mission-card")).toHaveClass(/done/);
   await expect(page.locator(".mission-done")).toHaveText("Done! Robo 1 found the grove!");
   await expect(page.locator(".mission-explain")).toContainText("Tell someone what your block told Robo 1 to do.");
-  await page.locator(".mission-card").getByRole("button", { name: "Next mission" }).click();
+  await page.locator(".mission-next").getByRole("button", { name: "Next mission" }).click();
   await opened(page);
   await expect(page.locator(".briefing h2")).toHaveText("One Piece of Wood");
   await letsGo(page);
   await expect(page.locator(".island-bar h1")).toHaveText("One Piece of Wood");
-  await expect(page.locator(".clock .ticks")).toHaveText("Steps: 0");
+  await expect(page.locator(".clock .ticks")).toHaveText("0");
   const grove = await island(page, () => window.islandPage.game.world.nodes.find((n) => n.id === "grove").access);
   expect(grove).toContain(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "r1").cell));
   expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id)), "mission 2's own programs alone").toEqual(["m02"]);
@@ -132,6 +137,7 @@ test("a mission with trials pauses when one is passed, saying what changes next,
   await ready(page);
   await expect(page.locator(".trial")).toHaveText(["Trial 1: One plank at the sawmill", "Trial 2: Two planks at the sawmill"]);
   await expect(page.locator(".trial.current")).toHaveText("Trial 1: One plank at the sawmill");
+  await openDrawer(page, "mission");
   for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
   await page.getByRole("button", { name: "Show me the whole program" }).click();
   await expect(page.locator(".code-state")).toHaveText(/^Changed/);
@@ -164,7 +170,11 @@ test("the hints answer the problem in view, and the card offers one once everyth
   await frames(page);
   await expect(page.locator(".mission-stuck")).toBeVisible();
   await expect(page.locator(".mission-hint")).toHaveClass(/offer/);
-  await page.locator(".mission-hint").click();
+  // The bubble's Hint gives the first hint, in the mission's panel, which opens.
+  await expect(page.locator(".mission-panel")).toBeHidden();
+  await page.locator(".coach-hint").click();
+  await expect(page.locator(".mission-panel")).toBeVisible();
+  await expect(page.locator(".coach-hint")).toBeHidden();
   expect(await island(page, () => window.islandPage.selected)).toBe("r1");
   await page.locator(".mission-hint").click();
   await expect(page.locator(".mission-hints .hint-think")).toHaveText("Think: The basket is full. What must happen before another collection?");
@@ -174,6 +184,7 @@ test("a project offers a start, and starting from nothing; “Undo changes” br
   await seedCampaign(page, "m05");
   await page.goto("/play?dev");
   await ready(page);
+  await openDrawer(page, "mission");
   for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
   await page.getByRole("button", { name: "Show me a start" }).click();
   await expect(page.locator(".code-title")).toHaveText("Mission 5: Robo 1");
@@ -253,6 +264,7 @@ test("free play opens after mission 15 with programs of its own, and grows into 
   await expect(page.locator(".island-bar h1")).toHaveText("Sandbox");
   await page.getByRole("button", { name: "Add a robot" }).click();
   await page.getByRole("button", { name: "Step", exact: true }).click();
+  await openDrawer(page, "overview");
   await expect(page.locator('.row[data-row="r4"]')).toBeVisible();
   await page.getByRole("button", { name: "New island…" }).click();
   await page.locator('.sandbox-card select[name="robots"]').selectOption("5");

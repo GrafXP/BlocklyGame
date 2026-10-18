@@ -4,6 +4,7 @@ import { toolboxFor } from "../blockly/toolboxes.js";
 import { isChanged, latest, programDoc, resetDraft, sameBlocks, setDraft } from "../programming/programs.js";
 import { programOf } from "../programming/runtime.js";
 import { esc } from "./dom.js";
+import { icon, iconButton } from "./icons.js";
 import { identityMark } from "./inspector.js";
 import { marksFor } from "./marks.js";
 import { createWarnings } from "./problems.js";
@@ -22,6 +23,11 @@ import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged
 // Versions, at the head, opens the program's history: every version applied,
 // as a tree, each to put back into the draft (history.js).
 //
+// The head says little in words: the version in a bubble whose look says
+// whether it runs, has changed, waits for the next step or has problems; who
+// runs it by mark and name; and the actions as icons, Apply beside its word.
+// The sentences it stands for are there for screen readers.
+//
 // The toolbox offers only what the robots or buildings running the program can
 // do, and its dropdowns only what's on the island (src/blockly/toolboxes.js,
 // choices.js). The compiler checks the draft as it's edited, and marks what
@@ -38,6 +44,9 @@ import { applyProgram, checkProgram, currentGame, currentLibrary, libraryChanged
 // Debounce of saving the draft and checking it after an edit, in ms.
 const SETTLE = 300;
 
+// The icon beside the version in its bubble, for each state of the program.
+const VERSION_ICON = { running: "play", changed: "pencil", pending: "pending", parked: "ready", problems: "error" };
+
 // `host` is the panel's content; `blockly` the module src/blockly/workspace.js,
 // with prepareBlockly done, and `markers` src/blockly/markers.js. `onPick(id)`
 // chooses an entity whose marker was tapped.
@@ -47,17 +56,21 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
   const { types, builds } = programContext(programId);
   const { blocks, blank } = rules();
   host.innerHTML = `<div class="code-head">
-      <h2 class="code-title">${esc(display(doc.name))}</h2>
-      <p class="code-runners"></p>
-      <p class="code-state" role="status"></p>
-      <p class="code-affects"></p>
+      <div class="code-line">
+        <h2 class="code-title">${esc(display(doc.name))}</h2>
+        <span class="code-version"></span>
+      </div>
+      <p class="code-who" aria-hidden="true"></p>
+      <p class="code-runners vh"></p>
+      <p class="code-state vh" role="status"></p>
+      <p class="code-affects vh"></p>
       <p class="code-problems" role="alert"></p>
       <div class="code-actions">
-        <button class="button small primary" data-code="apply">${esc(t("editor.apply"))}</button>
-        <button class="button small" data-code="undo">${esc(t("editor.undo"))}</button>
-        <button class="button small" data-code="starter" title="${esc(t("editor.starterTitle"))}">${esc(t("editor.starter"))}</button>
-        ${blank ? `<button class="button small" data-code="blank" title="${esc(t("editor.blankTitle"))}">${esc(t("editor.blank"))}</button>` : ""}
-        <button class="button small history-toggle" data-code="history" aria-expanded="false" aria-controls="code-history">${esc(t("history.open"))} <span class="history-count"></span></button>
+        <button type="button" class="button primary" data-code="apply">${icon("check")}${esc(t("editor.apply"))}</button>
+        ${iconButton("undo", t("editor.undo"), { attrs: `data-code="undo"` })}
+        ${iconButton("starter", t("editor.starter"), { attrs: `data-code="starter"`, title: t("editor.starterTitle") })}
+        ${blank ? iconButton("blank", t("editor.blank"), { attrs: `data-code="blank"`, title: t("editor.blankTitle") }) : ""}
+        <button type="button" class="button icon history-toggle" data-code="history" aria-expanded="false" aria-controls="code-history" aria-label="${esc(t("history.open"))}" title="${esc(t("history.open"))}">${icon("history")}<span class="num history-count" aria-hidden="true"></span></button>
       </div>
       <div class="code-history" id="code-history" hidden></div>
     </div>
@@ -113,18 +126,34 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
     const { runners } = programContext(programId);
     const parked = runners.length > 0 && runners.every((e) => e.runtime.parked);
     const names = formatList(runners.map((e) => display(e.name)));
-    const marks = runners.map((e) => identityMark(currentGame().world, e.id)).join("");
-    draw(".code-runners", runners.length ? `${marks}${esc(t("editor.runners", { names }))}` : esc(t("editor.noRunners")));
-    draw(".code-affects", changed && runners.length && !checked?.errors.length ? `${marks}${esc(t("editor.affects", { names }))}` : "");
+    const affects = changed && runners.length && !checked?.errors.length;
+    // Who runs it, by mark and name; once the draft has changes, marked as
+    // those Apply starts again. The sentences are for screen readers.
+    draw(
+      ".code-who",
+      runners.length
+        ? (affects ? icon("restart", 16) : "") + runners.map((e) => `<span class="who">${identityMark(currentGame().world, e.id)}${esc(display(e.name))}</span>`).join("")
+        : esc(t("editor.noRunners")),
+    );
+    $(".code-who").classList.toggle("affects", !!affects);
+    draw(".code-runners", esc(runners.length ? t("editor.runners", { names }) : t("editor.noRunners")));
+    draw(".code-affects", affects ? esc(t("editor.affects", { names })) : "");
     // A program the world doesn't have yet, such as a copy given a moment ago,
     // arrives with the next step.
     const arriving = !programOf(world, programId) && runners.length > 0;
     let state;
-    if (checked?.errors.length) state = t("editor.problems");
-    else if (changed) state = parked ? t("editor.parkedChanged") : t("editor.changed", { revision: running });
-    else if (newest > running || arriving) state = t("editor.pending", { revision: newest });
-    else state = parked ? t("editor.parked") : t("editor.running", { revision: running });
+    let mark; // [the version's look, the version in its bubble]
+    if (checked?.errors.length) [state, mark] = [t("editor.problems"), ["problems", running]];
+    else if (changed) [state, mark] = [parked ? t("editor.parkedChanged") : t("editor.changed", { revision: running }), ["changed", running]];
+    else if (newest > running || arriving) [state, mark] = [t("editor.pending", { revision: newest }), ["pending", newest]];
+    else [state, mark] = [parked ? t("editor.parked") : t("editor.running", { revision: running }), [parked ? "parked" : "running", running]];
     $(".code-state").textContent = state;
+    // The version as a number in a bubble, its look saying what the sentence
+    // says: running, changed, waiting for the next step, not started, or wrong.
+    const version = $(".code-version");
+    version.title = state;
+    version.dataset.state = mark[0];
+    draw(".code-version", `${icon(VERSION_ICON[mark[0]], 14)}${esc(String(mark[1]))}`);
     $('[data-code="apply"]').disabled = !changed || !!checked?.errors.length;
     $('[data-code="undo"]').disabled = !changed;
     $('[data-code="starter"]').disabled = sameBlocks(doc.draft, doc.starter);
@@ -135,9 +164,11 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
   }
 
   // Sets the markup of `sel` in the head, if it's new.
+  const drawn = new Map();
   function draw(sel, markup) {
-    const el = $(sel);
-    if (el.innerHTML !== markup) el.innerHTML = markup;
+    if (drawn.get(sel) === markup) return;
+    drawn.set(sel, markup);
+    $(sel).innerHTML = markup;
   }
 
   // The markers and readings of the snapshot last shown.

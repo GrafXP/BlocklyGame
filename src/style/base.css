@@ -654,17 +654,117 @@ a {
   outline-offset: 1px;
 }
 
-/* The world clock's controls (src/ui/clock.js), and the notice that the whole
-   world is stuck. */
+/* Words for screen readers alone, beside an icon or a number that says the
+   same on screen (src/ui/icons.js). */
+.vh {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A number in a bubble: a version, a count. */
+.num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: none;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 0.45em;
+  border-radius: 999px;
+  background: #e4e9f0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* A button that is an icon alone: round, its words its name and tooltip. */
+.button.icon {
+  flex: none;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
+.button.icon.small {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+}
+
+.button.icon.small .icon {
+  width: 19px;
+  height: 19px;
+}
+
+.button .icon {
+  flex: none;
+}
+
+.button[aria-pressed="true"].icon,
+.button[aria-expanded="true"].icon {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The world clock's controls (src/ui/clock.js): icons, with Run the biggest,
+   green, and amber while it pauses; and the notice that the whole world is
+   stuck. */
 .clock {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.clock .run {
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
+  border: 0;
+  background: linear-gradient(#34b85c, #1d8f43);
+  color: #fff;
+  box-shadow: 0 3px 0 #156a31;
+}
+
+.clock .run[aria-pressed="true"] {
+  background: linear-gradient(#f8c04f, #e39b14);
+  color: #3d2600;
+  box-shadow: 0 3px 0 #a26a00;
+}
+
+.clock .speed {
+  min-width: 54px;
+  padding: 0 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .clock .ticks {
-  min-width: 7.5em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 4.2em;
+  padding: 0 6px;
+  color: var(--ink-soft);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 

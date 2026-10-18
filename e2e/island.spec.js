@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { pointAt, sharedSpots } from "../src/render/grid.js";
 import { robotPose } from "../src/render/pose.js";
+import { openDrawer, openMenu } from "./ui.js";
 
 // The Phase 3 acceptance in a browser (PLAN.md §11): the island in 3D, its robots
 // and buildings chosen from any side on desktop and iPad, robots moving smoothly
@@ -61,12 +62,16 @@ const drawn = (page) => island(page, () => Object.fromEntries(["r1", "r2", "r3"]
 
 test("the island opens paused, with a label over every robot, building and deposit", async ({ page }) => {
   await openIsland(page);
-  await expect(page.locator(".clock .ticks")).toHaveText("Steps: 0");
+  await expect(page.locator(".clock .ticks")).toHaveText("0");
+  await expect(page.locator(".clock .ticks")).toHaveAttribute("aria-label", "Steps: 0");
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await expect(page.locator(".tag")).toHaveCount(9);
   await expect(page.getByRole("button", { name: "Robo 1: Ready" })).toBeVisible();
-  await expect(page.locator(".overview")).toContainText("Tap a robot or building");
+  // The overview is folded away until asked for, with a row for everyone.
+  await expect(page.locator(".overview-drawer")).toBeHidden();
+  await openDrawer(page, "overview");
   await expect(page.locator(".overview .row")).toHaveCount(9);
+  await expect(page.locator(".overview .row")).toHaveText(Array(9).fill(/./));
   expect(await island(page, () => window.islandPage.problems())).toEqual([]);
 });
 
@@ -88,33 +93,36 @@ test("tapping a robot or building in the world chooses it, and the inspector say
     await expect(page.locator(".tag.selected")).toHaveCount(1);
   }
   await expect(page.locator(".flyout .details dl")).not.toBeEmpty();
+  // The water at the window's left, clear of the bar and the camera.
   const stage = await page.locator(".island-stage").boundingBox();
-  await tap(page, { x: stage.x + 30, y: stage.y + 30 }, touch);
+  await tap(page, { x: stage.x + 30, y: stage.y + stage.height / 2 }, touch);
   expect(await selected(page)).toBe(null);
-  await expect(page.locator(".overview")).toContainText("Tap a robot or building");
+  await expect(page.locator(".flyout")).toBeHidden();
   await expect(page.locator(".details")).toHaveCount(0);
 });
 
 test("a label or a row chooses too; the chosen row shows its block, its flyout what it's doing and what it holds; Escape lets go", async ({ page }) => {
   await openIsland(page);
   await steps(page, 2);
+  await openDrawer(page, "overview");
   await page.getByRole("button", { name: "Robo 1: Moving" }).click();
   expect(await selected(page)).toBe("r1");
   const row = page.locator(".row.selected");
   const flyout = page.locator(".flyout");
   await expect(row.locator(".row-name")).toHaveText("Robo 1");
   await expect(row.locator(".state")).toHaveText("Moving");
-  await expect(row.locator(".row-program")).toHaveText("Wood collector, version 1");
+  await expect(row.locator(".row-program")).toHaveAttribute("title", "Wood collector, version 1");
+  await expect(row.locator(".row-program .num")).toHaveText("1");
   await expect(row.locator(".chip")).toHaveText("go to grove");
   await expect(flyout.locator("h2")).toHaveText("Robo 1");
   await expect(flyout).toContainText("On the way to Grove");
-  await expect(flyout).toContainText("0 of 2");
+  await expect(flyout.locator(".basket .count")).toHaveText("0/2");
   await page.keyboard.press("Escape");
   expect(await selected(page)).toBe(null);
   await page.locator('.row-head[data-pick="sawmill"]').click();
   expect(await selected(page)).toBe("sawmill");
   await expect(row).toContainText("Waiting until its condition is true");
-  await expect(flyout).toContainText("Wood 0 of 4");
+  await expect(flyout.locator(".stock li").first()).toHaveText("Wood 0/4");
   // A label's mark says why on hover.
   await expect(page.locator('.tag[data-pick="site"]')).toHaveAttribute("title", "Waiting: Needs 4 planks · Construction site has 0");
   await flyout.getByRole("button", { name: "Close" }).click();
@@ -129,6 +137,7 @@ test("a label or a row chooses too; the chosen row shows its block, its flyout w
 test("turned a quarter, the island is seen from another side, and its things can still be chosen there; Reset view turns it back", async ({ page }, testInfo) => {
   await openIsland(page);
   const before = await island(page, () => window.islandPage.screenOf("sawmill"));
+  await openMenu(page, "view");
   await page.getByRole("button", { name: "Turn right" }).click();
   await page.waitForTimeout(600); // the turn takes a moment to draw
   await frames(page);
@@ -138,6 +147,7 @@ test("turned a quarter, the island is seen from another side, and its things can
   const spot = await clearSpot(page, ["sawmill", "camp", "depot", "site"]);
   await tap(page, spot, !!testInfo.project.use.hasTouch);
   expect(await selected(page)).toBe(spot.id);
+  await openMenu(page, "view"); // the tap closed it
   await page.getByRole("button", { name: "Zoom in" }).click();
   expect((await island(page, () => window.islandPage.camera())).zoom).toBeGreaterThan(1);
   await page.getByRole("button", { name: "Reset view" }).click();
@@ -213,10 +223,12 @@ test("labels never cover one another", async ({ page }) => {
 test("the island and the world lab show one world; a change of language keeps it, the camera and the choice", async ({ page }) => {
   await openIsland(page);
   await steps(page, 12);
+  await openMenu(page, "view");
   await page.getByRole("button", { name: "Turn right" }).click();
   await island(page, () => window.islandPage.select("r2"));
   const hash = await island(page, () => window.islandPage.hash());
 
+  await openMenu(page, "settings");
   await page.getByRole("group", { name: "Language" }).getByRole("button", { name: "Deutsch" }).click();
   await page.waitForFunction(() => document.documentElement.lang === "de" && window.islandPage && document.querySelector(".tag"));
   await expect(page.getByRole("button", { name: "Los" })).toBeVisible();
@@ -235,10 +247,12 @@ test("the island and the world lab show one world; a change of language keeps it
 test("the graphics setting is remembered on this device", async ({ page }) => {
   await openIsland(page);
   expect(await island(page, () => window.islandPage.quality())).toBe("high");
+  await openMenu(page, "settings");
   await page.getByRole("group", { name: "Graphics" }).getByRole("button", { name: "Simple" }).click();
   expect(await island(page, () => window.islandPage.quality())).toBe("low");
   await openIsland(page);
   expect(await island(page, () => window.islandPage.quality())).toBe("low");
+  await openMenu(page, "settings");
   await expect(page.getByRole("group", { name: "Graphics" }).getByRole("button", { name: "Simple" })).toHaveAttribute("aria-pressed", "true");
 });
 

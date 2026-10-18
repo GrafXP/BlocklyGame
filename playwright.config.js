@@ -21,6 +21,9 @@ export default defineConfig({
     // The game follows the browser's language (PLAN.md §8); the tests choose
     // theirs, whatever this machine's is.
     locale: "en-US",
+    // Panels and bubbles slide in (src/style/island.css); the tests measure
+    // where things are as soon as they open, so nothing moves.
+    reducedMotion: "reduce",
   },
   webServer: {
     command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,

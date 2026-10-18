@@ -4,6 +4,7 @@ import { LANGUAGES } from "../src/i18n/languages.js";
 import { NOT_WORDS, UNUSED_BLOCKLY } from "../src/i18n/blockly-unused.js";
 import { overrides as germanOverrides } from "../src/i18n/de/blockly.js";
 import { letsGo, seedCampaign, solveMission } from "./campaign-seed.js";
+import { openDrawer } from "./ui.js";
 
 // The language checks of PLAN.md §12 that need a browser: the title page and the
 // editor lab in each language, chosen by the browser or by the player; a switch
@@ -169,11 +170,12 @@ function unmarkedText() {
 
 // Elements whose text doesn't fit in them, or that run off the window. Blockly
 // draws in SVG, which the toolbox test measures instead. An ellipsis is a
-// deliberate shortening, with the whole text on hover.
+// deliberate shortening, with the whole text on hover; words for screen
+// readers alone (.vh) aren't on screen to be cut off.
 function clippedText() {
   const found = [];
   for (const el of document.querySelectorAll("body *")) {
-    if (el.closest("svg, .injectionDiv, .blocklyWidgetDiv, .blocklyDropDownDiv, .blocklyTooltipDiv")) continue;
+    if (el.closest("svg, .injectionDiv, .blocklyWidgetDiv, .blocklyDropDownDiv, .blocklyTooltipDiv, .vh")) continue;
     if (![...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.nodeValue.trim())) continue;
     const style = getComputedStyle(el);
     if (style.display === "inline" || style.display === "contents" || style.textOverflow === "ellipsis") continue;
@@ -317,9 +319,9 @@ async function worldAt(page, query, ticks) {
   await frames(page);
 }
 
-// The island in 3D, `ticks` steps on, with `id` chosen, so the overview and the
-// labels' marks say what it's doing and why, and with `panel` open on the left:
-// ["editor", program] or ["together"].
+// The island in 3D, `ticks` steps on, with `id` chosen, so the overview, open,
+// and the labels' marks say what it's doing and why, and with `panel` open on
+// the left: ["editor", program] or ["together"].
 async function islandAt(page, query, ticks, id, panel = null) {
   await page.goto(`/island?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
@@ -330,6 +332,7 @@ async function islandAt(page, query, ticks, id, panel = null) {
     },
     [ticks, id],
   );
+  await openDrawer(page, "overview");
   if (panel) await page.evaluate(([kind, program]) => window.islandPage.open(kind, program), panel);
   await frames(page);
 }
@@ -406,6 +409,9 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
     await apply();
     await page.evaluate(() => window.islandPage.close());
   }
+  // The mission's panel open, unless it's done and the win is over the page
+  // (or about to be, at the next frame).
+  if (!(await page.evaluate(() => window.islandPage.game.world.mission?.done != null))) await openDrawer(page, "mission");
   for (let i = 0; i < hints; i++) await page.locator(".mission-hint").click();
   await frames(page);
 }
@@ -425,6 +431,12 @@ async function campaignAt(page, query, { mission = "m01", briefing = false, hint
   await page.goto(sandbox ? `/free?dev${query}` : replay ? `/replay?dev${query}&mission=${replay}` : `/play?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
   if (!briefing) await letsGo(page);
+  // The mission's panel open, and the overview, so their words are checked too.
+  const panels = async () => {
+    if (!sandbox) await openDrawer(page, "mission");
+    await openDrawer(page, "overview");
+  };
+  if (!briefing) await panels();
   if (passed) {
     for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
     await page.locator('[data-mission="whole"]').click();
@@ -436,6 +448,7 @@ async function campaignAt(page, query, { mission = "m01", briefing = false, hint
       const game = window.islandPage.game;
       while (game.world.mission.trial === 0) game.step();
     });
+    await panels();
   } else for (let i = 0; i < hints; i++) await page.locator(".mission-hint").click();
   if (stuck) await page.evaluate(() => {
     const game = window.islandPage.game;

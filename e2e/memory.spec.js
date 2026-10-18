@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openDrawer } from "./ui.js";
 import { letsGo, seedCampaign, solveMission } from "./campaign-seed.js";
 
 // Phase 8 in a browser (PLAN.md §11): variables with their values beside the
@@ -57,6 +58,7 @@ test("mission 26: Memory offers the program's variable, the robot's row shows wh
   await seedCampaign(page, "m26");
   await open(page);
   await expect(page.locator('.row[data-row="r1"] .row-memory')).toHaveText("order 0");
+  await openDrawer(page, "mission");
   await page.getByRole("button", { name: "Open the program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Mission 26: Robo 1");
   const box = await toolbox(page);
@@ -73,6 +75,7 @@ test("mission 26: Memory offers the program's variable, the robot's row shows wh
 test("mission 31: My blocks offers a new block and a use of the program's own; the debugger follows Robo 1 into it and back", async ({ page }) => {
   await seedCampaign(page, "m31");
   await open(page);
+  await openDrawer(page, "mission");
   await page.getByRole("button", { name: "Open the program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Mission 31: Robo 1");
   expect((await toolbox(page))["My blocks"]).toEqual(["procedures_defnoreturn", "procedures_callnoreturn"]);
@@ -81,6 +84,7 @@ test("mission 31: My blocks offers a new block and a use of the program's own; t
     return b.toString().replace(/\s+/g, " ");
   });
   expect(def).toMatch(/^my block bring wood /);
+  await openDrawer(page, "mission");
   for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
   await page.getByRole("button", { name: "Show me the whole program" }).click();
   await page.waitForTimeout(400);
@@ -104,6 +108,7 @@ test("mission 36: a building's toolbox has Messages; Robo 2 waits for the note, 
   await expect(page.locator('.row[data-row="r2"] .why')).toHaveText("Waiting for the message “plank ready”");
   await island(page, () => window.islandPage.select("r2"));
   await expect(page.locator(".details .inspector-row", { hasText: "Inbox" })).toContainText("empty");
+  await openDrawer(page, "mission");
   await page.getByRole("button", { name: "Open the program" }).click();
   await expect(page.locator(".code-title")).toHaveText("Mission 36: Sawmill");
   expect((await toolbox(page)).Messages).toEqual(["message_send", "message_wait"]);
@@ -127,6 +132,7 @@ test("a message waiting in an inbox is listed there, with who sent it", async ({
 test("in German, a starter's block of its own and its variables are worded in German, and so are the categories", async ({ page }) => {
   await seedCampaign(page, "m33", { query: "&lang=de" });
   await open(page, "&lang=de");
+  await openDrawer(page, "mission");
   await page.getByRole("button", { name: "Programm öffnen" }).click();
   await expect(page.locator(".code-title")).toHaveText("Auftrag 33: Robo 1");
   const words = await island(page, () =>

@@ -7,6 +7,7 @@ import { reasonOf, statusOf } from "../sim/status.js";
 import { thing } from "../sim/things.js";
 import { describeReason, placeName } from "./describe.js";
 import { esc } from "./dom.js";
+import { icon, iconButton } from "./icons.js";
 import { picture, placePicture } from "./pictures.js";
 
 // The mission card (PLAN.md §8, Main layout and Beginner support; §9): the
@@ -30,8 +31,10 @@ import { picture, placePicture } from "./pictures.js";
 //   best watched from the mission's checkpoint (PLAN.md §9).
 //
 // The mission's start and its end have big windows of their own over the page,
-// the briefing and the win (mission-overlays.js); the card stays beside the
-// island throughout, with the way on once the mission is done.
+// the briefing and the win (mission-overlays.js). The card opens from the
+// mission's title in the bar, and what it asks or offers by itself comes in a
+// bubble over the island while it holds, the way on among them once the
+// mission is done; the bar shows the goals as pictures throughout.
 //
 // Phase 5's bridge slice keeps its strip of planks filling towards the bridge
 // (`mission.progress`); the campaign's missions show their goals instead.
@@ -72,17 +75,18 @@ export function stuck(world) {
   return !!world.stall || world.entities.every((e) => ["stopped", "error"].includes(statusOf(e)));
 }
 
-// A goal as the card shows it: pictures, its words, and a note.
-function goalView(world, goal) {
+// A goal as the card shows it: pictures, `size` CSS pixels square, its words,
+// and a note.
+function goalView(world, goal, size = 32) {
   const { have, need, done, failed } = goalProgress(world, goal);
   const item = goal.item ? t(`item.${goal.item}`) : null;
   const pics = (name, n = need) =>
-    n > 8 ? picture(name, { there: done }) : Array.from({ length: n }, (_, i) => picture(name, { there: done || i < Math.min(have, n) })).join("");
+    n > 8 ? picture(name, { there: done, size }) : Array.from({ length: n }, (_, i) => picture(name, { there: done || i < Math.min(have, n), size })).join("");
   let pictures = "";
   let label = "";
   switch (goal.type) {
     case "reached":
-      pictures = picture(placePicture(goal.at), { there: done });
+      pictures = picture(placePicture(goal.at), { there: done, size });
       label = t("goal.reached", { robot: nameOf(world, goal.robot), place: nameOf(world, goal.at) });
       break;
     case "holds":
@@ -90,7 +94,7 @@ function goalView(world, goal) {
       label = t("goal.holds", { robot: nameOf(world, goal.robot), have, need });
       break;
     case "delivered":
-      pictures = goal.item ? pics(goal.item) : picture("basket", { there: done });
+      pictures = goal.item ? pics(goal.item) : picture("basket", { there: done, size });
       label = goal.by
         ? t("goal.deliveredBy", { robot: nameOf(world, goal.by), place: nameOf(world, goal.to), have, need })
         : t("goal.delivered", { item, place: nameOf(world, goal.to), have, need });
@@ -104,7 +108,7 @@ function goalView(world, goal) {
       label = need ? t("goal.made", { item, place: nameOf(world, goal.at), have, need }) : t("goal.madeNone", { item, place: nameOf(world, goal.at), have });
       break;
     case "built":
-      pictures = picture("bridge", { there: done, size: 40 });
+      pictures = picture("bridge", { there: done, size: Math.round(size * 1.25) });
       label = t("goal.built", { place: nameOf(world, goal.at) });
       break;
     case "steady":
@@ -125,6 +129,17 @@ function goalView(world, goal) {
   return { pictures, label, note: failed ? t("goal.failed") : notes.join(" "), done, failed };
 }
 
+// The goals of `world`'s mission as small pictures alone, filling as they're
+// met, for the bar along the top: how far the mission has got at a glance.
+export function goalsPictures(world, goals) {
+  return goals
+    .map((goal) => {
+      const v = goalView(world, goal, 22);
+      return `<span class="goal-mini${v.done ? " met" : ""}${v.failed ? " failed" : ""}">${v.pictures}</span>`;
+    })
+    .join("");
+}
+
 // The items of a list of `goals` of `world`'s mission, as the card and the
 // briefing (mission-overlays.js) show them: pictures, words and a note, and
 // whether each is met or failed.
@@ -137,17 +152,24 @@ export function goalsMarkup(world, goals) {
     .join("");
 }
 
-// The card in `el` for `mission`. `kept` holds what the card remembers across
-// openings of the page (hints shown, the prediction, the explanation), and is
-// changed as the player goes. `replay` says it's a mission played again on its
-// own; `next` whether there's a mission after it to go on to.
+// The card in `el` for `mission`, which the page shows when asked for (the
+// mission's panel, island.js), and what it has to say without being asked in
+// `coach`, each in a bubble over the island while it holds: the prediction
+// before Run, a trial passed, the offer of a hint when everything has stopped,
+// the offer to start again, a notice, the explanation and the way on once it's
+// done. `progress`, in the bar along the top, shows the goals as pictures
+// alone. `kept` holds what the card remembers across openings of the page
+// (hints shown, the prediction, the explanation), and is changed as the player
+// goes. `replay` says it's a mission played again on its own; `next` whether
+// there's a mission after it to go on to.
 //
 // It calls `onLook(id)` when a hint asks for thing `id` to be chosen,
-// `onOpen(program)` to open a program's editor, `onShow(program, which)` to
-// put a start ("start") or the whole program ("whole") into its editor,
-// `onRestart()` when the player starts again from the card, `onNext()` to go
-// on, and `onDismiss()` when the player has read a notice.
-export function createMissionCard(el, bin, { mission, kept, replay = false, next = false, onLook, onOpen, onShow, onRestart, onNext, onDismiss }) {
+// `onHint()` when a hint is asked for, `onOpen(program)` to open a program's
+// editor, `onShow(program, which)` to put a start ("start") or the whole
+// program ("whole") into its editor, `onRestart()` when the player starts
+// again from the card, `onNext()` to go on, and `onDismiss()` when the player
+// has read a notice.
+export function createMissionCard(el, bin, { mission, kept, replay = false, next = false, coach, progress = null, onLook, onHint, onOpen, onShow, onRestart, onNext, onDismiss }) {
   const key = (part) => `${mission.id}.${part}`;
   const has = (part) => missionText(key(part)) !== key(part);
   const isSlice = !!mission.progress;
@@ -157,25 +179,30 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
   kept.predict ??= mission.predict ? "ask" : "done"; // "ask", "pointing", "said", "done", or a thing's id
   kept.explained ??= false;
 
-  el.innerHTML = `${mission.n ? `<p class="mission-chapter">${esc(t("mission.chapter", { chapter: mission.chapter, n: mission.n }))}</p>` : ""}
+  el.innerHTML = `<div class="mission-head">
+      ${mission.n ? `<p class="mission-chapter">${esc(t("mission.chapter", { chapter: mission.chapter, n: mission.n }))}</p>` : "<span></span>"}
+      ${iconButton("close", t("inspector.close"), { attrs: `data-drawer="mission"` })}
+    </div>
     <h2 class="mission-title">${esc(missionText(key("title")))}</h2>
     ${replay ? `<p class="mission-replay">${esc(t("mission.replaying", { n: mission.n }))}</p>` : ""}
     <p class="mission-goal">${esc(missionText(key("goal")))}</p>
     ${has("setup") ? `<p class="mission-setup">${esc(missionText(key("setup")))}</p>` : ""}
     ${isSlice ? `<div class="mission-progress" role="img"></div><p class="mission-building idle"></p>` : `<ul class="mission-goals" aria-label="${esc(t("mission.goals"))}"></ul>`}
-    ${trials.length > 1 ? `<ol class="mission-trials" aria-label="${esc(t("mission.trials"))}"></ol><p class="mission-passed" role="status" hidden></p>` : ""}
-    <div class="mission-predict" hidden></div>
-    ${main ? `<div class="mission-actions"><button class="button small" data-mission="open">${esc(t("mission.open"))}</button></div>` : ""}
+    ${trials.length > 1 ? `<ol class="mission-trials" aria-label="${esc(t("mission.trials"))}"></ol>` : ""}
+    ${main ? `<div class="mission-actions"><button type="button" class="button" data-mission="open">${icon("blocks")}${esc(t("mission.open"))}</button></div>` : ""}
     <p class="mission-done" role="status"></p>
-    <div class="mission-explain" hidden></div>
-    <div class="mission-next" hidden></div>
-    <div class="mission-again" hidden><p>${esc(t("mission.again"))}</p><button class="button small primary" data-mission="restart">${esc(t("world.reset"))}</button></div>
-    <p class="mission-stuck" role="status" hidden>${esc(t("mission.stuck"))}</p>
     <ol class="mission-hints"></ol>
-    <button class="button small mission-hint" data-mission="hint"></button>
-    <div class="mission-notice" role="alert" hidden><p></p><button class="button small" data-mission="dismiss">${esc(t("mission.ok"))}</button></div>`;
+    <button type="button" class="button mission-hint" data-mission="hint">${icon("hint")}<span class="hint-words"></span></button>`;
+  coach.innerHTML = `<div class="mission-predict coach-bubble" hidden></div>
+    ${trials.length > 1 ? `<p class="mission-passed coach-bubble" role="status" hidden></p>` : ""}
+    <div class="coach-stuck coach-bubble" hidden><p class="mission-stuck" role="status">${esc(t("mission.stuck"))}</p><button type="button" class="button small coach-hint" data-mission="hint">${icon("hint", 18)}<span class="hint-words"></span></button></div>
+    <div class="mission-again coach-bubble" hidden><p>${esc(t("mission.again"))}</p><button type="button" class="button small primary" data-mission="restart">${icon("restart", 18)}${esc(t("world.reset"))}</button></div>
+    <div class="mission-notice coach-bubble" role="alert" hidden><p></p><button type="button" class="button small" data-mission="dismiss">${icon("check", 18)}${esc(t("mission.ok"))}</button></div>
+    <div class="mission-explain coach-bubble" hidden></div>
+    <div class="mission-next coach-bubble" hidden></div>`;
   el.setAttribute("aria-label", t("mission.label"));
-  const $ = (sel) => el.querySelector(sel);
+  // The card's part `sel`, on the card or in a bubble.
+  const $ = (sel) => el.querySelector(sel) ?? coach.querySelector(sel);
   const drawn = new Map();
   // Sets the markup of `sel`, if it's new.
   const draw = (sel, markup) => {
@@ -187,12 +214,13 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
   let shown = {};
   let problem = null;
 
-  bin.on(el, "click", (e) => {
+  const onClick = (e) => {
     const act = e.target.closest("[data-mission]")?.dataset.mission;
     if (act === "hint" && kept.hints < LADDER.length) {
       kept.hints++;
       if (kept.hints === 1) onLook?.(problem?.entity ?? mission.look);
       showHints();
+      onHint?.();
     } else if (act === "look") onLook?.(problem?.entity ?? mission.look);
     else if (act === "open") onOpen?.(main);
     else if (act === "start" || act === "whole") onShow?.(e.target.closest("[data-program]").dataset.program, act);
@@ -205,7 +233,9 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
     else if (act === "explained") kept.explained = true;
     else return;
     if (world) card.show(world, shown.options);
-  });
+  };
+  bin.on(el, "click", onClick);
+  bin.on(coach, "click", onClick);
 
   // The hint ladder, as far as the player has asked for it, answering the
   // problem in view.
@@ -235,9 +265,12 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
         )
         .join(""),
     );
-    const button = $(".mission-hint");
-    button.hidden = kept.hints >= LADDER.length || !!shown.done;
-    button.textContent = t(kept.hints ? "mission.moreHint" : "mission.hint");
+    const more = t(kept.hints ? "mission.moreHint" : "mission.hint");
+    for (const button of [el.querySelector(".mission-hint"), coach.querySelector(".coach-hint")]) {
+      button.hidden = kept.hints >= LADDER.length || !!shown.done;
+      const words = button.querySelector(".hint-words");
+      if (words.textContent !== more) words.textContent = more;
+    }
   }
 
   // The prediction before Run: asked while the world hasn't run, and the guess
@@ -277,6 +310,13 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
 
       if (isSlice) showStrip(w, done, before);
       else draw(".mission-goals", goalsMarkup(w, m?.goals ?? []));
+      if (progress && !isSlice) {
+        const pictures = goalsPictures(w, m?.goals ?? []);
+        if (drawn.get("progress") !== pictures) {
+          drawn.set("progress", pictures);
+          progress.innerHTML = pictures;
+        }
+      }
       if (trials.length > 1 && m) {
         draw(
           ".mission-trials",
@@ -303,9 +343,9 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
       draw(".mission-explain", has("explain") ? `<p><strong>${esc(t("mission.explainLabel"))}</strong> ${esc(missionText(key("explain")))}</p><button class="button small" data-mission="explained">${esc(t("mission.explained"))}</button>` : "");
       const onward = $(".mission-next");
       onward.hidden = !done || isSlice;
-      draw(".mission-next", `<button class="button primary" data-mission="next">${esc(t(replay || !next ? "mission.toMissions" : "mission.next"))}</button>`);
+      draw(".mission-next", `<button type="button" class="button primary" data-mission="next">${esc(t(replay || !next ? "mission.toMissions" : "mission.next"))}${icon("moving", 20)}</button>`);
 
-      $(".mission-stuck").hidden = !stuck(w);
+      $(".coach-stuck").hidden = !stuck(w);
       $(".mission-hint").classList.toggle("offer", stuck(w));
       if (shown.again !== before.again) $(".mission-again").hidden = !shown.again;
       if (notice !== before.notice) {
@@ -334,11 +374,13 @@ export function createMissionCard(el, bin, { mission, kept, replay = false, next
     shown.work = work;
     if (have !== before.have || done !== before.done) {
       const strip = $(".mission-progress");
-      strip.innerHTML =
-        Array.from({ length: need }, (_, i) => picture(item, { there: done || i < have })).join("") +
-        `<span class="mission-arrow" aria-hidden="true">→</span>` +
-        picture(builds, { there: done, size: 40 });
+      const pictures = (size) =>
+        Array.from({ length: need }, (_, i) => picture(item, { there: done || i < have, size })).join("") +
+        `<span class="mission-arrow" aria-hidden="true">${icon("moving", Math.round(size * 0.6))}</span>` +
+        picture(builds, { there: done, size: Math.round(size * 1.25) });
+      strip.innerHTML = pictures(32);
       strip.setAttribute("aria-label", missionText(key("progress"), { have: done ? need : have, need }));
+      if (progress) progress.innerHTML = pictures(22);
     }
     // The work's line keeps its place, unseen, until the work starts, so the
     // overview below holds still; once the mission is done it goes.

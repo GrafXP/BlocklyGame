@@ -37,6 +37,7 @@ export default {
   "home.worldNote": "Prototyp aus Phase 2: Roboter und Gebäude führen ihre Programme auf der Weltuhr aus.",
   "nav.home": "Startseite",
   "language.choose": "Sprache",
+  "menu.settings": "Einstellungen",
 
   "lab.title": "Editor-Labor",
   "lab.treatment": "Stil",
@@ -225,6 +226,7 @@ export default {
   "clock.nextTitle": "Schritte, bis der gewählte Roboter oder das gewählte Gebäude beim nächsten Baustein ist, oder bis irgendwer so weit ist, wenn nichts gewählt ist.",
   "clock.speed": "Tempo",
   "clock.speedValue": "{speed}×",
+  "clock.speedIs": "Tempo: {speed}×",
   "clock.ticks": "Schritte: {tick}",
   "clock.resetMission": "Zurück zum Anfang des Auftrags. Deine Programme bleiben, wie du sie übernommen hast.",
   "mission.label": "Auftrag",

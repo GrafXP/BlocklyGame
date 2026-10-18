@@ -2,6 +2,7 @@ import { display, formatList, t } from "../i18n/index.js";
 import { ITEMS, SETTINGS } from "../sim/entities.js";
 import { NAME_LENGTH } from "../sim/commands.js";
 import { esc } from "./dom.js";
+import { icon, iconButton } from "./icons.js";
 import { picture } from "./pictures.js";
 import { COMMANDS, choose, makeOwnCopy, nameRobot, peekWorld, preview, programName, setSetting, sharedProgram } from "./session.js";
 
@@ -72,14 +73,15 @@ export function createSetup({ onOpenProgram }) {
     const library = tools.includes("library");
     const before = now?.entities.find((it) => it.id === id);
     if (e && library) parts.push(programHtml(world, e, before));
-    if (e && library && isRobot(e)) parts.push(teamHtml(world, e), nameHtml(e));
+    if (e && library && isRobot(e)) parts.push(`<div class="setup-line">${teamHtml(world, e)}${nameHtml(e)}</div>`);
     if (e && tools.includes("settings") && isRobot(e)) parts.push(settingsHtml(e, now?.entities.find((it) => it.id === id)));
     if (tools.includes("stock") && (e ?? node)?.store.caps) parts.push(stockHtml(e ?? node));
     if (asked?.entity === id && asked.text) {
       parts.push(
-        `<div class="setup-preview" role="status"><p>${esc(asked.text)}</p>` +
-          `<button class="button small primary" data-setup="ok">${esc(t("setup.ok"))}</button> ` +
-          `<button class="button small" data-setup="cancel">${esc(t("setup.cancel"))}</button></div>`,
+        `<div class="setup-preview" role="status"><p>${esc(asked.text)}</p><div class="setup-buttons">` +
+          iconButton("check", t("setup.ok"), { attrs: `data-setup="ok"`, className: "small primary" }) +
+          iconButton("close", t("setup.cancel"), { attrs: `data-setup="cancel"`, className: "small" }) +
+          `</div></div>`,
       );
     }
     return parts.length ? `<div class="setup" data-entity="${esc(id)}">${parts.join("")}</div>` : "";
@@ -96,30 +98,31 @@ export function createSetup({ onOpenProgram }) {
     const others = running && world.entities.some((it) => it.id !== e.id && it.runtime?.kind === "program" && it.runtime.program === running);
     const buttons = [];
     // A copy of a program only it runs would change nothing.
-    if (running && !(e.own && !others)) buttons.push(`<button class="button small" data-setup="copy">${esc(t("setup.copy"))}</button>`);
-    if (e.own && shared && shared !== e.own) buttons.push(`<button class="button small" data-setup="back">${esc(t("setup.back"))}</button>`);
+    if (running && !(e.own && !others)) buttons.push(iconButton("copy", t("setup.copy"), { attrs: `data-setup="copy"`, className: "small" }));
+    if (e.own && shared && shared !== e.own) buttons.push(iconButton("undo", t("setup.back"), { attrs: `data-setup="back"`, className: "small" }));
     return (
-      `<p class="setup-note setup-from">${esc(from)}</p>` +
-      (pending ? `<p class="setup-note pending">${esc(t("settings.pending"))}</p>` : "") +
-      (buttons.length ? `<div class="setup-buttons">${buttons.join("")}</div>` : "")
+      `<div class="setup-line"><p class="setup-note setup-from">${icon("blocks", 16)}<span>${esc(from)}</span></p>${buttons.join("")}</div>` +
+      (pending ? `<p class="setup-note pending">${esc(t("settings.pending"))}</p>` : "")
     );
   }
 
-  // Robot `e`'s team.
+  // Robot `e`'s team, beside the button that renames it.
   function teamHtml(world, e) {
     const wanted = asked?.entity === e.id && asked.choice?.kind === "team" ? asked.choice.value : (e.role ?? "");
     const options = [["", t("setup.noTeam")], ...world.roles.map((r) => [r.id, display(r.name)])].map(
       ([value, words]) => `<option value="${esc(value)}"${value === wanted ? " selected" : ""}>${esc(words)}</option>`,
     );
-    return `<div class="setup-field"><label for="setup-team">${esc(t("setup.team"))}</label><select id="setup-team" data-setup="team">${options.join("")}</select></div>`;
+    return `<div class="setup-field setup-team"><label for="setup-team" title="${esc(t("setup.team"))}">${icon("team", 18)}<span class="vh">${esc(t("setup.team"))}</span></label><select id="setup-team" data-setup="team">${options.join("")}</select></div>`;
   }
 
   function nameHtml(e) {
-    if (renaming !== e.id) return `<div class="setup-buttons"><button class="button small" data-setup="rename">${esc(t("setup.rename"))}</button></div>`;
+    if (renaming !== e.id) return `<div class="setup-buttons">${iconButton("pencil", t("setup.rename"), { attrs: `data-setup="rename"`, className: "small" })}</div>`;
     return (
       `<form class="setup-rename" data-setup="name"><label for="setup-name">${esc(t("setup.name"))}</label>` +
       `<input id="setup-name" name="name" maxlength="${NAME_LENGTH}" value="${esc(display(e.name))}" autocomplete="off">` +
-      `<button class="button small primary" type="submit">${esc(t("setup.ok"))}</button> <button class="button small" type="button" data-setup="cancel-name">${esc(t("setup.cancel"))}</button></form>`
+      `<button type="submit" class="button icon small primary" aria-label="${esc(t("setup.ok"))}" title="${esc(t("setup.ok"))}">${icon("check")}</button>` +
+      iconButton("close", t("setup.cancel"), { attrs: `data-setup="cancel-name"`, className: "small" }) +
+      `</form>`
     );
   }
 

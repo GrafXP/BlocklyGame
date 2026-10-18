@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { setSpeed } from "./ui.js";
 import { ISLAND } from "../src/content/island.js";
 import { advanceWorld, createWorld } from "../src/sim/world.js";
 import { stateHash } from "../src/sim/replay.js";
@@ -26,13 +27,13 @@ function nodeWorld(ticks) {
 
 test("the world opens paused; Step advances it exactly one tick, every robot and building with it", async ({ page }) => {
   await openWorld(page);
-  await expect(page.locator(".ticks")).toHaveText("Steps: 0");
+  await expect(page.locator(".ticks")).toHaveText("0");
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await page.getByRole("button", { name: "Step", exact: true }).click();
-  await expect(page.locator(".ticks")).toHaveText("Steps: 1");
+  await expect(page.locator(".ticks")).toHaveText("1");
   expect(await world(page, () => window.world.game.trace.evaluated.map((e) => e.entity))).toEqual(["r1", "r2", "r3", "sawmill", "site"]);
   await page.getByRole("button", { name: "Step", exact: true }).click();
-  await expect(page.locator(".ticks")).toHaveText("Steps: 2");
+  await expect(page.locator(".ticks")).toHaveText("2");
   await expect(page.locator('tr[data-id="r1"]')).toContainText("On the way to Grove");
   await expect(page.locator('tr[data-id="r3"]')).toContainText("No way to Stone pit");
 
@@ -81,7 +82,7 @@ test("Run moves the clock at the chosen speed, Pause stops it, and the world is 
   await page.waitForTimeout(400);
   expect(await tick(page)).toBe(slow);
 
-  await page.getByRole("button", { name: "4×" }).click();
+  await setSpeed(page, 4);
   await page.getByRole("button", { name: "Run" }).click();
   await page.waitForTimeout(1000);
   await page.getByRole("button", { name: "Pause" }).click();
@@ -95,7 +96,7 @@ test("Run moves the clock at the chosen speed, Pause stops it, and the world is 
 
 test("switching language reopens the page with the world exactly as it was, and paused", async ({ page }) => {
   await openWorld(page);
-  await page.getByRole("button", { name: "4×" }).click();
+  await setSpeed(page, 4);
   await page.getByRole("button", { name: "Run" }).click();
   await page.waitForTimeout(800);
   // Switching while it runs: the world stops where it is.
@@ -106,7 +107,8 @@ test("switching language reopens the page with the world exactly as it was, and 
   const before = await hash(page);
   await page.waitForTimeout(400);
   expect(await tick(page)).toBe(ticks);
-  await expect(page.locator(".ticks")).toHaveText(`Schritte: ${ticks}`);
+  await expect(page.locator(".ticks")).toHaveText(String(ticks));
+  await expect(page.locator(".ticks")).toHaveAttribute("aria-label", `Schritte: ${ticks}`);
 
   await page.getByRole("group", { name: "Sprache" }).getByRole("button", { name: "English" }).click();
   await page.waitForFunction(() => document.documentElement.lang === "en" && window.world);
@@ -117,9 +119,9 @@ test("switching language reopens the page with the world exactly as it was, and 
 test("Start again gives a new world at step 0", async ({ page }) => {
   await openWorld(page);
   for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "Step", exact: true }).click();
-  await expect(page.locator(".ticks")).toHaveText("Steps: 3");
+  await expect(page.locator(".ticks")).toHaveText("3");
   await page.getByRole("button", { name: "Start again" }).click();
-  await expect(page.locator(".ticks")).toHaveText("Steps: 0");
+  await expect(page.locator(".ticks")).toHaveText("0");
   expect(await hash(page)).toBe(stateHash(createWorld(ISLAND)));
 });
 

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openMenu, setSpeed } from "./ui.js";
 import { ISLAND } from "../src/content/island.js";
 import { stateHash } from "../src/sim/replay.js";
 import { advanceWorld, createWorld } from "../src/sim/world.js";
@@ -63,7 +64,7 @@ test("one Step moves every marker in every program panel, the rows and the label
   expect(await marked(page)).toEqual({});
   for (const n of [1, 2, 3]) {
     await page.getByRole("button", { name: "Step", exact: true }).click();
-    await expect(page.locator(".clock .ticks")).toHaveText(`Steps: ${n}`);
+    await expect(page.locator(".clock .ticks")).toHaveText(String(n));
     const want = await running(page);
     expect(Object.keys(want).sort()).toEqual(["r1", "r2", "r3", "sawmill", "site"]);
     // Panels well out of view have no workspace (PLAN.md §13); each, scrolled
@@ -84,7 +85,7 @@ test("one Step moves every marker in every program panel, the rows and the label
 test("running at 4×, every frame's views show one tick: markers, rows and the clock agree", async ({ page }) => {
   await openIsland(page);
   await open(page, "together");
-  await page.getByRole("button", { name: "4×" }).click();
+  await setSpeed(page, 4);
   await page.getByRole("button", { name: "Run" }).click();
   // Read after the page's own frame callback, on each of 40 frames.
   const { bad: mixed, checked, ticks } = await island(
@@ -107,7 +108,7 @@ test("running at 4×, every frame's views show one tick: markers, rows and the c
             const chip = row.querySelector(".chip");
             if (chip && at[row.dataset.row] !== chip.dataset.block) bad.push(`tick ${snap.tick}: row ${row.dataset.row}@${chip.dataset.block}`);
           }
-          if (document.querySelector(".clock .ticks").textContent !== `Steps: ${snap.tick}`) bad.push(`tick ${snap.tick}: clock says ${document.querySelector(".clock .ticks").textContent}`);
+          if (document.querySelector(".clock .ticks").textContent !== `${snap.tick}`) bad.push(`tick ${snap.tick}: clock says ${document.querySelector(".clock .ticks").textContent}`);
           if (--left > 0) requestAnimationFrame(() => requestAnimationFrame(look));
           else resolve({ bad, checked, ticks: ticks.size });
         };
@@ -135,7 +136,7 @@ test("Next block stops when the chosen robot takes a new block, with every other
     [27, "collector-take"],
   ]);
   expect(await island(page, () => window.islandPage.hash())).toBe(nodeHash(27));
-  await expect(page.locator(".clock .ticks")).toHaveText("Steps: 27");
+  await expect(page.locator(".clock .ticks")).toHaveText("27");
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   // With nothing chosen, it stops at anyone's next block.
   await island(page, () => window.islandPage.select(null));
@@ -236,7 +237,7 @@ test("a draft being edited never moves the marks of the code that runs; Apply ta
   await expect(apply).toBeEnabled();
   // The overview still shows the block that runs, and the world goes on with it.
   await steps(page, 1);
-  await expect(page.locator('.row[data-row="r1"] .row-program')).toHaveText("Wood collector, version 1");
+  await expect(page.locator('.row[data-row="r1"] .row-program')).toHaveAttribute("title", "Wood collector, version 1");
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "r1").runtime.revision)).toBe(1);
 
   // A place there isn't is marked at its block, and can't be applied.
@@ -251,12 +252,12 @@ test("a draft being edited never moves the marks of the code that runs; Apply ta
   const tick = await island(page, () => window.islandPage.game.world.tick);
   await apply.click();
   await expect(state).toHaveText("Version 2 starts with the next step.");
-  await expect(page.locator('.row[data-row="r1"] .row-pending')).toHaveText("Version 2 starts with the next step");
+  await expect(page.locator('.row[data-row="r1"] .row-pending')).toHaveAttribute("title", "Version 2 starts with the next step");
   expect(await island(page, () => window.islandPage.game.world.tick)).toBe(tick);
   expect(await marked(page)).toEqual({});
   await page.getByRole("button", { name: "Step", exact: true }).click();
   await expect(state).toHaveText("Version 2 is running.");
-  await expect(page.locator('.row[data-row="r1"] .row-program')).toHaveText("Wood collector, version 2");
+  await expect(page.locator('.row[data-row="r1"] .row-program')).toHaveAttribute("title", "Wood collector, version 2");
   await expect.poll(() => marked(page)).toEqual({ r1: "editor@collector-forever" });
 
   // Undo changes and Starter program work on the draft only.
@@ -275,6 +276,7 @@ test("opening the editor pauses the world; the draft and the panel outlast a cha
   await expect(page.getByRole("button", { name: "Run" })).toBeVisible();
   await island(page, () => window.islandPage.editor().workspace.getBlockById("courier-go-site-place").getField("PLACE").setValue("depot"));
   await expect(page.locator(".code-state")).toHaveText("Changed. Apply to run it; until then, version 1 keeps running.");
+  await openMenu(page, "settings");
   await page.getByRole("group", { name: "Language" }).getByRole("button", { name: "Deutsch" }).click();
   await page.waitForFunction(() => document.documentElement.lang === "de" && window.islandPage?.panel()?.kind === "editor" && document.querySelector(".code-host .blocklySvg"));
   await expect(page.locator(".code-title")).toHaveText("Bretterbote");

@@ -21,6 +21,7 @@ import { bindClock, clockMarkup, showClock } from "./clock.js";
 import { amounts, describeReason } from "./describe.js";
 import { esc, go, html, isDev } from "./dom.js";
 import { openEditor } from "./editor.js";
+import { icon, iconButton } from "./icons.js";
 import { identityMark } from "./inspector.js";
 import { languageChoice } from "./language-choice.js";
 import { createFlyout } from "./flyout.js";
@@ -86,15 +87,16 @@ const loadQuality = () => {
   return QUALITIES[q] ? q : "high";
 };
 
-// The icons of the view's buttons, drawn in the button's own colour.
-const ICON = (inner) => `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+// The view's own controls: what each does, its words and its icon.
 const VIEW_BUTTONS = [
-  ["left", "view.turnLeft", ICON(`<path d="M9 7H5V3"/><path d="M5.6 7A8 8 0 1 1 4 12"/>`)],
-  ["right", "view.turnRight", ICON(`<path d="M15 7h4V3"/><path d="M18.4 7A8 8 0 1 0 20 12"/>`)],
-  ["in", "view.zoomIn", ICON(`<path d="M12 5v14M5 12h14"/>`)],
-  ["out", "view.zoomOut", ICON(`<path d="M5 12h14"/>`)],
-  ["reset", "view.reset", ICON(`<path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/>`)],
+  ["left", "view.turnLeft", "turnLeft"],
+  ["right", "view.turnRight", "turnRight"],
+  ["in", "view.zoomIn", "zoomIn"],
+  ["out", "view.zoomOut", "zoomOut"],
+  ["reset", "view.reset", "resetView"],
 ];
+const GAP = 12; // px between the page's edge, its panels and its cards
+const MIN_COACH = 300; // px the bubbles over the island need, at the least
 
 // The free island (PLAN.md §11, Phases 3 and 4), where every program runs from
 // the start, for this visit.
@@ -116,18 +118,22 @@ export const free = (el) => islandPage(el, "free");
 export const slice = (el) => islandPage(el, "slice");
 
 // The island in 3D: play `key`'s world (session.js) on its clock, drawn from
-// the world as it stands, with the debugger round it. Robots and buildings can
-// be looked at from any side and chosen by tapping them, their labels, or their
-// rows in the overview, which lists every one with the block it's at and why it
-// waits; the chosen one's flyout, beside the list, says more (flyout.js). A
-// robot or building's program opens in the editor on the left, over the world,
-// from its Edit program button; one that runs none is given a new program as
-// the editor opens. All programs shows every running program there instead,
-// with everyone's markers. Every view shows the same tick: one snapshot
-// (snapshot.js) is taken after the frame's ticks and drawn by all. A mission's
-// card sits above the overview, and the mission is saved as it's played, at
-// tick boundaries. A mission begins with its briefing over the page, and ends
-// with the win, fireworks and the way on (mission-overlays.js).
+// the world as it stands, with the debugger round it. The world fills the
+// window; over it, one line along the top (home, the title, and the panels'
+// icons), the clock at the bottom, and the rest only when asked for or needed
+// (PLAN.md §8, amendment of 18 October 2026). Robots and buildings can be
+// looked at from any side and chosen by tapping them, their labels, or their
+// rows in the overview, which opens on the right and lists every one with the
+// block it's at and why it waits; the chosen one's flyout slides in on the
+// right and says more (flyout.js). A robot or building's program opens in the
+// editor on the left, over the world, from its Edit program button; one that
+// runs none is given a new program as the editor opens. All programs shows
+// every running program there instead, with everyone's markers. Every view
+// shows the same tick: one snapshot (snapshot.js) is taken after the frame's
+// ticks and drawn by all. A mission's card opens below its title, what it asks
+// comes in a bubble above the clock, and the mission is saved as it's played,
+// at tick boundaries. A mission begins with its briefing over the page, and
+// ends with the win, fireworks and the way on (mission-overlays.js).
 //
 // Phase 6's tools, where the play offers them (session.js, tools): in the
 // chosen one's flyout, its own copy of its program and a robot's team, name and
@@ -160,77 +166,143 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     el,
     `<div class="island-page${mission ? " playing" : ""}">
       <header class="island-bar">
-        <a class="button small" href="/${location.search}" data-link>${t("nav.home")}</a>
-        <h1>${esc(title)}</h1>
-        ${clockMarkup(mission ? { resetTitle: t("clock.resetMission") } : {})}
-        <button class="button small" data-panel="together" aria-pressed="false">${t("together.open")}</button>
-        ${offers.includes("library") ? `<button class="button small" data-panel="library" aria-pressed="false">${t("library.open")}</button>` : ""}
-        ${canBuild ? `<button class="button small" data-build="open" aria-pressed="false">${t("build.open")}</button>` : ""}
-        ${ruled.sandbox ? `<button class="button small" data-sandbox="robot">${t("sandbox.addRobot")}</button><button class="button small" data-sandbox="new" aria-expanded="false">${t("sandbox.new")}</button>` : ""}
-        ${languageChoice({ group: "segmented language-choice" })}
+        <div class="bar-start">
+          <a class="button icon" href="/${location.search}" data-link aria-label="${esc(t("nav.home"))}" title="${esc(t("nav.home"))}">${icon("home")}</a>
+          <h1 class="bar-title">${
+            mission
+              ? `<button type="button" class="title-button" data-drawer="mission" aria-expanded="false" aria-controls="mission-panel" title="${esc(t("mission.label"))}"><span class="title-text">${esc(title)}</span><span class="bar-goals" aria-hidden="true"></span>${icon("chevron", 18)}</button>`
+              : `<span class="title-text">${esc(title)}</span>`
+          }</h1>
+        </div>
+        <div class="bar-end">
+          ${iconButton("robots", t("inspector.everyone"), { attrs: `data-drawer="overview" aria-expanded="false" aria-controls="overview"` })}
+          ${iconButton("together", t("together.open"), { attrs: `data-panel="together" aria-pressed="false"` })}
+          ${offers.includes("library") ? iconButton("library", t("library.open"), { attrs: `data-panel="library" aria-pressed="false"` }) : ""}
+          ${canBuild ? iconButton("build", t("build.open"), { attrs: `data-build="open" aria-pressed="false"` }) : ""}
+          ${ruled.sandbox ? iconButton("addRobot", t("sandbox.addRobot"), { attrs: `data-sandbox="robot"` }) + iconButton("island", t("sandbox.new"), { attrs: `data-sandbox="new" aria-expanded="false"` }) : ""}
+          ${iconButton("gear", t("menu.settings"), { attrs: `data-menu="settings" aria-expanded="false" aria-controls="settings-menu"` })}
+        </div>
       </header>
       <div class="island-main">
         <div class="island-stage"></div>
         <div class="tags"></div>
-        <p class="stall" role="status" hidden></p>
-        ${
-          canBuild
-            ? `<p class="build-pending" role="status" hidden>${esc(t("build.pending"))}</p>
-        <section class="build-card" hidden aria-label="${esc(t("build.open"))}">
-          <p class="build-ask"></p>
-          <p class="build-why" role="status"></p>
-          <div class="build-actions">
-            <button class="button small" data-build="turn">${esc(t("build.turn"))}</button>
-            <button class="button small primary" data-build="place" disabled>${esc(t("build.place"))}</button>
-            <button class="button small" data-build="cancel">${esc(t("build.cancel"))}</button>
-          </div>
-        </section>`
-            : ""
-        }
-        ${
-          ruled.sandbox
-            ? `<form class="sandbox-card" hidden aria-label="${esc(t("sandbox.new"))}">
-          <p>${esc(t("sandbox.newAsk"))}</p>
-          ${Object.entries(LAYOUT_CHOICES)
-            .map(
-              ([part, values]) =>
-                `<label>${esc(t(`sandbox.${part}`))} <select name="${part}">${values
-                  .map((v) => `<option value="${v}"${v === LAYOUT[part] ? " selected" : ""}>${esc(typeof v === "number" ? String(v) : t(`sandbox.${part}.${v}`))}</option>`)
-                  .join("")}</select></label>`,
-            )
-            .join("")}
-          <div class="build-actions">
-            <button class="button small primary" type="submit">${esc(t("sandbox.create"))}</button>
-            <button class="button small" type="button" data-sandbox="cancel">${esc(t("sandbox.cancel"))}</button>
-          </div>
-        </form>`
-            : ""
-        }
+        <div class="coach">
+          <p class="stall" role="status" hidden></p>
+          ${
+            canBuild
+              ? `<p class="build-pending" role="status" hidden>${esc(t("build.pending"))}</p>
+          <section class="build-card" hidden aria-label="${esc(t("build.open"))}">
+            <p class="build-ask"></p>
+            <p class="build-why" role="status"></p>
+            <div class="build-actions">
+              ${iconButton("turnRight", t("build.turn"), { attrs: `data-build="turn"` })}
+              <button type="button" class="button primary" data-build="place" disabled>${icon("check")}${esc(t("build.place"))}</button>
+              ${iconButton("close", t("build.cancel"), { attrs: `data-build="cancel"` })}
+            </div>
+          </section>`
+              : ""
+          }
+          ${
+            ruled.sandbox
+              ? `<form class="sandbox-card" hidden aria-label="${esc(t("sandbox.new"))}">
+            <p>${esc(t("sandbox.newAsk"))}</p>
+            ${Object.entries(LAYOUT_CHOICES)
+              .map(
+                ([part, values]) =>
+                  `<label>${esc(t(`sandbox.${part}`))} <select name="${part}">${values
+                    .map((v) => `<option value="${v}"${v === LAYOUT[part] ? " selected" : ""}>${esc(typeof v === "number" ? String(v) : t(`sandbox.${part}.${v}`))}</option>`)
+                    .join("")}</select></label>`,
+              )
+              .join("")}
+            <div class="build-actions">
+              <button class="button primary" type="submit">${icon("check")}${esc(t("sandbox.create"))}</button>
+              ${iconButton("close", t("sandbox.cancel"), { attrs: `data-sandbox="cancel"` })}
+            </div>
+          </form>`
+              : ""
+          }
+          ${mission ? `<div class="mission-coach"></div>` : ""}
+        </div>
         <section class="editor-panel side-panel" hidden>
-          <button class="button small panel-close" data-panel="close">${t("inspector.close")}</button>
+          ${iconButton("close", t("inspector.close"), { attrs: `data-panel="close"`, className: "panel-close" })}
           <div class="panel-body"></div>
           <div class="panel-handle" role="separator" aria-orientation="vertical" aria-label="${esc(t("panel.resize"))}" tabindex="0"></div>
         </section>
-        <div class="island-side">
-          ${mission ? `<section class="mission-card"></section>` : ""}
-          <aside class="inspector overview" aria-label="${esc(t("inspector.everyone"))}"></aside>
-        </div>
+        ${mission ? `<section class="mission-panel" id="mission-panel" aria-label="${esc(t("mission.label"))}" hidden><div class="mission-card"></div></section>` : ""}
+        <aside class="drawer overview-drawer" id="overview" aria-labelledby="overview-title" hidden>
+          <header class="drawer-head"><h2 id="overview-title">${esc(t("inspector.everyone"))}</h2>${iconButton("close", t("inspector.close"), { attrs: `data-drawer="overview"` })}</header>
+          <div class="inspector overview"></div>
+        </aside>
         <aside class="flyout" id="flyout" aria-labelledby="flyout-title" hidden></aside>
-        <div class="island-tools">
-          <div class="view-controls" role="group" aria-label="${esc(t("view.controls"))}">
-            ${VIEW_BUTTONS.map(([act, key, icon]) => `<button class="button icon" data-view="${act}" aria-label="${esc(t(key))}" title="${esc(t(key))}">${icon}</button>`).join("")}
-          </div>
-          <div class="quality"><span>${t("quality.label")}</span>
-            <div class="segmented" role="group" aria-label="${esc(t("quality.label"))}">
-              <button data-quality="low">${t("quality.low")}</button><button data-quality="high">${t("quality.high")}</button>
-            </div>
+        <div class="menu settings-menu" id="settings-menu" hidden>
+          <p class="menu-label">${esc(t("language.choose"))}</p>
+          ${languageChoice({ group: "segmented language-choice" })}
+          <p class="menu-label">${esc(t("quality.label"))}</p>
+          <div class="segmented quality" role="group" aria-label="${esc(t("quality.label"))}">
+            <button type="button" data-quality="low">${esc(t("quality.low"))}</button><button type="button" data-quality="high">${esc(t("quality.high"))}</button>
           </div>
           ${isDev() ? `<pre class="counters"></pre>` : ""}
+        </div>
+        <div class="island-tools">
+          <div class="view-tools">
+            <div class="menu view-controls" id="view-controls" role="group" aria-label="${esc(t("view.controls"))}" hidden>
+              ${VIEW_BUTTONS.map(([act, key, name]) => iconButton(name, t(key), { attrs: `data-view="${act}"` })).join("")}
+            </div>
+            ${iconButton("camera", t("view.controls"), { attrs: `data-menu="view" aria-expanded="false" aria-controls="view-controls"` })}
+          </div>
+          <div class="transport">${clockMarkup(mission ? { resetTitle: t("clock.resetMission") } : {})}</div>
         </div>
       </div>
     </div>`,
   );
   const main = $(".island-main");
+
+  // --- Drawers and menus ------------------------------------------------------
+  // The mission's panel and the overview slide in when asked for, and stay
+  // until closed; a menu (the settings, the view's controls) closes at the
+  // next tap anywhere else. What's open is kept for the next opening of the
+  // page, as after a change of language.
+  const drawers = (kept.drawers ??= { mission: false, overview: false });
+  let menu = null; // "settings", "view", or null
+  function showDrawers() {
+    const missionPanel = $(".mission-panel");
+    if (missionPanel) missionPanel.hidden = !drawers.mission;
+    const aside = $(".overview-drawer");
+    aside.hidden = !drawers.overview;
+    for (const b of $(".island-bar").querySelectorAll("[data-drawer]")) b.setAttribute("aria-expanded", String(!!drawers[b.dataset.drawer]));
+    main.style.setProperty("--aside", drawers.overview ? `${aside.offsetWidth + GAP}px` : "0px");
+    placeFlyout();
+    placeCoach();
+    placeTags();
+  }
+  // The bubbles between whatever is open: the panel on the left or the
+  // mission's, and the overview or the flyout on the right; where that leaves
+  // too little room, between the panels alone, or else over the whole world.
+  function placeCoach() {
+    const width = main.clientWidth;
+    const side = panel ? sidePanel.offsetLeft + sidePanel.offsetWidth : 0;
+    const aside = drawers.overview ? $(".overview-drawer").offsetWidth + GAP : 0;
+    const missionPanel = $(".mission-panel");
+    const fly = $(".flyout");
+    const left = Math.max(side, missionPanel && !missionPanel.hidden ? missionPanel.offsetLeft + missionPanel.offsetWidth : 0);
+    const right = Math.max(aside, fly.hidden ? 0 : width - fly.offsetLeft);
+    const fits = (l, r) => width - l - r - 2 * GAP >= MIN_COACH;
+    const [l, r] = fits(left, right) ? [left, right] : fits(side, aside) ? [side, aside] : [0, 0];
+    main.style.setProperty("--coach-l", `${l}px`);
+    main.style.setProperty("--coach-r", `${r}px`);
+  }
+  function toggleDrawer(name, open = !drawers[name]) {
+    if (name === "mission" && !mission) return;
+    drawers[name] = open;
+    showDrawers();
+    if (name === "overview" && open && selected) overview.reveal(selected);
+  }
+  function showMenu(name) {
+    menu = name;
+    $(".settings-menu").hidden = menu !== "settings";
+    $(".view-controls").hidden = menu !== "view";
+    for (const b of el.querySelectorAll("[data-menu]")) b.setAttribute("aria-expanded", String(b.dataset.menu === menu));
+  }
 
   // --- The world in 3D ------------------------------------------------------
   const view = createIslandView($(".island-stage"), { quality: loadQuality() });
@@ -259,6 +331,17 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     placeFlyout();
   }
   bin.on(el, "click", (e) => {
+    const menuAct = e.target.closest("[data-menu]")?.dataset.menu;
+    if (menu && !menuAct && !e.target.closest(".menu")) showMenu(null);
+    if (menuAct) {
+      showMenu(menu === menuAct ? null : menuAct);
+      return;
+    }
+    const drawerAct = e.target.closest("[data-drawer]")?.dataset.drawer;
+    if (drawerAct) {
+      toggleDrawer(drawerAct);
+      return;
+    }
     if (selected && setup.handle(e, selected)) {
       refresh();
       return;
@@ -320,9 +403,16 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     newFreeIsland(layout);
     go(location.pathname + location.search, "replace");
   });
+  // Escape closes what was opened last: a menu, placing, the flyout, the
+  // mission's panel, then the overview.
   bin.on(document, "keydown", (e) => {
-    if (e.key === "Escape" && placing) stopPlacing();
-    else if (e.key === "Escape" && selected && !e.target.closest?.(".side-panel, .setup")) select(null);
+    if (e.key !== "Escape") return;
+    if (menu) showMenu(null);
+    else if (placing) stopPlacing();
+    else if (e.target.closest?.(".side-panel, .setup")) return;
+    else if (selected) select(null);
+    else if (drawers.mission) toggleDrawer("mission", false);
+    else if (drawers.overview) toggleDrawer("overview", false);
   });
 
   // --- Placing a building ------------------------------------------------------
@@ -397,17 +487,17 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     const status = entry?.state ?? null;
     const why = entry?.reason ?? null;
     const block = entry?.block ? blockOf(entry.program, entry.revision, entry.block) : null;
-    const icon = block ? blockIcon(block.type) : null;
+    const blockPicture = block ? blockIcon(block.type) : null;
     const name = display(e.name);
     const stateWord = status ? t(`state.${status}`) : "";
     return {
-      key: [name, status, icon, why ? describeReason(w, why) : ""].join("|"),
+      key: [name, status, blockPicture, why ? describeReason(w, why) : ""].join("|"),
       className: `tag ${status ?? "node"}${e.id === selected ? " selected" : ""}`,
       label: status ? t("tag.label", { name, state: stateWord }) : name,
       title: why ? t("tag.title", { state: stateWord, reason: describeReason(w, why) }) : stateWord || name,
       html:
         identityMark(w, e.id) +
-        (icon ? `<span class="bubble"><img src="${icon}" alt="" width="18" height="18"></span>` : "") +
+        (blockPicture ? `<span class="bubble"><img src="${blockPicture}" alt="" width="18" height="18"></span>` : "") +
         `<span class="tag-name">${esc(name)}</span>` +
         (status === "waiting" || status === "error" ? `<span class="badge ${status}" aria-hidden="true"></span>` : ""),
     };
@@ -434,16 +524,19 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     return resized;
   }
   // Puts each label over its thing, none covering another, and none under the
-  // panel on the left.
+  // bar along the top, the panel on the left or the overview on the right.
   function placeTags() {
+    // Where the panels are as laid out, not as drawn while they slide in.
     const area = tagsEl.getBoundingClientRect();
-    const left = panel ? sidePanel.getBoundingClientRect().right : area.left;
+    const left = panel ? area.left + sidePanel.offsetLeft + sidePanel.offsetWidth : area.left;
+    const right = drawers.overview ? area.left + $(".overview-drawer").offsetLeft : area.right;
+    const top = $(".island-bar").getBoundingClientRect().bottom;
     const labels = [];
     for (const tag of tagsEl.children) {
       const id = tag.dataset.pick;
       const at = view.anchorOf(id);
       const size = sizes.get(id);
-      const inside = at && size && at.x > left && at.x < area.right && at.y > area.top && at.y < area.bottom;
+      const inside = at && size && at.x > left && at.x < right && at.y - size.h > top && at.y < area.bottom;
       tag.hidden = !inside;
       if (inside) labels.push({ id, x: at.x - area.left, y: at.y - area.top - 4, ...size });
     }
@@ -454,27 +547,40 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     }
   }
 
-  // --- The overview, and the mission's card above it -------------------------
+  // --- The overview, the flyout, and the mission's panel ----------------------
   const overview = createOverview($(".overview"));
   const flyout = createFlyout($(".flyout"));
   const setup = createSetup({ onOpenProgram: (program) => openPanel({ kind: "editor", program }) });
-  // The flyout level with the chosen one's row, inside the page.
+  // The flyout below the bar on the right; with the overview open, beside it,
+  // level with the chosen one's row.
   function placeFlyout() {
-    const el = $(".flyout");
-    const row = selected && overview.rowOf(selected);
-    if (el.hidden || !row) return;
+    const fly = $(".flyout");
+    if (fly.hidden) return;
+    const row = drawers.overview && selected && overview.rowOf(selected);
+    if (!row) {
+      fly.style.top = "";
+      return;
+    }
     const area = main.getBoundingClientRect();
+    const least = $(".island-bar").getBoundingClientRect().bottom - area.top;
     const top = row.getBoundingClientRect().top - area.top;
-    el.style.top = `${Math.round(Math.max(12, Math.min(top, area.height - el.offsetHeight - 12)))}px`;
+    fly.style.top = `${Math.round(Math.max(least, Math.min(top, area.height - fly.offsetHeight - GAP)))}px`;
   }
   bin.on($(".overview"), "scroll", placeFlyout);
-  bin.on(window, "resize", placeFlyout);
+  bin.on(window, "resize", () => {
+    showDrawers();
+    showPanelState();
+  });
   const card = mission
     ? createMissionCard($(".mission-card"), bin, {
         mission,
         kept: (kept.card ??= {}),
         replay: key === "replay",
         next: key === "campaign" && !!nextMission(mission),
+        coach: $(".mission-coach"),
+        progress: $(".bar-goals"),
+        // A hint asked for from its offer opens the panel that shows it.
+        onHint: () => toggleDrawer("mission", true),
         onLook: (id) => select(id),
         onOpen: (program) => openPanel({ kind: "editor", program }),
         // A start or the whole program, put into the editor's draft: the
@@ -532,6 +638,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     const blockly = await loadBlockly();
     if (!bin.open || ticket !== opening) return;
     closePanel(false);
+    if (drawers.mission) toggleDrawer("mission", false); // it would lie over the panel
     sidePanel.hidden = false;
     sidePanel.dataset.kind = want.kind;
     const markers = { createMarkers };
@@ -571,7 +678,8 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   function showPanelState() {
     $('[data-panel="together"]').setAttribute("aria-pressed", String(panel?.kind === "together"));
     $('[data-panel="library"]')?.setAttribute("aria-pressed", String(panel?.kind === "library"));
-    main.style.setProperty("--side", panel ? `${sidePanel.getBoundingClientRect().width}px` : "0px");
+    main.style.setProperty("--side", panel ? `${sidePanel.offsetLeft + sidePanel.offsetWidth}px` : "0px");
+    placeCoach();
     placeTags();
   }
 
@@ -641,6 +749,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
       overview.show(w, snapshot, selected, words);
       flyout.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w), make: giving });
       placeFlyout();
+      placeCoach();
       panel?.view.show(w, snapshot, selected);
       if (canBuild) $(".build-pending").hidden = !game.pending.some((c) => c.type === "place");
       const stall = $(".stall");
@@ -739,6 +848,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   bin.add(() => Object.assign(kept, { camera: view.camera, selected }));
 
   view.sync(game.world);
+  showDrawers();
   showWorld(true);
   select(kept.selected);
   view.frame(performance.now());
