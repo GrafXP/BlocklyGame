@@ -8,8 +8,8 @@
 //
 // Notes for translators are comments above the message.
 export default {
-  // The game's name. Whether it's translated is still open (PLAN.md §8).
-  "app.name": "Robot Island",
+  // The game's name, the same in every language (PLAN.md §8).
+  "app.name": "BlocklyBots",
   // The browser tab's title on a page other than the title page: the page's
   // name, then the game's.
   "page.title": "{page} · {app}",

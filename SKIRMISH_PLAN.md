@@ -4,7 +4,7 @@ Date: 17 October 2026
 
 Status: proposed design and implementation plan; not implemented.
 
-Build a small, pausable strategy mode in which children aged 7–9 program their settlement and robot squad against the computer. Gathering resources, expanding production, protecting supply routes, and deciding when to attack should provide an Age of Empires feel within Robot Island's existing programming model.
+Build a small, pausable strategy mode in which children aged 7–9 program their settlement and robot squad against the computer. Gathering resources, expanding production, protecting supply routes, and deciding when to attack should provide an Age of Empires feel within BlocklyBots' existing programming model.
 
 This is an additional mode alongside the campaign and free play. The full skirmish economy includes wood, stone, food, water, iron, and gold, with connected production chains. Introduce those chains gradually through tutorials and starter programs; all six resource families belong in the full mode. The values below are starting points for prototyping and child playtesting, not final balance settings.
 
@@ -510,7 +510,7 @@ The first release should support building and balancing an economy, programming 
 
 ## 11. References
 
-- [Robot Island implementation plan](PLAN.md).
+- [BlocklyBots implementation plan](PLAN.md).
 - [Campaign plan and teaching progression](docs/campaign-plan.md).
 - [Age of Empires II: Expanding Your Empire](https://www.ageofempires.com/learn-to-play/expanding-your-empire-aoe2/) — resource allocation, production, and expansion as strategic decisions.
 - [ScratchJr background](https://www.scratchjr.org/about) — developmentally appropriate programming design; ScratchJr's audience begins at ages 5–7, while Scratch serves children from eight upward. Offering scaffolded and open programming paths here is a design recommendation to validate with the intended players.

@@ -75,7 +75,7 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await expect(briefing.locator(".goal")).toHaveText(["Robo 1 → Grove"]);
   await briefing.getByRole("button", { name: "Let's go!" }).click();
   await expect(briefing).toBeHidden();
-  await expect(page).toHaveTitle("Hello, Helper! · Robot Island");
+  await expect(page).toHaveTitle("Hello, Helper! · BlocklyBots");
   await expect(page.locator(".mission-chapter")).toHaveText("Chapter 1 · Mission 1");
   await expect(page.locator(".mission-goal")).toHaveText("Help Robo 1 find the grove.");
   await expect(page.locator(".mission-card .goal")).toHaveText(["Robo 1 → Grove"]);

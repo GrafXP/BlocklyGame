@@ -1,8 +1,8 @@
 // Die Oberfläche auf Deutsch. Schlüssel, Platzhalter und Hinweise: en/ui.js.
 // Begriffe wie in docs/glossary.md; Anrede mit du.
 export default {
-  // Ob der Name übersetzt wird, ist noch offen (PLAN.md §8).
-  "app.name": "Robot Island",
+  // Der Name des Spiels, in jeder Sprache gleich (PLAN.md §8).
+  "app.name": "BlocklyBots",
   "page.title": "{page} · {app}",
 
   "home.tagline": "Programmiere Roboter und Gebäude und erwecke eine Insel wieder zum Leben.",

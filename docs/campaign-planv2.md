@@ -1,4 +1,4 @@
-# Robot Island: campaign plan v2
+# BlocklyBots: campaign plan v2
 
 17 October 2026 · Ages 7–9 · Proposed content specification, not implemented
 

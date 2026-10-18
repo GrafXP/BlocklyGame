@@ -115,7 +115,7 @@ async function fixPrograms(page) {
 test("the mission's card says the goal, and each Step moves and highlights all four programs together", async ({ page }) => {
   await openPlay(page);
   await expect(page.locator(".island-bar h1")).toHaveText("Across the Stream");
-  await expect(page).toHaveTitle("Across the Stream · Robot Island");
+  await expect(page).toHaveTitle("Across the Stream · BlocklyBots");
   await expect(page.locator(".mission-goal")).toHaveText("Work together to build our bridge.");
   await expect(page.locator(".mission-progress")).toHaveAttribute("aria-label", "Planks at the construction site: 0 of 4");
   await expect(page.locator(".mission-progress .picture.missing")).toHaveCount(5);

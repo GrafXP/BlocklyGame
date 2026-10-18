@@ -1,4 +1,4 @@
-# Robot Island: a 40-mission campaign
+# BlocklyBots: a 40-mission campaign
 
 Campaign plan · 15 October 2026 · Ages 7–9 · Adopted in PLAN.md the same day
 

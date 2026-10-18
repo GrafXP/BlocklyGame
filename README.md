@@ -1,4 +1,4 @@
-# Robot Island
+# BlocklyBots
 
 A browser game for children aged 7–9: Blockly programs run the robots and buildings of a small 3D island. See [PLAN.md](PLAN.md) for the design and the phases.
 

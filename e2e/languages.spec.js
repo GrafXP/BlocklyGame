@@ -192,7 +192,7 @@ test.describe("with a German browser", () => {
   test("the title page is in German, and the player's choice of English is remembered", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("lang", "de");
-    await expect(page).toHaveTitle("Robot Island");
+    await expect(page).toHaveTitle("BlocklyBots");
     await expect(page.locator(".tagline")).toHaveText("Programmiere Roboter und Gebäude und erwecke eine Insel wieder zum Leben.");
     await page.locator(".grown-ups summary").click();
     await expect(page.getByRole("link", { name: "Editor-Labor" })).toBeVisible();
@@ -208,7 +208,7 @@ test.describe("with a German browser", () => {
 
   test("the editor lab is in German: page, toolbox, blocks, dropdowns, menus, tooltips and markers", async ({ page }) => {
     await openLab(page, "de");
-    await expect(page).toHaveTitle("Editor-Labor · Robot Island");
+    await expect(page).toHaveTitle("Editor-Labor · BlocklyBots");
     await expect(page.locator(".lab-bar strong")).toHaveText("Editor-Labor");
     await expect(page.locator('[data-out="opacity"]')).toHaveText("60 %");
     expect(await page.locator(".editor-host .blocklyToolboxCategoryLabel").allTextContents()).toEqual(["Start", "Roboter", "Gebäude", "Steuerung", "Fühlen", "Werte"]);
@@ -262,7 +262,7 @@ test("an English browser gets English, and so does one in a language not on offe
     const page = await (await browser.newContext({ locale })).newPage();
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page).toHaveTitle("Robot Island");
+    await expect(page).toHaveTitle("BlocklyBots");
     await expect(page.locator(".tagline")).toHaveText("Program robots and buildings to bring an island back to life.");
     await page.context().close();
   }

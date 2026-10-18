@@ -98,4 +98,4 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | send … to …, wait for … | schicke … an …, warte auf … | |
 | inbox | Briefkasten | “Der Briefkasten ist voll: Werkstatt”. |
 
-Open: whether the game's name is translated (*Robot Island*, *Roboterinsel*). Both catalogues say “Robot Island” until it's decided, before Phase 9 (PLAN.md §8).
+The game's name, *BlocklyBots*, isn't translated (PLAN.md §8). The island in the missions is *Robot Island*, in German *Roboterinsel*.

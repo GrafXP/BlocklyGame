@@ -1,4 +1,4 @@
-# Robot Island: implementation plan
+# BlocklyBots: implementation plan
 
 Date: 14 October 2026
 
@@ -42,7 +42,7 @@ These decisions can be refined during playtesting without changing the global-cl
 
 The reference project is `../GyroRocket`. Its source and lockfile were inspected directly.
 
-| Concern | Observed in GyroRocket | Decision for Robot Island |
+| Concern | Observed in GyroRocket | Decision for BlocklyBots |
 | --- | --- | --- |
 | Language | Vanilla JavaScript, ES modules, `type: module` | Use the same; add JSDoc contracts for simulation and program data |
 | Build/dev server | Vite; lockfile resolves to 8.3.1 | Start from that resolved version and commit this project's own lockfile |
@@ -424,7 +424,7 @@ Everything the player reads or hears is translated: the shell and settings, insp
 
 Left-to-right languages written in Latin, Greek, or Cyrillic script need nothing more. A self-hosted font, if one is added, must cover every listed language's characters. Right-to-left languages would also need Blockly's `rtl` injection option and a mirrored layout, so they are outside the first release. CSS uses logical properties such as `margin-inline-start` where they cost nothing, to keep that path open.
 
-Open decision: whether the game's name is translated (Robot Island, Roboterinsel). The name of the installed app comes from the single web app manifest, which cannot follow the in-app language. Decide before Phase 9.
+Decided 18 October 2026: the game is called BlocklyBots (until then Robot Island), and the name isn't translated. The name of the installed app comes from the single web app manifest, which cannot follow the in-app language, so it is the same name. The island in the missions is still Robot Island (Roboterinsel).
 
 ## 9. Campaign and sandbox
 
@@ -604,7 +604,7 @@ This phase comes before Phase 1 so that the simulation's waiting reasons and the
 
 - [x] Restructure `src/i18n/` into `languages.js` and one folder per language (Section 8, Languages). Bundle English; load other languages and their Blockly catalogues on demand. (`missions.js` joins each folder with the first mission.)
 - [x] Extend `t()` with plural forms through `Intl.PluralRules` and number formatting through `Intl.NumberFormat`. A key missing in a production build shows the English text, never the key.
-- [x] Translate everything Phase 0 shows into German: the shell, the lab, the game's blocks and tooltips, toolbox categories, dropdown options, and the sample entity names. (Awaiting a fluent speaker's review; the game's name stays “Robot Island” until that decision.)
+- [x] Translate everything Phase 0 shows into German: the shell, the lab, the game's blocks and tooltips, toolbox categories, dropdown options, and the sample entity names. (Awaiting a fluent speaker's review. The game's name, BlocklyBots, isn't translated: Section 8.)
 - [x] Add `de/blockly.js` overrides for the Blockly strings the game shows or announces that Blockly 13.4.0 leaves in English, with an allowlist for features the game doesn't enable. (157 overrides; `src/i18n/blockly-unused.js`. Blockly fixes the modifier-key names in shortcut hints when it loads, so “Control”, “Alt” and “Shift” stay English: docs/languages.md.)
 - [x] Choose the language from the stored setting, otherwise from the browser's languages, otherwise English. Add a language selector to the title screen. Set `<html lang>` and the document title. (The lab has the selector too.)
 - [x] Make switching reopen the current screen and recreate editors from their JSON, leaving programs unchanged. (The lab also keeps its markers, camera and selection.)
