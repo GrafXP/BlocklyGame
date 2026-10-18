@@ -5,6 +5,7 @@ import { compile } from "./programming/compiler.js";
 import { applyDraft, latest, newProgram, programDoc, setDraft, wordStarter } from "./programming/programs.js";
 import { beginTrial, createMission, needOf } from "./sim/objectives.js";
 import { room } from "./sim/inventory.js";
+import { BLUEPRINTS } from "./sim/placement.js";
 import { enter } from "./sim/staging.js";
 import { thing } from "./sim/things.js";
 import { advanceWorld, createWorld } from "./sim/world.js";
@@ -46,9 +47,13 @@ function compiledPrograms(library, places) {
 
 // Mission `mission`'s setup made on `world`, with `library` its programs: the
 // world gets every one it can run and no other, its resources are reset, the
-// setup is made (src/sim/staging.js) and the first trial staged.
+// setup is made (src/sim/staging.js) and the first trial staged. A program may
+// name what the setup brings, and a building the mission lets the player
+// place: the first placed takes its blueprint's name as its id (placement.js,
+// freeId), such as `workshop`.
 function enterMission(world, library, mission) {
-  const places = [...new Set([...world.entities, ...world.nodes].map((t) => t.id).concat(mission.setup.add ?? []))];
+  const coming = [...(mission.setup.add ?? []), ...(mission.setup.plots ?? []), ...(mission.blueprints ?? []).map((b) => b.blueprint)];
+  const places = [...new Set([...world.entities, ...world.nodes].map((t) => t.id).concat(coming))];
   enter(world, mission.setup, { things: THINGS, programs: compiledPrograms(library, places), restock: true });
   world.mission = createMission({ id: mission.id, trials: mission.trials, goals: mission.goals, reward: mission.reward ?? [] });
   beginTrial(world);
@@ -147,9 +152,12 @@ export function missionProblems(mission, world) {
   for (const goal of goals) {
     const at = goal.type === "delivered" ? goal.to : goal.type === "made" ? goal.at : null;
     if (!at) continue;
-    const store = thing(world, at)?.store;
-    if (!store) problems.push(`${mission.id}: goal ${goal.id} counts at ${at}, which isn't there`);
-    else if (goal.item && room(store, goal.item) < needOf(goal)) problems.push(`${mission.id}: ${at} has room for ${room(store, goal.item)} ${goal.item}, goal ${goal.id} counts ${needOf(goal)}`);
+    const t = thing(world, at);
+    // A construction site still to be built has the room its building will.
+    const site = t?.type === "site" && !t.built ? BLUEPRINTS[t.blueprint] : null;
+    const free = !goal.item ? null : site ? (site.caps[goal.item] ?? 0) : t && room(t.store, goal.item);
+    if (!t?.store) problems.push(`${mission.id}: goal ${goal.id} counts at ${at}, which isn't there`);
+    else if (goal.item && free < needOf(goal)) problems.push(`${mission.id}: ${at} has room for ${free} ${goal.item}, goal ${goal.id} counts ${needOf(goal)}`);
   }
   // The deposits as the checkpoint has them, and what each later trial stages
   // in them again.
@@ -169,16 +177,18 @@ const WORKSPACES = ["build", "repair", "change", "explore"];
 // What's wrong with mission `mission` by the campaign plan's authoring rules
 // (docs/campaign-planv2.md, “Teaching boundaries”, “Independent authoring”),
 // for a developer to read: [] when it keeps them.
-// - It says what its focus program opens with, and names one of its programs.
+// - It says what its focus program opens with, and names one of its programs;
+//   an Explore mission may have none (no code is needed).
 // - A Build mission's focus starter is its start block alone: the child
 //   writes the program.
 // - Through mission 40 the reference solution changes the focus program only,
-//   and gives no commands: no team, setting or copy.
+//   and its only commands place buildings: no team, setting or copy.
 // That a Repair or Change starter doesn't meet the goals already is played
 // for every mission (scripts/verify-missions.js).
 function authoringProblems(mission) {
   const problems = [];
   if (!WORKSPACES.includes(mission.workspace)) problems.push(`${mission.id}: its workspace is ${mission.workspace}`);
+  if (mission.workspace === "explore" && !mission.focus) return problems;
   const focus = mission.programs.find((p) => p.id === mission.focus);
   if (!focus) return [...problems, `${mission.id}: its focus ${mission.focus} isn't one of its programs`];
   if (mission.workspace === "build") {
@@ -188,7 +198,7 @@ function authoringProblems(mission) {
   if (mission.main && mission.n <= 40) {
     const changed = Object.keys(mission.reference.programs ?? {});
     if (changed.some((id) => id !== mission.focus)) problems.push(`${mission.id}: its reference changes ${changed.join(", ")}, not only its focus`);
-    if (mission.reference.commands?.length) problems.push(`${mission.id}: its reference gives commands`);
+    if (mission.reference.commands?.some((c) => c.type !== "place")) problems.push(`${mission.id}: its reference gives commands other than placing`);
   }
   return problems;
 }

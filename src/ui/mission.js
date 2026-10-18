@@ -111,6 +111,11 @@ function goalView(world, goal, size = 32) {
       pictures = picture("bridge", { there: done, size: Math.round(size * 1.25) });
       label = t("goal.built", { place: nameOf(world, goal.at) });
       break;
+    case "placed":
+    case "constructed":
+      pictures = picture(placePicture(goal.blueprint), { there: done, size: Math.round(size * 1.25) });
+      label = t(`goal.${goal.type}`, { building: t(`entity.${goal.blueprint}`) });
+      break;
     case "steady":
       pictures = pics(goal.item);
       label = t("goal.steady", { item, place: nameOf(world, goal.at), have, need });

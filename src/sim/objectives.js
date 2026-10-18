@@ -39,6 +39,9 @@ import { isAt, thing } from "./things.js";
 // The goals there are, as content writes them:
 //
 //   { type: "built", at }                      site `at` has built its bridge
+//   { type: "placed", blueprint, count? }      a site for `blueprint` stands on the island, or the
+//        building it became: placed with the Build tool, or there from the start
+//   { type: "constructed", blueprint, count? } a `blueprint` building stands, finished on its site
 //   { type: "reached", robot, at }             robot stands at place `at`, not on its way
 //   { type: "holds", robot, item, count }      robot has at least `count` of `item` in its basket
 //   { type: "delivered", to, item?, by?, count, load?, exact?, noWait? }
@@ -65,6 +68,8 @@ import { isAt, thing } from "./things.js";
 // Each goal's measure: a number its count is about (1 or 0 for yes or no).
 const MEASURES = {
   built: (world, g) => (thing(world, g.at)?.built === true ? 1 : 0),
+  placed: (world, g) => world.entities.filter((e) => e.type === g.blueprint || (e.type === "site" && e.blueprint === g.blueprint)).length,
+  constructed: (world, g) => world.entities.filter((e) => e.type === g.blueprint).length,
   reached: (world, g) => {
     const r = thing(world, g.robot);
     return r?.kind === "robot" && r.action?.type !== "move" && isAt(world, r, g.at) ? 1 : 0;
@@ -91,6 +96,8 @@ export const GOALS = Object.keys(MEASURES);
 // What each type of goal must name, and may.
 const FIELDS = {
   built: [["at"], []],
+  placed: [["blueprint"], ["count"]],
+  constructed: [["blueprint"], ["count"]],
   reached: [["robot", "at"], []],
   holds: [["robot", "item"], ["count"]],
   delivered: [["to", "count"], ["item", "by", "load", "exact", "noWait"]],

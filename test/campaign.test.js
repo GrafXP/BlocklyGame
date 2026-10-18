@@ -8,6 +8,8 @@ import { missionById } from "../src/content/missions/index.js";
 import { program as write } from "../src/content/missions/write.js";
 import { COMPILER_VERSION } from "../src/programming/compiler.js";
 import { giveDraft, programDoc, sameBlocks, setDraft } from "../src/programming/programs.js";
+import { goalProgress } from "../src/sim/objectives.js";
+import { checkPlacement } from "../src/sim/placement.js";
 import { stateHash } from "../src/sim/replay.js";
 import { checkWorld } from "../src/sim/validate.js";
 import { SIM_VERSION } from "../src/sim/world.js";
@@ -54,20 +56,20 @@ test("every mission played from its start by its reference solution gives the re
   }
 });
 
-test("its missions are chapters 1–5 so far, the foundation, numbered on the main path", () => {
-  assert.deepEqual(ids(CAMPAIGN), Array.from({ length: 25 }, (_, i) => `c2-m${String(i + 1).padStart(3, "0")}`));
+test("its missions are chapters 1–6 so far, the foundation and construction, numbered on the main path", () => {
+  assert.deepEqual(ids(CAMPAIGN), Array.from({ length: 30 }, (_, i) => `c2-m${String(i + 1).padStart(3, "0")}`));
   assert.deepEqual(
     CAMPAIGN.map((m) => [m.n, m.chapter, m.main]),
-    Array.from({ length: 25 }, (_, i) => [i + 1, Math.floor(i / 5) + 1, true]),
+    Array.from({ length: 30 }, (_, i) => [i + 1, Math.floor(i / 5) + 1, true]),
   );
   assert.deepEqual(
     CHAPTERS.map((c) => [c.chapter, ids(c.missions)]),
-    [1, 2, 3, 4, 5].map((n) => [n, ids(CAMPAIGN.slice((n - 1) * 5, n * 5))]),
+    [1, 2, 3, 4, 5, 6].map((n) => [n, ids(CAMPAIGN.slice((n - 1) * 5, n * 5))]),
   );
   for (const m of CAMPAIGN) assert.equal(missionById(m.id), m);
   assert.deepEqual(
     CAMPAIGN.filter((m) => m.milestone).map((m) => m.n),
-    [5, 10, 15, 20, 25],
+    [5, 10, 15, 20, 25, 30],
   );
   assert.deepEqual(
     CAMPAIGN.filter((m) => m.unlocks).map((m) => [m.n, m.unlocks]),
@@ -78,11 +80,17 @@ test("its missions are chapters 1–5 so far, the foundation, numbered on the ma
   );
 });
 
-test("the child writes the program: a Build mission's starts with its start block alone; a Repair or Change mission's with a whole program", () => {
+test("the child writes the program: a Build mission's starts with its start block alone; a Repair or Change mission's with a whole program; an Explore mission needs none", () => {
   const kinds = Object.fromEntries(CAMPAIGN.map((m) => [m.n, m.workspace]));
-  const repairs = [4, 8, 10];
-  assert.deepEqual(kinds, Object.fromEntries(CAMPAIGN.map((m) => [m.n, repairs.includes(m.n) ? "repair" : m.n === 9 ? "change" : "build"])));
+  const other = { 4: "repair", 8: "repair", 9: "change", 10: "repair", 26: "explore", 28: "explore", 29: "repair" };
+  assert.deepEqual(kinds, Object.fromEntries(CAMPAIGN.map((m) => [m.n, other[m.n] ?? "build"])));
   for (const m of CAMPAIGN) {
+    if (m.workspace === "explore") {
+      assert.equal(m.focus, null, `${m.id} has no focus program`);
+      assert.deepEqual(m.reference.programs ?? {}, {}, `${m.id}'s reference writes no program`);
+      assert.ok(m.reference.commands.every((c) => c.type === "place"), `${m.id}'s reference places a building`);
+      continue;
+    }
     const focus = m.programs.find((p) => p.id === m.focus);
     const tops = focus.source.blocks.blocks;
     assert.equal(tops.length, 1, `${m.id} has one stack: no loose blocks lie ready`);
@@ -97,14 +105,20 @@ test("every mission stands alone: the island's base and its own setup, nothing o
   for (const m of CAMPAIGN) {
     const { world, library } = missionStart(m);
     assert.deepEqual(checkWorld(world), [], `${m.id}'s start`);
-    assert.deepEqual(things(world), ["camp", "grove", "r1", ...(m.setup.add ?? [])].sort(), `${m.id}: the base and what its setup adds`);
+    assert.deepEqual(things(world), ["camp", "grove", "r1", ...(m.setup.add ?? []), ...(m.setup.plots ?? [])].sort(), `${m.id}: the base and what its setup adds`);
     assert.deepEqual(ids(library.programs), ids(m.programs).sort(), `${m.id}'s library: its own programs alone`);
-    assert.ok(world.entities.some((e) => e.own === m.focus), `${m.id}'s focus program is run`);
+    if (m.focus) assert.ok(world.entities.some((e) => e.own === m.focus), `${m.id}'s focus program is run`);
     assert.equal(byId(world, "site")?.built ?? false, m.n > 15, `${m.id}: the bridge is open after mission 15`);
     assert.deepEqual(copy(world), copy(missionStart(m).world), `${m.id} starts the same every time`);
   }
   assert.deepEqual(byId(missionStart(mission("c2-m003")).world, "r1").store.items, { wood: 1 }, "mission 3 starts with the wood");
   assert.deepEqual(byId(missionStart(mission("c2-m004")).world, "r1").store.items, {}, "and mission 4 without");
+  const plot = byId(missionStart(mission("c2-m027")).world, "workshop");
+  assert.deepEqual(
+    [plot.type, plot.blueprint, plot.built, plot.store.caps, plot.store.items, plot.name],
+    ["site", "workshop", false, { plank: 4, stone: 2 }, {}, { key: "entity.workshopSite" }],
+    "mission 27's workshop is its construction site, waiting for its bill",
+  );
 });
 
 // --- The map ------------------------------------------------------------------------------
@@ -118,19 +132,19 @@ test("each mission needs the one before it on the main path, and opens once that
   assert.equal(firstOpen([]).id, "c2-m001");
   assert.equal(firstOpen(["c2-m001", "c2-m002"]).id, "c2-m003");
   assert.equal(nextMission(mission("c2-m004"), ["c2-m001", "c2-m002", "c2-m003"]).id, "c2-m005");
-  assert.equal(nextMission(mission("c2-m025"), ids(CAMPAIGN)), null, "the last one built has no next yet");
+  assert.equal(nextMission(mission("c2-m030"), ids(CAMPAIGN)), null, "the last one built has no next yet");
   assert.equal(nextMission(mission("c2-m002"), ids(CAMPAIGN).filter((id) => id !== "c2-m001")).id, "c2-m001", "one left undone before it comes next");
 });
 
 test("a requirement on a mission not built yet stands for the last one built below it, until it's built", () => {
   assert.equal(gateOf("c2-m003"), "c2-m003");
-  assert.equal(gateOf("c2-m060"), "c2-m025", "workshops A and B wait for 60: today, for 25");
-  assert.equal(gateOf("c2-m085"), "c2-m025");
+  assert.equal(gateOf("c2-m060"), "c2-m030", "workshops A and B wait for 60: today, for 30");
+  assert.equal(gateOf("c2-m085"), "c2-m030");
   assert.throws(() => gateOf("c2-a01"), /isn't a main-path mission/);
   // A workshop lesson after 60, as the plan has it.
   const lesson = { id: "c2-a01", main: false, requires: ["c2-m060"], blocks: ["variables_set"] };
-  assert.deepEqual(gatesOf(lesson), ["c2-m025"]);
-  assert.equal(isOpen(lesson, ids(CAMPAIGN).slice(0, 24)), false);
+  assert.deepEqual(gatesOf(lesson), ["c2-m030"]);
+  assert.equal(isOpen(lesson, ids(CAMPAIGN).slice(0, -1)), false);
   assert.equal(isOpen(lesson, ids(CAMPAIGN)), true);
   assert.ok(unlockedBlocks(lesson).includes("controls_repeat_ext"), "it offers what the main path taught");
   assert.ok(!unlockedBlocks(mission("c2-m025")).includes("variables_set"), "and its blocks don't reach the main path");
@@ -278,6 +292,67 @@ test("missions 24 and 25: the planks alone leave the workshop waiting for its st
   const world = playWith("c2-m025", { "c2-m025": once });
   assert.equal(world.mission.done, null);
   assert.equal(world.mission.tally.made["workshop|kit"], 1);
+});
+
+test("a site counts as placed once it stands, and as constructed only once it's the building", () => {
+  const placed = { id: "p", type: "placed", blueprint: "workshop" };
+  const constructed = { id: "c", type: "constructed", blueprint: "workshop" };
+  const at = (id) => missionStart(mission(id)).world;
+  assert.deepEqual([goalProgress(at("c2-m026"), placed).have, goalProgress(at("c2-m027"), placed).have, goalProgress(at("c2-m027"), constructed).have], [0, 1, 0]);
+  const m = mission("c2-m027");
+  const { world, library } = missionStart(m);
+  playMission(world, referenceCommands(world, library, m), m.steps);
+  assert.deepEqual([goalProgress(world, placed).have, goalProgress(world, constructed).have, byId(world, "workshop").type], [1, 1, "workshop"]);
+});
+
+test("mission 26: nothing placed, nothing done; a workshop can't stand where it blocks the way, and placed where it fits, the mission is done", () => {
+  const m = mission("c2-m026");
+  const { world } = missionStart(m);
+  assert.ok(checkPlacement(world, { blueprint: "workshop", x: 9, z: 16, facing: "south" }).problem, "not on the camp");
+  playMission(world, [{ type: "place", blueprint: "workshop", x: 9, z: 16, facing: "south", program: null }], 10);
+  assert.equal(world.mission.done, null);
+  assert.ok(!byId(world, "workshop"), "the command was refused");
+  playMission(world, m.reference.commands, world.tick + 10);
+  assert.notEqual(world.mission.done, null);
+  assert.equal(byId(world, "workshop").type, "site");
+});
+
+test("mission 27: the planks alone leave the site waiting for its stone", () => {
+  const planks = write("c2-m027", (p) => p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload()))));
+  const world = playWith("c2-m027", { "c2-m027": planks });
+  assert.equal(byId(world, "workshop").pending.reason.code, "wait.item");
+  assert.equal(world.mission.done, null);
+});
+
+test("mission 28: Robo 1 has no job until the site is placed; then it brings the bill and the site builds", () => {
+  const m = mission("c2-m028");
+  const { world } = missionStart(m);
+  assert.equal(byId(world, "r1").runtime, null);
+  playMission(world, [], 30);
+  assert.deepEqual([world.mission.trial, world.mission.done], [0, null], "nothing happens before it's placed");
+  playMission(world, m.reference.commands, world.tick + 5);
+  assert.equal(world.mission.trial, 1, "placed: the first trial is passed");
+  assert.equal(byId(world, "r1").own, "c2-m028-courier");
+  playMission(world, [], world.tick + m.steps);
+  assert.notEqual(world.mission.done, null);
+});
+
+test("mission 29: its job takes the pieces back to the camp, and the site waits for them", () => {
+  const world = playWith("c2-m029");
+  assert.equal(world.mission.done, null);
+  assert.deepEqual(byId(world, "camp").store.items, { plank: 4, stone: 2 });
+  assert.equal(byId(world, "workshop").pending.reason.code, "wait.item");
+});
+
+test("mission 30: the kit's pieces can't go in before the workshop is built; the workshop's bill alone makes no kit", () => {
+  const buildOnly = write("c2-m030", (p) =>
+    p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload()), p.go("quarry"), p.repeat(2, p.collect("stone")), p.go("workshop"), p.unload())),
+  );
+  const world = playWith("c2-m030", { "c2-m030": buildOnly });
+  assert.equal(byId(world, "workshop").type, "workshop");
+  assert.equal(world.mission.goals.find((g) => g.id === "workshop").done !== null, true);
+  assert.equal(world.mission.done, null, "no kit");
+  assert.equal(byId(world, "workshop").pending.reason.code, "wait.item", "the workshop waits for the kit's pieces");
 });
 
 // --- The help keeps the child's draft --------------------------------------------------------

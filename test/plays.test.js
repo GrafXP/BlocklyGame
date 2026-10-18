@@ -271,3 +271,18 @@ test("a reference solution is applied as the editor applies programs: a publish 
   );
   assert.equal(world.entities.find((e) => e.id === "site").own, "c2-m015", "the construction site's program");
 });
+
+test("a mission that's about placing offers its blueprint and the Build tool, and placing does it", () =>
+  withStorage(async () => {
+    saveCampaignAt("c2-m026");
+    const session = await reload();
+    const play = session.usePlay("campaign");
+    assert.equal(play.mission.id, "c2-m026");
+    assert.deepEqual(session.rules().tools, ["library", "build"]);
+    assert.deepEqual(session.blueprints(), [{ blueprint: "workshop", program: null }]);
+    assert.equal(session.placeBuilding({ blueprint: "workshop", x: 9, z: 16, facing: "south" }), false, "not on the camp");
+    assert.equal(session.placeBuilding({ blueprint: "workshop", x: 24, z: 16, facing: "south" }), true);
+    play.game.step();
+    assert.notEqual(play.game.world.mission.done, null);
+    assert.equal(session.savePlay(), true);
+  }));

@@ -477,6 +477,9 @@ const CAMPAIGN_STATES = [
   // and a robot on its way across the bridge.
   { mission: "c2-m024", chosen: "workshop", stuck: true, hints: 2 },
   { mission: "c2-m021", chosen: "r1", steps: 40 },
+  // Construction: a briefing with trials, and a construction site chosen.
+  { mission: "c2-m028", briefing: true },
+  { mission: "c2-m030", chosen: "workshop", hints: 1 },
 ];
 
 // The title page with the campaign saved at mission 6, every mission done so

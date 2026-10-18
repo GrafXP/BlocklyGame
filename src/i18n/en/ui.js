@@ -18,7 +18,7 @@ export default {
   "home.play": "Play",
   // The button once the missions have begun: the mission they're at.
   "home.continue": "Mission {n}: {title}",
-  "home.playNote": "Twenty-five missions so far, from a first instruction to the island's first workshop.",
+  "home.playNote": "Thirty missions so far, from a first instruction to a workshop you build yourself.",
   // How far the mission got, when it's saved on this device.
   "home.saved": "Saved at step {tick}.",
   "home.completed": "Done!",
@@ -423,6 +423,10 @@ export default {
   // A goal of making none at all: {have} made so far.
   "goal.madeNone": "{place} · {item} made: {have}, and none are wanted",
   "goal.built": "{place} builds the bridge",
+  // A building's construction site placed on the island, and the building
+  // finished there: {building} is its name, such as Workshop.
+  "goal.placed": "{building}: its site placed",
+  "goal.constructed": "{building}: built",
   // Keeping a number on a shelf: {have} now, {need} to keep.
   "goal.steady": "{place} · {item}: {have}, keep it at {need}",
   // What a robot remembers in a variable: {have} now, {need} once it's done.
@@ -443,6 +447,7 @@ export default {
   "chapter.3": "A Working Island",
   "chapter.4": "Look Before You Act",
   "chapter.5": "One Helper, Useful Jobs",
+  "chapter.6": "Make Room to Grow",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",

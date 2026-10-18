@@ -4,6 +4,8 @@ import { insertById, makeThing } from "./content.js";
 import { SETTINGS, TYPES } from "./entities.js";
 import { count, makeStore, room, setCount } from "./inventory.js";
 import { walkable } from "./navigation.js";
+import { placedName } from "./placement.js";
+import { RECIPES } from "./recipes.js";
 import { areaCells, cellAt, setKind } from "./terrain.js";
 import { thing } from "./things.js";
 
@@ -21,6 +23,8 @@ import { thing } from "./things.js";
 // A stage is plain data, as content writes it; each part is optional:
 //
 //   { add: [id, …]                    things from the island's catalogue that arrive
+//     plots: [id, …]                  buildings from the catalogue that arrive as their
+//                                     construction site, to be built (missions 27–30)
 //     open: [site, …]                 bridges that are there by now, built or not
 //     stock: { at: { item: n } }      a store's exact count of each item
 //     room: { at: { item: n } }       room for at least n more of each item
@@ -114,6 +118,11 @@ export function stage(world, spec, things = []) {
     const given = things.find((t) => t.id === id);
     if (!given) throw new Error(`stage: no ${id} in the catalogue`);
     addThing(world, given);
+  }
+  for (const id of spec.plots ?? []) {
+    const given = things.find((t) => t.id === id);
+    if (!given || !RECIPES[given.type]?.builds) throw new Error(`stage: no building ${id} in the catalogue to build`);
+    addThing(world, { ...given, type: "site", blueprint: given.type, name: placedName(given.type, 1, true), items: undefined, caps: { ...RECIPES[given.type].inputs } });
   }
   for (const id of spec.open ?? []) openBridge(world, id);
   for (const [at, counts] of entries(spec.stock)) {

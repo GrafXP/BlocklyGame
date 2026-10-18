@@ -206,12 +206,12 @@ test("the help offers a start; Starter program goes back to the start block alon
 test("the title page's mission map: stars for the missions done, the one the campaign is at to go on with, the rest locked; with ?dev every one opens on its own", async ({ page }) => {
   await seedCampaign(page, "c2-m005");
   await page.goto("/");
-  await expect(page.locator(".missions .chapter")).toHaveCount(5);
+  await expect(page.locator(".missions .chapter")).toHaveCount(6);
   await expect(page.locator(".missions .chapter-1 h3")).toHaveText("Chapter 1: Hello, Helper!4/5");
   await expect(page.locator(".missions .chapter li.done")).toHaveCount(4);
   await expect(page.locator(".missions .chapter li.done").first()).toContainText("Play again");
   await expect(page.locator(".missions .chapter li.current")).toHaveText(["5Camp Is ReadyYou're here"]);
-  await expect(page.locator(".missions .chapter li.later")).toHaveCount(20);
+  await expect(page.locator(".missions .chapter li.later")).toHaveCount(25);
   await expect(page.locator(".missions .chapter li.later a")).toHaveCount(0);
   await expect(page.locator(".dev-note")).toHaveCount(0);
   await expect(page.locator(".grown-ups")).not.toHaveAttribute("open");
@@ -223,7 +223,7 @@ test("the title page's mission map: stars for the missions done, the one the cam
   await expect(page.locator(".dev-note")).toBeVisible();
   await expect(page.locator(".grown-ups")).toHaveAttribute("open");
   await expect(page.locator(".missions .chapter li.later")).toHaveCount(0);
-  await expect(page.locator(".missions .chapter li.open")).toHaveCount(20);
+  await expect(page.locator(".missions .chapter li.open")).toHaveCount(25);
   await page.locator('.missions .chapter li[value="12"]').getByRole("link", { name: "Try it" }).click();
   await ready(page);
   await expect(page).toHaveURL(/\/replay\?mission=c2-m012&dev$/);
@@ -309,4 +309,21 @@ test("in mission 15 the child writes the construction site's program, while the 
   expect(await solveMission(page)).toBeLessThanOrEqual(600);
   await expect(page.locator(".win .win-reward")).toHaveText("The bridge is open! Robo 2 is crossing the stream to fetch stone. Free play is open too.");
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "site").built)).toBe(true);
+});
+
+test("in mission 26 the Build tool places the workshop's site, which shows the bill it still needs; that's the mission done", async ({ page }) => {
+  await seedCampaign(page, "c2-m026");
+  await page.goto("/play?dev");
+  await ready(page);
+  await openDrawer(page, "mission");
+  await expect(page.getByRole("button", { name: "Open the program" })).toHaveCount(0);
+  await expect(page.locator(".mission-card .goal")).toHaveText(["Workshop: its site placed"]);
+  await page.locator('[data-build="open"]').click();
+  await island(page, () => window.islandPage.aimAt(25, 17));
+  await expect(page.locator(".build-why")).toHaveText("It fits here. Robots bring what the construction site needs: 2 stones, 4 planks.");
+  await page.locator('[data-build="place"]').click();
+  await island(page, () => window.islandPage.game.step());
+  await frames(page);
+  await expect(page.locator(".win .win-reward")).toHaveText("The workshop has its site! Tap it to see the pieces it still needs.");
+  expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "workshop").type)).toBe("site");
 });

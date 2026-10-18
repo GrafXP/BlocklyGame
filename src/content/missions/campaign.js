@@ -3,6 +3,7 @@ import { CHAPTER_2 } from "./chapter2.js";
 import { CHAPTER_3 } from "./chapter3.js";
 import { CHAPTER_4 } from "./chapter4.js";
 import { CHAPTER_5 } from "./chapter5.js";
+import { CHAPTER_6 } from "./chapter6.js";
 
 // The campaign (PLAN.md §9; docs/campaign-planv2.md): 105 missions in 21
 // chapters on the main path, and 15 lessons in three optional workshops, built
@@ -59,6 +60,7 @@ const CHAPTERS_BUILT = [
   [3, CHAPTER_3],
   [4, CHAPTER_4],
   [5, CHAPTER_5],
+  [6, CHAPTER_6],
 ];
 
 const ID = /^c2-(m|a)(\d+)$/;

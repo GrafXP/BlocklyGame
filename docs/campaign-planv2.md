@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1 and 2, the v2 infrastructure and the foundation (missions 01–25), are implemented, and v2 replaced v1 as the game's campaign the same day; the rest is proposed
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -1629,7 +1629,7 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 
 ### Rollout alongside v1
 
-*As built:* v2 was played at `/play2` alongside v1 for phases 1 and 2. On 18 October 2026, with the game still in development, v2 replaced v1 at `/play` at once, rather than waiting for the switch-over below: v1's 40 missions, their words and their tests were removed, `/play2` with them, and saves of v1 are let go rather than credited (a save that can't be read starts the campaign afresh). Until phases 3 and 4, the campaign has no lessons for teams, settings and copies (81–84), memory and blocks of one's own (workshops A and B), or messages (workshop C); the engine and the free island (`/island`) still have all of them, and their browser tests run there. Free play's settings tool waits for mission 82.
+*As built:* v2 was played at `/play2` alongside v1 for phases 1 and 2. On 18 October 2026, with the game still in development, v2 replaced v1 at `/play` at once, rather than waiting for the switch-over below: v1's 40 missions, their words and their tests were removed, `/play2` with them, and saves of v1 are let go rather than credited (a save that can't be read starts the campaign afresh). Until phases 3 and 4, now the last, the campaign has no lessons for teams, settings and copies (81–84), memory and blocks of one's own (workshops A and B), or messages (workshop C); the engine and the free island (`/island`) still have all of them, and their browser tests run there. Free play's settings tool waits for mission 82.
 
 The plan as it was: v1 stays the campaign at `/play` until v2 has everything v1 teaches. v2 is played at `/play2`, a campaign with its own save and progress, listed with the prototypes on the title page; replaying one of its missions uses the replay v1 uses. Free play and the sandbox open when either campaign has reached them.
 
@@ -1643,16 +1643,16 @@ The first time a device opens v2, the v1 progress on it is credited through the 
 | --- | --- | --- | --- |
 | 1 | v2 infrastructure; chapters 1–2 (01–10) | None: content and campaign code | Implemented 18 October 2026 |
 | 2 | Chapters 3–5 (11–25) | None | Implemented 18 October 2026; v2 replaced v1 the same day |
-| 3 | Missions 81–84; workshops A and B (A01–A10) | None; interim gates | |
-| 4 | Workshop C (A11–A15) | None; interim gate for 85 | |
-| 5 | Chapter 6 (26–30) | Building-finished and placement goals | |
+| 5 | Chapter 6 (26–30) | Goals for a placed site and a finished building; catalogue buildings staged as construction sites; missions that offer the Build tool | Implemented 18 October 2026 |
 | 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | |
 | 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | |
 | 8 | Chapters 15–16 (71–80) | Gold, forge, lab, improvements | |
 | 9 | Chapters 13–14 (61–70) | Sides, shields, Guard and Advance, repair and reboot, paid guards | |
 | 10 | Chapters 18–21 (86–105) | Population, the opponent, matches and presets, safe edits | |
+| 3 | Missions 81–84; workshops A and B (A01–A10) | None; interim gates | |
+| 4 | Workshop C (A11–A15) | None; interim gate for 85 | |
 
-Phases 8 and 9 can swap, as either route after 60 can come first. A phase is done when its missions pass `npm run verify:missions` in English and German, with a test for each lesson's deliberate mistake.
+Phases 3 and 4 were moved to the end on 18 October 2026, once v2 had replaced v1: the main path's economy comes first, and the team lessons and the workshops follow it, in their final places behind 80, 60 and 85. Phases 8 and 9 can swap, as either route after 60 can come first. A phase is done when its missions pass `npm run verify:missions` in English and German, with a test for each lesson's deliberate mistake.
 
 ## Playtest gates
 

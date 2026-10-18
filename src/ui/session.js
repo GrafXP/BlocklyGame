@@ -166,7 +166,7 @@ function savedPlay(key, fresh) {
     return p;
   }
   const mission = read.mission ? missionById(read.mission) : null;
-  const content = key === "slice" ? SLICE.content : key === "free" ? freeContent() : {};
+  const content = key === "slice" ? SLICE.content : key === "free" ? freeContent() : missionContent(mission);
   const p = { ...playOf(key, mission, content, read.library, read.world), checkpoint: read.checkpoint, progress: read.progress };
   // Applies that were waiting for the next tick when the game was saved wait
   // again (saves.js).
@@ -237,8 +237,12 @@ export function newGame() {
 // the player's language; `progress` the campaign's so far.
 function missionPlay(key, mission, progress = { completed: [] }) {
   const { world, library } = missionStart(mission, { word: display });
-  return { ...playOf(key, mission, {}, library, world), progress: { completed: [...progress.completed] } };
+  return { ...playOf(key, mission, missionContent(mission), library, world), progress: { completed: [...progress.completed] } };
 }
+
+// What a play of mission `mission` offers to place: the buildings it lets the
+// player place, each with the program its construction site starts with.
+const missionContent = (mission) => (mission?.blueprints ? { blueprints: mission.blueprints } : {});
 
 // The campaign's progress, in this visit or saved: { mission, done, completed,
 // saved }: the mission it's at, whether that one is done, every mission done at
