@@ -1,27 +1,56 @@
 # BlocklyBots: campaign plan v2
 
-17 October 2026 · Ages 7–9 · Proposed content specification, not implemented
+18 October 2026 · Ages 7–9 · Proposed content specification, not implemented
 
-This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **100 main-path missions in twenty chapters, plus 15 optional programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
+This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
-Missions 1–25 retain the original programming foundation. The continuation teaches construction, all six resource families, physical supply networks, paid robot assembly, guards, recovery, improvements, and strategy. The original memory, custom-block, and message lessons become optional workshops A01–A15. They remain proper lessons with their own milestones; they are not prerequisites for playing skirmish.
+The early campaign centres on **one robot, one building, or one visible delivery at a time**. Missions 1–25 teach instructions, loops, decisions, and concrete material handling. Shared programs, per-robot settings, shared edits, and individual copies move from missions 21–24 to **81–84**, after the full peaceful economy. Mission 85 introduces reasoning about another helper's incoming delivery. The message workshop moves from an after-25 option to **an optional continuation after 85**. Children can build and enjoy a complete peaceful settlement before learning team management or communication.
+
+Most lessons ask the child to write a complete small program from a clear task description. Prepared code is reserved for deliberate repair/change lessons and background work outside the learning task. Pictures, block explanations, and optional examples provide support while leaving the programming decisions to the child.
+
+The continuation still teaches construction, all six resource families, physical supply networks, paid robot assembly, guards, recovery, improvements, and strategy. Memory and custom blocks remain optional workshops after 60, taught without shared-job prerequisites. Adding five late team lessons makes room for concrete practice early; it does not compress the economy or guard lessons. The 105 main-path missions and 15 workshop lessons are destinations to return to over time, not an expectation that every 7–9-year-old must complete them.
 
 This document specifies the proposed v2 campaign. It does not renumber the implemented campaign, change its saves, or claim that skirmish features already exist. [PLAN.md](../PLAN.md) and the original campaign remain the record of the current release until v2 is implemented. The skirmish plan owns shared economy and combat mechanics; this plan owns their teaching sequence. Any unresolved shared rule must be settled before its dependent mission is authored.
 
 ## Learning and pacing
 
 - A mission introduces **one main idea**. A new resource name, a recipe, a new interface, and a new programming structure each consume attention. Do not introduce all four together.
-- Use a repeating progression: watch or fill one gap → change a working example → diagnose one visible fault → combine familiar jobs. Projects supply working programs for everything outside the lesson's focus.
-- Missions 1–5 aim for 3–6 minutes, ordinary lessons for 5–10, and production projects for 10–15. Full matches may take 15–25 minutes of running play plus unlimited paused thinking time. These are targets to validate with children, not deadlines.
+- **The child writes the focus program.** Most missions begin with only When Started in that workspace. Explain the job, the available materials, and the relevant rule in the briefing; let the child choose blocks and put them in order. A short demonstration of a new block lives beside the workspace and does not insert a solution. Familiar travel, unloading, loops, and conditions are no longer filled in by default.
+- **One editable program through mission 40.** The child controls one robot or building in each lesson. Other workers may demonstrate a familiar action, but their programs already work, use explicit places, and need no assignment, settings, synchronization, or repair. Show the selected worker's immediate input and output first; a whole-chain overview is optional.
+- **Separate a busy world from managing a team.** Through 80, supplied support jobs belong to individual entities; changing the focus program affects only that entity. Use literal source/item/destination choices in blocks, not `my Source` settings or a shared library. From 41, a project may offer a second independent edit in a separate pictured step, after the first outcome is understood. Do not make children trace several instruction pointers or decide who waits for whom to pass these lessons.
+- **Delay communication deliberately.** Team tools first appear in 81–85, on a small peaceful island with familiar goods. Messages, inboxes, request/reply, and cross-program waiting appear only in workshop C after 85. Stock waits and supplied production support suffice everywhere on the main path; communication is never a sandbox or skirmish prerequisite.
+- Use a repeating progression: learn a block's meaning → write a small program → test or repair → solve a fresh task with familiar blocks. Keep prepared faulty programs for actual debugging lessons and working programs when the lesson is specifically about changing or sharing one. Chapter projects ask children to author a complete useful job. Background programs handle only work outside the stated learning task.
+- Missions 1–5 aim for 3–6 minutes, ordinary lessons for 5–10, and small production projects for 10–15. The full bootstrap in 102 is a project across several sessions, with a save after each building stage. Full matches may take 15–25 minutes of running play plus unlimited paused thinking time. Validate these targets with children writing the programs, including time spent reading or hearing the briefing; they are not deadlines.
 - One or two missions make a session. Save inside projects and matches; a child never has to finish a chapter or match in one sitting.
 - Most immediate orders use 1–4 pictured items. Larger construction bills and multi-stage chains use grouped recipe pictures and visible deliveries, not mental arithmetic exercises.
 - Give each mission one visible main outcome. Authoring checks may inspect several contributing events, but the child sees a single order, reserve, building, protected route, or match objective.
 - Introduce Pause, Step, and Next block early and reuse them throughout. Opening the editor pauses the whole world, including production, the opponent, combat, and recovery.
 - Offer a short prediction before Run and an explanation after success. Pointing and speaking count; neither reading fluency nor typing is the programming test.
-- No speed medals, block-count requirements, hint penalties, lost lives, or surprise attacks during a first encounter. A longer chain is not permission to remove scaffolding.
+- No speed medals, block-count requirements, hint penalties, lost lives, or surprise attacks during a first encounter. Keep pictures, readable instructions, Pause, and optional help as programs become more independent.
 - Combat uses playful pulses and shield segments. Let children stay in peaceful economy play. Combat lessons can be revisited with demonstrations and generous Practice settings.
 
-Every mission stands alone. Its island, stock, robots, programs, settings, improvements, and opponent state are authored for that mission; nothing depends on the child's previous solution. “Use the plan again” means supplying a fresh mission-owned example. Restart keeps this mission's edits and drafts while restoring its world; Back to starter is a separate choice. Progress records completion and unlocks, not a settlement carried into the next lesson.
+Every mission stands alone. Its island, stock, robots, programs, settings, improvements, and opponent state are authored for that mission; nothing depends on the child's previous solution. Reusing a familiar idea means writing it again in the current mission, unless a Change or Repair card explicitly provides an example. Restart keeps this mission's edits and drafts while restoring its world; Back to starter restores its declared starting workspace, usually just When Started. Progress records completion and unlocks, not a settlement carried into the next lesson.
+
+### Mission descriptions and optional help
+
+Each mission opens with a short briefing, normally two or three short sentences: **what to achieve, where the useful things are, and the rule that matters**. Name the robot or building to program. Put quantities beside item pictures and mark named places on the island. Explain new block behavior in ordinary language, including whether an action waits or repeats. A first-use explanation may name its block, but the normal briefing does not dictate a block-by-block solution or point to a preselected empty socket.
+
+Keep the goal sentence visible while the child edits. The remaining context can be replayed as speech and reread without opening a hint. Show larger orders as a few pictured stages so better explanations do not become a wall of text. Children should be able to describe the intended result before opening the toolbox; reading fluency and remembering a long spoken list are not prerequisites.
+
+Use four explicit workspace types in the cards below:
+
+| Workspace | What is present when the lesson opens | When to use it |
+| --- | --- | --- |
+| Build | Only When Started in the focus program; blocks are in the toolbox, with no connected actions, loop shells, condition gaps, or ordered loose stacks | Default for authoring a delivery, production rule, guard behavior, or project job; empty named procedure definitions may accompany their first workshop lesson |
+| Repair | A complete but faulty program, with its symptom described and the answer unmarked | When finding and fixing a fault is the learning objective |
+| Change | A working program needed for the specific comparison, shared edit, or live-edit lesson | Explain what must change and what outcome to check; do not turn an ordinary authoring lesson into a one-gap exercise |
+| Explore | A placement, inspection, assignment, or recovery fixture with no new code required | When the lesson teaches that interface or world behavior rather than programming |
+
+The current cards use **Build for 81 of 105 main missions**. The other 24 are 12 Repair, six Change, and six Explore lessons with specific reasons for prepared code. Ten of the fifteen workshop lessons also use Build. Check this balance when adding lessons; a source dropdown or a missing loop block is not a substitute for authoring a familiar job.
+
+An already working building or courier may remain as **background support**. The card must identify it and say what the child authors. Do not prefill the focus job just because other parts of the island are complex. Through 80, background programs remain independent, so reducing prepared code does not bring team management forward again.
+
+Help is available from the start but opens only when requested: **Look** identifies useful evidence, **Think** explains a relevant relationship, **Try** shows a small fragment, and **Show me** opens a worked example separately. Inserting an example requires the child's explicit choice and preserves their draft. There is no forced failed attempt, automatic solution reveal, or loss of reward for using help. Author reference solutions are for validation and optional examples, not default player programs.
 
 ## Chapter map
 
@@ -29,41 +58,44 @@ Every mission stands alone. Its island, stock, robots, programs, settings, impro
 | --- | --- | --- | --- |
 | 1. Hello, Helper! | 01–05 | Instructions, order, observing and repairing | Camp receives its first wood |
 | 2. Do It Again | 06–10 | Repeat, loop boundaries, two basket spaces | Reliable repeated deliveries |
-| 3. A Working Island | 11–15 | Building programs, Pick Up, concurrent jobs, Forever | Bridge opens; basic free play |
+| 3. A Working Island | 11–15 | Make, Pick Up, one delivery into a building, Forever | Bridge opens; basic free play |
 | 4. Look Before You Act | 16–20 | Stock, If/Else, Wait Until, feedback | A useful reserve |
-| 5. Give Everyone a Job | 21–25 | Shared programs, settings, copies, kit recipe | First kits; original sandbox milestone |
+| 5. One Helper, Useful Jobs | 21–25 | Stone, mixed baskets, pictured recipes, deliveries in stages | First kits; expanded solo sandbox |
 | 6. Make Room to Grow | 26–30 | Placement, construction bills, local materials, access | Build and use a workshop |
 | 7. Water Makes Things Grow | 31–35 | Spring versus well, water deliveries, farms | A working food chain |
 | 8. Energy for More Helpers | 36–40 | Charge packs, paid helper assembly, recovery | First settlement economy |
-| 9. Supply What Is Needed | 41–45 | Inspectable Supply, sources, demand, room, incoming goods | A dependable supplier team |
+| 9. Supply What Is Needed | 41–45 | One helper's Supply, sources, finite orders, shelf room | A dependable supplier |
 | 10. Materials for Industry | 46–50 | Stone blocks, charcoal, sharing wood, advanced construction | A supplied industrial district |
 | 11. From Ore to Iron | 51–55 | Ore, three-input smelting, tracing shortages | Reliable iron bars |
-| 12. Keep the Factory Flowing | 56–60 | Recipe readiness, batch targets, competing consumers, buffers | Balanced working industry |
+| 12. Keep the Factory Flowing | 56–60 | Recipe readiness, batch targets, one missing route, buffers | Working industry with supplied support |
 | 13. Meet the Guards | 61–65 | Guard, Advance, free repair, repeated danger decisions | A guard that returns safely |
-| 14. A Team That Recovers | 66–70 | Reboot, paid guards, job groups, danger sensing | Protect a production route |
+| 14. Back to Work Safely | 66–70 | Reboot, paid guards, individual destinations, danger sensing | Protect a production route |
 | 15. Gold and Clever Parts | 71–75 | Gold, fair smelter scheduling, gears, circuits | All six resource families connected |
 | 16. Improve the Settlement | 76–80 | Bigger baskets, stronger shields, one-time improvements | Peaceful full-economy project |
-| 17. Prepare a Skirmish | 81–85 | Population targets, faster repair, rallying, camp objective, opponent inspection | Understand the match |
-| 18. Play and Recover | 86–90 | Supported matches, setbacks, home/central routes, expansion choices | Win a working-industry match |
-| 19. Manage the Full Economy | 91–95 | Full-economy Practice, bottlenecks, investment, safe editing | A resilient full settlement |
-| 20. Your Island Strategy | 96–100 | Choose, bootstrap, rehearse, debug, play | Full skirmish finale |
-| Workshop A. Remember the Job | A01–A05 | Local variables and counted orders | Optional after 25 |
-| Workshop B. Make Your Own Blocks | A06–A10 | Procedures and one typed input | Optional after 25; independent of A01–A05 |
-| Workshop C. Talk and Work Together | A11–A15 | Individual messages and system projects | Optional after 25; independent of the other workshops |
+| 17. Ready for a Team | 81–85 | Shared programs, settings, shared edits, own copies, incoming deliveries | First deliberately managed helper team |
+| 18. Prepare a Skirmish | 86–90 | Population targets, faster repair, rallying, camp objective, opponent inspection | Understand the match |
+| 19. Play and Recover | 91–95 | Supported matches, setbacks, home/central routes, expansion choices | Win a working-industry match |
+| 20. Manage the Full Economy | 96–100 | Full-economy Practice, bottlenecks, investment, safe editing | A resilient full settlement |
+| 21. Your Island Strategy | 101–105 | Choose, bootstrap, rehearse, debug, play | Full skirmish finale |
+| Workshop A. Remember the Job | A01–A05 | Local variables and counted orders | Optional after 60; no team tools needed |
+| Workshop B. Make Your Own Blocks | A06–A10 | Procedures and one typed input | Optional after 60; independent of A01–A05 |
+| Workshop C. Talk and Work Together | A11–A15 | Individual messages and system projects | Optional after 85; independent of A01–A10 and combat |
 
-The child can stop at several satisfying points. Keep basic free play after 15 and the original sandbox after 25. Add peaceful energy templates after 40, industry after 60, guard practice after 70, and the full peaceful economy after 80. Mission 86 opens First settlement Practice, 90 opens Working industry Practice, and 91 opens Full skirmish Practice. Do not require the finale or optional workshops to revisit those modes. Economy preset and opponent difficulty are separate: the full economy works with Practice; Friendly and Challenge are optional replay choices.
+The child can stop at several satisfying points. Keep basic free play after 15 and an expanded solo sandbox after 25. Add peaceful energy templates after 40, industry after 60, guard practice after 70, and the full peaceful economy after 80. A peaceful template identifies its independent background jobs and offers an empty focus program with a pictured task; a fully working demonstration is a separate choice. Team tools are not needed to enjoy it. After 85, offer shared-job tools and the message workshop as further choices. Mission 91 opens First settlement Practice, 95 opens Working industry Practice, and 96 opens Full skirmish Practice. Do not require the finale or optional workshops to revisit those modes. Economy preset and opponent difficulty are separate: the full economy works with Practice; Friendly and Challenge are optional replay choices.
 
-Missions 01–60 follow the chapter sequence. After 60, offer two chapter routes: guard training 61–70, and peaceful gold/improvements 71–80. Either route can come first. Mission 81 requires both routes; later match chapters proceed in order. Thus a child can unlock the complete peaceful economy without fighting. If the guard route has not been taken, mission 78 supplies a noncombat shield demonstration with recovery and assembly programs already configured; the child edits only the improvement. Completing it does not claim the guard lessons were learned.
+Missions 01–60 follow the chapter sequence. After 60, offer two chapter routes: guard training 61–70, and peaceful gold/improvements 71–80. Either route can come first. Team chapter 81–85 requires 80 and remains peaceful; it does not require guard training. Mission 86 requires both 70 and 85; later match chapters proceed in order. Thus a child can unlock the complete peaceful economy before team management, and later learn messages without fighting. If the guard route has not been taken, mission 78 supplies a noncombat shield demonstration with recovery and assembly programs already configured; the child edits only the improvement. Completing it does not claim the guard lessons were learned.
 
 ```mermaid
 flowchart LR
-    Foundation[01–25: programming foundation] --> Economy[26–60: settlement and industry]
-    Foundation -. optional .-> Workshops[A01–A15: programming workshops]
+    Foundation[01–25: one-worker foundation] --> Economy[26–60: supported settlement and industry]
+    Economy -. optional .-> Workshops[A01–A10: memory and custom blocks]
     Economy --> Guards[61–70: guards and recovery]
     Economy --> Parts[71–80: gold and improvements]
     Parts --> Peaceful[Full peaceful sandbox]
-    Guards --> Matches[81–100: skirmish preparation and play]
-    Parts --> Matches
+    Parts --> Teams[81–85: shared jobs and helper teams]
+    Teams -. optional .-> Messages[A11–A15: messages and team projects]
+    Guards --> Matches[86–105: skirmish preparation and play]
+    Teams --> Matches
 ```
 
 Workshop progress grants no implicit main-path prerequisite and does not enlarge a lesson's default toolbox. Offer advanced blocks in an optional expanded drawer only after the relevant workshop. Replays always use the selected mission's own availability profile.
@@ -88,61 +120,66 @@ The bridge still costs four planks; a workshop building costs four planks and tw
 
 ## Mission cards
 
-Quoted text is draft child-facing copy. Cards specify the learning focus, prepared support, task, completed-world evidence, and an observation prompt. The defaults above apply to every card. Supporting jobs are visible, supplied, and inspectable. No card requires a reference program's exact block layout.
+Quoted text is the draft child-facing briefing, including the task context that previously had to be inferred from a prepared program. Each card declares its starting workspace, learning focus, background support, player-authored work, completed-world evidence, and an optional observation prompt. The defaults above apply to every card. Background jobs are visible and inspectable. No card requires a reference program's exact block layout; new-block demonstrations and hints do not run in the child's workspace automatically.
 
 ### Foundation: missions 01–25
 
-These retain the original campaign's gradual introduction. Each setup is authored afresh, including a basket that deliberately starts with wood or an already opened bridge.
+These adapt the original foundation around one editable worker. Missions 13–15 simplify the first building relationship, and 21–25 replace early team management with stone, baskets, and kit practice. Each setup is authored afresh, including a basket that deliberately starts with wood or an already opened bridge.
 
 ### Chapter 1 — Hello, Helper!
 
 #### 01. Hello, Helper!
 
-“Help Robo 1 find the grove.”
+“Robo 1 is at camp. Give it a Go To instruction to reach the grove, where the trees grow. Press Apply, then Run to try your program.”
 
+- **Workspace:** Build.
 - **Learn:** A block tells a robot what to do.
-- **Setup and support:** One selectable helper, a clearly marked grove, and a fixed `When Started` block. Offer only `Go To`; preselect the grove. Point to Apply and Run in context.
-- **Player task:** Attach the action and run the program.
+- **Setup and support:** One helper at camp and a clearly marked grove. Show the Go To block's place selector and identify Apply and Run without placing an action or choosing the destination.
+- **Player task:** Choose Go To and its grove destination, attach it under When Started, and run.
 - **Success:** Robo 1 reaches the grove's interaction point.
 - **Hint / talk:** “Put the instruction under Start.” Ask the child to point to the place the robot will go before running.
 
 #### 02. One Piece of Wood
 
-“Put one piece of wood in the basket.”
+“Robo 1 is already beside the trees. Use Collect Wood to put one piece in its basket. Watch the basket picture when the action finishes.”
 
+- **Workspace:** Build.
 - **Learn:** An action can change what a robot carries.
-- **Setup and support:** Robo 1 starts at the grove with an empty basket. Show its two basket spaces as pictures. Supply Start and introduce `Collect Wood`.
-- **Player task:** Add Collect and watch one wood appear in the basket.
+- **Setup and support:** Robo 1 starts at the grove with an empty two-space basket. Introduce Collect Wood in the toolbox; other workers are inactive.
+- **Player task:** Write the collection instruction and run it.
 - **Success:** The robot holds one wood after collection completes.
 - **Hint / talk:** “The robot is already beside the wood.” Ask what changed and what did not.
 
 #### 03. Bring It Home
 
-“Bring your wood back to camp.”
+“Robo 1 is at the grove with one wood in its basket. Bring it to camp and leave the wood there. Unload Basket puts carried items into the place where the robot is standing.”
 
+- **Workspace:** Build.
 - **Learn:** Instructions run from top to bottom.
-- **Setup and support:** Start at the grove carrying one staged wood, as pictured in mission 2. Offer `Go To Camp` and the new `Unload Basket`, with two visible spaces in the starter.
-- **Player task:** Put travel before unloading.
+- **Setup and support:** Start at the grove carrying one staged wood. Offer travel and Unload Basket, with a short explanation of unloading; no ordered placeholders appear.
+- **Player task:** Choose and order the travel and unloading actions.
 - **Success:** One wood reaches camp and the robot's basket is empty.
 - **Hint / talk:** “Where must the robot be before it can unload?” Follow the highlight from travel to unloading.
 
 #### 04. The Mixed-Up Instructions
 
-“Something is in the wrong place. Help Robo 1 fix it.”
+“Robo 1 should bring one wood from the grove to camp, but this program gets stuck. Use Step to see where it stops. Change the instructions so the delivery finishes.”
 
+- **Workspace:** Repair.
 - **Learn:** Debugging means noticing what happened and changing a cause.
-- **Setup and support:** A fresh empty robot at camp; a four-action delivery program tries Collect before Go To Grove. Supply every needed block.
-- **Player task:** Predict the first action, use Step to see the problem, then move the misplaced block. Demonstrate Step to Next Block for the corrected walk.
+- **Setup and support:** An empty robot starts at camp with a complete four-action program that tries Collect before Go To Grove. Keep the misplaced action unmarked; the toolbox contains the familiar actions.
+- **Player task:** Inspect the failed action, repair the order, and test the complete delivery. Demonstrate Next block as a navigation control if requested.
 - **Success:** The repaired program delivers one wood without the location error.
 - **Hint / talk:** “Which instruction needs the robot to be at the grove?” Change one thing, then try again.
 
 #### 05. Camp Is Ready
 
-“Bring two pieces of wood for our camp.”
+“Camp needs two pieces of wood. The grove has wood, and your robot can carry two items. Write the whole job, ending with the wood at camp.”
 
+- **Workspace:** Build.
 - **Learn:** Make a complete short sequence independently; no new block.
-- **Setup and support:** Empty basket at camp; a picture strip shows grove, two wood, camp, empty basket. Provide Start and familiar blocks, without placing the sequence for the child.
-- **Player task:** Go to the grove, collect twice, return, and unload. Two separate one-item trips are also valid.
+- **Setup and support:** An empty basket at camp, a reachable grove, and a two-wood order beside camp. Show source and destination on the map, without an ordered action strip.
+- **Player task:** Write a complete collection and delivery program. One full load or two smaller trips are valid.
 - **Success:** Two new wood reach camp.
 - **Hint / talk:** “Tell the robot the whole job.” Reveal a small camp improvement and ask the child to describe their instructions in order.
 
@@ -150,51 +187,56 @@ These retain the original campaign's gradual introduction. Each setup is authore
 
 #### 06. Again, Please!
 
-“Can one Repeat block collect two pieces?”
+“Your robot is already at the grove. Collect two wood and bring them to camp. Repeat runs the instructions inside it as many times as its number says.”
 
+- **Workspace:** Build.
 - **Learn:** Repeat does its inside instructions a chosen number of times.
-- **Setup and support:** Robo 1 starts at the grove. Show one Collect block beside a starter `Repeat 2` with one gap. (Two Collects, as first planned, were one stack: dragging it put both into the loop, and the third Collect waited for room in the basket forever.) Keep the count fixed at first.
-- **Player task:** Put Collect inside Repeat. Travel home is already supplied after the loop.
+- **Setup and support:** An empty robot at the grove and a two-wood camp order. Demonstrate Repeat's meaning separately with a two-clap animation; leave the player's workspace empty apart from Start. Collect is a single toolbox block, never a prepared stack.
+- **Player task:** Build a counted collection loop and the return-and-unload sequence; choose the repeat count.
 - **Success:** Two wood are collected and delivered.
 - **Hint / talk:** “What happens once? How many times should it happen?” Point to each basket space as a round finishes.
 
 #### 07. A Whole Trip Again
 
-“Bring three pieces, one trip at a time.”
+“Bring three wood to camp, carrying one on each trip. Each trip must end with an empty basket before another starts. Make the robot repeat the whole trip.”
 
+- **Workspace:** Build.
 - **Learn:** A loop can repeat an entire sequence.
-- **Setup and support:** Start at camp. Supply one working trip: go to grove, collect one, go to camp, unload. Show three empty delivery pictures.
-- **Player task:** Put the whole trip inside `Repeat 3`.
+- **Setup and support:** One helper at camp and a pictured three-delivery order. No trip, loop, or ordered loose blocks are supplied.
+- **Player task:** Write a one-item round trip, decide which actions repeat, and set the count for three deliveries.
 - **Success:** Three one-item deliveries complete, with the robot ending empty at camp.
 - **Hint / talk:** “Which parts must happen on every trip?” Compare repeating Collect with repeating the whole journey.
 
 #### 08. Two Basket Spaces
 
-“Bring four pieces without overfilling the basket.”
+“This robot tries to put three wood in a basket with only two spaces. Repair its job so four wood reach camp. It will need to empty its basket between loads.”
 
+- **Workspace:** Repair.
 - **Learn:** A program must respect a physical limit.
-- **Setup and support:** A starter tries to collect three times before unloading. Show two basket spaces and let the third collection wait visibly. Provide a partly filled plan for two trips.
-- **Player task:** Make each trip collect two items before returning. An outer `Repeat 2` with two ordinary Collect blocks is enough; do not introduce nesting yet.
+- **Setup and support:** A complete faulty program collects three before unloading. Show basket capacity and the four-wood goal, but do not supply a second partly filled solution.
+- **Player task:** Inspect the full-basket wait and rewrite the collection and trip counts to finish the order.
 - **Success:** Four wood reach camp, and no trip needs more than two basket spaces.
 - **Hint / talk:** “The basket is full. What must happen before another collection?” Waiting is a clue, not a punishment.
 
 #### 09. A Repeat Inside a Repeat
 
-“Make two trips, with two pieces on each trip.”
+“This program already brings four wood in two trips. It collects two pieces on each trip with two separate Collect instructions. Try a Repeat inside the trip's Repeat to do that small job.”
 
+- **Workspace:** Change.
 - **Learn:** An inner loop finishes as part of each outer round.
-- **Setup and support:** Supply a fresh copy of the working two-trip program. Its outer loop and travel actions are already placed. Highlight only the two adjacent Collect blocks.
-- **Player task:** Replace those two blocks with an inner `Repeat 2 → Collect`.
+- **Setup and support:** Provide the complete working two-trip program because the lesson is about changing its structure. Explain that the inside loop finishes before the rest of that trip; do not highlight a replacement socket.
+- **Player task:** Replace repeated collection actions with an inner loop and check that both full-basket trips still finish.
 - **Success:** Four wood arrive in two full-basket deliveries.
 - **Hint / talk:** “Two pieces for this trip; then the next trip begins.” Animate the two loop counts separately. Do not require multiplication vocabulary.
 
 #### 10. The Loop Detective
 
-“The robot collects wood, but never brings it home. Find out why.”
+“This job should bring three wood home, one on each trip. The robot collects, but the wood never reaches camp. Follow one loop round with Step and repair what happens during each trip.”
 
+- **Workspace:** Repair.
 - **Learn:** Review loop boundaries and diagnose a full-basket wait.
-- **Setup and support:** A supplied three-trip loop has Go To Camp and Unload accidentally placed after the loop. All action choices and the repeat count are correct.
-- **Player task:** Move the return-and-unload pair inside the loop; use the highlight and basket to check the repair.
+- **Setup and support:** A complete three-trip loop has the return-and-unload pair after the loop. Do not mark the fault or supply a corrected alternative by default.
+- **Player task:** Find which actions need to happen on every round, move them, and rerun the order.
 - **Success:** Exactly three one-item deliveries finish without a full-basket stall.
 - **Hint / talk:** “What is repeated? What is left until the very end?” Award a delivery badge without introducing another mechanic.
 
@@ -202,945 +244,1186 @@ These retain the original campaign's gradual introduction. Each setup is authore
 
 #### 11. Wake Up the Sawmill
 
-“Turn one piece of wood into a plank.”
+“The sawmill already has one wood. Program the sawmill to turn it into one plank. Make Plank finishes when the plank is ready.”
 
+- **Workspace:** Build.
 - **Learn:** A building can run a program too.
-- **Setup and support:** The sawmill already holds one wood and has output space. Focus selection on the sawmill; introduce `Make Plank` under Start.
-- **Player task:** Program the sawmill and watch its input become its output.
+- **Setup and support:** The selected sawmill holds one wood and has output room. Explain Make Plank's input and output with pictures; no robot delivery is required.
+- **Player task:** Write the sawmill's production instruction and observe the completed plank.
 - **Success:** One plank is produced by the building.
 - **Hint / talk:** “Which thing does the making?” Show that making takes time while the same action remains highlighted; no Wait block is needed.
 
 #### 12. The Plank Courier
 
-“Take two planks from the sawmill to the depot.”
+“Two finished planks are waiting at the sawmill. Program your helper to bring both to the depot. Use Pick Up for items on a building's shelf.”
 
+- **Workspace:** Build.
 - **Learn:** Pick Up takes a finished item from a building.
-- **Setup and support:** The sawmill holds two planks. Supply travel and unloading, with a familiar Repeat containing a new Pick Up gap.
-- **Player task:** Pick up two planks and deliver them to the depot.
+- **Setup and support:** A helper starts at camp; the sawmill holds two planks. Explain Pick Up separately from raw-material Collect. No travel, pickup, unloading, or loop is placed.
+- **Player task:** Write the full journey to the sawmill and depot, including collecting the stored load and unloading it.
 - **Success:** Two planks move from the sawmill into the depot.
 - **Hint / talk:** “Collect finds raw materials. Pick Up takes something stored here.” Use different source pictures as well as words.
 
-#### 13. Two Jobs at Once
+#### 13. Wood Goes In, Planks Come Out
 
-“Bring wood while the sawmill gets ready to make planks.”
+“The sawmill needs two wood to make two planks. Your helper starts at camp, and the wood is at the grove. Write its delivery job; the sawmill already knows how to make the planks.”
 
-- **Learn:** Separate programs work at the same time on one world clock.
-- **Setup and support:** The sawmill starts empty with a supplied `Repeat 2 → Make Plank` program. The child has a familiar two-wood delivery program with its destination left to choose.
-- **Player task:** Deliver to the sawmill, then pause and inspect both programs together.
+- **Workspace:** Build.
+- **Learn:** A delivery puts ingredients where a building can use them.
+- **Setup and support:** The sawmill has a visible two-plank background program and no wood. The selected helper starts empty at camp. Show the sawmill's ingredient picture and identify its program as background support.
+- **Player task:** Author the complete two-wood delivery to the sawmill and run it until both planks finish.
 - **Success:** The robot supplies two wood and the sawmill produces two planks.
-- **Hint / talk:** “The sawmill is waiting for wood. Who can bring it?” One Step advances both workers; no message or guessed delay is needed.
+- **Hint / talk:** “Where does the sawmill need the wood?” Observe the material change without comparing two program highlights. Pause and Step still affect the whole world.
 
 #### 14. Keep It Going
 
-“Keep bringing wood while your friends make and move planks.”
+“Keep bringing wood from the grove to camp. A Forever block repeats its inside instructions until you pause. Make sure the basket is emptied on every trip.”
 
+- **Workspace:** Build.
 - **Learn:** Forever keeps a useful job running.
-- **Setup and support:** Supplied sawmill and courier programs repeatedly make planks and take them to a roomy depot. Show their existing loops. Give the child the collector's known one-item delivery trip.
-- **Player task:** Wrap that trip in Forever. Show how Pause stops the whole world.
-- **Success:** At least four new planks reach the depot while the collector completes multiple trips.
-- **Hint / talk:** “What should happen after this delivery?” Explain that a worker waiting for supplies may still be doing the right job.
+- **Setup and support:** One helper, enough grove wood, and a roomy camp; no other worker is active. Explain Forever beside the workspace without inserting a loop or trip.
+- **Player task:** Write a complete repeating delivery job and use Pause after observing several trips.
+- **Success:** Four new wood reach camp through completed trips, and the helper starts another trip until the child pauses.
+- **Hint / talk:** “What should happen after this delivery?” Compare the familiar counted Repeat with a job that keeps going.
 
 #### 15. Across the Stream
 
-“Work together to build our bridge.”
+“The bridge needs four planks. A courier already brings them to the bridge site. Program the site to build the bridge once the pieces arrive; Build waits until its bill is filled.”
 
-- **Learn:** Combine familiar programs into a production chain. `Build Bridge` is a new action using the familiar building-program pattern.
-- **Setup and support:** Supply working collector and sawmill programs. The courier has a destination gap; the site has Start and a Build Bridge block to attach. Use a four-plank picture on the site.
-- **Player task:** Send planks to the site and start its one-time building program. Observe collector → sawmill → courier → site.
+- **Workspace:** Build.
+- **Learn:** A one-time Build action turns delivered materials into a finished structure.
+- **Setup and support:** Stage four planks at the sawmill and a background courier making two full loads. Focus the site's empty program and its four-plank bill. Explain that Build is a one-time action.
+- **Player task:** Write the site's building program and watch the delivered bill become the bridge.
 - **Success:** The site consumes four planks, completes the bridge, and opens the route across the stream.
-- **Hint / talk:** “Follow one piece of wood all the way to the bridge.” Celebrate with a crossing and unlock basic free play. Never put Build Bridge in Forever.
+- **Hint / talk:** “Which pieces became the bridge?” Celebrate with a crossing and unlock basic free play. Never put Build Bridge in Forever; no production-chain setup is needed here.
 
 ### Chapter 4 — Look Before You Act
 
 #### 16. How Many Are Ready?
 
-“Look at the sawmill's stock and take what is ready.”
+“Your helper is beside the sawmill. Bring every plank on its shelf to the depot; this time there may be one or two. The stock block reads that number, and Repeat uses the number when it starts.”
 
+- **Workspace:** Build.
 - **Learn:** A sensor supplies a number from the world.
-- **Setup and support:** One isolated courier starts at a sawmill holding one or two planks. No other program changes that stock during the pickup. Supply `Repeat [gap] → Pick Up Plank`, followed by travel and unloading.
-- **Player task:** Put the sawmill's plank-count sensor into Repeat. Show the number it reads before running.
+- **Setup and support:** One isolated helper at the sawmill; announced trials begin with one or two planks and no competing program. Explain the stock sensor and its number-shaped output without assembling a loop.
+- **Player task:** Build a pickup loop whose count reads the shelf, followed by the complete depot delivery.
 - **Success:** The courier transfers the starting stock correctly in two visible trials: one plank and two planks.
 - **Hint / talk:** “The number comes from the shelf.” Explain that Repeat reads its count when the loop starts; it does not keep changing the count as items are taken.
 
 #### 17. Only When We Need It
 
-“Make a plank only when the shelf has fewer than two.”
+“Program the sawmill to look at its plank shelf once. If there are fewer than two planks, make one; otherwise leave the shelf alone. The wood is already here.”
 
+- **Workspace:** Build.
 - **Learn:** If chooses whether to do an action, using a true-or-false comparison.
-- **Setup and support:** Offer If with a preassembled `planks at sawmill < 2` condition. The sawmill has wood and room. Show the condition as a readable picture question before showing the comparison symbol.
-- **Player task:** Put Make Plank inside If.
+- **Setup and support:** Announced trials start with one or two planks, enough wood, and output room. Explain If and the less-than comparison with a pictured shelf line; no condition or Make block is connected.
+- **Player task:** Build the stock comparison and conditional production action, then try both starting shelves.
 - **Success:** In two small trials, starting with one plank makes one more; starting with two makes none.
 - **Hint / talk:** “Is the shelf below the line?” A single If checks once. Repeated checking is reserved for mission 20.
 
 #### 18. This Job or That Job
 
-“If the sawmill has a plank, bring it home. Otherwise, bring it wood.”
+“Your helper has two possible jobs. If a plank is ready at the sawmill, bring it to the depot. Otherwise, bring one wood from the grove to the sawmill.”
 
+- **Workspace:** Build.
 - **Learn:** Else chooses another action when the condition is false.
-- **Setup and support:** A supplied `If planks at sawmill > 0` has a working plank-delivery branch. Offer Else and a familiar wood-delivery sequence. Give the sawmill no active production job during either trial, making the choice unambiguous.
-- **Player task:** Place the wood job in Else.
+- **Setup and support:** One helper at camp and an inactive sawmill. Trials begin with one plank or none. Explain Else as the other path when If's question is false; neither delivery branch is supplied.
+- **Player task:** Write the stock question and both complete delivery branches, each ending with an empty basket.
 - **Success:** One trial with a plank delivers it to the depot; another with none delivers wood to the sawmill.
 - **Hint / talk:** “Which path will run this time?” Both branches return with an empty basket, and only one branch runs per check.
 
 #### 19. Wait for a Full Load
 
-“Wait until two planks are ready, then take both.”
+“Wait at camp until the sawmill has two planks ready. Then bring both to the depot in one load. Wait Until keeps checking a question, so you do not have to guess how long making takes.”
 
+- **Workspace:** Build.
 - **Learn:** Wait Until holds the program at a condition until it becomes true.
-- **Setup and support:** A working sawmill makes two planks over time. Supply a courier program with a gap before its two pickups. The courier starts at camp.
-- **Player task:** Add `Wait Until planks at sawmill >= 2` before travelling to the sawmill.
+- **Setup and support:** A background sawmill produces two planks over time. The selected helper begins at camp with no program. Explain Wait Until's condition; vary the producer's start time between visible trials.
+- **Player task:** Write the waiting condition and the full pickup-and-delivery journey.
 - **Success:** The courier departs only once two planks are ready, then delivers both together. Repeat with the producer starting later.
 - **Hint / talk:** “What should become true before the trip starts?” Pick Up already waits for a missing item; this wait deliberately chooses when the whole batch journey begins. Do not guess a number of waiting steps.
 
 #### 20. Just Enough Planks
 
-“Keep two planks ready when our friends take some away.”
+“Keep two planks ready on the sawmill shelf. A courier will take one away twice, and the wood for replacements is already here. Make the sawmill check again after each decision so it refills the shelf without making a third plank.”
 
+- **Workspace:** Build.
 - **Learn:** Combine sensing, If, and Forever into a feedback loop; no new block.
-- **Setup and support:** A reliable collector supplies wood. A supplied courier removes one plank on each of two visible visits, waiting for the reserve first. Provide a Forever shell and the condition from mission 17.
-- **Player task:** Make the sawmill repeatedly check whether its stock is below two before making one plank.
+- **Setup and support:** Stage enough wood and room to expose overproduction. A background courier makes two announced removals. Provide a pictured reserve line and individual familiar blocks only.
+- **Player task:** Author the complete repeated stock check and production rule, then observe both refills.
 - **Success:** The sawmill builds and restores a two-plank reserve after both removals, without making a third plank when two are already ready and inputs/output space are available.
 - **Hint / talk:** “When does the program look again?” Observe a complete settled producer cycle after the final refill, not just the instant the count reaches two.
 
-### Chapter 5 — Give Everyone a Job
+### Chapter 5 — One Helper, Useful Jobs
 
-#### 21. Two Helpers, One Plan
+#### 21. Bring a Stone
 
-“Give both helpers the same stone-delivery job.”
+“Bring two stones from the stone pit to camp. The bridge is already open, and your helper has two basket spaces. Stone uses the same collection and delivery actions as wood.”
 
-- **Learn:** Multiple robots can use one shared program.
-- **Setup and support:** The bridge is open; the stone pit has ample stone. Provide one working program that makes two one-stone trips from pit to depot. Introduce library assignment with a preview naming both affected robots.
-- **Player task:** Assign the same program to two helpers.
-- **Success:** Each helper completes two deliveries, for four new stone at the depot.
-- **Hint / talk:** “They share the instructions. Must they be on the same block?” Show both markers, including when one waits briefly for the other.
+- **Workspace:** Build.
+- **Learn:** The familiar collection trip works for a different raw material.
+- **Setup and support:** One helper at camp, an open bridge, and a marked pit. Show raw stone's source and icon; no wood trip is supplied for editing.
+- **Player task:** Write the full stone-collection trip with literal source, item, and destination choices.
+- **Success:** Two raw stone reach camp in a valid load.
+- **Hint / talk:** “What changes when we want stone?” No library, robot settings, or second helper appears.
 
-#### 22. Same Plan, Different Places
+#### 22. Two Different Things in One Basket
 
-“One helper brings wood. The other brings stone.”
+“Bring one wood and one stone home in the same basket. Wood is at the grove and stone is at the pit. Both kinds use the same two basket spaces.”
 
-- **Learn:** Per-robot settings let a shared program do different jobs.
-- **Setup and support:** Supply the shared collector with `my Source`, `my Item`, and `my Destination` already in its action inputs. Show three picture-based settings on each robot. Both sources are raw-material nodes.
-- **Player task:** Set one helper to grove/wood/depot and the other to stone pit/stone/depot.
-- **Success:** Each helper completes its two one-item deliveries, with two wood and two stone arriving.
-- **Hint / talk:** “The plan is the same. Which choices belong to this robot?” Do not introduce child-defined procedure inputs yet.
+- **Workspace:** Build.
+- **Learn:** Different items use the same two basket spaces.
+- **Setup and support:** One empty helper and two nearby sources. The goal card shows one wood and one stone together, without an ordered route. Other workers are inactive.
+- **Player task:** Plan the two-source trip, collect a mixed load, and unload both items at camp.
+- **Success:** A mixed load of one wood and one stone is unloaded at camp without exceeding capacity.
+- **Hint / talk:** “Is there a separate basket for each kind?” Keep the route finite and the other workers inactive.
 
-#### 23. One Edit Helps Everyone
+#### 23. What Makes a Kit?
 
-“Teach both collectors to carry two pieces on a trip.”
+“The workshop already holds two planks and one stone. Together they make one kit. Program the workshop to make the kit and watch which ingredients it uses.”
 
-- **Learn:** Applying an edit to a shared program updates everyone assigned to it.
-- **Setup and support:** Begin paused, with empty baskets and no unfinished actions. Reuse the two configured collectors. The shared program has one trip; the collection section is highlighted.
-- **Player task:** Change that section to Repeat 2, inspect the affected-robots preview, and apply once.
-- **Success:** Each helper uses the revised program and completes a two-item delivery of its configured material.
-- **Hint / talk:** “Who will use this change?” Observe both baskets. Restart from a clean mission checkpoint for comparisons, since Apply restarts the affected programs.
+- **Workspace:** Build.
+- **Learn:** A recipe can need more than one kind of ingredient.
+- **Setup and support:** An already built workshop contains exactly one kit recipe. Show the ingredient and output pictures; no helper route or production action is placed.
+- **Player task:** Write the workshop's one-kit production program.
+- **Success:** The workshop consumes two planks and one stone and produces one kit.
+- **Hint / talk:** “Point to everything this kit needs.” Introduce the recipe separately from transporting its ingredients.
 
-#### 24. A Special Job for One
+#### 24. One Recipe, Two Trips
 
-“Keep one collector working. Give the other a one-trip job.”
+“Help the workshop make one kit from two planks and one stone. The planks are at the sawmill and the stone is at the pit. Your basket holds only two items, so plan more than one delivery; the workshop already knows how to make the kit.”
 
-- **Learn:** An individual copy can change without changing a shared original.
-- **Setup and support:** Two helpers share a supplied Forever collector. The special helper's new job is one delivery using its existing settings; this changes behavior, not just a destination.
-- **Player task:** Make an individual copy for that helper and remove its Forever wrapper. Preview which robot the edit affects.
-- **Success:** The special helper completes one trip and stops; the other completes at least two trips using the unchanged shared program.
-- **Hint / talk:** “Is this change for everyone or just this helper?” Offer returning to the shared job as an optional experiment.
+- **Workspace:** Build.
+- **Learn:** A recipe larger than the basket can be delivered in stages by one helper.
+- **Setup and support:** Stage the ingredients at their sources. The workshop's one-kit program is background support; the helper starts empty with only Start. Keep the recipe and basket capacity visible.
+- **Player task:** Write all journeys needed to deliver the complete recipe with one helper, choosing the order and valid loads.
+- **Success:** The one helper delivers both loads and the workshop makes one kit; no load exceeds two items.
+- **Hint / talk:** “Must every ingredient arrive in the same basket?” No second helper or signal is needed to finish the recipe.
 
 #### 25. Our First Workshop
 
-“Bring the workshop what it needs to make two kits.”
+“The workshop needs enough ingredients for two kits. Each kit takes two planks and one stone; find them at the sawmill and stone pit. Write one helper's delivery plan, remembering its two basket spaces.”
 
-- **Learn:** Combine familiar deliveries to satisfy a recipe; no new programming structure.
-- **Setup and support:** Provide an already built workshop. Show one kit as two plank pictures plus one stone picture. Stage four planks at the sawmill and at least two stone at the pit. Supply a workshop program that makes two kits once materials arrive.
-- **Player task:** Give one robot two full-basket plank trips and another one two-stone trip. Use familiar library/settings tools where useful; do not force raw-material Collect and building Pick Up into one identical program.
+- **Workspace:** Build.
+- **Learn:** Repeat a familiar two-trip recipe delivery; no new programming structure.
+- **Setup and support:** Stage four planks and at least two stone. The workshop has a two-kit background program. Show the two-kit order and one-kit recipe, without supplying a trip or loop.
+- **Player task:** Create the complete delivery plan. Repeating a one-kit delivery round or grouping valid loads by ingredient are both accepted.
 - **Success:** The workshop consumes four planks and two stone and produces two kits.
-- **Hint / talk:** “Can all three recipe pieces fit in one basket?” Restore part of the workshop district, celebrate the main campaign milestone, and expand free play.
+- **Hint / talk:** “What is one whole round of this job?” Restore part of the workshop district, celebrate the solo-programming milestone, and expand free play with ready-made support jobs.
 
 ### Chapter 6 — Make Room to Grow
 
 #### 26. Choose a Home for the Workshop
 
-“Choose where our new workshop will stand.”
+“Choose a place for a new workshop. A blueprint marks where it will go; the building appears only after its materials arrive. Place the blueprint and look at its pictured bill.”
 
+- **Workspace:** Explore.
 - **Learn:** Placing a blueprint chooses a site; it does not create a finished building.
-- **Setup / task:** Show two valid marked plots, an empty workshop blueprint, and the familiar camp. Select a plot and inspect the pictured bill. No other construction choices are shown.
+- **Setup and support:** Show two valid plots, the camp, and one workshop blueprint. Placement is the focus; no courier program is needed yet.
+- **Player task:** Choose a plot and inspect the unpaid construction bill.
 - **Success / observe:** A reachable workshop site is placed and its unpaid bill is visible. “What still has to arrive?” This is an interface lesson; payment follows separately.
 
 #### 27. Bring the Building Pieces
 
-“Bring four planks and two stones to the workshop site.”
+“The workshop site needs four planks and two stones. Planks are at the sawmill, and stones are at the pit. Program one helper to bring the whole bill in loads that fit its two-space basket; the site already has its Build instruction.”
 
+- **Workspace:** Build.
 - **Learn:** Construction consumes materials delivered to its site.
-- **Setup / task:** Preplace the site; stage four planks at the sawmill and two stone at the quarry. Supply the site’s one-time Build program and familiar couriers with destination gaps.
+- **Setup and support:** Preplace the site and stage its exact bill at the named sources. Only the site's building program is prepared; the courier begins at camp with an empty workspace.
+- **Player task:** Plan and write the complete construction-delivery job, including every trip and unload.
 - **Success / observe:** Completed deliveries pay the exact bill and the site becomes a workshop. “Which shelf needs these pieces?” Do not require the child to create placement and all courier programs together.
 
 #### 28. Leave a Way Through
 
-“Build a workshop that everyone can reach.”
+“Choose a workshop site with a clear way in. Helpers need a path to the building and a place to stand while unloading. Check the placement picture before you build; delivery jobs are already ready.”
 
+- **Workspace:** Explore.
 - **Learn:** Placement must preserve routes and interaction space.
-- **Setup / task:** Show one valid nearby plot and one invalid preview that would obstruct access. Give a pictured access explanation; reject the bad placement before accepting it. Supplied couriers pay the valid site.
+- **Setup and support:** Show a valid plot and an obstructing preview, with reachable interaction cells pictured. Reject invalid placement before accepting it. Background couriers and site building behavior are prepared solely to demonstrate access.
+- **Player task:** Choose a reachable site, inspect the access preview, and watch a courier use the completed route.
 - **Success / observe:** The workshop is built and a courier reaches both it and the existing sawmill. “Where will the helper stand to unload?” No trial can permanently trap a robot.
 
 #### 29. Right Pieces, Wrong Place
 
-“The pieces are here, but the building is waiting. Find them.”
+“The workshop has not been built, even though camp holds all its pieces. Inspect this courier's job and follow where the pieces go. Repair the delivery so the workshop site receives its bill.”
 
+- **Workspace:** Repair.
 - **Learn:** A settlement total is different from stock at the consumer.
-- **Setup / task:** Put the workshop bill at camp; the site is empty. A courier mistakenly returns the pieces to camp. Change that one destination; the one-time site program already works.
+- **Setup and support:** Stage the exact bill at camp and a complete faulty courier that picks it up but unloads back at camp. The site has a working Build program. No destination field is highlighted.
+- **Player task:** Use the inventory and route to find the wrong destination, repair it, and finish construction with the same materials.
 - **Success / observe:** The same staged materials reach the site and complete construction. “Here at camp, or here at the site?” No extra resources appear during the repair.
 
 #### 30. Open for Work
 
-“Build the workshop and make its first kit.”
+“Build a workshop, then supply its first kit. The building uses four planks and two stones; the kit needs two more planks and one more stone. Program one helper's deliveries from the sawmill and stone pit; making and building jobs are already ready.”
 
+- **Workspace:** Build.
 - **Learn:** Combine familiar construction and production, without a new block.
-- **Setup / task:** Supply a sawmill and source jobs, six wood and three raw stone, and a valid site. Complete delivery destinations. Show two separate picture orders: the building, then its kit. Supply the building's post-construction kit program through a visible assignment step.
+- **Setup and support:** Provide a working sawmill and wood collector, six raw wood, three raw stone, and a valid site. Background site behavior builds once then makes one kit. Display separate building and kit bills; the selected courier has no prepared route.
+- **Player task:** Write the complete delivery job in two pictured stages, accounting for consumed building materials before supplying the kit.
 - **Success / observe:** Four planks/two stone build the workshop; two more planks/one stone make a kit. “Which pieces became the building, and which became the kit?” Construction does not silently leave its consumed inputs available.
 
 ### Chapter 7 — Water Makes Things Grow
 
 #### 31. A Bucket from the Spring
 
-“Bring one bucket of water to camp.”
+“Bring one bucket of water from the spring to camp. Water at a spring is collected like wood or stone. It takes one basket space, and there is no empty bucket to return.”
 
+- **Workspace:** Build.
 - **Learn:** Water is another collectible item and uses one basket space.
-- **Setup / task:** Reuse a one-item collector with spring/water choices. Show a bucket picture; offer Collect, not Pick Up, at this natural source.
+- **Setup and support:** One empty helper at camp and a reachable spring. Introduce the water icon and its raw-source Collect action; no delivery program is supplied.
+- **Player task:** Write and run the full water-collection trip.
 - **Success / observe:** One water reaches camp and the basket is empty. “Does water need a space too?” Empty-bucket returns are not a job.
 
 #### 32. Wake Up the Well
 
-“Let the well fill its shelf with water.”
+“Program the well to make two buckets of water. It needs time, but no ingredients. Make Water fills one bucket each time it finishes.”
 
+- **Workspace:** Build.
 - **Learn:** A well produces water over time without material inputs.
-- **Setup / task:** Prebuild an empty well with room for two water. Add Make Water inside a supplied Repeat 2; observe its progress bar.
+- **Setup and support:** A prebuilt empty well with room for two output items. Show its progress bar and explain the no-input recipe; no Repeat is placed.
+- **Player task:** Write a finite two-water production program and observe its progress.
 - **Success / observe:** Two water are produced without consuming an ingredient. “What is the well waiting for while it fills?” Pause must freeze extraction.
 
 #### 33. Take Water from the Well
 
-“Carry two buckets from the well to camp.”
+“Two buckets are ready on the well's shelf. Bring both to camp in one load. Use Pick Up here because the well is a building, unlike the spring.”
 
+- **Workspace:** Build.
 - **Learn:** A well is a building source: use Pick Up for its output.
-- **Setup / task:** Stage two water at the well and supply a familiar full-basket courier with an action gap. Compare its shelf picture with the spring picture.
+- **Setup and support:** Stage two water at the well; the selected helper starts empty at camp. Keep all other routes inactive and show the well and spring source icons.
+- **Player task:** Write the full pickup-and-delivery program with a valid two-item load.
 - **Success / observe:** Two water move into camp in one load. “Which water is stored on a shelf?” Keep all other routes inactive.
 
 #### 34. Water Becomes Food
 
-“Give the farm water and watch food grow.”
+“The farm already has one bucket of water. Program it to grow food. One water makes two food when the growing action finishes.”
 
+- **Workspace:** Build.
 - **Learn:** One delivered water grows a batch of two food.
-- **Setup / task:** Prebuild a farm and stage one water in it. Attach Make Food; animate the recipe and show room for the whole two-item output.
+- **Setup and support:** A prebuilt farm contains one water and room for two food. Show the recipe and crop progress; there is no delivery task.
+- **Player task:** Write the farm's one-batch production program.
 - **Success / observe:** One water is consumed and two food are produced. “Where did the water go?” Crop growth uses the same paused world clock as every other recipe.
 
 #### 35. Our Little Farm
 
-“Bring water in and carry four food home.”
+“Bring four food home from the farm. Each bucket from the well lets the farm grow two food, and your helper carries only two items. Program the water deliveries and food pickups; the well and farm already know their jobs.”
 
-- **Learn:** Connect the familiar producer/courier pattern using the new goods.
-- **Setup / task:** Supply a working well, a farm that makes two batches, and two couriers. Set the water courier's destination and the food courier's source. Each has a short known finite order.
-- **Success / observe:** Two delivered water become four food at camp. “Who is waiting for whom?” Reveal peaceful farm scenery; no spoilage or feeding meter appears.
+- **Workspace:** Build.
+- **Learn:** Practise bringing a building's input and then collecting its output.
+- **Setup and support:** The well produces two water and the farm makes two batches as background support. One helper starts at camp without a route. Show the recipe, sources, and camp goal; Pick Up's ordinary waiting behavior remains visible.
+- **Player task:** Write the complete one-helper plan for bringing in water and carrying the resulting food home, choosing valid loads and repetition.
+- **Success / observe:** Two delivered water become four food at camp. “What went into the farm, and what came out?” Reveal peaceful farm scenery; no spoilage or feeding meter appears.
 
 ### Chapter 8 — Energy for More Helpers
 
 #### 36. Food into Charge Packs
 
-“Make two charge packs for our robots.”
+“The fuel station holds two food and one water. Program it to turn them into two charge packs. Packs help make new robots; your existing robot can move without one.”
 
+- **Workspace:** Build.
 - **Learn:** The fuel station turns two food and one water into two charge packs.
-- **Setup / task:** Visibly stage those inputs from berries and the spring. Show berries and farm crops as the same food item. A short animation explains plant energy; attach Make Charge Packs to the prebuilt station.
+- **Setup and support:** Stage one complete recipe visibly from berries and spring water. Show berries and crops as the same food item and provide a separate plant-energy illustration. The station's workspace is empty.
+- **Player task:** Write the station's one-batch production program.
 - **Success / observe:** The paid batch completes with two packs. “What powers a new robot?” Existing robots keep moving with no pack consumption.
 
 #### 37. Feed the Fuel Station
 
-“Bring both ingredients so the fuel station can work.”
+“The fuel station needs two food and one water to make two charge packs. Food is at the berry patch and water is at the spring. Write one helper's deliveries; all three ingredients will not fit in its two-space basket.”
 
+- **Workspace:** Build.
 - **Learn:** Practise a mixed-input recipe using separate deliveries.
-- **Setup / task:** Supply one berry collector and one spring-water collector, with one destination gap each; the station runs one batch. The recipe card shows why all three ingredients cannot fit in a two-space basket.
+- **Setup and support:** The station has a one-batch background production job and no inputs. Sources are reachable. The helper begins empty with no trip or destination filled in.
+- **Player task:** Plan and author the complete food and water deliveries, using Collect at both natural sources.
 - **Success / observe:** Two food and one water arrive and produce two packs. “Which ingredient is still missing?” Collect food at berries; do not use the farm's Pick Up action here.
 
 #### 38. Make One More Helper
 
-“Build a helper and give it a delivery job.”
+“Camp has two planks and one charge pack, enough for a new helper. Program camp to make one helper. Its delivery job is already chosen, so you can watch it work after assembly.”
 
-- **Learn:** Camp pays two planks and one pack to assemble a helper with a chosen job.
-- **Setup / task:** Stage the costs at camp, leave one population slot free, and offer one working Collector job. Attach Make a Helper for that job. Show the reserved slot and assembly progress.
-- **Success / observe:** The costs are spent once, the new helper appears in a valid space and completes one delivery using its inherited program. “Who gave the new helper its instructions?” No free Add Robot control is available.
+- **Workspace:** Build.
+- **Learn:** Camp spends ingredients to assemble a helper.
+- **Setup and support:** Stage the bill at camp and leave one population slot free. The Make a Helper block offers the mission's one fixed Collector job, whose program is background support. Explain the payment and assembly progress separately from job assignment.
+- **Player task:** Write the camp's one-time assembly instruction and observe the new helper's first delivery.
+- **Success / observe:** The costs are spent once, the new helper appears in a valid space and completes its supplied delivery. “Which pieces made this helper?” The engine gives it its job; job assignment and inheritance are not concepts the child must explain yet. No free Add Robot control is available.
 
 #### 39. No Packs Left
 
-“Make another charge pack when the shelf is empty.”
+“Camp is waiting for a charge pack to make a helper. The fuel station has no food, although berries are reachable. Find why the food collector is not bringing them; existing helpers can work even with no packs.”
 
+- **Workspace:** Repair.
 - **Learn:** Empty energy stock pauses expansion but does not stop recovery or existing work.
-- **Setup / task:** Begin with zero packs, existing helpers, a prebuilt empty fuel station, reachable berries and spring, and working one-batch assembly at camp waiting for a pack. Planks are already there. Repair the food courier's missing source setting.
+- **Setup and support:** Start with zero packs, a prebuilt fuel station, reachable berries and spring, and paid assembly waiting at camp with planks staged. All other routes work. The selected collector has a complete faulty food trip with the wrong source place, not an empty input socket.
+- **Player task:** Follow the food shortage to the collector, diagnose its route, and repair the program until packs reach camp and assembly completes.
 - **Success / observe:** Gathered ingredients make packs and one paid helper completes. “Who can still work before the new pack exists?” No pack or intermediate ingredient is granted after start.
 
 #### 40. A Growing Settlement
 
-“Let your settlement make its own new helper.”
+“Help camp make one new helper from freshly made supplies. Bring it two planks from the sawmill and one charge pack from the fuel station. Write the full delivery job; the other workers already gather and make these items.”
 
+- **Workspace:** Build.
 - **Learn:** Integrate wood, water, food, fuel, and paid assembly.
-- **Setup / task:** Prebuild the chain and supply producer programs. Choose pictured delivery routes from grove through sawmill to camp, and well through farm/fuel station to camp. Focus editing on one or two route gaps.
+- **Setup and support:** Prebuild the full chain with independent background gathering, production, and camp assembly. Processed stocks begin empty; the selected final courier has only Start. Pin the two-source assembly bill instead of providing a route with a destination gap.
+- **Player task:** Author the whole plank-and-pack delivery with one helper, allowing pickups to wait for newly produced goods.
 - **Success / observe:** Two gathered wood become the helper's planks; two extracted water cover one farm cycle and one fuel cycle; one of the resulting packs pays assembly. The helper makes its first delivery. “Follow one ingredient all the way.” Unlock peaceful First settlement templates.
 
 ### Chapter 9 — Supply What Is Needed
 
 #### 41. Open a Supply Job
 
-“Let a supplier bring the fuel station what it needs.”
+“The fuel station needs two food; its water is already there. Two food are waiting at the farm. Try Supply: choose where this helper may find ingredients, and it makes one delivery using its basket.”
 
+- **Workspace:** Build.
 - **Learn:** Supply is an inspectable delivery routine, not instant material creation.
-- **Setup / task:** Give the station one water, a declared one-batch input target, and no food. Stage two food at a friendly farm. Select that source, add one Supply Fuel Station, and step into its pictured travel/pickup/unload sequence.
+- **Setup and support:** Stage two food at a friendly farm and one water at the fuel station. Declare one batch's input target and park production. Explain Supply's source selection and bounded cycle outside the empty focus workspace.
+- **Player task:** Choose the source and destination, write one Supply action, and open its pictured travel, pickup, and unload steps.
 - **Success / observe:** One bounded cycle delivers the two food and returns to its caller. “Which ordinary actions are inside?” The station's production program is parked so arrival remains visible.
 
 #### 42. Supply, Then Look Again
 
-“Keep supplying food and water for two batches.”
+“Keep the fuel station supplied until it makes four charge packs. Food is at the farm and water is at the well. Each Supply trip brings a needed ingredient, so make the helper come back and check for another job.”
 
+- **Workspace:** Build.
 - **Learn:** Repeating Supply revisits declared needs and can serve different ingredients.
-- **Setup / task:** Stage four food and two water at separate sources. Use a one-batch input target and a producer that stops after two fuel batches. Wrap Supply in Forever; make both source choices visible.
+- **Setup and support:** Stage four food and two water at separate source buildings. The station has a finite two-batch background program with a one-batch input target. No Supply action or loop is placed.
+- **Player task:** Choose both sources and author a repeating Supply job, then observe different ingredients and the final no-work wait.
 - **Success / observe:** Four packs are made through completed food and water deliveries; once needs are filled, the supplier waits briefly and returns. “Why did its next trip carry something different?” It must not hold food while indefinitely blocking the water delivery.
 
-#### 43. Is More Already Coming?
+#### 43. Does This Shelf Need More?
 
-“Send more water only when the farm still needs it.”
+“The farm's order is one water. Program your helper to bring a bucket only if that order is still missing one. Needs asks whether the building's order needs more; try both an empty shelf and a shelf that already has water.”
 
-- **Learn:** Needs accounts for declared targets and goods already promised by another courier.
-- **Setup / task:** Offer If with a ready-made Farm Needs Water? gap and Supply inside. Run two announced fixtures: a missing bucket with no delivery claim, and a bucket already on the way. Other jobs and targets are fixed.
-- **Success / observe:** The unmet trial sends water; the claimed trial avoids a duplicate delivery. Both farms receive their intended bucket. “Is it here, or on the way?” Show the live claim, not an unexplained false sensor.
+- **Workspace:** Build.
+- **Learn:** Needs compares a building's pictured order with what it already has.
+- **Setup and support:** One helper and a friendly well with water. The farm has a one-water target and parked production. Announced trials vary its stock; no other courier or incoming claim changes the result.
+- **Player task:** Build the Needs condition and the conditional Supply job, choosing the source and recipient yourself.
+- **Success / observe:** The empty-shelf trial receives one bucket; the full-shelf trial starts no delivery. “Which recipe picture is still empty?” The sensor still uses the engine's real demand rules; incoming claims from other helpers are introduced only in 85.
 
 #### 44. Leave Room to Unload
 
-“Wait for a shelf space before starting this delivery.”
+“Bring one water from the well to the farm, but wait at camp until the farm has room. Space tells you how much shelf room is free. Test your program when the shelf has space and when it starts full.”
 
+- **Workspace:** Build.
 - **Learn:** Space for an item is a capacity observation, separate from stock need.
-- **Setup / task:** A one-item courier has a Wait Until condition gap using Space for Water at Farm > 0. One fixture starts with room; another with a full input shelf that a supplied farm cycle later frees. There is only one courier.
+- **Setup and support:** One courier begins at camp. A full-shelf trial includes a background farm cycle that frees space; a second trial starts with room. Stage pickup water at the well, with no prepared wait or trip.
+- **Player task:** Write the room condition, the wait at camp, and the complete one-water delivery.
 - **Success / observe:** The courier leaves after room exists and completes its delivery in both fixtures. “What made space?” Explain that the later unload still checks capacity; the condition did not reserve it.
 
 #### 45. The Missing Water Route
 
-“Two suppliers are busy, but no water arrives. Fix their route.”
+“The fuel station needs food and water, but this supplier only brings food. Both ingredients are available nearby. Open the Supply steps and repair where the helper is allowed to look so two batches finish.”
 
+- **Workspace:** Repair.
 - **Learn:** Diagnose a source configuration through the visible supply steps.
-- **Setup / task:** Two suppliers share the fuel job; the selected source list has food but no water. Give adequate stocks, finite one-batch targets, and a producer that requests two batches. Add the friendly well as the water source.
-- **Success / observe:** Two batches finish; suppliers share demand without duplicate claims or permanent neglect. “The station needs water; where are its suppliers allowed to look?” Changing sources previews both affected robots.
+- **Setup and support:** One helper has a complete repeating Supply program whose source list omits the well. Provide adequate food and water, a one-batch input target, and a two-batch background producer. Do not highlight the missing source.
+- **Player task:** Inspect the waiting reason and source list, correct the configuration, and test both ingredients arriving.
+- **Success / observe:** The single helper supplies both ingredients across valid loads and two batches finish. “Where can this helper find water?” No shared edit, second supplier, or incoming-delivery comparison is required.
 
 ### Chapter 10 — Materials for Industry
 
 #### 46. Cut a Stone Block
 
-“Turn two stones into one building block.”
+“The stonecutter has two raw stones. Program it to make one stone block for a larger building. A stone block is a different item from the raw stone used in kits.”
 
+- **Workspace:** Build.
 - **Learn:** Stone blocks are processed goods, distinct from raw stone.
-- **Setup / task:** Prebuild the stonecutter with two raw stone. Attach its Make block and compare the two icons.
+- **Setup and support:** A prebuilt stonecutter holds two raw stone and has output room. Compare source and product icons without placing its Make action.
+- **Player task:** Write one stone-block production instruction and inspect the result.
 - **Success / observe:** Two stone become one stone block. “Which picture does the old kit recipe use?” Keep kits and basic workshop construction on raw stone.
 
 #### 47. A Foundation for the Smelter
 
-“Bring building blocks to the new smelter site.”
+“The new smelter site needs stone blocks. They are ready at the stonecutter; its bill shows how many to bring. Write the whole delivery job; another courier brings the planks, and the site already knows how to build.”
 
+- **Workspace:** Build.
 - **Learn:** Advanced buildings use a familiar construction process with processed inputs.
-- **Setup / task:** Preplace a reachable smelter site, show its shared-registry bill, and stage its exact planks and stone blocks at friendly stores. Supply the site program; set the two courier destinations.
+- **Setup and support:** Preplace a reachable site and stage the exact shared-registry bill at friendly stores. Prepare only the plank courier and Build program. The focus courier has no route. Render the finalized block quantity as item pictures before authoring this fixture.
+- **Player task:** Read the stone-block portion of the bill and program all its pickups, trips, and unloads within basket capacity.
 - **Success / observe:** The full bill is delivered and the smelter is built. “Does this site ask for stone, or stone blocks?” Its production stays parked until the iron lessons.
 
 #### 48. Wood for the Kiln
 
-“Make charcoal for our future metal work.”
+“The kiln holds two wood. Program it to make charcoal for the smelter. One batch uses both wood and produces two charcoal.”
 
+- **Workspace:** Build.
 - **Learn:** Two wood become a batch of two charcoal at the kiln.
-- **Setup / task:** Prebuild a kiln, stage two wood, and offer its Make Charcoal action. Use familiar progress and output pictures.
+- **Setup and support:** A prebuilt kiln contains the exact recipe inputs and output room. Show recipe and progress pictures; no fire-management system or extra fuel meter appears.
+- **Player task:** Write the one-batch charcoal program.
 - **Success / observe:** One batch produces two charcoal. “Which source can feed both the sawmill and the kiln?” No fire management or extra fuel meter is introduced.
 
 #### 49. Share the Wood
 
-“Keep both planks and charcoal coming.”
+“The sawmill and kiln both need wood. These collectors are busy, but only the kiln gets deliveries. Inspect the selected collector's route and repair it so both buildings finish their orders.”
 
+- **Workspace:** Repair.
 - **Learn:** One raw resource can serve two useful chains.
-- **Setup / task:** Two supplied collectors have separate destination settings, but both point to the kiln. Sawmill and kiln each have one finite production order. Change one collector to the sawmill.
+- **Setup and support:** Two independent complete collector programs both deliver to the kiln. The sawmill and kiln have finite orders for two planks and two charcoal. Only one collector needs editing; the other is background support. Keep the wrong destination unmarked.
+- **Player task:** Trace the missing wood, repair the selected collector's destination, and verify both outputs.
 - **Success / observe:** At least two planks and two charcoal are produced from separate paid inputs. “Which building was missing its share?” Require no efficiency optimum or arithmetic split.
 
 #### 50. An Industrial Corner
 
-“Build a smelter and put charcoal beside it.”
+“Build the smelter, then leave two charcoal in its input store. The sawmill and stonecutter make its building pieces, and the kiln makes charcoal. Use the site's pictured bill to write your helper's deliveries; all three makers already have jobs.”
 
+- **Workspace:** Build.
 - **Learn:** Combine construction materials and fuel preparation.
-- **Setup / task:** Supply working sawmill, stonecutter, and kiln programs with pictured source routes. Start with raw wood/stone access and a valid smelter site; support jobs produce its exact bill. The child completes one construction route and one charcoal route.
+- **Setup and support:** Background gathering and production make the exact construction bill and two charcoal from raw sources. A valid site has its Build program. The selected helper's workspace is empty; show construction and first-fuel orders separately.
+- **Player task:** Author the whole construction-and-fuel delivery plan, using valid loads and waiting pickups as needed.
 - **Success / observe:** The smelter finishes and receives two newly made charcoal. “Which deliveries built it, and which will help it work?” Budget construction and fuel separately; do not use staged processed inputs in the reference solution.
 
 ### Chapter 11 — From Ore to Iron
 
 #### 51. Bring Iron Ore
 
-“Bring two pieces of iron ore to the smelter.”
+“Bring two iron ore to the smelter. Ore comes from the iron deposit and uses basket space like stone. It must be made into bars later; this job is only the delivery.”
 
+- **Workspace:** Build.
 - **Learn:** Ore is a raw collectible; iron bars will be its processed output.
-- **Setup / task:** Reuse a familiar two-item collector with a local iron deposit and prebuilt smelter. Choose ore and destination; show the different ore/bar icons.
+- **Setup and support:** One empty helper at camp, a reachable deposit, and a prebuilt smelter with production parked. Distinguish ore and bar icons.
+- **Player task:** Write the complete two-ore collection and delivery program.
 - **Success / observe:** Two iron ore reach the input store. “Is this ready to build a robot yet?” Leave production off for this delivery lesson.
 
 #### 52. The Smelter's Three Ingredients
 
-“Make two iron bars from ore, charcoal, and water.”
+“The smelter has two iron ore, one charcoal, and one water. Program it to make a batch of two iron bars. All four ingredients are used together.”
 
+- **Workspace:** Build.
 - **Learn:** One iron batch needs two ore, one charcoal, and one water.
-- **Setup / task:** Visibly stage the full set at the smelter and attach Make Iron Bars. Its output has room for two; no delivery programming is required.
+- **Setup and support:** Visibly stage one complete iron recipe and room for two output items. Keep delivery programming outside this first recipe lesson.
+- **Player task:** Write the smelter's one-batch iron program and observe payment and output.
 - **Success / observe:** The complete input set is consumed once and two bars finish. “Point to every ingredient before Run.” Do not substitute charge packs for charcoal.
 
 #### 53. Join the Three Routes
 
-“Keep the smelter supplied for two batches.”
+“Help the smelter make four iron bars. Each batch needs two ore, one charcoal, and one water. Program one supplier to bring every ingredient from the marked deposit, kiln, and well; the smelter already knows how to make two batches.”
 
+- **Workspace:** Build.
 - **Learn:** Practise supplying a three-input producer with known tools.
-- **Setup / task:** Stage charcoal and water at source buildings; ore remains at its deposit. Supply two working routes and leave one source choice for the child. The smelter requests two iron batches.
+- **Setup and support:** Stage charcoal and water at their source buildings; ore stays at its deposit. Give the smelter a finite two-batch background program and declared demand. The single supplier starts without a source list or program.
+- **Player task:** Choose all three sources and write the complete repeated Supply job, then trace each ingredient's deliveries.
 - **Success / observe:** Four ore, two charcoal, and two water arrive across valid loads and produce four bars. “Which route brought each picture?” Supplies must not require a four-item basket.
 
 #### 54. Follow the Missing Ingredient
 
-“The smelter needs charcoal. Find what the kiln needs.”
+“The smelter is waiting for charcoal. The kiln can make it, but first needs wood. Follow the selected wood collector's route and repair the earliest missing delivery so an iron batch can finish.”
 
+- **Workspace:** Repair.
 - **Learn:** Trace a shortage upstream to its cause.
-- **Setup / task:** Ore and water delivery work. The kiln is empty because its wood collector points to the sawmill. The overview links Smelter → Charcoal → Kiln → Wood. Correct that destination.
+- **Setup and support:** Ore and water routes and building programs work. The kiln's collector has a complete faulty trip to the sawmill. The overview can show the material chain, but does not mark the block to change.
+- **Player task:** Inspect the kiln's input and collector's travel, repair the cause, and follow newly made charcoal through to iron.
 - **Success / observe:** New wood becomes charcoal, a completed delivery feeds the smelter, and an iron batch finishes. “Where did the first missing piece belong?” Changing the final Make block alone cannot solve the cause.
 
 #### 55. Our Iron Works
 
-“Make four iron bars from the island's resources.”
+“Make four iron bars from the island's raw resources and deliver them to the depot. Program a supplier for the smelter's ore, charcoal, and water. The kiln, well, smelter, and finished-bar courier already have jobs.”
 
+- **Workspace:** Build.
 - **Learn:** Build a small complete industrial chain without a new block.
-- **Setup / task:** Prebuild the well, kiln, and smelter. Offer known collectors/suppliers and job cards; start processed inputs empty. Choose routes with support for all but one or two decisions.
+- **Setup and support:** Prebuild the required producers with empty processed stores. Background jobs supply kiln wood, produce water and charcoal, make two iron batches, and export completed bars. The selected supplier has no program or sources chosen.
+- **Player task:** Plan the three-source Supply job and run it until all four newly made bars arrive at the marked depot.
 - **Success / observe:** Four ore, two wood, and two water become four iron bars at a marked depot through two batches. “Follow one bar back to its sources.” Working buildings alone are not counted as completed deliveries.
 
 ### Chapter 12 — Keep the Factory Flowing
 
 #### 56. Ready to Make?
 
-“Make iron when the whole recipe is ready.”
+“Program the smelter to check whether it can make iron. Ready to Make asks whether every ingredient is here and the whole batch will fit. Make one batch if it is ready; otherwise leave it for now.”
 
+- **Workspace:** Build.
 - **Learn:** Ready to Make checks all inputs and a full output batch's space.
-- **Setup / task:** Put Ready to Make Iron Bars? into a supplied If. Show announced ready/not-ready fixtures: complete inputs and room, then missing water. Demonstrate a full output shelf as an optional third variation.
-- **Success / observe:** The ready fixture completes a batch; the unready fixture takes the alternative visible watch/wait path. “Which picture says why it cannot start?” The real Make action still checks atomically.
+- **Setup and support:** Trials provide complete inputs and room, then missing water; a full output shelf is an optional variation. Explain Ready to Make as one true-or-false block; no If wrapper is placed.
+- **Player task:** Write the readiness condition and conditional production action, then test the same program in both trials.
+- **Success / observe:** The ready fixture completes a batch; the unready fixture finishes its check without attempting Make or spending ingredients. “Which picture says why it cannot start?” The real Make action still checks atomically; no new timed-wait block is needed.
 
 #### 57. Batches Need Room
 
-“Keep four iron bars ready without making too many.”
+“Keep four iron bars on the smelter's shelf. A batch makes two bars, and a courier will take two away once. Program the smelter to check its own stock again and refill only when needed.”
 
+- **Workspace:** Build.
 - **Learn:** Stock targets must account for a recipe's batch size.
-- **Setup / task:** Supply Forever/If stock at This Building < 4 around Make Iron Bars, with the comparison value left to choose. Explain This Building as “this smelter,” a familiar stock target relative to its own program. Start visible trials at zero or two bars. Inputs continue and output capacity exceeds four; a test courier removes two once.
+- **Setup and support:** Trials start with zero or two bars, continuing inputs, and capacity above four. A background courier removes two once. Explain This Building as this smelter; no reserve loop or comparison value is supplied.
+- **Player task:** Build the complete repeated stock check and batch-production rule for a four-bar reserve.
 - **Success / observe:** Both trials reach four, replace the removed pair, and settle without starting an unnecessary batch. “How many appear each time?” Arbitrary odd starting stocks are excluded from this first batch lesson.
 
 #### 58. Water for Everyone
 
-“Give the farm, fuel station, and smelter their water.”
+“The farm, fuel station, and smelter each need water. Two deliveries work, but the smelter's shelf stays empty. Repair the selected courier's route so every building can finish one batch.”
 
+- **Workspace:** Repair.
 - **Learn:** Several consumers share one useful resource.
-- **Setup / task:** Give three short route presets with declared one-batch targets and enough well throughput. One water courier is assigned twice to the same consumer while another receives none. Correct the assignment; other ingredients are staged.
-- **Success / observe:** Each of the three consumers completes one paid cycle. “Which job was nobody doing?” Avoid adding a new scheduling language or AND/OR blocks.
+- **Setup and support:** Farm and fuel routes work independently. The selected courier has a complete faulty delivery to the farm instead of the smelter. Other ingredients are staged and well throughput is sufficient. Show stock evidence without marking the wrong block.
+- **Player task:** Find the wrongly served shelf and repair the selected route, then check all three completed cycles.
+- **Success / observe:** Each consumer completes one paid cycle after the repaired delivery. “Which shelf was still missing water?” Do not require library assignment, shared settings, or a scheduling language.
 
 #### 59. A Longer Delivery
 
-“Keep the smelter working when the water route is longer.”
+“Supply the smelter with water for two batches, even when the well is farther away. Choose whether it should keep water for one or two batches ready. Write a delivery job that keeps checking its order; a travelling bucket is not lost.”
 
+- **Workspace:** Build.
 - **Learn:** A small input buffer absorbs travel delay; a temporary wait is not automatically a bug.
-- **Setup / task:** Run two announced route layouts with the same known production jobs. Offer pictured targets of one or two complete recipe sets and a supported extra courier choice. Sources remain adequate and targets fit stores.
+- **Setup and support:** Two announced route layouts share the same adequate sources and background production jobs. The water courier has no program; pictured input-target choices fit the stores. Other ingredients have working routes.
+- **Player task:** Choose a buffer target and write the water-supply program; run the same plan on both route layouts and explain normal travel waits.
 - **Success / observe:** Two batches finish in each layout without manual nudges; the child can point to waiting goods or incoming goods. “Is it missing, or still travelling?” Do not require uninterrupted production or guessed delays.
 
 #### 60. A Balanced Factory
 
-“Prepare iron, kits, and charge packs for the next adventure.”
+“Deliver four iron bars, two kits, and two charge packs to the marked stores. The island's workers already gather and make them from raw materials. Write one helper's collection and delivery plan, using the pictured order to decide its trips.”
 
-- **Learn:** Combine the working-industry chains and investigate one bottleneck.
-- **Setup / task:** Prebuild production with empty processed stores. Supply grouped templates for construction materials, food/energy, and iron. A single pictured order asks for four iron bars, two kits, and two packs at compatible destination stores.
-- **Success / observe:** All requested goods are newly produced and delivered; no group is permanently starved. “Which missing input would you inspect first?” Unlock peaceful industry templates. The child edits at most two focus jobs by default.
+- **Workspace:** Build.
+- **Learn:** Plan a complete finished-goods order across familiar industry outputs.
+- **Setup and support:** Prebuild production with empty processed stocks and complete independent background input and production jobs. Leave the final courier unprogrammed. Mark each output source and compatible destination; no pickup route or loop is supplied.
+- **Player task:** Author the complete finished-goods order with valid loads, waiting for freshly produced items when necessary.
+- **Success / observe:** All requested goods are newly produced and delivered; no chain is permanently starved. “Which loads finished this order?” Unlock peaceful industry templates. Completing the order does not require assigning a group or changing multiple workers.
 
 ### Chapter 13 — Meet the Guards
 
 #### 61. Meet Your Guard
 
-“Send your guard to the flag.”
+“Send your guard to the flag. Advance moves it a short way toward a place, then lets the next instruction run. Make the guard keep advancing until it arrives.”
 
+- **Workspace:** Build.
 - **Learn:** A guard has a different job and toolbox from a helper.
-- **Setup / task:** Provide one guard, a nearby rally flag, no opponent, and a supplied Forever shell. Add Advance Toward Flag. Demonstrate that each short movement action returns to the loop.
+- **Setup and support:** One guard, a reachable flag, and no opponent. Explain Advance's short return and the guard's distinct toolbox; no Forever shell is placed.
+- **Player task:** Write a repeating movement program with the flag as its destination.
 - **Success / observe:** The guard reaches the flag. “Which robot carries things, and which protects them?” Collection and Supply choices are absent from the guard's toolbox.
 
 #### 62. Watch This Place
 
-“Ask the guard to protect our crossing.”
+“Protect the crossing when the practice visitor arrives. Guard moves toward its chosen place and watches nearby without chasing across the island. Write a job that keeps returning to that watch.”
 
+- **Workspace:** Build.
 - **Learn:** Guard approaches and protects an area without chasing across the map.
-- **Setup / task:** Supply a guard with ample shield and one announced, preplaced practice visitor with a short finite route. Choose Guard Crossing inside Forever; no assembly or economy edits are needed.
+- **Setup and support:** A healthy guard and one announced preplaced visitor on a short finite route. Explain Guard's bounded watch cycle; economy and assembly are outside this fixture.
+- **Player task:** Write the complete repeated protection program and select the crossing.
 - **Success / observe:** The guard reaches its area, responds to the visitor, and remains within its allowed protection area after the visitor leaves. “What is the guard watching?” Tune the fixture so defeat/reboot is not needed yet.
 
 #### 63. Move and Watch
 
-“Move toward the flag while watching for an opponent.”
+“Move your guard to the flag, watching for the practice opponent on the way. Advance can respond to a nearby opponent and then continue its journey. Keep it checking its route until it reaches the flag.”
 
+- **Workspace:** Build.
 - **Learn:** Advance combines movement with nearby engagements, then continues toward its place.
-- **Setup / task:** Reuse the short route with a visible practice opponent along it and a supplied healthy guard. Replace Guard with Advance Toward Flag. Show different side shapes and badges.
+- **Setup and support:** One healthy guard, a short route, and an easy visible opponent. Show side shapes and badges. The focus guard has no program; no old Guard action is preselected for replacement.
+- **Player task:** Write the advancing job, test the encounter, and compare the observed travel with guarding one place.
 - **Success / observe:** The guard engages the opponent when eligible and continues to the flag when the path is clear. “How did this differ from watching one place?” Use an easy finite encounter, with no moving-target selection block to learn.
 
 #### 64. Come Home for Repair
 
-“Bring this guard home to refill its shield.”
+“Your guard has a damaged shield and is away from camp. Program it to go home and repair. This action includes the journey and the repair, and costs no charge packs.”
 
+- **Workspace:** Build.
 - **Learn:** Go Home and Repair is a complete free recovery action.
-- **Setup / task:** Start one guard away from camp with a visibly damaged shield, zero charge packs, and no opponents. Add Go Home and Repair; watch travel and the repair bar as parts of the same action.
+- **Setup and support:** One damaged guard away from camp, zero packs, and no opponents. Explain Go Home and Repair and show its progress bar.
+- **Player task:** Write the recovery instruction and observe a complete free repair.
 - **Success / observe:** The guard reaches its own camp and completes basic repair without spending resources. “Does an empty pack shelf stop this repair?” No speed comparison yet.
 
 #### 65. Check the Shield Again
 
-“Protect the crossing, and come home when the shield is low.”
+“Protect the crossing while your guard's shield is healthy. When its shield is low, send it home to repair, then let it protect the crossing again. Make it check its shield more than once.”
 
+- **Workspace:** Build.
 - **Learn:** Repeated conditions make a guard respond to a changing shield.
-- **Setup / task:** Provide Forever/If/Else with a low-shield condition gap and known Guard/Repair branches. Two announced trials begin healthy or low; the healthy fixture includes a gentle encounter that later reaches the threshold.
+- **Setup and support:** Announced healthy and low-shield trials; the healthy trial includes a gentle encounter that later lowers the shield. Explain the Low Shield condition, but supply no loop or branch.
+- **Player task:** Author the repeated condition and both protection/recovery behaviors, then test a full protect-repair-return cycle.
 - **Success / observe:** The guard protects while healthy, returns and repairs when low, then resumes its job. “When does it look at the shield again?” Verify short Guard actions return to the condition; do not pretend If interrupts a running action.
 
-### Chapter 14 — A Team That Recovers
+### Chapter 14 — Back to Work Safely
 
 #### 66. Back After a Setback
 
-“Watch your guard reboot and return to its job.”
+“This guard lost its shield and is rebooting. Watch its recovery bar with Step, then Run. Its job is still there, so it should return to protecting the crossing when it recovers.”
 
+- **Workspace:** Explore.
 - **Learn:** Losing shield disables a robot temporarily; its assigned program remains.
-- **Setup / task:** Begin with a visibly rebooting guard after an explained practice encounter. It has a supplied defender job and an occupied population slot. Step through the recovery bar, then Run; an optional replay shows the bounded encounter itself.
+- **Setup and support:** A visibly rebooting guard, a complete Defender job, and an occupied population slot after an explained encounter. Keep the optional encounter replay separate.
+- **Player task:** Inspect the recovery and resumed job; explain whether a new robot or new payment was needed.
 - **Success / observe:** The same robot recovers through the documented restart rule and resumes protection without payment or reassignment. “Is it gone, or coming back?” Explain any program-local restart through the highlighted block, not through a new memory lesson.
 
 #### 67. Build a Guard
 
-“Make a guard for our Defender job.”
+“The workshop holds one kit, one iron bar, and one charge pack. Program it to make one guard. The new guard's protection job is already chosen.”
 
+- **Workspace:** Build.
 - **Learn:** A workshop pays one kit, one iron bar, and one pack to assemble a guard.
-- **Setup / task:** Stage the inputs at a workshop with an available guard slot and a known Defender program. Add Make a Guard for Defender; keep kit production and metal delivery out of this first assembly task.
+- **Setup and support:** Stage the exact bill and an available guard slot. A fixed Defender job is background support for the resulting guard, as in helper assembly; the workshop's program is empty.
+- **Player task:** Write the workshop's one-time paid assembly instruction and watch the guard take up its job.
 - **Success / observe:** One paid guard appears and reaches its assigned protection area. “Which building makes helpers, and which makes guards?” Assembly cannot consume the same kit twice.
 
-#### 68. Two Guard Jobs
+#### 68. Protect the Other Place
 
-“Keep one guard at home and send one to the crossing.”
+“One guard already protects camp. Write a job for the other guard to protect the crossing. Each guard has its own instructions, so changing this one will leave the camp guard's job alone.”
 
-- **Learn:** Apply familiar shared jobs and individual copies to guard behavior.
-- **Setup / task:** Two healthy guards start paused with a common defender program. Choose one copy's protected place; show the affected-robots preview and side badge before Apply.
-- **Success / observe:** Each guard reaches and protects its intended area through a short announced visit. “Is this change for one guard or both?” Edit never heals either shield or changes the computer's programs.
+- **Workspace:** Build.
+- **Learn:** A guard's destination determines which place it protects.
+- **Setup and support:** Two healthy guards; only the camp guard has a background program. The selected guard starts with Start, using literal places and no shared controls. Announce a short practice visit.
+- **Player task:** Author the selected guard's complete protection job and test both places remaining covered.
+- **Success / observe:** Each guard reaches and protects its intended area through a short announced visit. “Which place does this guard watch?” Editing the selected guard affects only its own program and never heals either shield.
 
 #### 69. A Courier Notices Danger
 
-“Send the supplier home when an opponent is nearby.”
+“Keep bringing supplies when the route is clear. If an opponent is nearby, send the helper home to repair instead. Opponent Near asks about danger when the program checks it, so make the helper check again between jobs.”
 
+- **Workspace:** Build.
 - **Learn:** Opponent Near? can choose between a delivery and a safe return.
-- **Setup / task:** Supply Forever/If/Else with working Go Home and Repair and Supply branches. Fill the danger sensor target. Use two visible fixtures, clear and threatened, with enough safety margin for any active delivery cycle to finish.
+- **Setup and support:** One supplier, known sources and finite demand, with clear and threatened trials. Provide enough margin for a bounded delivery to finish before retreat is needed. Explain the new sensor; no branches are supplied.
+- **Player task:** Build the complete repeated danger decision, safe-return branch, and configured Supply branch.
 - **Success / observe:** The clear trial delivers; the threatened trial returns home and later resumes after the visitor leaves. “When will it check again?” Supply is bounded, but the condition is not an instant escape interrupt.
 
 #### 70. Keep the Route Open
 
-“Protect the water route until two iron batches are finished.”
+“Protect the water courier until the smelter finishes two iron batches. Another guard already watches camp, and the makers know their jobs. Write your guard's protection and repair plan, choosing a place that covers the water route.”
 
+- **Workspace:** Build.
 - **Learn:** Production and protection can support one visible goal.
-- **Setup / task:** Supply the complete iron chain, a water courier, and two healthy guards. Let the child choose the guards' places. Announce one small preplaced raid and offer an automatic pause before it starts.
+- **Setup and support:** A complete background iron chain, water courier, and home defender. The focus guard is healthy and unprogrammed. Announce one finite raid and provide a planning pause before it.
+- **Player task:** Choose a protection area and author the full shield-aware guard job, then test it through the raid and completed production.
 - **Success / observe:** Two new iron batches finish after the raid has run its course, the player's camp remains active, and interrupted workers recover. “Which delivery did the guard help?” Unlock guard practice; no opponent-camp victory is required yet.
 
 ### Chapter 15 — Gold and Clever Parts
 
 #### 71. Find Gold Ore
 
-“Bring two pieces of gold ore to the smelter.”
+“Bring two gold ore from the home deposit to the smelter. Gold ore is collected like iron ore, but has its own picture. This is a safe delivery trip; making the bar comes later.”
 
+- **Workspace:** Build.
 - **Learn:** Gold is the sixth raw resource family and has its own ore picture.
-- **Setup / task:** Use a short safe home deposit and the familiar collector. Choose gold ore; the smelter's production is parked and its iron inputs are empty.
+- **Setup and support:** One helper at camp and a short safe gold source. The smelter's production is parked and iron inputs are empty. No collector program is supplied.
+- **Player task:** Write the complete two-item gold-ore collection and delivery.
 - **Success / observe:** Two gold ore arrive. “Which ore did this trip carry?” No contested mining or opponent pressure accompanies the first gold lesson.
 
 #### 72. A Gold Bar
 
-“Make one gold bar for our electronics.”
+“The smelter holds two gold ore, one charcoal, and one water. Program it to make one gold bar. A gold batch makes one bar, while an iron batch makes two.”
 
+- **Workspace:** Build.
 - **Learn:** The same smelter supports another recipe with a different output quantity.
-- **Setup / task:** Stage two gold ore, one charcoal, and one water. Choose Make Gold Bar; show one output picture next to the iron recipe's two.
+- **Setup and support:** Stage the full gold recipe with output room and keep iron production inactive. Show both output quantities side by side.
+- **Player task:** Write one gold-production action and compare its paid batch with iron.
 - **Success / observe:** One paid gold batch yields one bar. “Do both recipes make the same number?” Keep iron production inactive until recipe selection is taught next.
 
 #### 73. Give Both Metals a Turn
 
-“Make iron when gold must wait, and give gold a turn when it is ready.”
+“The smelter owes us two iron bars and one gold bar. Iron's ingredients are here, but gold ore arrives later. Repair the program so waiting for gold does not stop iron, and both orders finish.”
 
+- **Workspace:** Repair.
 - **Learn:** A missing recipe must not block another ready recipe forever.
-- **Setup / task:** Supply a Forever loop with separate iron and gold branches, each with a provided stock-target wrapper and a Ready to Make check. Targets are two iron bars and one gold bar; no courier drains either output in this lesson. An incorrect starter's gold branch has an unconditional Make Gold first. Add its missing readiness check. Show delayed-gold and fully supplied fixtures, with enough charcoal/water and room for both batches.
+- **Setup and support:** A complete faulty production loop attempts gold unconditionally before the iron check. Each recipe has a complete finite stock-target wrapper. Announced delayed-gold and fully supplied trials have sufficient shared inputs and room. No missing socket or offending block is highlighted.
+- **Player task:** Trace the blocking action and repair the readiness decisions while retaining finite targets; test both recipes completing.
 - **Success / observe:** Iron completes while gold is absent; after its announced delivery, both targets fill without starvation. “Which block was holding the whole program?” Explain why this uses two checks rather than an Else that always favors iron. Two readiness checks alone do not guarantee fairness under shared-input scarcity; the supplied target wrappers prevent repeatedly feeding one finished order.
 
 #### 74. Make Gears
 
-“Turn one iron bar into two gears.”
+“The forge has one iron bar. Program it to make two gears. Gears are parts we can use to improve our robots.”
 
+- **Workspace:** Build.
 - **Learn:** The forge adds a processing stage for improvements.
-- **Setup / task:** Prebuild the forge, stage one iron bar, and attach Make Gears. Offer the source → forge → gear picture strip.
+- **Setup and support:** A prebuilt forge, one iron bar, and output room. Show the bar-to-gears recipe and its smelter source; no transport task is added.
+- **Player task:** Write the forge's one-batch gear program.
 - **Success / observe:** One bar becomes two gears. “Where was the bar made?” No new transport block is needed.
 
 #### 75. Make Circuits
 
-“Bring gold and iron together to make circuits.”
+“The electronics lab needs one gold bar and one iron bar to make two circuits. Both bars are waiting at the marked smelter shelves. Program one helper to bring them; the lab already knows its recipe.”
 
+- **Workspace:** Build.
 - **Learn:** The electronics lab combines one gold bar and one iron bar into two circuits.
-- **Setup / task:** Prebuild the lab and stage bars at friendly smelter shelves. Supply its producer and familiar bar couriers; leave one route to connect.
+- **Setup and support:** Prebuild the lab with a one-batch background program. Stage the bars at the named source shelves. The selected helper starts empty; no bar courier or route is prepared.
+- **Player task:** Plan and write the complete two-metal delivery with one helper.
 - **Success / observe:** One gold and one iron are delivered and become two circuits. “Which two metal paths meet here?” Count actual deliveries and a completed batch.
 
 ### Chapter 16 — Improve the Settlement
 
 #### 76. One More Basket Space
 
-“Give every helper a bigger basket.”
+“Give our helpers one more basket space. The workshop already has the price: two gears, one circuit, and two charge packs. Program it to buy the basket improvement once.”
 
+- **Workspace:** Build.
 - **Learn:** A paid improvement changes every eligible robot on one side, once.
-- **Setup / task:** Stage two gears, one circuit, and two packs at the workshop. Attach Improve Baskets, outside Forever. Show two existing helpers' basket outlines before and after; the opponent's remains unchanged.
+- **Setup and support:** Stage the exact bill at the workshop. Show two friendly helpers and one opponent for comparison; a background later assembly demonstrates that a new helper benefits too.
+- **Player task:** Write the one-time improvement program and check who gains capacity.
 - **Success / observe:** The cost is paid once and player helpers gain a third slot. A supplied later helper assembly shows inheritance. “Who received the extra space?” The upgrade creates no carried items.
 
 #### 77. Use the New Space
 
-“Bring one kit's ingredients in a single basket.”
+“Your helper now has three basket spaces. Bring two planks from the sawmill and one stone from the pit to the workshop in one load. The workshop already knows how to turn them into a kit.”
 
+- **Workspace:** Build.
 - **Learn:** Revisit a familiar delivery after its physical limit changes.
-- **Setup / task:** Start with Bigger Baskets already completed and clearly labelled as staged. Supply a route with two plank pickups and one raw-stone collection before the workshop. The workshop makes one kit.
+- **Setup and support:** Clearly stage the completed basket improvement and required source stock. Only the workshop's kit program is prepared; the helper has no route.
+- **Player task:** Write the complete mixed three-item collection and delivery without unloading early.
 - **Success / observe:** A single mixed three-item load pays that kit's recipe. “Which extra trip did the new space save?” Compare pictures with the old two-slot basket; do not silently change ordinary collectors to a three-item load in unupgraded missions.
 
 #### 78. Stronger Shields
 
-“Give our guards one more shield segment.”
+“Give our guards one more shield space. The workshop has two gears, two circuits, and two charge packs to pay for it. Program the shield improvement, then watch how repairing fills a damaged shield.”
 
+- **Workspace:** Build.
 - **Learn:** A second improvement increases guard shield capacity.
-- **Setup / task:** Stage two gears, two circuits, and two packs. Provide healthy and damaged player guards plus a visible opponent for comparison. Run Improve Shields without a battle in progress; demonstrate the agreed rule for current versus maximum shield and then free repair.
+- **Setup and support:** Stage the bill, healthy and damaged friendly guards, and a passive opponent comparison. Background repair and later guard assembly demonstrate the agreed current-versus-maximum rule, including on the peaceful route. No combat program needs editing.
+- **Player task:** Write the one-time shield-improvement instruction and observe capacity, repair, and inheritance.
 - **Success / observe:** Only player guards gain the new maximum, once, with no unintended heal; free repair can fill the new maximum. A supplied new guard also inherits it. “Did the picture show a new space or a repair?” Lock the exact shared shield rule before implementing this fixture.
 
 #### 79. Already Improved
 
-“Let the workshop start its next job after the improvement is done.”
+“Let the workshop improve baskets once, then make kits. Improvement Finished tells it whether that purchase is already done. Write a job that checks before choosing what to do next.”
 
+- **Workspace:** Build.
 - **Learn:** Improvement Finished? distinguishes a one-time project from repeatable work.
-- **Setup / task:** Provide Forever/If Baskets Finished? → Make Kit / Else → Improve Baskets, with the sensor gap. Use announced not-yet-finished and already-finished starts, enough paid inputs, and output room to observe the choice.
+- **Setup and support:** Announced not-yet-improved and already-improved fixtures have sufficient inputs and output room. Explain the sensor separately; no loop, condition, or branches are placed.
+- **Player task:** Author the repeated improvement-status decision and its purchase/production behaviors, then test both starting states.
 - **Success / observe:** Both trials make a kit; the first pays for one upgrade, the second pays for none. “What should happen the next time it looks?” Do not require repeatedly attempting an already completed purchase.
 
 #### 80. The Clever Factory
 
-“Make the parts for an improvement from our island's resources.”
+“Choose bigger baskets or stronger shields. Bring the pictured parts and charge packs to the workshop to pay for your choice. Other workers make them from the island's raw resources; write your helper's whole delivery plan.”
 
+- **Workspace:** Build.
 - **Learn:** Connect all six resource families to one useful outcome.
-- **Setup / task:** Prebuild all production; processed stores start empty. Offer known grouped route templates, fair smelter production, and a choice of baskets or shields. The child connects one or two final routes while inspecting the whole pictured chain.
+- **Setup and support:** Prebuild production with empty processed stores and independent background raw-input, production, and kit jobs. The chosen improvement determines the visible workshop bill and its one-time background purchase. The final courier starts unprogrammed; display sources for gears, circuits, and packs.
+- **Player task:** Choose the improvement and author every required pickup, load, and delivery, watching newly made parts reach the bill.
 - **Success / observe:** Newly gathered wood, water, food, iron ore, and gold ore feed a paid improvement; a supplied stone route also completes a fresh kit, keeping the construction family visible. Every required intermediate is actually made. “What did gold help us change?” Unlock the full peaceful economy.
 
-### Chapter 17 — Prepare a Skirmish
+### Chapter 17 — Ready for a Team
 
-#### 81. How Many Robots Belong to Us?
+Return to a small peaceful island with wood, stone, and short trips. This chapter follows mission 80 but uses no advanced recipes or opponents. Hide the larger factory so the new difficulty is managing instructions across two helpers. Missions 81–84 relocate the original shared-job lessons; 85 adds a first explicit incoming-delivery comparison. No messages are needed.
 
-“Make another helper only while our team is below its target.”
+#### 81. Two Helpers, One Plan
 
+“These two helpers need the same stone-delivery job. Give both the working plan in the library. They share instructions, but each robot takes its own trips and may be on a different step.”
+
+- **Workspace:** Explore.
+- **Learn:** Two robots can use one shared program.
+- **Setup and support:** Provide one complete two-trip, one-stone program because assignment is the new concept. Two empty helpers start at different distances; show the assignment preview naming both.
+- **Player task:** Assign the shared job, run it, and compare individual progress and completed deliveries.
+- **Success:** Each helper completes two deliveries, for four new stone at the depot.
+- **Hint / talk:** “They share instructions. Must they be on the same block?” Compare their highlights only now, after practising individual jobs throughout the economy.
+
+#### 82. Same Plan, Different Places
+
+“Send one helper's stones to camp and the other's to the depot. Their shared plan uses my Destination to read each robot's own choice. Change those choices, then try the source and item choices in separate small rounds.”
+
+- **Workspace:** Change.
+- **Learn:** A per-robot setting supplies a choice to a shared program.
+- **Setup and support:** A complete shared stone-collector program uses my Destination. Later announced trials introduce my Source and my Item individually, keeping the other choices configured. No filled destination answer is highlighted.
+- **Player task:** Configure the two destinations, then the supported source/item trials, and verify each robot follows its own choices.
+- **Success:** Both helpers deliver their pictured orders to their own destinations; the later trials also collect the configured materials.
+- **Hint / talk:** “Which choice belongs to this helper?” If changing one setting is not yet clear, repeat that trial before introducing another. No child-defined procedure input is needed.
+
+#### 83. One Edit Helps Everyone
+
+“Both helpers use this one-item collection plan. Change it so each brings two pieces on a trip. Before Apply, check which robots will receive your shared edit.”
+
+- **Workspace:** Change.
+- **Learn:** Applying an edit to a shared program updates everyone assigned to it.
+- **Setup and support:** Two configured collectors share a complete one-item trip, paused with empty baskets. Show the affected-helpers preview but do not highlight Collect or prescribe a replacement fragment.
+- **Player task:** Decide how to change the carried amount, edit once, and test both full-basket deliveries.
+- **Success:** Both helpers use the revised shared program and complete a two-item delivery of their configured material.
+- **Hint / talk:** “Who will use this change?” Compare both baskets. Restart from a clean mission checkpoint for comparisons; cargo-preserving live edits have their own later lesson in 99.
+
+#### 84. A Special Job for One
+
+“Both helpers currently keep collecting. Make one helper stop after a single trip while the other keeps working. An individual copy gives one helper a plan you can change without changing its friend's plan.”
+
+- **Workspace:** Change.
+- **Learn:** An individual copy can change without changing the shared original.
+- **Setup and support:** Two paused helpers with empty baskets share a complete Forever collector. Explain the own-copy control and preview; the behavioral edit is left to the child.
+- **Player task:** Create an individual copy for the chosen helper, change its stopping behavior, and verify the other still repeats.
+- **Success:** The special helper completes one trip and stops; the other completes at least two using the unchanged shared program.
+- **Hint / talk:** “Is this change for everyone or just this helper?” Returning to the shared job is an optional experiment, not another required assignment task.
+
+#### 85. Is More Already Coming?
+
+“The farm needs one bucket of water. Write a job that brings it only if it is still needed; Needs also notices a bucket another helper is already bringing. Test an empty route and a route with a bucket on the way.”
+
+- **Workspace:** Build.
+- **Learn:** Needs accounts for goods already promised by another courier as well as goods on the shelf.
+- **Setup and support:** Use the one-water farm target from 43 with production parked. A second helper is background support only in the claimed-delivery trial. Show its incoming bucket, and leave the focus helper's program empty in both trials.
+- **Player task:** Author the Needs decision and Supply behavior, predict both trials, and test that exactly one bucket arrives.
+- **Success:** The unclaimed trial sends water; the claimed trial avoids an extra delivery. Each farm receives exactly its one required bucket through completed deliveries.
+- **Hint / talk:** “Is it missing, or is somebody already bringing it?” Do not expose reservation arithmetic. Unlock optional message workshop C; this comparison uses stock and delivery observations, without a Send or Wait For Message block.
+
+### Chapter 18 — Prepare a Skirmish
+
+#### 86. How Many Robots Belong to Us?
+
+“Grow our helper team to the number shown on the goal card. Helpers being built or rebooting already count, even when they are not standing at camp. Program camp to check the count before making another helper.”
+
+- **Workspace:** Build.
 - **Learn:** Population counts include robots assembling or rebooting, not just those standing nearby.
-- **Setup / task:** Add Number of Our Helpers to a supplied comparison and assembly loop. Use small announced target fixtures, plus a full-limit fixture with one robot rebooting. Show active, assembling, and rebooting icons within the same slot row.
+- **Setup and support:** Small target trials plus a full-limit fixture with one rebooting robot. Show active, assembling, and rebooting slots, enough paid inputs, and a known delivery job for new helpers. The camp's control program is empty.
+- **Player task:** Write the population comparison, paid assembly action, and repeated check, then test against over-assembly.
 - **Success / observe:** Paid assembly fills the chosen target without an extra robot; the full-limit fixture starts no additional assembly. “Does a rebooting helper still have a place?” Reservations are shown and counted once; a full-cap wait is valid feedback, not an error.
 
-#### 82. Spend a Pack on Repair?
+#### 87. Spend a Pack on Repair?
 
-“Try a faster repair, then compare it with a free repair.”
+“This robot is at camp with a damaged shield. Try spending one charge pack to repair faster, then compare with a free repair. It can still recover when the pack shelf is empty.”
 
+- **Workspace:** Explore.
 - **Learn:** A pack can shorten recovery without making recovery depend on packs.
-- **Setup / task:** Stage one damaged robot at camp. The camp's recovery card offers the shared fast-repair operation for one pack. Run two announced fixtures, one choosing paid acceleration and one with zero packs using basic repair. Other programs are parked.
+- **Setup and support:** One damaged robot at camp and two announced recovery fixtures: paid acceleration and zero-pack basic repair. Other programs are parked. The recovery choice and timing must follow the agreed shared implementation.
+- **Player task:** Choose each recovery option, observe its payment and duration, and compare the completed repairs.
 - **Success / observe:** Both recover; only the fast option consumes one pack and it completes sooner under the same simulation conditions. “What else might that pack help us make?” This is an operation-choice lesson; its exact interface and timing depend on the shared recovery implementation.
 
-#### 83. Meet at the Flag
+#### 88. Meet at the Flag
 
-“Bring three guards together before choosing their next job.”
+“Gather three guards at a safe flag before their next job. Their shared plan already tells them to guard the flag. Place it where they can reach it, and check that all three arrive.”
 
+- **Workspace:** Explore.
 - **Learn:** A rally flag names a place for a squad.
-- **Setup / task:** Supply three already assembled guards with a known Guard Rally Flag job. Place the flag on a safe reachable square and run the gathering. Show actual arrivals separately from the population count.
+- **Setup and support:** Three assembled guards share a complete Guard Rally Flag job. Flag placement and actual arrival are the focus; display arrivals separately from the population row.
+- **Player task:** Place the flag, run the gathering, and inspect the three guards at its area.
 - **Success / observe:** All three guards reach the rally area and keep watching it. “Are all the robots counted at camp ready here yet?” Do not use population alone as proof of arrival or assembly completion. Sending them onward is the next lesson.
 
-#### 84. The Other Camp
+#### 89. The Other Camp
 
-“Send the squad forward to lower the practice camp's shield.”
+“Win this practice encounter by bringing the other camp's shield to zero. Write your squad's job to advance toward that camp and return home for repair when shields are low. Your own camp must keep its shield.”
 
+- **Workspace:** Build.
 - **Learn:** A skirmish is won by reducing the opposing camp's shield to zero while protecting one's own.
-- **Setup / task:** Provide a gathered squad, a low-strength practice camp, no active enemy economy, and the familiar low-shield/repair guard starter. Change the Advance destination to Opponent Camp. Pin both camp shields.
+- **Setup and support:** A gathered healthy squad, a weak practice camp, and no active enemy economy. Pin both camp shields and explain win, loss, and draw. The squad's shared program contains only Start.
+- **Player task:** Author the full advance-and-repair behavior, assign it to the squad, and run the encounter.
 - **Success / observe:** The opponent camp reaches zero through completed hits and the player's camp remains active. “Which shield decides the match?” Show defeat and draw explanations in the result help, without forcing the child to lose a tutorial.
 
-#### 85. See What the Computer Is Doing
+#### 90. See What the Computer Is Doing
 
-“Look at the opponent's plan and protect the route it is approaching.”
+“Look at the opponent's program to find which route its guard is approaching. Then write your defender's job to protect that route until our courier finishes its delivery. You can inspect the opponent's instructions, but only change your own.”
 
+- **Workspace:** Build.
 - **Learn:** The visible opponent runs inspectable programs but belongs to another side.
-- **Setup / task:** A small opponent settlement has visibly paid supplies and one announced advancing guard. Open its read-only program and route view, then choose a protected place for the player's defender. No editing controls are offered for the opponent.
+- **Setup and support:** A small opponent settlement with paid stocks and one announced advancing guard; a friendly courier has its background delivery. The opponent is read-only. The player's focus guard starts unprogrammed.
+- **Player task:** Inspect the opponent's route, choose a defense place, and write a complete protection-and-repair job.
 - **Success / observe:** The announced visit resolves and a marked courier delivery completes with the player's camp active. “Which plan can you change?” Pause and Step advance or freeze both sides together.
 
-### Chapter 18 — Play and Recover
+### Chapter 19 — Play and Recover
 
-#### 86. Your First Practice Match
+#### 91. Your First Practice Match
 
-“Use our working settlement to beat the Practice computer.”
+“Win your first Practice match while our workers keep the settlement running. Write your guards' jobs to protect useful routes, repair, and approach the other camp. This short match includes the iron needed to make guards.”
 
+- **Workspace:** Build.
 - **Learn:** Combine the camp objective with supported economy and guard decisions.
-- **Setup / task:** Use First settlement, working food/energy/construction templates, a pictured finite iron allowance sufficient for the authored guard order, and generous Practice announcements. Ask for one useful choice: defend a route or change the squad's destination.
+- **Setup and support:** Use First settlement with independent working food/energy/construction and paid assembly support. Display the finite iron allowance and generous raid announcements. Begin the player-controlled defender and advancing squad programs at Start; full worked guard plans are optional help.
+- **Player task:** Author and assign the guard behaviors, choose their places, and adjust the plan during a paid match.
 - **Success / observe:** Win by camp shields under the real paid resource rules. “Which program change helped?” Announce that iron was supplied for this short lesson; never imply that this preset has a self-sustaining metal chain. Unlock its replayable Practice mode.
 
-#### 87. A Setback Is Part of the Match
+#### 92. A Setback Is Part of the Match
 
-“Recover a supply route after a courier reboots.”
+“A courier is rebooting, and the fuel station is waiting for its deliveries. Its delivery job will return with it. Inspect the threatened route and change the defender's job so the courier can safely supply two fuel batches.”
 
+- **Workspace:** Change.
 - **Learn:** Repair the economy's interruption instead of replacing all its programs.
-- **Setup / task:** Start an explained mid-match fixture with one rebooting courier, a waiting fuel station, and a long safe recovery gap. All initial resources and damage are displayed. Let the child inspect the wait and protect the route; existing assigned jobs handle recovery.
+- **Setup and support:** An explained mid-match fixture has a rebooting courier, waiting fuel station, and long recovery gap. Display initial damage and stock. A working defender plan is present for the specific mid-match change; courier recovery is background behavior.
+- **Player task:** Use waiting and danger evidence to change protection where useful, then observe recovery and completed pack deliveries.
 - **Success / observe:** After reboot, two fuel batches finish and their packs reach consumers while camp stays active. “Did it need a new robot, a safe route, or time to return?” No scripted extra gift resolves the shortage.
 
-#### 88. Safe Supplies or a Shorter Route?
+#### 93. Safe Supplies or a Shorter Route?
 
-“Choose a water route and keep it working.”
+“Choose water from the safe home well or the faster central spring. Program the chosen delivery so the smelter can finish two batches. The central route is exposed during the announced visit; camp must stay safe whichever route you choose.”
 
+- **Workspace:** Build.
 - **Learn:** Home sources are viable; central sources offer a travel or throughput advantage with exposure.
-- **Setup / task:** Offer a slow safe well and a faster central spring, with known Collector/Courier/Supplier presets that choose the correct source action. Keep the rest of industry working. A pictured raid announcement identifies the exposed route.
+- **Setup and support:** Keep the rest of industry and basic defense working. Offer both viable sources with pictures explaining Pick Up versus Collect; no Collector or Supplier preset is selected. The focus helper starts at Start.
+- **Player task:** Choose a source, author the complete water-supply job, and test it through the announced encounter.
 - **Success / observe:** Either route delivers enough water for two marked iron batches while camp survives the encounter. “What did your choice change?” Neither speed nor using the contested resource is required for success.
 
-#### 89. More Help or Another Guard?
+#### 94. More Help or Another Guard?
 
-“Choose how to help this settlement through the next two visits.”
+“Our materials can pay for another helper or another guard. Choose which would help this route through the next two visits. Program the matching building to make your choice, then see whether the pictured delivery order finishes.”
 
+- **Workspace:** Build.
 - **Learn:** Limited materials create a choice between economic growth and immediate protection.
-- **Setup / task:** A working-industry fixture offers pictured, affordable choices: one extra helper to improve a supply route, or a guard for that route. Keep sufficient basic recovery capacity and minimum defenses for both approaches; no gold chain yet.
+- **Setup and support:** A working-industry fixture has affordable choice bills, existing job options, basic recovery, and minimum defense supporting either strategy. The selected assembly program starts at Start; no gold chain is required.
+- **Player task:** Choose an investment, write the paid assembly control, and assign the new robot's familiar job.
 - **Success / observe:** The two announced visits resolve, camp remains active, and the marked supply order completes. “What did you spend, and what became easier?” Accept both tested strategies and other valid programs.
 
-#### 90. A Working-Industry Match
+#### 95. A Working-Industry Match
 
-“Let your own iron works supply the squad.”
+“Win a Practice match using iron made here, instead of a supplied iron allowance. Write the smelter-to-workshop delivery and your squad's advancing job. The other workers gather ingredients and make kits, packs, and bars.”
 
+- **Workspace:** Build.
 - **Learn:** Sustain a match using the taught metal economy.
-- **Setup / task:** Use Practice with the Working industry preset, prebuilt chains and editable templates. Replace mission 86's staged iron allowance with empty metal output and real ore/charcoal/water production. No new block or guard behavior is introduced.
+- **Setup and support:** Use Working industry with prebuilt chains, empty metal output, and working background input/production, home defense, and paid assembly. The iron courier and advancing squad have no programs. Optional examples can help with one job at a time.
+- **Player task:** Author the full iron delivery and advance/repair behavior, then sustain paid guard production through the match.
 - **Success / observe:** The opponent camp is defeated; at least one player guard has been assembled from newly produced iron, a kit, and a pack. “Which route kept your workshop going?” Unlock Working industry Practice.
 
-### Chapter 19 — Manage the Full Economy
+### Chapter 20 — Manage the Full Economy
 
-#### 91. Every Chain, Friendly Pace
+#### 96. Every Chain, Friendly Pace
 
-“Explore the complete settlement with a gentle opponent.”
+“This island has every resource chain, but the opponent is still set to gentle Practice. Choose to make a new guard or buy an improvement. Write its workshop job while the other workers make and deliver the pictured ingredients.”
 
+- **Workspace:** Build.
 - **Learn:** Full economy and opponent difficulty are separate settings.
-- **Setup / task:** Start Full skirmish with Practice and complete visible templates, including gold/electronics. Let the child choose an economy group to inspect and one route to adjust. Announce a single small visit; other groups run on supplied plans.
+- **Setup and support:** Provide full-economy background gathering, production, delivery, and defense, including gold/electronics. The selected final assembly or improvement job starts at Start with its bill visible. Announce one small visit; other production uses separate authored support jobs.
+- **Player task:** Inspect the chosen bill, write the paid final job, and observe the outcome while camp survives the visit.
 - **Success / observe:** A chosen newly produced guard or paid improvement completes and camp survives the announced visit. The child can enter Full skirmish Practice afterward; winning a long match is not the entry gate. “What can stay gentle while the factory grows?”
 
-#### 92. Find the Bottleneck
+#### 97. Find the Bottleneck
 
-“Find the one missing delivery that is holding up our new guard.”
+“Our workshop is waiting to make a new guard. Follow the missing ingredients back through the factory until you find the delivery that stopped. Repair its job, then check that the new guard is actually made.”
 
+- **Workspace:** Repair.
 - **Learn:** Read the full economy as small connected chains.
-- **Setup / task:** Supply a running settlement with one deliberate route fault: packs are missing because the farm's water supplier has no source. Other ingredients and jobs work. The guard assembly card links through fuel to food to water.
+- **Setup and support:** A running full settlement has one complete faulty source configuration: the farm's water supplier has no usable water source. Other jobs work. Ingredient links are available, but no wrong field or answer is highlighted.
+- **Player task:** Trace the shortage, inspect the root route, repair it, and follow completed food, pack, and guard production.
 - **Success / observe:** Correcting the root route leads to completed food, packs, delivery, and guard assembly without injected intermediates. “Which waiting building was closest to the cause?” Show only the relevant group first, with the full map expandable.
 
-#### 93. Invest Now or Grow the Squad?
+#### 98. Invest Now or Grow the Squad?
 
-“Choose a stronger factory or more guards for this match.”
+“Choose whether to make guards straight away or buy an improvement first. Read the pictured costs and write the workshop's production plan for your choice. Use it to win the Practice match; both approaches can work.”
 
+- **Workspace:** Build.
 - **Learn:** Gold-funded improvements are strategic options, not mandatory purchases.
-- **Setup / task:** Give two explicit starter strategies from the same full-economy checkpoint: immediate guard production, or an improvement followed by production. Both are affordable and viable against this Practice opponent. Allow a third child-authored plan.
+- **Setup and support:** Use the same full-economy checkpoint with working material delivery and squad behaviors. Present the two investment possibilities as descriptions and bills, not executable starter strategies. Leave the focus workshop program empty; other valid strategies remain welcome.
+- **Player task:** Author the chosen production/improvement policy using familiar checks and actions, then test and revise its strategy.
 - **Success / observe:** Either strategy can win by camp shields, using the actual costs. “What did you wait for, and what did you gain?” Do not require both improvements, a specific build order, or the fastest victory.
 
-#### 94. Change a Job with a Full Basket
+#### 99. Change a Job with a Full Basket
 
-“Change this supplier's job without losing what it carries.”
+“This supplier is paused with water in its basket. Change its supply job and check which helpers your edit affects. After Apply, the carried water must still reach a useful destination before the helper takes another load.”
 
+- **Workspace:** Change.
 - **Learn:** Editing restarts execution under an explicit cargo-preserving policy.
-- **Setup / task:** Pause a v2 supplier carrying one water with a visible incoming claim. Preview a shared-program change. Supply a restart-safe template that can finish or safely redirect carried goods before acquiring more; its internal recovery steps stay inspectable.
+- **Setup and support:** Start with a complete restart-safe program, an incoming claim, and one carried water. Retain its inspectable cargo-settlement behavior because this lesson studies a real live edit, not inventing a new recovery protocol. Show valid recipients with water demand.
+- **Player task:** Choose and apply a useful job change, then trace the existing cargo, released or updated claim, and next completed delivery.
 - **Success / observe:** Applying the change preserves and eventually delivers the water exactly once, releases or updates the old claim correctly, and the revised job completes another delivery. “What happened to the water already in the basket?” Gate this lesson on the shared v2 restart contract; do not reuse the legacy cargo-emptying behavior.
 
-#### 95. Make the Routes Dependable
+#### 100. Make the Routes Dependable
 
-“Keep the factory working when one route takes longer.”
+“Keep supplying water while the factory makes one new guard and your chosen improvement. Write the supplier's job and choose how much water its destinations keep ready. Try the normal route and a longer one; both orders must finish without restarting workers.”
 
+- **Workspace:** Build.
 - **Learn:** Use buffers, safe sources, and helper allocation in a complete network.
-- **Setup / task:** Supply full-economy programs and a finite order for one new guard and one chosen improvement. Run normal and visibly longer water-route fixtures, with the same starting stocks and enough slots. Offer target or route adjustments, not timing constants.
+- **Setup and support:** The full economy has working background jobs except the selected water supplier. Both route layouts use the same finite order, stock, and available slots. Show safe sources, pictured buffer targets, and the ability to assign another helper after the team chapter.
+- **Player task:** Author a water-supply plan, choose targets and helper allocation as needed, and test completion on both layouts.
 - **Success / observe:** The order completes in both fixtures without manual resource moves, repeated Apply, or starvation. “Which wait was normal, and which needed a change?” Save inside either fixture; no speed target is scored.
 
-### Chapter 20 — Your Island Strategy
+### Chapter 21 — Your Island Strategy
 
-#### 96. Choose a Plan
+#### 101. Choose a Plan
 
-“Choose the first jobs for this new island.”
+“Plan the first deliveries for a new island. Camp needs two planks and one charge pack for another helper. Choose who will bring those items and write their jobs, using the source pictures to see what is already being made.”
 
+- **Workspace:** Build.
 - **Learn:** Turn a familiar strategy into a small set of jobs.
-- **Setup / task:** Show the full-match starter settlement and a pictured immediate goal: supplies for one additional helper. Offer Collector, Courier, Supplier, and Producer cards and a working-start button. Choose the relevant jobs and local sources.
+- **Setup and support:** Use a fresh starter fixture with visible stocks and background production for the immediate order. The helpers chosen for its final deliveries have empty programs. Job cards describe responsibilities and sources without inserting executable code.
+- **Player task:** Decide the division of work, author the needed delivery programs, and deliver the paid helper ingredients.
 - **Success / observe:** Those jobs deliver the paid helper ingredients to camp without manual stock changes. “What will each helper do first?” Defer enemy pressure and later build choices to their own missions.
 
-#### 97. From Camp to a Complete Economy
+#### 102. From Camp to a Complete Economy
 
-“Build the chains for one new guard and one improvement.”
+“Build a settlement that can make one new guard and one robot improvement. The building cards show each price and what it can produce. Choose a building to work toward, write the jobs it needs, and save whenever you want to continue later.”
 
+- **Workspace:** Build.
 - **Learn:** Bootstrap the full economy using known construction and production dependencies.
-- **Setup / task:** Start with the proposed camp/sawmill/well, four helpers, one guard, and visible starter stock. Provide staged job cards and dependency-aware build templates; no opponent attacks. Farms, fuel, stonecutter, kiln, workshop, smelter, forge, and lab must actually be built. All six home resources are reachable.
+- **Setup and support:** Start with camp/sawmill/well, four helpers, one guard, and the skirmish starter stock. Supply only visible initial gathering/making support identified on the goal card. New building programs and expansion routes start empty. Show recipe and construction dependencies as reference pictures, not a prewritten build-order script; no attacks occur.
+- **Player task:** Choose the construction order and author delivery, building, and production programs in manageable stages until all required chains, the new guard, and the improvement are paid for.
 - **Success / observe:** One additional paid guard and one chosen improvement complete; no intermediate stock is injected after start. The resource ledger proves every required chain was built and used. “Which building made the next building possible?” This longer project supports saves and optional pauses after each pictured subgoal.
 
-#### 98. Rehearse the Defenses
+#### 103. Rehearse the Defenses
 
-“Keep this settlement working through two announced visits.”
+“Keep this settlement working through two announced visits. Write the defender jobs and a safe supply route, including what robots should do when danger or low shields appear. The makers already know their jobs, and there is time to recover between visits.”
 
+- **Workspace:** Build.
 - **Learn:** Test an integrated economy/defense plan before a full match.
-- **Setup / task:** Supply a fresh complete settlement and known programs. Let the child set defender places and safe supply routes. Two announced finite Practice visits leave a recovery gap; the first can automatically pause for planning.
+- **Setup and support:** Provide a fresh complete settlement with production and paid assembly support. Leave the chosen route and defender programs at Start. Two finite visits have a recovery gap and an optional planning pause.
+- **Player task:** Author protection, repair, and route decisions, then observe both visits and a later assembled guard reaching work.
 - **Success / observe:** Both visits finish, camp stays active, and a new guard assembled afterward reaches its job. “Did the team recover between visits?” Victory is not awarded merely because camp was healthy at the start.
 
-#### 99. The Final Rehearsal
+#### 104. The Final Rehearsal
 
-“Find one problem, fix it, and finish the order.”
+“Finish the pictured order for one new guard. One familiar problem is stopping this factory: inspect what is waiting and find its cause. Repair the program and follow the ingredients until assembly finishes.”
 
+- **Workspace:** Repair.
 - **Learn:** Independently investigate a familiar system using evidence.
-- **Setup / task:** Give a fully pictured one-guard order and one announced fault variant: a missing source or an unconditional gold recipe blocking iron. Both were taught earlier. Offer overview, Step, chain map, and the same hint ladder; do not highlight the answer immediately.
+- **Setup and support:** A fully pictured order and a complete faulty system use one announced variant: missing source access or unconditional gold production blocking iron. Offer overview, Step, and chain links without highlighting the answer.
+- **Player task:** Diagnose and repair the selected fault, then verify a completed paid guard rather than a temporary stock change.
 - **Success / observe:** A purposeful repair completes the paid order in the selected fixture. Offer the other fixture as an optional replay, not a hidden test. “What did you see that helped you choose a change?” This mission prepares confidence, not a new mechanic.
 
-#### 100. Your Island, Your Strategy
+#### 105. Your Island, Your Strategy
 
-“Run your settlement and lead your squad to a Practice victory.”
+“Lead your island to a Practice victory: the other camp's shield must reach zero while yours stays active. Write your supply and guard plans, choosing when to grow or improve your robots. Pause, inspect, and change your programs whenever the island needs a different plan.”
 
+- **Workspace:** Build.
 - **Learn:** Transfer familiar programming and strategic choices to a full match.
-- **Setup / task:** Use a fresh Full skirmish map, all six home resource families, fair shared costs, and Practice difficulty. Offer complete economy starters, picture job cards, save/resume, all taught hints, and optional blank workspaces. Every choice introduced here is a familiar choice in a new combination.
+- **Setup and support:** Use a fresh Full skirmish start with all six home resources and real costs. Clearly identify background gathering, build, and maker jobs that keep familiar infrastructure available. The selected main supply route, guard-production control, and squad behaviors begin at Start. Goal cards explain responsibilities; worked plans are available only through requested help.
+- **Player task:** Author and connect the economic and guard decisions, test them in the real match, and adapt the strategy. Save/resume and all learned hints remain available without scoring penalties.
 - **Success / observe:** The opponent camp reaches zero while the player's survives, using the real simulation and paid economy. Any viable mix of basic guards, expansion, or improvements is valid. On defeat or draw, explain the outcome and offer retry with this mission's programs retained. “Show one change that helped your island.” Celebrate completion; Friendly, Challenge, and peaceful sandbox remain choices.
 
 ## Optional programming workshops
 
-These preserve all fifteen advanced lessons from v1. Each workshop uses a small, peaceful, mission-owned island with the original wood/stone/kit recipes. It is available after mission 25 and never requires a later economy or combat mission. A child may take workshops between main chapters or return after learning skirmish. Lessons inside a workshop are sequential; workshops A, B, and C do not require one another.
+These adapt the fifteen advanced lessons from v1. Each workshop uses a small, peaceful, mission-owned island with the original wood/stone/kit recipes. Workshops A and B become optional after mission 60; their examples use individual programs and do not require shared jobs. Workshop C becomes optional after mission 85, once the child has practised managing two helpers. None requires combat. A child may return much later, and the main path never requires these workshops. Lessons inside each workshop are sequential; A, B, and C do not require one another.
 
 ### Workshop A — Remember the Job
 
 #### A01. A Number to Remember
 
-“Remember how many deliveries the order needs.”
+“Give your helper an order of two deliveries, then try three. A variable is a named place to remember a number. Store the order there and let the program read it to decide how many one-wood trips to make.”
 
+- **Workspace:** Build.
 - **Learn:** A variable is a named piece of a robot's memory.
-- **Setup and support:** Introduce one variable, `order`, with a live number display. Supply `set order to [number]` and a familiar one-item delivery loop with its count missing.
-- **Player task:** Put the value of order into Repeat. Try an order of two and then three, changing only the remembered number between clean trials.
+- **Setup and support:** One helper at camp, a reachable grove, and a variable name order with a live value display. Explain setting and reading memory separately; no assignment or delivery loop is placed.
+- **Player task:** Write the stored order and complete delivery loop, then change only the initial order number between trials.
 - **Success:** Each trial completes exactly its requested number of one-item deliveries.
 - **Hint / talk:** “Where can the robot look up the number?” Keep the name supplied and editable; do not require keyboard entry.
 
 #### A02. Count Finished Deliveries
 
-“Keep a count of the trips you have finished.”
+“Bring three wood home, one on each trip, and keep count of finished deliveries. Start the remembered count at zero. Add one only after the wood has been unloaded.”
 
+- **Workspace:** Build.
 - **Learn:** Change a variable as the program runs.
-- **Setup and support:** Supply `set delivered to 0` before a three-trip loop. Introduce `change delivered by 1`, with the number display beside the basket and destination.
-- **Player task:** Put the increment after Unload inside the loop.
+- **Setup and support:** One empty helper and a variable named delivered. Explain change by one beside the workspace and show the destination and memory display; no initialization, trip, or increment is placed.
+- **Player task:** Author the full three-trip delivery and counter program, checking when the number changes.
 - **Success:** Three completed one-item deliveries produce a remembered count of three. The count does not rise while an unload is still waiting or in progress.
 - **Hint / talk:** “When is a delivery really finished?” Pause immediately before and after unloading to compare the value.
 
 #### A03. How Many Are Left?
 
-“Finish the order, then wait for another job.”
+“Your helper has three deliveries left to do. After each finished one-wood trip, remember one fewer. Keep checking that number, and wait when no deliveries are left.”
 
+- **Workspace:** Build.
 - **Learn:** A changing value can control whether more work happens.
-- **Setup and support:** Supply `set remaining to 3` and a Forever shell beginning with `Wait Until remaining > 0`. Reuse the one-item delivery trip. Show three order pictures that can be crossed off.
-- **Player task:** Put `change remaining by -1` after the successful unload. Explain it as “one fewer”, not a lesson about negative numbers.
+- **Setup and support:** One helper, a variable named remaining, and a three-item order. Explain subtracting one as one fewer, not negative-number arithmetic. Supply no Forever, wait condition, or trip.
+- **Player task:** Write initialization, repeated positive-count checking, the delivery, and the completed-trip decrement.
 - **Success:** Three items are delivered, remaining becomes zero, and the robot waits before collecting a fourth.
 - **Hint / talk:** “What should the robot remember after this delivery?” Optional experiment: change the starting order to two and run a fresh trial.
 
 #### A04. My Count, Your Count
 
-“Give two helpers two deliveries each.”
+“The other helper already counts its own finished deliveries. Add a count to this helper's two-trip program, starting at zero and counting after unloading. Watch both displays: each robot remembers its own number.”
 
-- **Learn:** Robots using shared code still have separate variables.
-- **Setup and support:** Both helpers use the same program: set delivered to zero, repeat two deliveries, increment after each. Start them at different reachable places so they make progress at different times. No shared/global variable is introduced.
-- **Player task:** Assign the program and inspect the two live values during the run.
+- **Workspace:** Change.
+- **Learn:** A remembered count belongs to the robot whose program changes it.
+- **Setup and support:** The selected helper has a complete working two-delivery program with no counter; the other has an independent complete counting program. Different starting distances make their values differ during travel. Keep memory displays beside their own baskets; no shared assignment is used.
+- **Player task:** Add local initialization and completed-delivery counting to the selected program, then compare both independent values.
 - **Success:** Each helper ends with delivered equal to two; together they deliver four items.
 - **Hint / talk:** “This helper says one. What might the other say?” Do not imply that changing one variable changes the other robot's memory.
 
 #### A05. The Forgetful Counter
 
-“Three deliveries arrived, but the counter says one. Repair the memory.”
+“Three deliveries arrived, but this helper's counter says one. Step through a trip and watch which instruction changes the memory. Repair the counter so it remembers all three finished deliveries.”
 
+- **Workspace:** Repair.
 - **Learn:** Review initialization and updating by debugging.
-- **Setup and support:** Supply a three-trip program that resets delivered to zero inside every loop round, then increments after unloading. The physical deliveries work correctly.
-- **Player task:** Watch the value and move initialization before the loop.
+- **Setup and support:** A complete three-trip program resets delivered to zero inside each round before incrementing after unloading. Physical deliveries work. Do not highlight initialization.
+- **Player task:** Diagnose the repeated reset, repair where initialization runs, and test from a fresh checkpoint.
 - **Success:** Three deliveries complete and the final count is three. Repeat from the mission checkpoint to show that a new run starts at zero.
-- **Hint / talk:** “Which instruction makes the robot forget?” Celebrate explaining the mismatch, not merely moving the highlighted block.
+- **Hint / talk:** “Which instruction makes the robot forget?” Ask the child to explain the observed mismatch before showing a repair fragment.
 
 ### Workshop B — Make Your Own Blocks
 
 #### A06. My Delivery Block
 
-“Give this whole delivery job a name.”
+“Make your own block called Bring Wood. Put the whole one-wood trip inside its definition, then use its call block twice. Each call runs that job and returns when it finishes.”
 
+- **Workspace:** Build.
 - **Learn:** A procedure packages a familiar sequence as one callable block.
-- **Setup and support:** Supply a complete one-wood delivery sequence and a procedure named `Bring Wood`. Introduce its matching call block. No inputs or return values yet.
-- **Player task:** Move the sequence into the procedure and call it twice from Start.
+- **Setup and support:** One empty helper and an empty named Bring Wood definition to avoid a typing task. Explain definition versus call; no delivery actions or calls are placed.
+- **Player task:** Write the procedure's complete journey and the main program that calls it twice.
 - **Success:** Both calls return after unloading; two wood arrive at camp.
 - **Hint / talk:** “What is hidden inside your new block?” Let the child open the routine and follow execution entering it and coming back.
 
 #### A07. Fix It in One Place
 
-“One repair can fix every use of your delivery block.”
+“This program uses Bring Wood three times, but its basket gets stuck full. Open that block's definition to find what the delivery job is missing. One repair there will change every call.”
 
+- **Workspace:** Repair.
 - **Learn:** Reused behavior is maintained in its definition.
-- **Setup and support:** A main program calls Bring Wood three times. Its supplied definition is missing Unload, eventually causing a full-basket wait. All three calls refer to the same procedure.
-- **Player task:** Repair the definition once, then restart from the empty-basket checkpoint.
+- **Setup and support:** A complete main program calls a faulty Bring Wood procedure three times; its definition omits Unload. Preserve the faulty program because debugging reuse is the objective.
+- **Player task:** Inspect the definition, fix the trip, and rerun from an empty-basket checkpoint without editing every call.
 - **Success:** Three successful deliveries finish without changing each call.
 - **Hint / talk:** “Where does this block get its instructions?” Compare the definition with the places it is used.
 
 #### A08. One Routine, Two Destinations
 
-“Use your delivery block for camp and the depot.”
+“Let Bring Wood deliver to camp or the depot. Give the block a destination input, so each call can choose a place. Use it once for camp and once for the depot.”
 
+- **Workspace:** Change.
 - **Learn:** An input gives a routine a choice for this call.
-- **Setup and support:** Add one destination input to the existing Bring Wood definition. Source and item remain fixed. Provide two calls with picture dropdowns; use the input in the return Go To block.
-- **Player task:** Call Bring Wood with camp, then with depot.
+- **Setup and support:** A complete Bring Wood definition currently delivers to literal camp, and its main program calls it twice. Explain one place input separately; do not insert the parameter or replace the Go To input for the child.
+- **Player task:** Add and use a destination parameter, configure the two calls, and test both deliveries.
 - **Success:** One wood reaches each destination using the same definition.
-- **Hint / talk:** “What changes between these two calls?” Explain that a robot setting belongs to the robot, while this input belongs to one use of the routine.
+- **Hint / talk:** “What changes between these two calls?” Keep the input pictured on each call block; explaining per-robot settings is not a prerequisite.
 
 #### A09. Tell the Routine How Many
 
-“Ask for one delivery, then ask for three.”
+“Create Bring Some Wood with a number input called amount. That number means one-wood trips, not items in one basket. Call it for one trip, then for three.”
 
+- **Workspace:** Build.
 - **Learn:** Practise a procedure input as a number, using familiar Repeat.
-- **Setup and support:** Supply `Bring Some Wood(amount)` with a fixed destination and a Repeat-count gap. Each repeated trip carries one item, so any taught count respects basket capacity.
-- **Player task:** Put amount into the loop count and call the routine with one and then three.
+- **Setup and support:** One helper and an empty named procedure with its numeric amount input declared to avoid interface or typing overhead. Explain how an input's value is read inside a definition; no loop, actions, or calls are placed.
+- **Player task:** Write the complete repeated trip using amount, then create the two calls and verify their separate contributions.
 - **Success:** The first call delivers one wood; the second adds three, for four total.
 - **Hint / talk:** “Does three mean three things in the basket, or three trips?” Keep one input per routine; additional inputs are an optional later experiment.
 
 #### A10. Little Jobs Make a Big Job
 
-“Build a kit-delivery plan from smaller jobs.”
+“Make and deliver two kits using smaller blocks of your own. Each kit needs two planks and one stone, then must be carried from the workshop to the depot. Plan the little jobs and call them in a useful order.”
 
+- **Workspace:** Build.
 - **Learn:** Break a larger task into named, understandable parts; no new block.
-- **Setup and support:** Stage four planks at the sawmill and two stone at the pit. A supplied workshop makes two kits. Offer picture job cards and starter definitions for Bring Two Planks, Bring One Stone, and Deliver One Kit; each finishes with an empty basket.
-- **Player task:** Complete the familiar action sequences and call the three jobs in order inside Repeat 2. Other helpers have no active job, so this stays a one-robot planning task.
+- **Setup and support:** Stage four planks at the sawmill and two stone at the pit; the workshop has a two-kit background job. Offer optional pictured name choices for procedures, with no definitions or calls placed. Other helpers are inactive.
+- **Player task:** Define the delivery subtasks and write the main program that combines them for two kits; choose any valid decomposition.
 - **Success:** Two kits are produced and delivered to the depot. Pick Up naturally waits if the workshop is still making a kit.
 - **Hint / talk:** “Which little job must happen before the next?” Draw or point through the three-part plan before running. Multiple valid decompositions are welcome.
 
 ### Workshop C — Talk and Work Together
 
+Offer this as a later curiosity after 85, with a replayable two-character demonstration before A11. A child should first be able to explain which helpers an edit affects and follow one delivery between them. If that is still difficult, keep the workshop available to return to and recommend more peaceful play. Start with one sender and one receiver; add request/reply and system debugging only in the following lessons.
+
 #### A11. You Have a Message
 
-“Tell the courier when a plank is ready.”
+“The courier is waiting for a note called plank ready. Program the sawmill to make one plank, then send that note to the courier. The note tells it to start its pickup; it does not carry the plank.”
 
+- **Workspace:** Build.
 - **Learn:** One program can send a named message that another explicitly waits for.
-- **Setup and support:** The sawmill holds one wood. Its program makes a plank, then has a Send gap. The courier already has Wait For `plank ready`, followed by the familiar pickup and delivery sequence. Show both inboxes.
-- **Player task:** Send `plank ready` to that courier after Make Plank. Step through sending and receiving, then swap which small gap the child fills in an optional replay.
+- **Setup and support:** The sawmill holds one wood and starts with only Start. A background courier already waits for plank ready before its complete pickup and depot delivery. Explain Send's recipient and name fields, and show the receiving inbox.
+- **Player task:** Write the production-and-send sequence, choose the courier and message, and step through sending and consumption.
 - **Success:** The matching message is sent after production, consumed by the courier's wait, and one plank reaches the depot.
 - **Hint / talk:** “The note tells your friend something; it does not carry the plank.” This introduces messages even though a simple pickup could wait for stock without one.
 
 #### A12. Ask, Deliver, Reply
 
-“Bring one stone each time the workshop asks for it.”
+“The workshop sends stone please whenever it needs one stone. Write a helper's job that waits for that note, brings the stone, then replies stone delivered. Keep listening so the workshop can make two kits.”
 
+- **Workspace:** Build.
 - **Learn:** A request and a reply coordinate repeated work.
-- **Setup and support:** The workshop holds four planks. Supply its two-order program: send `stone please`, wait for `stone delivered`, make a kit. Supply the collector's Forever/Wait For structure and familiar stone trip.
-- **Player task:** Place the reply after unloading at the workshop, then follow the two-message exchange.
+- **Setup and support:** The workshop holds four planks and has a complete background two-order request/wait/production program. The collector starts empty. Explain Wait For and the two message names without placing a wait, trip, reply, or loop.
+- **Player task:** Author the full receive-deliver-reply cycle and its repetition, ensuring replies follow completed unloading.
 - **Success:** Two requests cause two stone deliveries and two kits. Each reply follows its completed delivery; the workshop has only one outstanding request at a time.
 - **Hint / talk:** “Who starts the conversation? Who answers?” Use two named message choices, without payloads, broadcasts, or hidden event handlers.
 
 #### A13. Everybody Is Waiting
 
-“The team has stopped. Find the missing first move.”
+“The workshop and collector are both waiting for a note, and no stone moves. Follow their programs to find who could send the first note. Repair the conversation so two stones arrive and two kits are made.”
 
+- **Workspace:** Repair.
 - **Learn:** Diagnose a coordination problem across programs.
-- **Setup and support:** Reuse workshop A12's small network, but the workshop waits for `stone delivered` before sending its first request. The collector correctly waits for `stone please`. Show both waits and the empty inboxes.
-- **Player task:** Follow who is waiting for whom and move the initial request before its reply wait.
+- **Setup and support:** Provide the complete request/reply system with the workshop incorrectly waiting for stone delivered before its first stone please. Show both inboxes and active waits, but do not mark the faulty order.
+- **Player task:** Trace the circular wait, repair the first request's position, and run two full cycles without manual nudges.
 - **Success:** Two complete request/delivery/reply cycles produce two kits without manual nudges or guessed delays.
 - **Hint / talk:** “Can either friend send the first note?” The defect is ordering, not an invisible lost message. Restore the same checkpoint for the corrected run.
 
 #### A14. The Celebration Rehearsal
 
-“Give everyone a job and deliver one finished kit.”
+“Use three helpers to make one kit from wood and stone, then bring it to the depot. The sawmill and workshop already know their recipes. Decide who brings each ingredient and who carries the finished kit, then write their jobs.”
 
+- **Workspace:** Build.
 - **Learn:** Plan and test a small complete system; no new block.
-- **Setup and support:** Three helpers, grove, stone pit, sawmill, workshop, and depot. Offer familiar sequence/loop programs as selectable starters. Offer custom routines only if workshop B has been completed. Show the recipe chain and three robot job cards.
-- **Player task:** Choose the jobs, set destinations, and test the full chain. A clear reference plan is: one robot supplies wood; one carries two planks and then one stone to the workshop; one takes finished kits to the depot. The buildings run their own programs.
+- **Setup and support:** Provide three empty helper programs, reachable raw sources, and complete background sawmill/workshop production. Show the material chain and blank responsibility cards. Custom routines are available only after workshop B; no helper plans are preselected.
+- **Player task:** Allocate responsibilities and author the complete helper jobs. A reference plan for validation uses a wood collector, a plank-and-stone courier, and a kit courier; it is not the default player workspace.
 - **Success:** One kit made from this mission's supplied raw materials reaches the depot, with each stage visible in the overview.
-- **Hint / talk:** “Where is the next missing piece?” Let the child fix one observed issue. The finale supplies a fresh working example of these jobs. Messages are available, not compulsory when stock-waiting already works.
+- **Hint / talk:** “Where is the next missing piece?” Let the child fix one observed issue. The finale starts a fresh island with empty helper programs; requested examples remain available separately. Messages are available, not compulsory when stock-waiting already works.
 
 #### A15. Welcome to Robot Island!
 
-“Use your team's plan to deliver four kits for our celebration.”
+“Make four kits from the island's wood and stone and deliver them to the depot. Write your helpers' jobs and use the recipe pictures to plan their loads. Try the longer courier route too; the order must still finish without restarting workers.”
 
+- **Workspace:** Build.
 - **Learn:** Extend, explain, and repair a cooperating system; no new feature in the finale.
-- **Setup and support:** Supply the rehearsal's programs again, as this mission's starters. Prepare a visible four-kit order, at least eight wood and four stone, and enough storage. Keep all required routes open. Use a longer familiar courier route as a visible test variation, not a surprise hazard.
-- **Player task:** Adapt the plan for four kits, use messages where helpful, and watch supplies flow without manually moving items or restarting workers to make progress. Counters and custom routines are optional additions only for children who have taken workshops A or B; the default reference needs neither.
+- **Setup and support:** Use a fresh island with at least eight wood and four stone, sufficient storage, and working background maker programs. Helper workspaces begin at Start; no rehearsal code transfers automatically. Show the four-kit order and announce the longer-route trial. Optional examples can be requested for individual jobs.
+- **Player task:** Build and test a complete delivery system for four kits. Messages may help but are not required; counters and custom routines remain optional after their own workshops.
 - **Success:** Four newly made kits reach the depot. Each recipe's materials are accounted for, and the production network completes the order under both the normal and slower-courier rehearsal conditions. Ordinary temporary waits are allowed.
 - **Hint / talk:** “Show one thing your program remembers, repeats, decides, or tells a friend.” Celebrate the restored island and offer the independent sandbox with its own starter programs. Do not require every advanced block family in one solution.
 
@@ -1150,41 +1433,43 @@ This matrix is the completeness check against the expanded skirmish plan. “Ava
 
 | Feature or decision | First focused lesson | Practice / transfer |
 | --- | --- | --- |
-| Sequence, Apply, Run, Pause, Step, Next block | 01–04 | Used throughout; both sides share the clock in 85 |
+| Sequence, Apply, Run, Pause, Step, Next block | 01–04 | Used throughout; both sides share the clock in 90 |
 | Repeat, nested Repeat, basket limits | 06–09 | 10, 25, 77; nesting stays optional |
 | Building Make, Pick Up, Forever, Build | 11–15 | Every production chain; placement 26–30 |
-| Stock, comparison, If, Else, Wait Until, feedback | 16–20 | 43–44, 56–59, 65, 69, 73, 79, 81 |
-| Shared jobs, settings, affected-robot preview, own copy | 21–24 | 45, 68, 94; defaults remain side-scoped |
-| Wood/planks, raw stone/kits | 02, 11, 21, 25 | 27–30, 49–50, 60, 97 |
-| Spring water, well output, water as cargo | 31–33 | 35, 37, 53, 58–59, 88 |
-| Food from farms and berries | 34–37 | 39–40, 60, 92, 97 |
-| Fuel station and charge packs | 36–37 | 38–40, 67, 76, 78, 82 |
-| Paid helper/guard assembly and inherited jobs | 38 / 67 | 40, 76, 78, 81, 90, 97 |
-| Supply's ordinary steps, one-cycle return, explicit sources | 41–42 | 45, 53, 69, 94 |
-| Declared targets, Needs, incoming delivery claims | 41–43 | 45, 57–60, 73, 95 |
+| Stock, comparison, If, Else, Wait Until, feedback | 16–20 | 43–44, 56–59, 65, 69, 73, 79, 85–86 |
+| Shared jobs, settings, affected-robot preview, own copy | 81–84 | 88–89, 99, A14–A15; absent from required tasks through 80 |
+| Wood/planks, raw stone/kits, mixed two-item loads | 02, 11, 21–24 | 25, 27–30, 49–50, 60, 102 |
+| Spring water, well output, water as cargo | 31–33 | 35, 37, 53, 58–59, 93 |
+| Food from farms and berries | 34–37 | 39–40, 60, 97, 102 |
+| Fuel station and charge packs | 36–37 | 38–40, 67, 76, 78, 87 |
+| Paid helper/guard assembly with a supplied job | 38 / 67 | 40, 76, 78; choosing shared jobs follows 81–84 in 86, 95, 102 |
+| Supply's ordinary steps, one-cycle return, explicit sources | 41–42 | 45, 53, 69, 99 |
+| Declared targets and Needs for one supplier | 41–43 | 45, 57–60, 73; no competing supplier in the introductory trials |
+| Another helper's incoming delivery and duplicate demand | 85 | 99–100; the engine handles reservations from 41 without making them an early team lesson |
 | Space for Item and output capacity | 44 / 56 | 57, 59, 73; capacities validated in every fixture |
-| Stonecutter / stone blocks and advanced building bills | 46–47 | 50, 97 |
-| Kiln / charcoal and competing wood uses | 48–49 | 54–55, 60, 97 |
-| Iron ore / bars and three-input recipes | 51–53 | 54–60, 67, 90, 97 |
-| Ready to Make, complete batches, useful buffers | 56–59 | 73, 95, 99 |
-| Guard, Advance, bounded action cycles | 61–63 | 65, 68, 70, 83–85 |
-| Free repair, low shield, reboot, resumed jobs | 64–66 | 69–70, 78, 82, 87, 98 |
-| Opponent Near and protected supply routes | 69–70 | 85, 87–88, 98 |
-| Gold ore / bars and fair recipe scheduling | 71–73 | 80, 91–95, 99–100 |
-| Forge / gears and electronics lab / circuits | 74–75 | 76, 78, 80, 93, 97 |
-| Bigger baskets, mixed three-item loads | 76–77 | 80, 93; all unupgraded fixtures stay at two |
-| Stronger shields, existing/new robot effects | 78 | 80, 93; no free heal on edit or improvement |
-| Improvement Finished and once-only purchases | 79 | 80, 93, 95, 97 |
-| Population sensors, caps, assembly/reboot slots | 38 (pictured slot), 81 (programmed target) | 83 distinguishes counts from readiness; 95, 97 |
-| Optional faster recovery for one pack | 82 | 87, 93, full matches |
-| My Camp, Opponent Camp, This Building, rally flag | 38/64, 84, 57, 61/83 | Contextual dropdowns explain relative ownership; This Building is introduced as “this smelter” in 57 |
-| Ownership versus jobs, opponent read-only inspection | 63/68, 85 | All matches; shared-edit isolation is an engine requirement |
-| Camp victory, defeat, draw, retry, save/resume | 84–86 | 90, 93, 100; save/resume already offered in earlier projects |
-| Productive home sites versus contested faster supplies | 88 | 89, 93, 95, 100 |
-| First settlement / Working industry / Full presets | 40/86, 60/90, 80/91 | Economy selection stays separate from difficulty |
-| Practice / Friendly / Challenge | 86 / optional replays | Main path uses Practice; no hard-difficulty progression gate |
-| Safe edits with cargo and claims | 94 | All advanced templates already obey this contract |
-| Variables, custom blocks, individual messages | A01–A15 | Optional in every project after their workshop; never required for a skirmish win |
+| Stonecutter / stone blocks and advanced building bills | 46–47 | 50, 102 |
+| Kiln / charcoal and competing wood uses | 48–49 | 54–55, 60, 102 |
+| Iron ore / bars and three-input recipes | 51–53 | 54–60, 67, 95, 102 |
+| Ready to Make, complete batches, useful buffers | 56–59 | 73, 100, 104 |
+| Guard, Advance, bounded action cycles | 61–63 | 65, 68, 70, 88–90 |
+| Free repair, low shield, reboot, resumed jobs | 64–66 | 69–70, 78, 87, 92, 103 |
+| Opponent Near and protected supply routes | 69–70 | 90, 92–93, 103 |
+| Gold ore / bars and fair recipe scheduling | 71–73 | 80, 96–100, 104–105 |
+| Forge / gears and electronics lab / circuits | 74–75 | 76, 78, 80, 98, 102 |
+| Bigger baskets, mixed three-item loads | 76–77 | 80, 98; all unupgraded fixtures stay at two |
+| Stronger shields, existing/new robot effects | 78 | 80, 98; no free heal on edit or improvement |
+| Improvement Finished and once-only purchases | 79 | 80, 98, 100, 102 |
+| Population sensors, caps, assembly/reboot slots | 38 (pictured slot), 86 (programmed target) | 88 distinguishes counts from readiness; 100, 102 |
+| Optional faster recovery for one pack | 87 | 92, 98, full matches |
+| My Camp, Opponent Camp, This Building, rally flag | 38/64, 89, 57, 61/88 | Contextual dropdowns explain relative ownership; This Building is introduced as “this smelter” in 57 |
+| Side identity, shared-job scope, opponent read-only inspection | 63, 81–84, 90 | All matches; shared-edit isolation is an engine requirement |
+| Camp victory, defeat, draw, retry, save/resume | 89–91 | 95, 98, 105; save/resume already offered in earlier projects |
+| Productive home sites versus contested faster supplies | 93 | 94, 98, 100, 105 |
+| First settlement / Working industry / Full presets | 40/91, 60/95, 80/96 | Economy selection stays separate from difficulty |
+| Practice / Friendly / Challenge | 91 / optional replays | Main path uses Practice; no hard-difficulty progression gate |
+| Safe edits with cargo and claims | 99 | All advanced templates already obey this contract |
+| Local variables and custom blocks | A01–A10, optional after 60 | Independent programs; never needed to unlock team lessons or win a skirmish |
+| Individual messages, request/reply, system debugging | A11–A15, optional after 85 | No combat prerequisite; never required on the main path or for sandbox play |
 
 Out of scope remains out of scope: no fog of war, multiplayer, additional combat types, patrol block, explicit Attack target block, numerical combat sensors, building-repair job, job-group broadcasts, pipes, conveyors, markets, grain/flour/meals, or depleting ore. No required AND/OR, general arithmetic, lists, recursion, procedure return values, global variables, or message payloads. These are not silently added to make a reference solution work. The two named improvements and all six resource families are included now, not deferred expansions.
 
@@ -1197,7 +1482,7 @@ Use one shared recipe registry for the game, cards, goal checks, and budgets. Th
 | Sawmill | 1 wood | 1 plank | 11 |
 | Bridge site | 4 planks | Open bridge | 15 |
 | Workshop site | 4 planks + 2 raw stone | Workshop building | 27 |
-| Workshop kit | 2 planks + 1 raw stone | 1 kit | 25 |
+| Workshop kit | 2 planks + 1 raw stone | 1 kit | 23 |
 | Well | No material inputs; extraction takes time | 1 water | 32 |
 | Farm | 1 water | 2 food | 34 |
 | Fuel station | 2 food + 1 water | 2 charge packs | 36 |
@@ -1211,9 +1496,9 @@ Use one shared recipe registry for the game, cards, goal checks, and budgets. Th
 | Electronics lab | 1 gold bar + 1 iron bar | 2 circuits | 75 |
 | Improve baskets | 2 gears + 1 circuit + 2 charge packs | Helpers gain one basket slot, once per side | 76 |
 | Improve shields | 2 gears + 2 circuits + 2 charge packs | Guards gain one maximum shield segment, once per side | 78 |
-| Camp fast repair | 1 charge pack | Accelerate one recovery; basic recovery remains free | 82 |
+| Camp fast repair | 1 charge pack | Accelerate one recovery; basic recovery remains free | 87 |
 
-Other construction bills follow these dependencies: additional sawmills use wood/raw stone; wells, farms, fuel stations, stonecutters, kilns, and workshops use planks/raw stone; smelters and forges use planks/stone blocks; electronics labs use planks/stone blocks/iron bars. Their exact quantities, stores, and footprints must be finalized in the shared registry before authoring missions 47, 50, or 97. A stonecutter cannot need stone blocks, a smelter cannot need iron, and a fuel station cannot need packs to build.
+Other construction bills follow these dependencies: additional sawmills use wood/raw stone; wells, farms, fuel stations, stonecutters, kilns, and workshops use planks/raw stone; smelters and forges use planks/stone blocks; electronics labs use planks/stone blocks/iron bars. Their exact quantities, stores, and footprints must be finalized in the shared registry before authoring missions 47, 50, or 102. A stonecutter cannot need stone blocks, a smelter cannot need iron, and a fuel station cannot need packs to build.
 
 Illustrative budgets below cover the **production order with buildings already present**, unless construction is explicitly named. Wells supply the counted water through timed extraction. Food comes from farms in these examples; berry variants have a different water budget. These are authoring arithmetic, not child-facing worksheets.
 
@@ -1230,17 +1515,17 @@ Illustrative budgets below cover the **production order with buildings already p
 
 For every implemented mission, compute an exact ledger from its actual staged state, production plans, recipe batches, and destinations. Account for leftovers, input/output reservations, in-flight cargo, construction costs, and spare capacities separately. Do not count an assembly's kit both as an inventory item and again as its constituent planks/stone. Do not assume that a three-item cost can be carried in one pre-upgrade load.
 
-For mission 97, begin with the skirmish proposal's visible starter stock (8 planks, 6 raw stone, 6 food, 4 packs) and camp/sawmill/well, then verify the entire dependency graph using actual build costs. Home sources provide continuing inputs. A separate authoring check starts with **zero charge packs** and proves recovery through berries/spring, a constructible fuel station, and existing helpers. This check prevents an accidental construction/energy deadlock; the child is not asked to solve an undisclosed harder start.
+For mission 102, begin with the skirmish proposal's visible starter stock (8 planks, 6 raw stone, 6 food, 4 packs) and camp/sawmill/well, then verify the entire dependency graph using actual build costs. Home sources provide continuing inputs. A separate authoring check starts with **zero charge packs** and proves recovery through berries/spring, a constructible fuel station, and existing helpers. This check prevents an accidental construction/energy deadlock; the child is not asked to solve an undisclosed harder start.
 
 ## Teaching support and reliable goals
 
-Use the original three-level hint ladder everywhere: **Look** points to evidence; **Think** asks one concrete question; **Try** supplies a partial arrangement. Offer a full worked program and a small replay variation when requested, without changing the completion reward. A full-basket hint must not appear when the actual problem is a missing source or an unbuilt destination.
+Use the optional help sequence defined above: Look, Think, Try, then a separate Show me example. Briefings and block explanations must be sufficient to understand the task before a hint is opened. Examples never overwrite a draft or fill the workspace automatically. A full-basket hint must not appear when the actual problem is a missing source or an unbuilt destination.
 
-Each new item gets a source picture, recipe picture, and visible result. Keep the active chain pinned while other groups collapse. Offer Collector, Courier, Supplier, Producer, Defender, and Attacker examples with inspectable internals, and construction/build-order support for the final project. Advanced helpers need not be rewritten by the child just to focus on one route. Supply cannot become unexplained magic.
+Each new item gets a source picture, recipe picture, and visible result. Keep the active chain pinned while other groups collapse. Offer Collector, Courier, Supplier, Producer, Defender, and Attacker examples through requested help, with inspectable internals. Construction dependencies and prices are ordinary reference information; executable build-order examples are optional help. Background jobs need not be rewritten just to focus on one route. Supply cannot become unexplained magic.
 
-The default editor offers the taught blocks appropriate to the selected entity. A helper cannot see guard actions, a well cannot assemble robots, and a guard cannot supply materials. Relative places resolve to the program's side. A child's completed optional workshop must not unexpectedly fill the next beginner lesson with extra blocks. Shared defaults and assignment previews name every affected friendly entity.
+The default editor offers the taught blocks appropriate to the selected entity. A helper cannot see guard actions, a well cannot assemble robots, and a guard cannot supply materials. Relative places resolve to the program's side. Through 80, the lesson's editing flow uses individual programs and literal choices; shared-library assignment, robot settings, and own-copy controls stay out of that flow. In 81–85, reveal each team control with its lesson and preview every affected friendly entity. Message blocks and inbox panels appear only in workshop C or explicitly expanded play after it. A child's completed optional workshop must not unexpectedly fill the next beginner lesson with extra blocks.
 
-Keep the child's main instruction to one short sentence, quantities as pictures, and side identity visible through shapes and badges as well as color. Use the [glossary](glossary.md) and add consistent English/German words for every new good, building, action, condition, waiting reason, result, and hint during implementation. This English planning draft is not completed localization. Offer replayable demonstrations, optional read-aloud, large touch targets, and the persistent goal card. Do not require typing resource names or calculating tick timing.
+Keep a short goal sentence visible, with the briefing's source information and relevant rule available beside it. Use item pictures for quantities and shapes and badges as well as color for side identity. Use the [glossary](glossary.md) and add consistent English/German words for every new good, building, action, condition, waiting reason, result, and hint during implementation. These English briefings still need localization and playtesting. Offer replayable explanations, optional read-aloud, large touch targets, and the persistent goal card. Do not require typing resource names or calculating tick timing.
 
 Mission authoring must follow these rules:
 
@@ -1254,21 +1539,25 @@ Mission authoring must follow these rules:
 8. **Whole-match evidence:** Match lessons use the normal camp shield result, including loss and simultaneous-defeat draw. Reference matches use fixed seeds/strategies and generous simulation bounds; those bounds are development checks, never a child-visible countdown. Retry keeps the current mission's programs; returning to a completed mission starts its own fixture.
 9. **Valid alternatives:** Accept any solution satisfying the visible world outcome. Do not demand exact block IDs, routine names, the reference route, an upgrade purchase in an open strategy mission, or a block family solely because it is available. Use assignment, memory, or message traces as teaching evidence in their own lessons without prescribing workspace layout.
 10. **Independent play:** Free play, sandbox, v1 campaign, v2 campaign, and skirmish retain separate worlds/programs. Unlocking a mode does not transfer a child's campaign inventory, research, or programs into it. A future explicit export/copy feature would be separate from mission progression.
+11. **Teaching boundaries:** Record which entity the child edits and which programs are supplied support. Reference solutions for 01–40 change at most one program; through 80 they require no shared assignment, per-robot setting, copy, message, or cross-program coordination. Check early sandbox templates against the same boundaries. Production waits remain visible, but understanding several running programs is not an unstated completion requirement.
+12. **Independent authoring:** Keep the initial workspace, background jobs, optional examples, and reference solution as separate content records. Build fixtures contain only Start in the focus program, plus explicitly declared empty procedure metadata where needed. Repair/Change/Explore fixtures justify their prepared programs. Each briefing states the intended outcome, useful starting facts, and the new rule without exposing the solution's block arrangement. Validate one complete child-authored job for each Build mission; do not substitute a test that inserts a single missing block into a solved starter.
 
 ## Implementation handoff and compatibility
 
-The existing implementation already provides the first 40 missions, the base recipes, per-entity editing, shared jobs, settings, local variables, procedures, and individual messages. Relevant sources are [mission definitions](../src/content/missions/campaign.js), [recipes](../src/sim/recipes.js), [placement](../src/sim/placement.js), [campaign progression](../src/campaign.js), and [mission verification](../scripts/verify-missions.js). Skirmish additions are proposed; planning a lesson is not evidence that its block, sensor, UI, or objective has been built.
+The existing implementation provides the original v1 40-mission campaign, the base recipes, per-entity editing, shared jobs, settings, local variables, procedures, and individual messages. Its early team progression is what this proposal changes; the revised v2 mission cards are not implemented. Relevant sources are [mission definitions](../src/content/missions/campaign.js), [recipes](../src/sim/recipes.js), [placement](../src/sim/placement.js), [campaign progression](../src/campaign.js), and [mission verification](../scripts/verify-missions.js). Skirmish additions are proposed; planning a lesson is not evidence that its block, sensor, UI, or objective has been built.
 
 | Delivery slice | Content it enables | Required engine/content capability |
 | --- | --- | --- |
-| v2 campaign infrastructure | 01–25 and A01–A15 | Explicit v2 ids, chapter/branch graph, independent fixtures, authored unlock profiles, progress migration; reuse known lesson mechanics |
-| Construction teaching | 26–30 | Existing workshop placement/construction plus clear staging, local bill views, post-build program assignment |
+| v2 campaign infrastructure and solo foundation | 01–25 | Explicit v2 ids, chapter/branch graph, independent fixtures, authored unlock profiles, progress migration, one-program focus, declared workspace types, briefings and optional-example storage separate from starters |
+| Construction teaching | 26–30 | Existing workshop placement/construction plus clear staging, local bill views, supplied post-build production |
 | First settlement economy | 31–40 | Water/food/fuel registries, finite buffers and timed production, productive resource profile, paid helper assembly and job inheritance |
 | Supply and industry | 41–60 | Bounded inspectable Supply, explicit demand/source plans, claim cleanup, Needs/Space/Ready sensors, stone blocks/charcoal/iron, batch storage, shared build bills |
 | Guard practice | 61–70 | Ownership, shield/combat rules, bounded Guard/Advance, danger sensing, repair/reboot, paid guards, reachable combat targets |
 | Full peaceful economy | 71–80 | Gold, two-recipe scheduling, forge/lab, once-only side-wide improvements and effects on existing/new robots |
-| Match teaching | 81–90 | Population semantics, paid acceleration, rally targets, camp results, read-only opponent inspection, deterministic paid computer strategy, preset selection |
-| Full campaign continuation | 91–100 | Full economy against Practice, safe edits/cargo recovery, complete bootstrap and recovery templates, long-project saves |
+| Late team teaching | 81–85 | Delayed library/settings/copy controls, affected-entity previews, two-helper fixtures, visible incoming-delivery comparison |
+| Match teaching | 86–95 | Population semantics, paid acceleration, rally targets, camp results, read-only opponent inspection, deterministic paid computer strategy, preset selection |
+| Full campaign continuation | 96–105 | Full economy against Practice, safe edits/cargo recovery, staged independent bootstrap authoring, optional examples, long-project saves |
+| Optional programming workshops | A01–A15 | A/B gates after 60, C gate after 85, independent capability profiles; no workshop dependency on combat or another workshop |
 
 Implementation order can follow the skirmish plan's technical stages, including a combat prototype before all industry. **Teaching order follows the prerequisites above**, including the two routes after mission 60. Do not expose unfinished chains to children because their engine scaffolding exists.
 
@@ -1284,48 +1573,51 @@ Before implementing the dependent lessons, agree these shared contracts in the e
 
 ### Preserve the existing campaign
 
-Use stable versioned ids, for example `c2-m001`–`c2-m100` and `c2-a01`–`c2-a15`, rather than assigning v1's `m26` to new construction content. Keep v1 content and saves readable during rollout. A migration may credit equivalent lessons only through an explicit mapping:
+Use stable versioned ids, for example `c2-m001`–`c2-m105` and `c2-a01`–`c2-a15`, rather than assigning v1's `m26` to new construction content. Keep v1 content and saves readable during rollout. A migration may credit equivalent lessons only through an explicit mapping:
 
 | Existing v1 lessons | Proposed v2 equivalents | Migration condition |
 | --- | --- | --- |
-| 01–25 | 01–25 | Same learning and completion semantics; new fixtures validated |
+| 01–20 | 01–20 | Credit only after validating the retained outcomes, including the simplified building lessons |
+| 21–24 | 81–84 | Credit the relocated shared-job lessons; never mark new solo lessons 21–24 complete by number |
+| 25 | 23 | Credit the kit-recipe outcome after validation; the new one-helper practice in 24–25 remains to do |
 | 26–30 | A01–A05 | Credit optional memory workshop completion |
 | 31–35 | A06–A10 | Credit optional custom-block workshop completion |
 | 36–40 | A11–A15 | Credit optional messages/system workshop completion |
-| None | 26–100 | New lessons remain uncompleted; prior v1 finale does not skip them |
+| None | 21–22, 24–80, 85–105 | New or substantially rewritten lessons remain uncompleted; prior v1 finale does not skip them |
 
-Do not discard a currently in-progress v1 world merely because a new campaign exists. Preserve it in its original slot or offer an explicit switch with a recoverable snapshot. Transfer completion/unlock records through the mapping, not stocks/programs/robot names into new missions. A v1 player with all forty lessons completed can begin new v2 content at 26 and retain credit for all optional workshops. Updating the title map, mode saves, compatibility checks, golden files, README, and PLAN.md is implementation work; this proposal alone does not change them.
+Do not discard a currently in-progress v1 world merely because a new campaign exists. Preserve it in its original slot or offer an explicit switch with a recoverable snapshot. Transfer completion/unlock records through the mapping, not stocks/programs/robot names into new missions. A v1 player with all forty lessons completed begins new v2 practice at 21, retains validated credit for the relocated team lessons and workshops, and continues to construction after the new solo practice. Preserve already earned workshop access as an explicit migration exception to the new-player gates, without backfilling intervening mission completion or expanding beginner toolboxes. Updating the title map, mode saves, compatibility checks, golden files, README, and PLAN.md is implementation work; this proposal alone does not change them.
 
-The current campaign list and unlock calculation are linear. V2 needs prerequisite-aware chapter/branch data, a default toolbox profile per mission, and a separate optional-workshop capability set. Support both orders through the guard and peaceful-industry routes; mission 81 checks both route milestones. Do not concatenate workshops to the main list and accidentally make them prerequisites. Use completion-based stable ids for navigation and saves; display numbers are presentation.
+The current campaign list and unlock calculation are linear. V2 needs prerequisite-aware chapter/branch data, a default toolbox profile per mission, and a separate optional-workshop capability set. Support both orders through the guard and peaceful-industry routes. Mission 81 checks 80; mission 86 checks 70 and 85. Workshops A/B check 60; workshop C checks 85 and never checks the guard route. Chapter-entry gates also apply to later lessons within that chapter: migrated credit for 84 does not unlock 85 before 80, and later credits do not skip earlier route requirements for entering matches. Previously earned workshop access is the explicit exception described above. Do not concatenate workshops to the main list and accidentally make them prerequisites. Use completion-based stable ids for navigation and saves; display numbers are presentation.
 
 ### Authoring package and validation
 
-For each mission implement its full fixture, staged-resource notice, own starters/support programs, narrow toolbox, trial variants, picture goal, three contextual hints, Show me a start, English/German copy, exact objective observation, reward/unlock, replay/reset behavior, reference programs, resource/capacity ledger, and generous deterministic completion bound. Provide a deliberate failing example and recovery route for debugging lessons. These cards specify intended behavior, not executable or already tested definitions.
+For each mission implement its full fixture, staged-resource notice, declared Build/Repair/Change/Explore workspace, separate background programs, narrow toolbox, trial variants, pictured goal, brief source/rule explanation, contextual hints, optional worked example, English/German copy, exact objective observation, reward/unlock, replay/reset behavior, reference solution, resource/capacity ledger, and generous deterministic completion bound. Provide a deliberate failing program and recovery route for debugging lessons. These cards specify intended behavior, not executable or already tested definitions.
 
-Extend `npm run verify:missions` to exercise every v2 main lesson and workshop independently with the real simulator and actual allowed blocks. Check dependency coverage, references, ingredients, all batch capacities, accessible sources, completed-action goals, finite demand, no hidden top-ups, and order leftovers. Verify both visible branches/trials, all skirmish presets with Practice, and accepted alternative plans for strategic choice missions.
+Extend `npm run verify:missions` to exercise every v2 main lesson and workshop independently with the real simulator and actual allowed blocks. Check dependency coverage, references, ingredients, all batch capacities, accessible sources, completed-action goals, finite demand, no hidden top-ups, and order leftovers. Verify Build starters are empty apart from their declared metadata, then load author reference solutions separately for simulator checks. Confirm background work alone cannot finish the programming goal; UI-only Explore goals have their own evidence. Check optional examples preserve drafts and remain opt-in. Check that the rewritten early lessons succeed with only the focus program changed, and that neither shared-job nor message capabilities are hidden prerequisites. Verify the 60/80/85 workshop and route gates, both route orders, migrated completion records, all skirmish presets with Practice, and accepted alternative plans for strategic choice missions.
 
 Shared-engine changes also require the original campaign checks and meaningful regression coverage for ownership isolation, simultaneous combat/draw, reserved slots, production/assembly payment, Supply contention and cleanup, recipe fairness, upgrade duplication, cargo-safe Apply/reboot, and no-pack recovery. Reproduce runs with Run/Step/replay, and save/load during crop growth, delivery claims, smelting, assembly, upgrades, fighting, and rebooting. Test touch layouts and English/German text. None of these implementation checks has been run merely by writing this plan.
 
 ## Playtest gates
 
-Observe explanations and purposeful repairs alongside completion. High hint use is information about the lesson, not poor performance by the child. Check both younger and older players and allow children to prefer peaceful building. If a project needs an adult to explain several new ideas, add another mission before it rather than shortening the instructions alone.
+Observe explanations and purposeful repairs alongside completion. Before showing an example, ask the child to say or point out the goal, source, destination, and relevant limit from the briefing. Then observe whether they can start a useful program and explain the order they chose. Distinguish an unclear task description from an unfamiliar block or a programming misconception; revise the explanation or task size before adding prefilled code. High hint use is information about the lesson, not poor performance by the child. Check both younger and older players and allow children to prefer peaceful building. If a project needs an adult to explain several new ideas, split its work into further missions or saved stages.
 
 | After | Evidence to look for | Adjustment if needed |
 | --- | --- | --- |
-| 05 / 10 | Order a delivery; distinguish a repeated action from a repeated trip | Shorter routes, clearer loop boundaries, another basket experiment |
-| 15 / 20 | Find a waiting supplier; predict both condition outcomes and repeated checks | Isolate producer/consumer again; use pictured stock trials |
-| 25 / 30 | Assign jobs, split a recipe across loads, distinguish construction from production | Separate placement/payment again; keep both bills pictured |
+| 05 / 10 | Write a delivery from the briefing; distinguish a repeated action from a repeated trip | Clarify the goal/source wording, shorten routes, show loop behavior separately |
+| 15 / 20 | Follow one building's inputs and output; predict both condition outcomes and repeated checks | Keep one editor in focus; use staged inputs and pictured stock trials |
+| 25 / 30 | Plan and write all loads for one helper; distinguish construction from production | Clarify the recipe and basket pictures; separate building and kit order cards |
 | 35 / 40 | Distinguish spring from well; trace water → food → packs → helper | Add another one-link route repair; repeat zero-pack recovery |
-| 45 | Explain one Supply trip, an incoming bucket, and a missing source | Open its ordinary steps; temporarily use one supplier |
+| 45 | Explain one helper's Supply trip, a filled recipe target, and a missing source | Open its ordinary steps; keep one supplier and one destination |
 | 50 / 55 | Distinguish stone from blocks and ore from bars; trace missing charcoal to wood | Use one recipe per fixture and a shorter chain map |
-| 60 | Identify a genuine shortage without treating normal travel as failure | Reduce active groups; add a visible buffered-route exercise |
+| 60 | Author a complete multi-source delivery order and explain normal pickup waits | Clarify source labels and split the pictured order into smaller stages |
 | 65 / 70 | Explain the next shield check, free recovery, and why a route needs protection | Slow finite encounters, longer recovery gaps, smaller squads |
 | 75 / 80 | Explain both smelter products, parts, and the chosen improvement | Prebuild more chains; split scheduling from delivery again |
-| 85 / 90 | Distinguish jobs from sides, slots from arrivals, and camp outcome from robot losses | Repeat flag gathering/read-only inspection; use simpler presets |
-| 95 | Choose a bottleneck repair and explain expansion versus investment | Keep full economy but restore more supplied templates and gentler attacks |
-| 100 | Pause, inspect, change one useful decision, recover, and finish a full match | Insert another focused rehearsal; never require Friendly/Challenge to pass |
+| 85 | Explain which helpers share an edit, which choice belongs to one helper, and whether a bucket is already coming | Return to two short stone trips; separate settings trials further; leave messages for a later visit |
+| 90 / 95 | Distinguish jobs from sides, slots from arrivals, and camp outcome from robot losses | Repeat flag gathering/read-only inspection; use simpler presets |
+| 100 | Write a supply plan that tolerates a longer route; explain targets and investment choices | Reduce simultaneous decisions, improve route descriptions, and offer a requested worked fragment |
+| 105 | Author useful supply/guard decisions, pause, inspect, recover, and finish a full match | Add another focused authoring rehearsal or saved stage; never require Friendly/Challenge to pass |
 | A05 / A10 / A15 | Explain local counts, a routine input, or who sends the first message | Use the original small examples again; keep workshops optional |
 
-Record hint requests, stalled causes, mistaken resource/ownership models, unnecessary restarts, ability to resume a saved project, and whether a child can explain the effect of one edit. Tune quantities, distances, stock targets, helper counts, pacing, and raid spacing from playtests. The 115 lessons are a proposed scaffold; age suitability and completion times still need observation.
+Record whether the child understood the briefing, started independently, requested a fragment or full example, explained their program order, and transferred the idea to a fresh task. Also record stalled causes, mistaken resource/ownership models, unnecessary restarts, and ability to resume a saved project. Tune descriptions, task size, quantities, distances, stock targets, helper counts, pacing, and raid spacing from playtests. The 120 lessons are a proposed scaffold; age suitability and completion times still need observation.
 
 
