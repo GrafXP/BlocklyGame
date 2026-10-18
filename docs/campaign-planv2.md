@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Proposed content specification, not implemented
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phase 1, the v2 infrastructure and missions 01–10, is implemented alongside v1; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -220,13 +220,13 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 09. A Repeat Inside a Repeat
 
-“This program already brings four wood in two trips. It collects two pieces on each trip with two separate Collect instructions. Try a Repeat inside the trip's Repeat to do that small job.”
+“This program makes two trips, but each trip brings only one wood. Change it so every trip brings a full basket of two, still in two trips. Try a Repeat inside the trip's Repeat to collect them.”
 
 - **Workspace:** Change.
 - **Learn:** An inner loop finishes as part of each outer round.
-- **Setup and support:** Provide the complete working two-trip program because the lesson is about changing its structure. Explain that the inside loop finishes before the rest of that trip; do not highlight a replacement socket.
-- **Player task:** Replace repeated collection actions with an inner loop and check that both full-basket trips still finish.
-- **Success:** Four wood arrive in two full-basket deliveries.
+- **Setup and support:** Provide the complete working two-trip, one-wood-per-trip program because the lesson is about changing its structure. Its outcome (two wood, in two one-item loads) must not already meet the goal. Explain that the inside loop finishes before the rest of that trip; do not highlight a replacement socket.
+- **Player task:** Make each trip's collection happen twice, preferably with an inner loop, and check that both full-basket trips finish.
+- **Success:** Four wood arrive in two full-basket deliveries. Two Collect blocks in a row are an accepted alternative; the goal judges the world, not the blocks.
 - **Hint / talk:** “Two pieces for this trip; then the next trip begins.” Animate the two loop counts separately. Do not require multiplication vocabulary.
 
 #### 10. The Loop Detective
@@ -345,11 +345,11 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 20. Just Enough Planks
 
-“Keep two planks ready on the sawmill shelf. A courier will take one away twice, and the wood for replacements is already here. Make the sawmill check again after each decision so it refills the shelf without making a third plank.”
+“Keep two planks ready on the sawmill shelf. A courier will take one away twice, and a collector keeps bringing wood for replacements. Make the sawmill check again after each decision so it refills the shelf without making a third plank.”
 
 - **Workspace:** Build.
 - **Learn:** Combine sensing, If, and Forever into a feedback loop; no new block.
-- **Setup and support:** Stage enough wood and room to expose overproduction. A background courier makes two announced removals. Provide a pictured reserve line and individual familiar blocks only.
+- **Setup and support:** A background collector keeps the sawmill's wood store supplied, and the plank shelf has room for more than two, so a sawmill that makes planks without looking visibly overfills it. Staged wood alone cannot show this: the sawmill holds only four wood, which a careless program turns into four planks, and after the two removals the shelf would show two anyway. A background courier makes two announced removals. Provide a pictured reserve line and individual familiar blocks only.
 - **Player task:** Author the complete repeated stock check and production rule, then observe both refills.
 - **Success:** The sawmill builds and restores a two-plank reserve after both removals, without making a third plank when two are already ready and inputs/output space are available.
 - **Hint / talk:** “When does the program look again?” Observe a complete settled producer cycle after the final refill, not just the instant the count reaches two.
@@ -1004,7 +1004,7 @@ Return to a small peaceful island with wood, stone, and short trips. This chapte
 
 - **Workspace:** Change.
 - **Learn:** A per-robot setting supplies a choice to a shared program.
-- **Setup and support:** A complete shared stone-collector program uses my Destination. Later announced trials introduce my Source and my Item individually, keeping the other choices configured. No filled destination answer is highlighted.
+- **Setup and support:** A complete shared stone-collector program uses my Destination. Both helpers' destinations start unchosen, so the starting world cannot meet the goal. Later announced trials introduce my Source and my Item individually, keeping the other choices configured. No filled destination answer is highlighted.
 - **Player task:** Configure the two destinations, then the supported source/item trials, and verify each robot follows its own choices.
 - **Success:** Both helpers deliver their pictured orders to their own destinations; the later trials also collect the configured materials.
 - **Hint / talk:** “Which choice belongs to this helper?” If changing one setting is not yet clear, repeat that trial before introducing another. No child-defined procedure input is needed.
@@ -1523,7 +1523,7 @@ Use the optional help sequence defined above: Look, Think, Try, then a separate 
 
 Each new item gets a source picture, recipe picture, and visible result. Keep the active chain pinned while other groups collapse. Offer Collector, Courier, Supplier, Producer, Defender, and Attacker examples through requested help, with inspectable internals. Construction dependencies and prices are ordinary reference information; executable build-order examples are optional help. Background jobs need not be rewritten just to focus on one route. Supply cannot become unexplained magic.
 
-The default editor offers the taught blocks appropriate to the selected entity. A helper cannot see guard actions, a well cannot assemble robots, and a guard cannot supply materials. Relative places resolve to the program's side. Through 80, the lesson's editing flow uses individual programs and literal choices; shared-library assignment, robot settings, and own-copy controls stay out of that flow. In 81–85, reveal each team control with its lesson and preview every affected friendly entity. Message blocks and inbox panels appear only in workshop C or explicitly expanded play after it. A child's completed optional workshop must not unexpectedly fill the next beginner lesson with extra blocks.
+The default editor offers the taught blocks appropriate to the selected entity. A helper cannot see guard actions, a well cannot assemble robots, and a guard cannot supply materials. Relative places resolve to the program's side. Through 80, the lesson's editing flow uses individual programs and literal choices; shared-library assignment, robot settings, and own-copy controls stay out of that flow. The program library itself stays reachable in every mission, as decided on 17 October 2026 ([PLAN.md](../PLAN.md) §16), so any program can be opened; no lesson through 80 needs Give to, teams, or copies, and the settings tool is offered only from 82. In 81–85, reveal each team control with its lesson and preview every affected friendly entity. Message blocks and inbox panels appear only in workshop C or explicitly expanded play after it. A child's completed optional workshop must not unexpectedly fill the next beginner lesson with extra blocks.
 
 Keep a short goal sentence visible, with the briefing's source information and relevant rule available beside it. Use item pictures for quantities and shapes and badges as well as color for side identity. Use the [glossary](glossary.md) and add consistent English/German words for every new good, building, action, condition, waiting reason, result, and hint during implementation. These English briefings still need localization and playtesting. Offer replayable explanations, optional read-aloud, large touch targets, and the persistent goal card. Do not require typing resource names or calculating tick timing.
 
@@ -1540,7 +1540,7 @@ Mission authoring must follow these rules:
 9. **Valid alternatives:** Accept any solution satisfying the visible world outcome. Do not demand exact block IDs, routine names, the reference route, an upgrade purchase in an open strategy mission, or a block family solely because it is available. Use assignment, memory, or message traces as teaching evidence in their own lessons without prescribing workspace layout.
 10. **Independent play:** Free play, sandbox, v1 campaign, v2 campaign, and skirmish retain separate worlds/programs. Unlocking a mode does not transfer a child's campaign inventory, research, or programs into it. A future explicit export/copy feature would be separate from mission progression.
 11. **Teaching boundaries:** Record which entity the child edits and which programs are supplied support. Reference solutions for 01–40 change at most one program; through 80 they require no shared assignment, per-robot setting, copy, message, or cross-program coordination. Check early sandbox templates against the same boundaries. Production waits remain visible, but understanding several running programs is not an unstated completion requirement.
-12. **Independent authoring:** Keep the initial workspace, background jobs, optional examples, and reference solution as separate content records. Build fixtures contain only Start in the focus program, plus explicitly declared empty procedure metadata where needed. Repair/Change/Explore fixtures justify their prepared programs. Each briefing states the intended outcome, useful starting facts, and the new rule without exposing the solution's block arrangement. Validate one complete child-authored job for each Build mission; do not substitute a test that inserts a single missing block into a solved starter.
+12. **Independent authoring:** Keep the initial workspace, background jobs, optional examples, and reference solution as separate content records. Build fixtures contain only Start in the focus program, plus explicitly declared empty procedure metadata where needed. Repair/Change/Explore fixtures justify their prepared programs. Each briefing states the intended outcome, useful starting facts, and the new rule without exposing the solution's block arrangement. Validate one complete child-authored job for each Build mission; do not substitute a test that inserts a single missing block into a solved starter. A Repair or Change starter, run with the background jobs, must not already meet the mission's goals.
 
 ## Implementation handoff and compatibility
 
@@ -1596,6 +1596,59 @@ For each mission implement its full fixture, staged-resource notice, declared Bu
 Extend `npm run verify:missions` to exercise every v2 main lesson and workshop independently with the real simulator and actual allowed blocks. Check dependency coverage, references, ingredients, all batch capacities, accessible sources, completed-action goals, finite demand, no hidden top-ups, and order leftovers. Verify Build starters are empty apart from their declared metadata, then load author reference solutions separately for simulator checks. Confirm background work alone cannot finish the programming goal; UI-only Explore goals have their own evidence. Check optional examples preserve drafts and remain opt-in. Check that the rewritten early lessons succeed with only the focus program changed, and that neither shared-job nor message capabilities are hidden prerequisites. Verify the 60/80/85 workshop and route gates, both route orders, migrated completion records, all skirmish presets with Practice, and accepted alternative plans for strategic choice missions.
 
 Shared-engine changes also require the original campaign checks and meaningful regression coverage for ownership isolation, simultaneous combat/draw, reserved slots, production/assembly payment, Supply contention and cleanup, recipe fairness, upgrade duplication, cargo-safe Apply/reboot, and no-pack recovery. Reproduce runs with Run/Step/replay, and save/load during crop growth, delivery claims, smelting, assembly, upgrades, fighting, and rebooting. Test touch layouts and English/German text. None of these implementation checks has been run merely by writing this plan.
+
+## Review and delivery phases
+
+Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blockly`, `src/content/missions`).
+
+### What the engine can teach today
+
+- Missions 01–25, 81–84, and workshops A01–A15 use only what exists: wood, raw stone, planks, kits, the bridge, the workshop and its placement; Go To, Collect, Pick Up, Unload, Make and Build; Repeat, Forever, If, Else and Wait Until; stock and comparisons; shared programs, teams, settings and own copies; variables, blocks of one's own, and messages.
+- Missions 26–30 also need a goal for a building finished on its construction site (today's `built` goal knows only bridges) and a placement-only goal for 26.
+- Everything else needs engine work first, in the order of the skirmish plan's stages: water, food, charge packs and paid assembly (31–40); Supply, declared targets, Needs, Space and Ready to Make, stone blocks, charcoal, iron and buildings with two recipes (41–60, 85); gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105).
+
+### Corrections made in this review
+
+- Mission 09's starting program already met its own goal (four wood in two full loads), so the Change lesson would have passed with no change. It now starts with one wood per trip.
+- Mission 20 staged its replacement wood in the sawmill, which holds four. A sawmill making planks without looking would make four, and after the two removals the shelf would show two: the overproduction the lesson is meant to expose would pass. A background collector now keeps the wood coming, as v1's validated mission 20 does.
+- Mission 82 didn't say how its settings start. They start unchosen, so the starting world can't meet the goal.
+- Authoring rule 12 now says it outright: a Repair or Change starter, with the background jobs, must not already meet the mission's goals. `npm run verify:missions` checks this for every mission.
+- The gates named missions that won't exist for a long time (A and B after 60, C after 85, 81 after 80), so during the rollout they would have locked the workshops and the team chapter away. Interim gates, below, fix that.
+- The program library stays reachable in every mission (the 17 October decision); the teaching boundary through 80 is what the lessons need, not a hidden library.
+
+### How v2 is built
+
+- **Self-contained setups.** v1 builds a mission's start by making every earlier mission's setup in turn. After 60 the map branches, so there is no single list of earlier missions: a v2 mission's setup is complete on its own, the island's base (Robo 1, the camp, the grove) plus everything its setup adds, opens, stages and runs.
+- **Prerequisites as data.** Each v2 mission names the missions it requires; by default the main-path mission before it. A mission opens when all of them are done (with ?dev, every mission opens).
+- **Interim gates.** A requirement on a mission not yet implemented stands for the implemented main-path mission with the highest number below it. While 26–80 don't exist, A and B's 60 and 81's 80 resolve to the foundation's last implemented mission; as missions arrive, the gates move to their final places with no change to the content.
+- **Toolbox profiles.** A mission's toolbox offers the blocks it introduces and those every mission it requires, directly or not, introduced. On the linear part this is v1's rule; each route after 60 keeps its own, and workshop blocks never reach the main path.
+- **Focus program.** Each mission names the program the child edits (`focus`), which its card opens. A Build mission's focus starter holds the start block alone (verified).
+- **Help.** v1's ladder carries over: Look, Think, Try, and from Try, Show me a start (a fragment, when the mission has one) and Show me the whole program (its reference solution). Putting either into the editor keeps a draft that has unapplied changes in the program's history, “Current, not applied yet”, to go back to.
+
+### Rollout alongside v1
+
+v1 stays the campaign at `/play` until v2 has everything v1 teaches. v2 is played at `/play2`, a campaign with its own save and progress, listed with the prototypes on the title page; replaying one of its missions uses the replay v1 uses. Free play and the sandbox open when either campaign has reached them.
+
+The first time a device opens v2, the v1 progress on it is credited through the migration table above, for the v2 missions implemented so far. v1's save is never changed.
+
+**Switch-over** comes when v2 has missions 01–25, 81–84, and workshops A01–A15, all verified: then `/play` becomes v2, and v1's missions stay readable for old saves and tests.
+
+### Delivery phases
+
+| Phase | Content | Engine work | Status |
+| --- | --- | --- | --- |
+| 1 | v2 infrastructure; chapters 1–2 (01–10) | None: content and campaign code | Implemented 18 October 2026 |
+| 2 | Chapters 3–5 (11–25) | None | |
+| 3 | Missions 81–84; workshops A and B (A01–A10) | None; interim gates | |
+| 4 | Workshop C (A11–A15); switch-over | None; interim gate for 85 | |
+| 5 | Chapter 6 (26–30) | Building-finished and placement goals | |
+| 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | |
+| 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | |
+| 8 | Chapters 15–16 (71–80) | Gold, forge, lab, improvements | |
+| 9 | Chapters 13–14 (61–70) | Sides, shields, Guard and Advance, repair and reboot, paid guards | |
+| 10 | Chapters 18–21 (86–105) | Population, the opponent, matches and presets, safe edits | |
+
+Phases 8 and 9 can swap, as either route after 60 can come first. A phase is done when its missions pass `npm run verify:missions` in English and German, with a test for each lesson's deliberate mistake.
 
 ## Playtest gates
 
