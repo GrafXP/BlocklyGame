@@ -319,11 +319,33 @@ test("in mission 26 the Build tool places the workshop's site, which shows the b
   await expect(page.getByRole("button", { name: "Open the program" })).toHaveCount(0);
   await expect(page.locator(".mission-card .goal")).toHaveText(["Workshop: its site placed"]);
   await page.locator('[data-build="open"]').click();
-  await island(page, () => window.islandPage.aimAt(25, 17));
+  await expect(page.locator(".build-ask")).toHaveText("The workshop goes on its plot, marked on the island.");
+  // The plan stands on the plot at once; a tap anywhere keeps it there.
   await expect(page.locator(".build-why")).toHaveText("It fits here. Robots bring what the construction site needs: 2 stones, 4 planks.");
+  await island(page, () => window.islandPage.aimAt(12, 20));
+  expect(await island(page, () => window.islandPage.placing())).toMatchObject({ at: { x: 24, z: 16 }, facing: "south" });
   await page.locator('[data-build="place"]').click();
   await island(page, () => window.islandPage.game.step());
   await frames(page);
   await expect(page.locator(".win .win-reward")).toHaveText("The workshop has its site! Tap it to see the pieces it still needs.");
   expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "workshop").type)).toBe("site");
+});
+
+test("in mission 28 the plan starts on the plot that would block the bridge, and says so; the other plot fits, and the workshop gets built", async ({ page }) => {
+  await seedCampaign(page, "c2-m028");
+  await page.goto("/play?dev");
+  await ready(page);
+  await page.locator('[data-build="open"]').click();
+  await expect(page.locator(".build-ask")).toHaveText("The workshop goes on one of the plots marked on the island. Tap one to choose it.");
+  await expect(page.locator('[data-build="turn"]')).toBeHidden();
+  await expect(page.locator(".build-why")).toHaveText("Robots couldn't get to this any more: Stone pit");
+  await expect(page.locator('[data-build="place"]')).toBeDisabled();
+  await island(page, () => window.islandPage.aimAt(26, 18));
+  expect(await island(page, () => window.islandPage.placing())).toMatchObject({ at: { x: 24, z: 16 }, facing: "south" });
+  await expect(page.locator(".build-why")).toHaveText("It fits here. Robots bring what the construction site needs: 2 stones, 4 planks.");
+  await page.locator('[data-build="place"]').click();
+  await island(page, () => window.islandPage.game.step());
+  await frames(page);
+  expect(await island(page, () => window.islandPage.game.world.mission.trial)).toBe(1);
+  expect(await runUntil(page, (w) => w.mission.done !== null)).toBeLessThan(1500);
 });

@@ -17,9 +17,14 @@ const workshop = ref("entity.workshop");
 const bridged = (add, rest) => ({ add: ["quarry", ...add], bridges: ["site"], robots: { r1: { at: "camp", basket: {} } }, ...rest });
 // The construction site's job: build the workshop, once its bill is there.
 const builder = (id, n) => named(id, n, site, program(id, (p) => p.workspace(p.start(p.build("workshop")))));
-// The workshop as the reference places it: where the island's catalogue has
-// it, facing south.
-const PLACE = { type: "place", blueprint: "workshop", x: 24, z: 16, facing: "south" };
+// The workshop's plot: where the island's catalogue has it, facing south, as
+// missions 27–30 have it. Placing is only on the plots a mission marks, so the
+// island stays the same from mission to mission (src/ui/session.js,
+// checkPlace). Mission 28 marks another, which would stand on the bridge's
+// landing and cut the stone pit off: placing refuses it, and says why.
+const PLOT = { x: 24, z: 16, facing: "south" };
+const LANDING = { x: 22, z: 14, facing: "south" };
+const PLACE = { type: "place", blueprint: "workshop", ...PLOT };
 // The workshop's bill, from the sawmill's planks and the stone pit: two loads of
 // planks, then one of stone.
 const bill = (p, from = "sawmill", to = "workshop") => [
@@ -31,14 +36,14 @@ const bill = (p, from = "sawmill", to = "workshop") => [
 ];
 
 export const CHAPTER_6 = [
-  // Placing a blueprint chooses a site; it doesn't make a building. Its bill
+  // Placing a blueprint makes a construction site, not a building: its bill
   // is still to come.
   {
     id: "c2-m026",
     workspace: "explore",
     focus: null,
     setup: bridged(["sawmill"], {}),
-    blueprints: [{ blueprint: "workshop", program: null }],
+    blueprints: [{ blueprint: "workshop", program: null, plots: [PLOT] }],
     tools: ["build"],
     programs: [],
     blocks: [],
@@ -64,14 +69,15 @@ export const CHAPTER_6 = [
     budget: { stone: 2 },
     steps: 1000,
   },
-  // A building needs a way in: placing checks it. Once the site is placed,
-  // Robo 1 brings its bill, and the site builds.
+  // A building needs a way in: of the two plots, one would block the bridge,
+  // and placing refuses it. Once the site is placed, Robo 1 brings its bill,
+  // and the site builds.
   {
     id: "c2-m028",
     workspace: "explore",
     focus: null,
     setup: bridged(["sawmill"], { stock: { sawmill: { plank: 4 } } }),
-    blueprints: [{ blueprint: "workshop", program: "c2-m028-site" }],
+    blueprints: [{ blueprint: "workshop", program: "c2-m028-site", plots: [LANDING, PLOT] }],
     tools: ["build"],
     trials: [
       { goals: [{ id: "site", type: "placed", blueprint: "workshop" }] },

@@ -183,15 +183,16 @@ const WORKSPACES = ["build", "repair", "change", "explore"];
 //   writes the program.
 // - Through mission 40 the reference solution changes the focus program only,
 //   and its only commands place buildings: no team, setting or copy.
+// - A building is placed on a plot the mission marks, so its island stays as
+//   the missions after it have it.
 // That a Repair or Change starter doesn't meet the goals already is played
 // for every mission (scripts/verify-missions.js).
 function authoringProblems(mission) {
   const problems = [];
   if (!WORKSPACES.includes(mission.workspace)) problems.push(`${mission.id}: its workspace is ${mission.workspace}`);
-  if (mission.workspace === "explore" && !mission.focus) return problems;
   const focus = mission.programs.find((p) => p.id === mission.focus);
-  if (!focus) return [...problems, `${mission.id}: its focus ${mission.focus} isn't one of its programs`];
-  if (mission.workspace === "build") {
+  if (!focus && !(mission.workspace === "explore" && mission.focus === null)) problems.push(`${mission.id}: its focus ${mission.focus} isn't one of its programs`);
+  if (focus && mission.workspace === "build") {
     const tops = focus.source.blocks?.blocks ?? [];
     if (tops.length !== 1 || tops[0].type !== "island_when_started" || tops[0].next) problems.push(`${mission.id}: a Build mission's focus starter holds more than its start block`);
   }
@@ -199,6 +200,11 @@ function authoringProblems(mission) {
     const changed = Object.keys(mission.reference.programs ?? {});
     if (changed.some((id) => id !== mission.focus)) problems.push(`${mission.id}: its reference changes ${changed.join(", ")}, not only its focus`);
     if (mission.reference.commands?.some((c) => c.type !== "place")) problems.push(`${mission.id}: its reference gives commands other than placing`);
+  }
+  for (const c of mission.reference.commands ?? []) {
+    if (c.type !== "place") continue;
+    const plots = mission.blueprints?.find((b) => b.blueprint === c.blueprint)?.plots;
+    if (!plots?.some((p) => p.x === c.x && p.z === c.z && p.facing === c.facing)) problems.push(`${mission.id}: its reference places ${c.blueprint} off its plots`);
   }
   return problems;
 }

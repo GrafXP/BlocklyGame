@@ -91,12 +91,13 @@ export function readSave(save, { content, missions = null }) {
 
 // Whether every program `world` runs is what its revision's blocks in `library`
 // compile to, instruction for instruction (PLAN.md §10: published workspaces are
-// compiled again on load).
+// compiled again on load). The places a program names aren't checked against
+// the island: one can name a building still to be placed (src/campaign.js,
+// mission 28), and they don't change what it compiles to.
 function programsMatch(world, library) {
-  const places = [...world.entities, ...world.nodes].map((t) => t.id);
   return world.programs.every((p) => {
     const source = sourceAt(library, p.id, p.revision);
-    const { program } = source ? compile(source, { places }) : {};
+    const { program } = source ? compile(source) : {};
     return !!program && canonicalJson({ id: p.id, revision: p.revision, ...program }) === canonicalJson(p);
   });
 }

@@ -124,6 +124,7 @@ export function createIslandView(container, { quality = "high" } = {}) {
     ok: new THREE.MeshBasicMaterial({ color: 0x2f9e5b, transparent: true, opacity: 0.55, depthWrite: false }),
     bad: new THREE.MeshBasicMaterial({ color: 0xd64545, transparent: true, opacity: 0.55, depthWrite: false }),
     front: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false }),
+    plot: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4, depthWrite: false }),
   };
   const planBlock = new THREE.BoxGeometry(0.94, 0.5, 0.94);
   const planTile = new THREE.BoxGeometry(0.7, 0.04, 0.7);
@@ -220,8 +221,9 @@ export function createIslandView(container, { quality = "high" } = {}) {
       const z = Math.floor(hit.point.z + height / 2);
       return x >= 0 && z >= 0 && x < width && z < height ? { x, z } : null;
     },
-    // Draws the plan of a building being placed: { area, front, ok } (area
-    // { x, z, w, d } in cells, front [[x, z], …]), or nothing for null.
+    // Draws the plan of a building being placed: { area, front, ok, plots? }
+    // (area { x, z, w, d } in cells, front [[x, z], …]), with the other plots
+    // it could go on outlined (areas too), or nothing for null.
     showPlan(p) {
       plan.clear();
       if (p && world) {
@@ -234,6 +236,7 @@ export function createIslandView(container, { quality = "high" } = {}) {
         };
         for (let dz = 0; dz < p.area.d; dz++) for (let dx = 0; dx < p.area.w; dx++) at(p.area.x + dx, p.area.z + dz, planBlock, p.ok ? planLook.ok : planLook.bad, TOP.grass + 0.25);
         for (const [x, z] of p.front) at(x, z, planTile, planLook.front, TOP.grass + 0.03);
+        for (const a of p.plots ?? []) for (let dz = 0; dz < a.d; dz++) for (let dx = 0; dx < a.w; dx++) at(a.x + dx, a.z + dz, planTile, planLook.plot, TOP.grass + 0.03);
       }
       stage.invalidate();
     },

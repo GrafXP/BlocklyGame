@@ -279,10 +279,19 @@ test("a mission that's about placing offers its blueprint and the Build tool, an
     const play = session.usePlay("campaign");
     assert.equal(play.mission.id, "c2-m026");
     assert.deepEqual(session.rules().tools, ["library", "build"]);
-    assert.deepEqual(session.blueprints(), [{ blueprint: "workshop", program: null }]);
+    assert.deepEqual(session.blueprints(), [{ blueprint: "workshop", program: null, plots: [{ x: 24, z: 16, facing: "south" }] }]);
     assert.equal(session.placeBuilding({ blueprint: "workshop", x: 9, z: 16, facing: "south" }), false, "not on the camp");
+    assert.deepEqual(session.checkPlace({ blueprint: "workshop", x: 25, z: 17, facing: "south" }).problem, { code: "place.plot" }, "open ground, but not its plot");
+    assert.equal(session.placeBuilding({ blueprint: "workshop", x: 24, z: 16, facing: "west" }), false, "its plot, but turned");
     assert.equal(session.placeBuilding({ blueprint: "workshop", x: 24, z: 16, facing: "south" }), true);
     play.game.step();
     assert.notEqual(play.game.world.mission.done, null);
     assert.equal(session.savePlay(), true);
+  }));
+
+test("a mission saved before its building is placed reads back, though a program names the building", () =>
+  withStorage(async () => {
+    saveCampaignAt("c2-m028");
+    const play = (await reload()).usePlay("campaign");
+    assert.deepEqual([play.mission.id, play.notice], ["c2-m028", null]);
   }));

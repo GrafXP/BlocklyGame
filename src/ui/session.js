@@ -27,6 +27,7 @@ import {
   wordStarter,
 } from "../programming/programs.js";
 import { choicesOf, makeChoices, programFor } from "../sim/bindings.js";
+import { reason } from "../sim/codes.js";
 import { applyCommand, installProgram } from "../sim/commands.js";
 import { walkable } from "../sim/navigation.js";
 import { checkPlacement } from "../sim/placement.js";
@@ -591,8 +592,14 @@ export function blueprints() {
 }
 
 // Whether `request` ({ blueprint, x, z, facing }) can be placed in the world
-// as it will be: checkPlacement's answer.
-export const checkPlace = (request) => checkPlacement(peekWorld(), request);
+// as it will be: checkPlacement's answer. A mission can mark the plots a
+// building may go on, { x, z, facing }, so that its island stays as its later
+// missions have it: anywhere else it doesn't fit.
+export function checkPlace(request) {
+  const plots = blueprints().find((b) => b.blueprint === request.blueprint)?.plots;
+  if (plots && !plots.some((p) => p.x === request.x && p.z === request.z && p.facing === request.facing)) return { problem: reason("place.plot") };
+  return checkPlacement(peekWorld(), request);
+}
 
 // Places `request`'s building at the next step, its site running the
 // blueprint's program. Returns whether it fits.

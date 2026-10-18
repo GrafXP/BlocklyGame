@@ -280,12 +280,12 @@ export default {
 
   // --- Kapitel 6: Platz zum Wachsen ------------------------------------------------
   "c2-m026.title": "Ein Platz für die Werkstatt",
-  "c2-m026.goal": "Such einen Platz für die neue Werkstatt aus.",
-  "c2-m026.setup": "Such einen Platz für eine neue Werkstatt aus. Drück „Bauen“ und tippe auf die Insel: Der Plan wird grün, wo die Werkstatt hinpasst. So entsteht eine Baustelle; gebaut wird die Werkstatt erst, wenn ihre Teile ankommen.",
+  "c2-m026.goal": "Setz die Baustelle der Werkstatt auf ihren Platz.",
+  "c2-m026.setup": "Der Platz für die neue Werkstatt ist auf der anderen Seite des Bachs markiert, beim Steinbruch. Drück „Bauen“: Der Plan steht auf dem Platz, und „Hier bauen“ setzt dort eine Baustelle hin. Gebaut wird die Werkstatt erst, wenn ihre Teile ankommen.",
   "c2-m026.explain": "Was braucht die Baustelle noch, bevor sie eine Werkstatt wird?",
-  "c2-m026.hint.look": "Schau auf die andere Seite des Bachs: Beim Steinbruch ist freier Boden.",
-  "c2-m026.hint.think": "Wo gibt es freien Boden, mit einem Weg für die Roboter?",
-  "c2-m026.hint.try": "Drück „Bauen“ und tippe auf einen Platz, wo der Plan grün wird. „Drehen“ dreht ihn; dann drück „Hier bauen“.",
+  "c2-m026.hint.look": "Schau auf die andere Seite des Bachs, zum Steinbruch.",
+  "c2-m026.hint.think": "Was braucht eine Baustelle noch, bevor sie eine Werkstatt wird?",
+  "c2-m026.hint.try": "Drück „Bauen“, dann „Hier bauen“.",
   "c2-m026.reward": "Die Werkstatt hat ihre Baustelle! Tippe sie an und schau, welche Teile ihr noch fehlen.",
 
   "c2-m027.title": "Bring die Bauteile",
@@ -300,14 +300,14 @@ export default {
   "c2-m027.reward": "Die Werkstatt ist gebaut!",
 
   "c2-m028.title": "Lass einen Weg frei",
-  "c2-m028.goal": "Setz die Werkstatt dorthin, wo Roboter hinkommen, und schau zu, wie sie gebaut wird.",
-  "c2-m028.setup": "Such einen Platz für die Werkstatt, zu dem ein Weg führt. Roboter brauchen einen Weg dorthin und davor Platz zum Stehen, während sie den Korb leeren. Der Plan wird nur grün, wo nichts versperrt wird; die Lieferaufgabe von Robo 1 ist bereit, sobald die Baustelle da ist.",
+  "c2-m028.goal": "Wähl den Platz mit einem Weg dorthin, dann schau zu, wie die Werkstatt gebaut wird.",
+  "c2-m028.setup": "Für die Werkstatt sind zwei Plätze markiert. Roboter brauchen einen Weg dorthin und davor Platz zum Stehen, während sie den Korb leeren, und nichts anderes darf abgeschnitten werden. Auf einem Platz, der den Weg versperrt, wird der Plan rot; die Lieferaufgabe von Robo 1 ist bereit, sobald die Baustelle da ist.",
   "c2-m028.trial.1": "Setz die Baustelle der Werkstatt",
   "c2-m028.trial.2": "Robo 1 bringt, was sie braucht",
   "c2-m028.explain": "Wo hat Robo 1 gestanden, um den Korb zu leeren?",
-  "c2-m028.hint.look": "Schau auf den Plan, während du ihn bewegst: Rot heißt, etwas ist im Weg.",
-  "c2-m028.hint.think": "Wo wird Robo 1 stehen, um den Korb zu leeren? Ist der Weg zum Sägewerk noch frei?",
-  "c2-m028.hint.try": "Drück „Bauen“, tippe auf freien Boden mit Platz davor und drück „Hier bauen“. Dann drück „Los“.",
+  "c2-m028.hint.look": "Drück „Bauen“ und lies, was die Karte zum roten Platz sagt.",
+  "c2-m028.hint.think": "Welcher Platz stünde dort, wo die Roboter von der Brücke kommen?",
+  "c2-m028.hint.try": "Tippe den anderen Platz an, damit der Plan grün wird, und drück „Hier bauen“. Dann drück „Los“.",
   "c2-m028.reward": "Robo 1 hat den Weg gefunden, und die Werkstatt ist gebaut!",
 
   "c2-m029.title": "Richtige Teile, falscher Ort",

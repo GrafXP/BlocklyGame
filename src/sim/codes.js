@@ -65,6 +65,7 @@ export const CODES = {
   "place.robot": ["robot"], // robot `robot` stands there, or is stepping onto it
   "place.cutOff": ["thing"], // a robot that can reach `thing` now couldn't any more
   "place.unreachable": [], // no robot could reach its front
+  "place.plot": [], // the play marks plots for the building, and it isn't on one (src/ui/session.js)
 };
 
 export const reason = (code, values = {}) => ({ code, ...values });

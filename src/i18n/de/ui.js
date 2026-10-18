@@ -193,6 +193,8 @@ export default {
   "preview.copy": "{name} bekommt eine eigene Kopie von {program}. Änderst du die Kopie, ändert sich nur {name}.",
   "build.open": "Bauen",
   "build.ask.workshop": "Wo soll die Werkstatt hin? Tippe auf einen Platz auf der Insel.",
+  "build.plot.workshop": "Die Werkstatt kommt auf ihren Platz, der auf der Insel markiert ist.",
+  "build.plots.workshop": "Die Werkstatt kommt auf einen der Plätze, die auf der Insel markiert sind. Tippe einen an.",
   "build.turn": "Drehen",
   "build.place": "Hier bauen",
   "build.cancel": "Abbrechen",
@@ -404,6 +406,7 @@ export default {
   "place.robot": "Da ist ein Roboter im Weg: {robot}",
   "place.cutOff": "Roboter kämen nicht mehr hin zu: {thing}",
   "place.unreachable": "Kein Roboter käme dorthin.",
+  "place.plot": "Hier kommen Gebäude auf die Plätze, die auf der Insel markiert sind.",
 
   "entity.tree": "Baum {n}",
   "entity.rock": "Felsen {n}",

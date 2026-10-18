@@ -419,7 +419,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 - **Workspace:** Explore.
 - **Learn:** Placing a blueprint chooses a site; it does not create a finished building.
-- **Setup and support:** Show two valid plots, the camp, and one workshop blueprint. Placement is the focus; no courier program is needed yet.
+- **Setup and support:** Show the workshop's plot, the camp, and one workshop blueprint. Placement is the focus; no courier program is needed yet. *As built:* placing is only on the plots a mission marks, and this one marks the plot where missions 27–30 have the workshop, so the island stays the same from mission to mission (missions stand alone, and nothing placed carries over).
 - **Player task:** Choose a plot and inspect the unpaid construction bill.
 - **Success / observe:** A reachable workshop site is placed and its unpaid bill is visible. “What still has to arrive?” This is an interface lesson; payment follows separately.
 
@@ -439,7 +439,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 - **Workspace:** Explore.
 - **Learn:** Placement must preserve routes and interaction space.
-- **Setup and support:** Show a valid plot and an obstructing preview, with reachable interaction cells pictured. Reject invalid placement before accepting it. Background couriers and site building behavior are prepared solely to demonstrate access.
+- **Setup and support:** Show a valid plot and an obstructing preview, with reachable interaction cells pictured. Reject invalid placement before accepting it. *As built:* two plots are marked, one on the bridge's east landing, which would cut the stone pit off and is refused with that reason, and the workshop's own plot, as in mission 26. Background couriers and site building behavior are prepared solely to demonstrate access.
 - **Player task:** Choose a reachable site, inspect the access preview, and watch a courier use the completed route.
 - **Success / observe:** The workshop is built and a courier reaches both it and the existing sawmill. “Where will the helper stand to unload?” No trial can permanently trap a robot.
 

@@ -417,10 +417,15 @@ function islandPage(el, key, { mission: asked = null } = {}) {
 
   // --- Placing a building ------------------------------------------------------
   // The plan follows the pointer, or the last tap; it can be turned, and placed
-  // where it fits, at the next step (session.js).
-  let placing = null; // { blueprint, facing, at: { x, z } | null, pinned, problem }
+  // where it fits, at the next step (session.js). Where the play marks plots for
+  // the building, as a mission does to keep its island as the missions after it
+  // have it, the plan stands on one from the start, a tap moves it to the plot
+  // nearest, and the others are outlined; it isn't turned.
+  let placing = null; // { blueprint, facing, at: { x, z } | null, pinned, problem, plots }
   function startPlacing() {
-    placing = { blueprint: blueprints()[0].blueprint, facing: "south", at: null, pinned: false, problem: null };
+    const plan = blueprints()[0];
+    placing = { blueprint: plan.blueprint, facing: "south", at: null, pinned: false, problem: null, plots: plan.plots ?? null };
+    if (placing.plots) aimPlot(placing.plots[0]);
     showPlacing();
   }
   function stopPlacing() {
@@ -432,13 +437,34 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   // Aims the plan at the cell under screen point (x, y); `pin` keeps it there
   // until the next tap.
   const aim = (x, y, pin) => aimCell(view.cellAt(x, y), pin);
-  // Aims the plan at cell `cell`, { x, z }, with the cell in its middle.
+  // Aims the plan at cell `cell`, { x, z }, with the cell in its middle; or,
+  // tapped, at the plot nearest it.
   function aimCell(cell, pin) {
     if (!cell) return;
+    if (placing.plots) {
+      if (pin) aimPlot(nearestPlot(cell));
+      return;
+    }
     const { area } = layout({ blueprint: placing.blueprint, facing: placing.facing, x: 0, z: 0 });
     placing.at = { x: cell.x - Math.floor((area.w - 1) / 2), z: cell.z - Math.floor((area.d - 1) / 2) };
     placing.pinned ||= pin;
     showPlan();
+  }
+  // Aims the plan at plot `plot`, { x, z, facing }, and keeps it there.
+  function aimPlot(plot) {
+    placing.facing = plot.facing;
+    placing.at = { x: plot.x, z: plot.z };
+    placing.pinned = true;
+    showPlan();
+  }
+  const plotArea = (plot) => layout({ blueprint: placing.blueprint, ...plot }).area;
+  // The plot whose middle is nearest cell `cell`.
+  function nearestPlot(cell) {
+    const away = (plot) => {
+      const { x, z, w, d } = plotArea(plot);
+      return Math.hypot(cell.x + 0.5 - (x + w / 2), cell.z + 0.5 - (z + d / 2));
+    };
+    return placing.plots.reduce((best, plot) => (away(plot) < away(best) ? plot : best));
   }
   function turnPlan() {
     placing.facing = FACINGS[(FACINGS.indexOf(placing.facing) + 1) % FACINGS.length];
@@ -448,7 +474,8 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   function showPlan() {
     const check = checkPlace(request());
     placing.problem = check.problem ?? null;
-    view.showPlan({ ...layout(request()), ok: !check.problem });
+    const others = (placing.plots ?? []).filter((p) => p.x !== placing.at.x || p.z !== placing.at.z || p.facing !== placing.facing);
+    view.showPlan({ ...layout(request()), ok: !check.problem, plots: others.map(plotArea) });
     showPlacing();
   }
   // Places the plan, if it still fits: the world may have moved on since it
@@ -468,7 +495,8 @@ function islandPage(el, key, { mission: asked = null } = {}) {
     button?.setAttribute("aria-pressed", String(!!placing));
     card.hidden = !placing;
     if (!placing) return;
-    $(".build-ask").textContent = t(`build.ask.${placing.blueprint}`);
+    $(".build-ask").textContent = t(placing.plots ? `build.${placing.plots.length > 1 ? "plots" : "plot"}.${placing.blueprint}` : `build.ask.${placing.blueprint}`);
+    $('[data-build="turn"]').hidden = !!placing.plots;
     const why = !placing.at ? "" : placing.problem ? describeReason(peekWorld(), placing.problem) : t("build.fits", { amounts: amounts(RECIPES[placing.blueprint].inputs) });
     const line = $(".build-why");
     line.textContent = why;

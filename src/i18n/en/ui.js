@@ -285,6 +285,10 @@ export default {
   // what its construction site needs.
   "build.open": "Build",
   "build.ask.workshop": "Where should the workshop go? Tap a spot on the island.",
+  // In a mission that marks where the workshop goes: one plot, or several to
+  // choose from.
+  "build.plot.workshop": "The workshop goes on its plot, marked on the island.",
+  "build.plots.workshop": "The workshop goes on one of the plots marked on the island. Tap one to choose it.",
   "build.turn": "Turn",
   "build.place": "Build it here",
   "build.cancel": "Cancel",
@@ -587,6 +591,7 @@ export default {
   "place.robot": "A robot is in the way: {robot}",
   "place.cutOff": "Robots couldn't get to this any more: {thing}",
   "place.unreachable": "No robot could get to it.",
+  "place.plot": "Here, buildings go on the plots marked on the island.",
 
   // Names of things on the island. {n} tells things of a kind apart.
   "entity.tree": "Tree {n}",

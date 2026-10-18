@@ -9,7 +9,8 @@ import { program as write } from "../src/content/missions/write.js";
 import { COMPILER_VERSION } from "../src/programming/compiler.js";
 import { giveDraft, programDoc, sameBlocks, setDraft } from "../src/programming/programs.js";
 import { goalProgress } from "../src/sim/objectives.js";
-import { checkPlacement } from "../src/sim/placement.js";
+import { thingOf } from "../src/content/missions/island.js";
+import { checkPlacement, layout } from "../src/sim/placement.js";
 import { cellAt, kindOf } from "../src/sim/terrain.js";
 import { stateHash } from "../src/sim/replay.js";
 import { checkWorld } from "../src/sim/validate.js";
@@ -318,6 +319,24 @@ test("mission 26: nothing placed, nothing done; a workshop can't stand where it 
   playMission(world, m.reference.commands, world.tick + 10);
   assert.notEqual(world.mission.done, null);
   assert.equal(byId(world, "workshop").type, "site");
+});
+
+test("a building is placed only on a plot its mission marks, and every plot it fits on is where the missions after it have the building", () => {
+  const placing = CAMPAIGN.filter((m) => m.blueprints);
+  assert.deepEqual(ids(placing), ["c2-m026", "c2-m028"]);
+  const workshop = thingOf("workshop");
+  for (const m of placing) {
+    const { world } = missionStart(m);
+    for (const { blueprint, plots } of m.blueprints) {
+      assert.ok(plots?.length, `${m.id} marks the plots for ${blueprint}`);
+      const fits = plots.filter((plot) => !checkPlacement(world, { blueprint, ...plot }).problem);
+      assert.equal(fits.length, 1, `${m.id}: one plot fits`);
+      const { area, front } = layout({ blueprint, ...fits[0] });
+      assert.deepEqual([area, front], [workshop.area, workshop.access], `${m.id}: the workshop where the island has it`);
+    }
+  }
+  const landing = mission("c2-m028").blueprints[0].plots[0];
+  assert.deepEqual(checkPlacement(missionStart(mission("c2-m028")).world, { blueprint: "workshop", ...landing }).problem, { code: "place.cutOff", thing: "quarry" }, "mission 28's other plot cuts the stone pit off");
 });
 
 test("mission 27: the planks alone leave the site waiting for its stone", () => {
