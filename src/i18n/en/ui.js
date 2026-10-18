@@ -18,7 +18,7 @@ export default {
   "home.play": "Play",
   // The button once the missions have begun: the mission they're at.
   "home.continue": "Mission {n}: {title}",
-  "home.playNote": "Forty missions, from a first instruction to a whole island at work.",
+  "home.playNote": "Twenty-five missions so far, from a first instruction to the island's first workshop.",
   // How far the mission got, when it's saved on this device.
   "home.saved": "Saved at step {tick}.",
   "home.completed": "Done!",
@@ -53,10 +53,6 @@ export default {
   "home.labNote": "Phase 0 prototype: the editor over the 3D world.",
   "home.world": "World lab",
   "home.worldNote": "Phase 2 prototype: robots and buildings running their programs on the world clock.",
-  // The second campaign, played apart from the first until it is ready
-  // (docs/campaign-planv2.md), with its missions by chapter.
-  "home.campaign2": "The new campaign",
-  "home.campaign2Note": "Being built: in its missions, you write each program yourself. It keeps its own progress.",
   "nav.home": "Home",
   // Labels the list of languages, each shown in its own language.
   "language.choose": "Language",
@@ -446,16 +442,7 @@ export default {
   "chapter.2": "Do It Again",
   "chapter.3": "A Working Island",
   "chapter.4": "Look Before You Act",
-  "chapter.5": "Give Everyone a Job",
-  "chapter.6": "Remember the Job",
-  "chapter.7": "Make Your Own Blocks",
-  "chapter.8": "Talk and Work Together",
-  // The second campaign's chapters (docs/campaign-planv2.md).
-  "chapter2.1": "Hello, Helper!",
-  "chapter2.2": "Do It Again",
-  "chapter2.3": "A Working Island",
-  "chapter2.4": "Look Before You Act",
-  "chapter2.5": "One Helper, Useful Jobs",
+  "chapter.5": "One Helper, Useful Jobs",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",
@@ -625,23 +612,6 @@ export default {
   "programName.fetch": "Collector",
   "programName.kits": "Kit maker",
   "programName.buildWorkshop": "Workshop builder",
-  "programName.counter": "Delivery counter",
-  "programName.woodSupplier": "Wood supplier",
-  "programName.partsCourier": "Parts courier",
-  "programName.kitCourier": "Kit courier",
-  // The names the missions give variables, blocks of one's own and their
-  // inputs, as the player sees them in the blocks: “set order to 3”, “my
-  // block bring wood”. Once given out they're the player's, to rename.
-  "variable.order": "order",
-  "variable.delivered": "delivered",
-  "variable.remaining": "remaining",
-  "routine.bringWood": "bring wood",
-  "routine.bringSomeWood": "bring some wood",
-  "routine.bringPlanks": "bring two planks",
-  "routine.bringStone": "bring one stone",
-  "routine.deliverKit": "deliver one kit",
-  "input.destination": "destination",
-  "input.amount": "amount",
   // A program's copy for one robot or building: the program's name, then
   // whose copy it is.
   "programName.copy": "{program} ({name})",
@@ -649,14 +619,12 @@ export default {
   "programName.duplicate": "Copy of {program}",
   "programName.new": "New program {n}",
   // A mission's program, by its number and who runs it or what it is: “Mission
-  // 3: Robo 1”, “Mission 21: Stone carrier”.
+  // 3: Robo 1”, “Mission 13: Sawmill”.
   "programName.mission": "Mission {n}: {name}",
   // The teams: named groups of robots that share one program.
   "role.woodTeam": "Wood team",
   "role.plankTeam": "Plank team",
   "role.stoneTeam": "Stone team",
-  // A team of robots each fetching what its own settings say.
-  "role.collectors": "Collectors",
 
   "notFound.title": "Not found",
   "notFound.text": "There's no such page.",

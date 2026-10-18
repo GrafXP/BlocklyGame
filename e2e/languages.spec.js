@@ -426,8 +426,8 @@ const PLAY_STATES = [{ hints: 3 }, { broken: true }, { fixed: true, ticks: 60, c
 // with the win showing; or `replay`, a mission done before played again; or
 // free play grown into the sandbox, with the grove chosen and the new island's
 // layout asked for. With `briefing`, the mission's briefing is left showing.
-async function campaignAt(page, query, { mission = "m01", briefing = false, hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
-  await seedCampaign(page, sandbox ? "m25" : mission, { done: sandbox, query });
+async function campaignAt(page, query, { mission = "c2-m001", briefing = false, hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
+  await seedCampaign(page, sandbox ? "c2-m025" : mission, { done: sandbox, query });
   await page.goto(sandbox ? `/free?dev${query}` : replay ? `/replay?dev${query}&mission=${replay}` : `/play?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
   if (!briefing) await letsGo(page);
@@ -465,25 +465,24 @@ async function campaignAt(page, query, { mission = "m01", briefing = false, hint
 }
 
 const CAMPAIGN_STATES = [
-  { mission: "m16", briefing: true },
-  { mission: "m01", hints: 3 },
-  { mission: "m10", stuck: true, hints: 2 },
-  { mission: "m16", passed: true },
-  { mission: "m22", chosen: "r1", hints: 1 },
-  { mission: "m25", done: true },
-  { mission: "m06", replay: "m03" },
+  { mission: "c2-m016", briefing: true },
+  { mission: "c2-m001", hints: 3 },
+  { mission: "c2-m010", stuck: true, hints: 2 },
+  { mission: "c2-m016", passed: true },
+  { mission: "c2-m020", chosen: "r1", hints: 1 },
+  { mission: "c2-m025", done: true },
+  { mission: "c2-m006", replay: "c2-m003" },
   { sandbox: true },
-  // Phase 8: what a robot remembers, the block of its own it's inside, and an
-  // inbox, with a stalled team's hint.
-  { mission: "m30", chosen: "r1", hints: 3 },
-  { mission: "m33", chosen: "r1", steps: 40 },
-  { mission: "m38", chosen: "workshop", stuck: true, hints: 2 },
+  // A building waiting for what's missing, with the hint that asks about it,
+  // and a robot on its way across the bridge.
+  { mission: "c2-m024", chosen: "workshop", stuck: true, hints: 2 },
+  { mission: "c2-m021", chosen: "r1", steps: 40 },
 ];
 
 // The title page with the campaign saved at mission 6, every mission done so
 // far listed, and Start over asking.
 async function homeAsking(page, query) {
-  await seedCampaign(page, "m06", { query });
+  await seedCampaign(page, "c2-m006", { query });
   await expect(page.locator(".start-over")).toBeVisible();
   await page.locator('[data-home="ask"]').click();
   await frames(page);

@@ -1,7 +1,6 @@
 import { BLOCKS } from "./blockly/blocks.js";
-import { CAMPAIGN, unlockedBlocks } from "./content/missions/campaign.js";
+import { unlockedBlocks } from "./content/missions/campaign.js";
 import { BASE, THINGS } from "./content/missions/island.js";
-import { blocksFor, isCampaign2Mission } from "./content/missions/v2/index.js";
 import { compile } from "./programming/compiler.js";
 import { applyDraft, latest, newProgram, programDoc, setDraft, wordStarter } from "./programming/programs.js";
 import { beginTrial, createMission, needOf } from "./sim/objectives.js";
@@ -18,23 +17,11 @@ import { advanceWorld, createWorld } from "./sim/world.js";
 // plays every mission's reference solution from its start.
 //
 // The island before mission 1 is BASE (src/content/missions/island.js). A
-// mission's setup is written as what it changes on the island of the mission
-// before (src/sim/staging.js), so its start set is the island with the setup
-// of every mission up to it made in turn, nothing played between: the bridge
-// is there from mission 16, the workshop from 25. Its library holds its own
-// starter programs alone.
-//
-// The second campaign's missions (docs/campaign-planv2.md) stand alone more
-// strictly: each one's setup is complete, made on the island before mission 1
-// with nothing of another's, as its map branches (v2/index.js).
+// mission's setup is complete on its own (docs/campaign-planv2.md), made on
+// BASE with nothing of another mission's, as the campaign's map branches
+// (campaign.js). Its library holds its own starter programs alone.
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
-
-// Whether `mission` is one of the second campaign's.
-const isV2 = (mission) => isCampaign2Mission(mission.id);
-
-// The blocks a toolbox may offer in mission `mission`, of either campaign.
-export const missionBlocks = (mission) => (isV2(mission) ? blocksFor(mission) : unlockedBlocks(mission));
 
 // The island before mission 1.
 export const baseWorld = () => createWorld(BASE);
@@ -72,7 +59,6 @@ function enterMission(world, library, mission) {
 // worded by `word`. The same every time.
 export function missionStart(mission, { word = null } = {}) {
   const world = baseWorld();
-  if (!isV2(mission)) for (const m of CAMPAIGN.slice(0, mission.n - 1)) enterMission(world, missionLibrary(m), m);
   const library = missionLibrary(mission, { word });
   enterMission(world, library, mission);
   return { world, library };
@@ -142,11 +128,10 @@ const BUILT_IN = ["controls_repeat_ext", "controls_if", "controls_if_else", "log
 // - At its checkpoint `world`, every store its goals deliver to or make in
 //   has room for what they count, and the deposits hold its budget, with what
 //   later trials stage in them.
-// - A second-campaign mission keeps that plan's authoring rules too
-//   (v2Problems).
+// - It keeps the campaign plan's authoring rules (authoringProblems).
 export function missionProblems(mission, world) {
-  const problems = isV2(mission) ? v2Problems(mission) : [];
-  const allowed = new Set([...ALWAYS, ...missionBlocks(mission)]);
+  const problems = authoringProblems(mission);
+  const allowed = new Set([...ALWAYS, ...unlockedBlocks(mission)]);
   const changed = Object.keys(mission.reference.programs ?? {});
   const sources = [
     ...changed.map((id) => [`reference ${id}`, mission.reference.programs[id]]),
@@ -167,7 +152,7 @@ export function missionProblems(mission, world) {
     else if (goal.item && room(store, goal.item) < needOf(goal)) problems.push(`${mission.id}: ${at} has room for ${room(store, goal.item)} ${goal.item}, goal ${goal.id} counts ${needOf(goal)}`);
   }
   // The deposits as the checkpoint has them, and what each later trial stages
-  // in them again (mission 40 fills them for its second run).
+  // in them again.
   const deposits = world.nodes.filter((d) => d.store.caps);
   for (const [item, n] of Object.entries(mission.budget ?? {})) {
     let held = deposits.reduce((sum, d) => sum + (d.store.items[item] ?? 0), 0);
@@ -177,13 +162,13 @@ export function missionProblems(mission, world) {
   return problems;
 }
 
-// The workspaces a second-campaign mission's focus program can open with
+// The workspaces a mission's focus program can open with
 // (docs/campaign-planv2.md, “Mission descriptions and optional help”).
 const WORKSPACES = ["build", "repair", "change", "explore"];
 
-// What's wrong with second-campaign mission `mission` by that plan's
-// authoring rules (“Teaching boundaries”, “Independent authoring”), for a
-// developer to read: [] when it keeps them.
+// What's wrong with mission `mission` by the campaign plan's authoring rules
+// (docs/campaign-planv2.md, “Teaching boundaries”, “Independent authoring”),
+// for a developer to read: [] when it keeps them.
 // - It says what its focus program opens with, and names one of its programs.
 // - A Build mission's focus starter is its start block alone: the child
 //   writes the program.
@@ -191,7 +176,7 @@ const WORKSPACES = ["build", "repair", "change", "explore"];
 //   and gives no commands: no team, setting or copy.
 // That a Repair or Change starter doesn't meet the goals already is played
 // for every mission (scripts/verify-missions.js).
-function v2Problems(mission) {
+function authoringProblems(mission) {
   const problems = [];
   if (!WORKSPACES.includes(mission.workspace)) problems.push(`${mission.id}: its workspace is ${mission.workspace}`);
   const focus = mission.programs.find((p) => p.id === mission.focus);

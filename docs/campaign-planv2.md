@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1 and 2, the v2 infrastructure and the foundation (missions 01–25), are implemented alongside v1; the rest is proposed
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1 and 2, the v2 infrastructure and the foundation (missions 01–25), are implemented, and v2 replaced v1 as the game's campaign the same day; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -1573,6 +1573,8 @@ Before implementing the dependent lessons, agree these shared contracts in the e
 
 ### Preserve the existing campaign
 
+*Not applied.* The switch-over came early, during development (see [Rollout](#rollout-alongside-v1)): v1's missions and their words were removed, and no save or progress was carried over, so the mapping and the migration below were not needed; the `c2-` ids stay. The section is kept as the design for a released game.
+
 Use stable versioned ids, for example `c2-m001`–`c2-m105` and `c2-a01`–`c2-a15`, rather than assigning v1's `m26` to new construction content. Keep v1 content and saves readable during rollout. A migration may credit equivalent lessons only through an explicit mapping:
 
 | Existing v1 lessons | Proposed v2 equivalents | Migration condition |
@@ -1627,7 +1629,9 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 
 ### Rollout alongside v1
 
-v1 stays the campaign at `/play` until v2 has everything v1 teaches. v2 is played at `/play2`, a campaign with its own save and progress, listed with the prototypes on the title page; replaying one of its missions uses the replay v1 uses. Free play and the sandbox open when either campaign has reached them.
+*As built:* v2 was played at `/play2` alongside v1 for phases 1 and 2. On 18 October 2026, with the game still in development, v2 replaced v1 at `/play` at once, rather than waiting for the switch-over below: v1's 40 missions, their words and their tests were removed, `/play2` with them, and saves of v1 are let go rather than credited (a save that can't be read starts the campaign afresh). Until phases 3 and 4, the campaign has no lessons for teams, settings and copies (81–84), memory and blocks of one's own (workshops A and B), or messages (workshop C); the engine and the free island (`/island`) still have all of them, and their browser tests run there. Free play's settings tool waits for mission 82.
+
+The plan as it was: v1 stays the campaign at `/play` until v2 has everything v1 teaches. v2 is played at `/play2`, a campaign with its own save and progress, listed with the prototypes on the title page; replaying one of its missions uses the replay v1 uses. Free play and the sandbox open when either campaign has reached them.
 
 The first time a device opens v2, the v1 progress on it is credited through the migration table above, for the v2 missions implemented so far. v1's save is never changed.
 
@@ -1638,9 +1642,9 @@ The first time a device opens v2, the v1 progress on it is credited through the 
 | Phase | Content | Engine work | Status |
 | --- | --- | --- | --- |
 | 1 | v2 infrastructure; chapters 1–2 (01–10) | None: content and campaign code | Implemented 18 October 2026 |
-| 2 | Chapters 3–5 (11–25) | None | Implemented 18 October 2026 |
+| 2 | Chapters 3–5 (11–25) | None | Implemented 18 October 2026; v2 replaced v1 the same day |
 | 3 | Missions 81–84; workshops A and B (A01–A10) | None; interim gates | |
-| 4 | Workshop C (A11–A15); switch-over | None; interim gate for 85 | |
+| 4 | Workshop C (A11–A15) | None; interim gate for 85 | |
 | 5 | Chapter 6 (26–30) | Building-finished and placement goals | |
 | 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | |
 | 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | |

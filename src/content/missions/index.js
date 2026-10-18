@@ -1,12 +1,11 @@
 import { CAMPAIGN } from "./campaign.js";
 import { SLICE } from "./slice.js";
-import { CAMPAIGN2 } from "./v2/index.js";
 
-// The missions there are (PLAN.md §9; docs/campaign-plan.md): the campaign's,
-// chapters 1–8 (campaign.js); the second campaign's, as far as it's built
-// (docs/campaign-planv2.md, v2/index.js); and Phase 5's bridge slice, mission
-// 15 played on its own, kept for its playtest.
-export const MISSIONS = [SLICE, ...CAMPAIGN, ...CAMPAIGN2];
+// The missions there are (PLAN.md §9; docs/campaign-planv2.md): the
+// campaign's, as far as it's built (campaign.js); and Phase 5's bridge
+// slice, the first campaign's mission 15 played on its own, kept for its
+// playtest.
+export const MISSIONS = [SLICE, ...CAMPAIGN];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id) ?? null;
 

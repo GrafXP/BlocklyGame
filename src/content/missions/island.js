@@ -2,12 +2,12 @@ import { ref } from "../../i18n/index.js";
 import { BLUEPRINTS } from "../../sim/placement.js";
 import { TERRAIN } from "../island.js";
 
-// The campaign's island (PLAN.md §9; docs/campaign-plan.md): the island of
-// Phases 3–6, which grows as the missions go on. Mission 1 starts with Robo 1,
-// the camp and the grove; the rest arrive when a mission needs them, each at
-// its place in this catalogue (src/sim/staging.js, `add`): the sawmill with
-// mission 11, the depot and Robo 2 with 12 and 14, the construction site, the
-// stone pit across the stream and Robo 3 with 15, and the workshop with 25.
+// The campaign's island (PLAN.md §9; docs/campaign-planv2.md): the island of
+// Phases 3–6. Every mission starts with Robo 1, the camp and the grove, BASE;
+// whatever else it needs arrives as its setup says, each at its place in this
+// catalogue (src/sim/staging.js, `add`): the sawmill from mission 11, the
+// depot from 12, the construction site and the stone pit across the stream
+// from 15, the workshop from 23.
 //
 // Each mission begins with every building empty and every deposit holding
 // what this catalogue gives it (src/sim/staging.js, restock); a mission stages

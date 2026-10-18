@@ -22,7 +22,7 @@ Phase 7 (the main campaign and free play) is in place: **Play** on the title pag
 
 Phase 8 (memory, blocks of one's own and messages) is in place: missions 26–40 go on with **variables** that each robot remembers for itself, shown beside it as it runs; **blocks of one's own** (“my block bring wood”) with one input, which the debugger follows in and out of; and **messages** from one program to another, waited for and shown in the inbox. The campaign ends with four kits for the island's celebration. Findings are in [docs/phase8.md](docs/phase8.md).
 
-The campaign's second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) is being built alongside it, in delivery phases. Phases 1 and 2 are in place: missions 1–25, the foundation, in which the child writes each program from the briefing, at `/play2` (*The new campaign* among the prototypes on the title page), with a save and progress of its own.
+Since 18 October 2026 the campaign follows its second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)), built in delivery phases; the first campaign's 40 missions are gone. Phases 1 and 2 are in place: **Play** starts missions 1–25, the foundation, in which the child writes each program from the briefing. Teams, memory, blocks of one's own and messages come back as lessons in the plan's next phases; until then they're on the island at `/island`.
 
 ## Development
 
@@ -32,13 +32,13 @@ The campaign's second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) 
 | `npm run dev` | Development server |
 | `npm run build` / `npm run preview` | Production build in `dist/`, and serving it. `dist/` holds an Apache `.htaccess` (from `public/`): every address is the game, with a strict CSP and long caching for hashed files. Serve it from the root of a domain or subdomain. |
 | `npm test` | Node unit tests in `test/`, `verify:missions` among them |
-| `npm run verify:missions` | Plays every mission's reference solution from its start, in both campaigns, and checks its starters, steps, toolbox, budget, room and words, and the second campaign's authoring rules (`scripts/verify-missions.js`) |
+| `npm run verify:missions` | Plays every mission's reference solution from its start, and checks its starters, steps, toolbox, budget, room, words and the campaign plan's authoring rules (`scripts/verify-missions.js`) |
 | `npm run golden` | Records the golden replays in `test/golden/` again (the island, the island with commands, the bridge slice, the island with teams, settings, copies and a workshop, and the campaign played through by its reference solutions), after a deliberate change to the simulation and a new `SIM_VERSION` |
 | `npx playwright install chromium webkit` | Once: the browsers for the browser tests |
 | `npm run e2e` | Browser tests in `e2e/` (Chromium, WebKit, WebKit as an iPad), against a fresh build |
 | `npm run shots` | Screenshots and frame times for `docs/phase0/`, `docs/languages/`, `docs/phase2/`, `docs/phase3/`, `docs/phase4/`, `docs/phase5/`, `docs/phase6/` and `docs/phase7/`; `npm run shots -- campaign` for some groups only |
 
-Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`, which `/play`, `/play2`, `/replay`, `/free` and `/slice` have too) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
+Add `?dev` to a URL for the test hooks (`window.island`, `window.lab`, `window.world`, `window.islandPage`, which `/play`, `/replay`, `/free` and `/slice` have too) and the island's graphics counters. With it, `&lang=de` opens the game in a language whatever the browser's, and `&lang=pseudo` in the pseudo-language: English with every letter accented, padded by about 40% and in brackets. Plain letters on screen are text that didn't come from a catalogue; a missing `]` is text cut off.
 
 ## Languages
 

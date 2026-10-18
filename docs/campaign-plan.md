@@ -2,6 +2,8 @@
 
 Campaign plan · 15 October 2026 · Ages 7–9 · Adopted in PLAN.md the same day
 
+*Superseded on 18 October 2026* by the [campaign plan v2](campaign-planv2.md), which replaced this campaign in the game: its missions were removed. Kept as the record of the first campaign.
+
 This is a new campaign design for the game described in [PLAN.md](../PLAN.md). It expands the earlier 12-mission outline into **40 short missions in eight chapters**, with room to practise before another idea arrives. PLAN.md has adopted it in place of its original 12 missions (PLAN.md §9 and §16, Campaign). This document is the content specification: what each mission teaches and asks of the child. PLAN.md says what the game provides for it and in which phase.
 
 The campaign follows one growing island: make camp, learn to carry materials, open the sawmill, build the bridge, and restore the workshop district. The final project is to prepare the island for a welcome celebration by running a small, dependable production network.

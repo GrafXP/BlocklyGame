@@ -16,8 +16,8 @@ import { act, block, call, chain, changeVar, getVar, number, routine, send, setV
 // the player's own (a routine) is a stack of its own, laid out the same way.
 //
 // Variables, routines and their inputs are named by message references:
-// p.variable("order") is the variable `${id}-order`, named by "variable.order"
-// in ui.js, worded as the program is given out (wordStarter). The workspace
+// p.variable("order") is the variable `${id}-order`, named by variable.order in
+// ui.js, worded as the program is given out (wordStarter). The workspace
 // lists every variable its blocks use.
 
 // The inputs of blocks that hold statements, rather than a value.
@@ -41,6 +41,10 @@ const stack = (first) => {
 };
 
 const ROW = 52; // workspace units a statement takes, about, in the Calm treatment
+
+// Program `id` of mission `n`, run by `who` (a name), as the library names it:
+// “Mission 3: Robo 1”.
+export const named = (id, n, who, source) => ({ id, name: ref("programName.mission", { n, name: who }), source });
 
 // The workspace `write(writer(id))` makes: program(“m03”, (p) =>
 // p.workspace(p.start(p.go("camp"), p.unload()))).

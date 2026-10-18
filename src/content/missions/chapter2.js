@@ -1,78 +1,98 @@
-import { named } from "./chapter1.js";
 import { robo } from "./island.js";
-import { program } from "./write.js";
+import { named, program } from "./write.js";
+import { blank } from "./chapter1.js";
 
-// Chapter 2, “Do It Again” (docs/campaign-plan.md): Repeat, loop bodies,
-// basket limits and a small nested loop. Regular deliveries reach the camp.
+// Chapter 2, “Do It Again” (docs/campaign-planv2.md): Repeat, what goes inside
+// a loop, the basket's two spaces, and a loop inside a loop. Reliable
+// deliveries reach the camp. The child writes 6 and 7; 8 and 10 are repairs,
+// and 9 changes a working program.
 
-const atCamp = (n, wood) => ({ stock: { grove: { wood: 12 } }, robots: { r1: { at: "camp", basket: {} } }, room: { camp: { wood } }, run: { r1: n } });
+const atCamp = (id) => ({ robots: { r1: { at: "camp", basket: {} } }, run: { r1: id } });
+// One trip from the camp to the grove and back, collecting `take` times.
+const trip = (p, take = 1) => [p.go("grove"), ...(take === 1 ? [p.collect()] : [p.repeat(take, p.collect())]), p.go("camp"), p.unload()];
 
 export const CHAPTER_2 = [
-  // One Repeat collects two pieces; the walk home follows the loop.
+  // Repeat does what's inside it a number of times: two Collects in one.
   {
-    id: "m06",
-    setup: { stock: { grove: { wood: 12 } }, robots: { r1: { at: "grove", basket: {} } }, room: { camp: { wood: 2 } }, run: { r1: "m06" } },
-    programs: [named("m06", 6, robo(1), program("m06", (p) => p.workspace(p.start(p.repeat(2), p.go("camp"), p.unload()), p.loose(p.collect()))))],
+    id: "c2-m006",
+    workspace: "build",
+    focus: "c2-m006",
+    setup: { robots: { r1: { at: "grove", basket: {} } }, run: { r1: "c2-m006" } },
+    programs: [blank("c2-m006", 6, robo(1))],
     blocks: ["controls_repeat_ext"],
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 2 }],
     look: "r1",
     predict: true,
-    reference: { programs: { m06: program("m06", (p) => p.workspace(p.start(p.repeat(2, p.collect()), p.go("camp"), p.unload()))) } },
+    reference: { programs: { "c2-m006": program("c2-m006", (p) => p.workspace(p.start(p.repeat(2, p.collect()), p.go("camp"), p.unload()))) } },
     budget: { wood: 2 },
     steps: 120,
   },
-  // A whole trip, repeated: one piece at a time.
+  // A loop can repeat a whole trip: three trips of one piece each. Three
+  // pieces in fewer trips aren't what was asked.
   {
-    id: "m07",
-    setup: atCamp("m07", 3),
-    programs: [named("m07", 7, robo(1), program("m07", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.go("camp"), p.unload()), p.loose(p.repeat(3)))))],
+    id: "c2-m007",
+    workspace: "build",
+    focus: "c2-m007",
+    setup: atCamp("c2-m007"),
+    programs: [blank("c2-m007", 7, robo(1))],
     blocks: [],
-    goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 3 }],
+    goals: [
+      { id: "camp", type: "delivered", to: "camp", item: "wood", count: 3, exact: true },
+      { id: "trips", type: "trips", by: "r1", to: "camp", count: 3 },
+    ],
     look: "camp",
     predict: true,
-    reference: { programs: { m07: program("m07", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect(), p.go("camp"), p.unload())))) } },
+    scaffold: { "c2-m007": program("c2-m007", (p) => p.workspace(p.start(...trip(p)))) },
+    reference: { programs: { "c2-m007": program("c2-m007", (p) => p.workspace(p.start(p.repeat(3, ...trip(p))))) } },
     budget: { wood: 3 },
     steps: 400,
   },
   // Three Collects before unloading: the third waits for room in the basket.
   {
-    id: "m08",
-    setup: atCamp("m08", 4),
-    programs: [named("m08", 8, robo(1), program("m08", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.collect(), p.collect(), p.collect(), p.go("camp"), p.unload())))))],
+    id: "c2-m008",
+    workspace: "repair",
+    focus: "c2-m008",
+    setup: atCamp("c2-m008"),
+    programs: [named("c2-m008", 8, robo(1), program("c2-m008", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.collect(), p.collect(), p.collect(), p.go("camp"), p.unload())))))],
     blocks: [],
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 4 }],
     look: "r1",
     problems: [{ entity: "r1", code: "wait.space", key: "full" }],
     predict: true,
-    reference: { programs: { m08: program("m08", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload())))) } },
+    reference: { programs: { "c2-m008": program("c2-m008", (p) => p.workspace(p.start(p.repeat(2, ...trip(p, 2))))) } },
     budget: { wood: 4 },
     steps: 400,
   },
-  // A Repeat inside a Repeat: two pieces on each of two trips.
+  // A loop inside a loop: the two trips bring one piece each; make each bring
+  // a full basket. As it starts, two pieces arrive in loads of one, which
+  // isn't the goal (docs/campaign-planv2.md, “Corrections made in this review”).
   {
-    id: "m09",
-    setup: atCamp("m09", 4),
-    programs: [named("m09", 9, robo(1), program("m09", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.go("camp"), p.unload())), p.loose(p.repeat(2)), p.loose(p.collect()))))],
+    id: "c2-m009",
+    workspace: "change",
+    focus: "c2-m009",
+    setup: atCamp("c2-m009"),
+    programs: [named("c2-m009", 9, robo(1), program("c2-m009", (p) => p.workspace(p.start(p.repeat(2, ...trip(p))))))],
     blocks: [],
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 4, load: 2 }],
     look: "r1",
     predict: true,
-    reference: { programs: { m09: program("m09", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.repeat(2, p.collect()), p.go("camp"), p.unload())))) } },
+    reference: { programs: { "c2-m009": program("c2-m009", (p) => p.workspace(p.start(p.repeat(2, ...trip(p, 2))))) } },
     budget: { wood: 4 },
     steps: 400,
   },
   // The walk home is after the loop, so the basket fills and the robot waits:
   // move it inside. Exactly three deliveries, with nothing more on its way.
   {
-    id: "m10",
-    setup: atCamp("m10", 3),
-    programs: [named("m10", 10, robo(1), program("m10", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect()), p.go("camp"), p.unload()))))],
+    id: "c2-m010",
+    workspace: "repair",
+    focus: "c2-m010",
+    setup: atCamp("c2-m010"),
+    programs: [named("c2-m010", 10, robo(1), program("c2-m010", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect()), p.go("camp"), p.unload()))))],
     blocks: [],
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 3, exact: true }],
     look: "r1",
     problems: [{ entity: "r1", code: "wait.space", key: "full" }],
-    project: true,
-    reference: { programs: { m10: program("m10", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect(), p.go("camp"), p.unload())))) } },
+    reference: { programs: { "c2-m010": program("c2-m010", (p) => p.workspace(p.start(p.repeat(3, ...trip(p))))) } },
     budget: { wood: 3 },
     steps: 500,
     milestone: true,

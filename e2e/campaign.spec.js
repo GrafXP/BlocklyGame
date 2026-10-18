@@ -2,13 +2,14 @@ import { test, expect } from "@playwright/test";
 import { letsGo, seedCampaign, solveMission } from "./campaign-seed.js";
 import { openDrawer } from "./ui.js";
 
-// The Phase 7 acceptance in a browser (PLAN.md §11): the campaign at /play,
-// from a fresh player's mission 1 on to the next, each mission beginning with
-// its briefing and ending with the win; the mission card's
-// prediction, hints that answer the problem in view, trials, “Show me a
-// start” and starting from nothing; missions played again on their own; free
-// play after mission 15, the sandbox after 25; and the title page's Start
-// over. Later missions start from a campaign saved at them (campaign-seed.js).
+// The campaign in a browser (PLAN.md §11, Phase 7; docs/campaign-planv2.md):
+// at /play, from a fresh player's mission 1, its program the start block
+// alone, on to the next, each mission beginning with its briefing and ending
+// with the win; the mission card's prediction, hints that answer the problem
+// in view, trials, and “Show me a start”; a building's program the child
+// writes; missions played again on their own; free play after mission 15, the
+// sandbox after 25; and the title page's Start over. Later missions start from
+// a campaign saved at them (campaign-seed.js).
 
 const frames = (page, n = 2) =>
   page.evaluate(
@@ -58,7 +59,7 @@ const runUntil = (page, done) =>
     done.toString(),
   );
 
-test("a fresh player starts at mission 1 with its briefing: the card asks for a guess, the editor offers only “go to”, and the win leads on to mission 2, which a reload keeps", async ({ page }) => {
+test("a fresh player starts at mission 1 with its briefing: the card asks for a guess, the program is the start block alone, the editor offers only “go to”, and the win leads on to mission 2, which a reload keeps", async ({ page }) => {
   await page.goto("/?dev");
   await page.evaluate(() => localStorage.clear());
   await page.goto("/?dev");
@@ -72,13 +73,14 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await expect(briefing).toBeVisible();
   await expect(briefing.locator(".briefing-chapter")).toHaveText("Chapter 1 · Mission 1");
   await expect(briefing.locator("h2")).toHaveText("Hello, Helper!");
-  await expect(briefing.locator(".briefing-goal")).toHaveText("Help Robo 1 find the grove.");
+  await expect(briefing.locator(".briefing-goal")).toHaveText("Send Robo 1 to the grove.");
+  await expect(briefing.locator(".briefing-setup")).toContainText("Give it a “go to” block to reach the grove");
   await expect(briefing.locator(".goal")).toHaveText(["Robo 1 → Grove"]);
   await briefing.getByRole("button", { name: "Let's go!" }).click();
   await expect(briefing).toBeHidden();
   await expect(page).toHaveTitle("Hello, Helper! · BlocklyBots");
   await expect(page.locator(".mission-chapter")).toHaveText("Chapter 1 · Mission 1");
-  await expect(page.locator(".mission-goal")).toHaveText("Help Robo 1 find the grove.");
+  await expect(page.locator(".mission-goal")).toHaveText("Send Robo 1 to the grove.");
   await expect(page.locator(".mission-card .goal")).toHaveText(["Robo 1 → Grove"]);
   await expect(page.locator('[data-panel="library"]')).toBeVisible();
   await expect(page.locator("[data-build]")).toHaveCount(0);
@@ -94,6 +96,7 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await page.getByRole("button", { name: "Open the program" }).click();
   await expect(page.locator(".mission-panel")).toBeHidden(); // it would lie over the editor
   await expect(page.locator(".code-title")).toHaveText("Mission 1: Robo 1");
+  expect(await island(page, () => window.islandPage.editor().workspace.getAllBlocks(false).map((b) => b.type))).toEqual(["island_when_started"]);
   expect(await toolbox(page)).toEqual({ Robot: ["robot_go_to"] });
   expect(await solveMission(page)).toBeLessThanOrEqual(150);
   await frames(page);
@@ -120,7 +123,7 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await expect(page.locator(".clock .ticks")).toHaveText("0");
   const grove = await island(page, () => window.islandPage.game.world.nodes.find((n) => n.id === "grove").access);
   expect(grove).toContain(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "r1").cell));
-  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id)), "mission 2's own programs alone").toEqual(["m02"]);
+  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id)), "mission 2's own programs alone").toEqual(["c2-m002"]);
 
   await page.reload();
   await ready(page);
@@ -132,7 +135,7 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
 });
 
 test("a mission with trials pauses when one is passed, saying what changes next, then goes on to the next; the win's Next mission goes on too", async ({ page }) => {
-  await seedCampaign(page, "m16");
+  await seedCampaign(page, "c2-m016");
   await page.goto("/play?dev");
   await ready(page);
   await expect(page.locator(".trial")).toHaveText(["Trial 1: One plank at the sawmill", "Trial 2: Two planks at the sawmill"]);
@@ -157,11 +160,11 @@ test("a mission with trials pauses when one is passed, saying what changes next,
   await page.locator(".win").getByRole("button", { name: "Next mission" }).click();
   await opened(page);
   await expect(page.locator(".briefing h2")).toHaveText("Only When We Need It");
-  expect(await island(page, () => window.islandPage.play().mission.id)).toBe("m17");
+  expect(await island(page, () => window.islandPage.play().mission.id)).toBe("c2-m017");
 });
 
 test("the hints answer the problem in view, and the card offers one once everything has come to a stop", async ({ page }) => {
-  await seedCampaign(page, "m08");
+  await seedCampaign(page, "c2-m008");
   await page.goto("/play?dev");
   await ready(page);
   await expect(page.locator(".mission-stuck")).toBeHidden();
@@ -180,8 +183,8 @@ test("the hints answer the problem in view, and the card offers one once everyth
   await expect(page.locator(".mission-hints .hint-think")).toHaveText("Think: The basket is full. What must happen before another collection?");
 });
 
-test("a project offers a start, and starting from nothing; “Undo changes” brings the blocks back", async ({ page }) => {
-  await seedCampaign(page, "m05");
+test("the help offers a start; Starter program goes back to the start block alone, and “Undo changes” brings the blocks back", async ({ page }) => {
+  await seedCampaign(page, "c2-m005");
   await page.goto("/play?dev");
   await ready(page);
   await openDrawer(page, "mission");
@@ -192,22 +195,23 @@ test("a project offers a start, and starting from nothing; “Undo changes” br
   expect(await blocks()).toEqual(["island_when_started", "robot_go_to", "robot_collect"]);
   await page.waitForTimeout(400);
   await page.locator('[data-code="apply"]').click();
-  await page.getByRole("button", { name: "Start from nothing" }).click();
+  await expect(page.getByRole("button", { name: "Start from nothing" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Starter program" }).click();
   expect(await blocks()).toEqual(["island_when_started"]);
   await page.getByRole("button", { name: "Undo changes" }).click();
   expect(await blocks()).toEqual(["island_when_started", "robot_go_to", "robot_collect"]);
-  expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("m05-start").isDeletable())).toBe(false);
+  expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("c2-m005-start").isDeletable())).toBe(false);
 });
 
 test("the title page's mission map: stars for the missions done, the one the campaign is at to go on with, the rest locked; with ?dev every one opens on its own", async ({ page }) => {
-  await seedCampaign(page, "m05");
+  await seedCampaign(page, "c2-m005");
   await page.goto("/");
-  await expect(page.locator(".missions .chapter")).toHaveCount(8);
+  await expect(page.locator(".missions .chapter")).toHaveCount(5);
   await expect(page.locator(".missions .chapter-1 h3")).toHaveText("Chapter 1: Hello, Helper!4/5");
   await expect(page.locator(".missions .chapter li.done")).toHaveCount(4);
   await expect(page.locator(".missions .chapter li.done").first()).toContainText("Play again");
   await expect(page.locator(".missions .chapter li.current")).toHaveText(["5Camp Is ReadyYou're here"]);
-  await expect(page.locator(".missions .chapter li.later")).toHaveCount(35);
+  await expect(page.locator(".missions .chapter li.later")).toHaveCount(20);
   await expect(page.locator(".missions .chapter li.later a")).toHaveCount(0);
   await expect(page.locator(".dev-note")).toHaveCount(0);
   await expect(page.locator(".grown-ups")).not.toHaveAttribute("open");
@@ -219,34 +223,34 @@ test("the title page's mission map: stars for the missions done, the one the cam
   await expect(page.locator(".dev-note")).toBeVisible();
   await expect(page.locator(".grown-ups")).toHaveAttribute("open");
   await expect(page.locator(".missions .chapter li.later")).toHaveCount(0);
-  await expect(page.locator(".missions .chapter li.open")).toHaveCount(35);
+  await expect(page.locator(".missions .chapter li.open")).toHaveCount(20);
   await page.locator('.missions .chapter li[value="12"]').getByRole("link", { name: "Try it" }).click();
   await ready(page);
-  await expect(page).toHaveURL(/\/replay\?mission=m12&dev$/);
+  await expect(page).toHaveURL(/\/replay\?mission=c2-m012&dev$/);
   await expect(page.locator(".mission-chapter")).toHaveText("Chapter 3 · Mission 12");
   await page.getByRole("link", { name: "Home" }).click();
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
 });
 
 test("a mission done before can be played again from its start, and the campaign stays as it was", async ({ page }) => {
-  await seedCampaign(page, "m05");
+  await seedCampaign(page, "c2-m005");
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
   await page.locator(".missions .chapter li").nth(2).getByRole("link", { name: "Play again" }).click();
   await ready(page);
-  await expect(page).toHaveURL(/\/replay\?mission=m03/);
+  await expect(page).toHaveURL(/\/replay\?mission=c2-m003/);
   await expect(page.locator(".mission-replay")).toHaveText("You're playing mission 3 again, from the beginning. The other missions stay as they are.");
-  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id))).toEqual(["m03"]);
+  expect(await island(page, () => window.islandPage.library().programs.map((p) => p.id))).toEqual(["c2-m003"]);
   await solveMission(page);
   await frames(page);
   await page.locator(".win").getByRole("button", { name: "Back to the missions" }).click();
   await expect(page.locator(".home .play")).toHaveText("Mission 5: Camp Is Ready");
   const campaign = await page.evaluate(() => JSON.parse(localStorage.getItem("robot-island:save.campaign")));
-  expect(campaign.mission).toBe("m05");
-  expect(campaign.library.programs.map((p) => p.id)).toEqual(["m05"]);
+  expect(campaign.mission).toBe("c2-m005");
+  expect(campaign.library.programs.map((p) => p.id)).toEqual(["c2-m005"]);
 });
 
 test("free play opens after mission 15 with programs of its own, and grows into the sandbox after 25", async ({ page }) => {
-  await seedCampaign(page, "m16");
+  await seedCampaign(page, "c2-m016");
   await expect(page.locator(".home .free")).toHaveText("Free play");
   await page.locator(".home .free").click();
   await ready(page);
@@ -255,9 +259,9 @@ test("free play opens after mission 15 with programs of its own, and grows into 
   await expect(page.locator('[data-build], [data-sandbox]')).toHaveCount(0);
   const programs = await island(page, () => window.islandPage.library().programs.map((p) => p.id));
   expect(programs).toContain("collector");
-  expect(programs.filter((id) => /^m\d/.test(id)), "the missions' programs stay in them").toEqual([]);
+  expect(programs.filter((id) => /^c2-/.test(id)), "the missions' programs stay in them").toEqual([]);
 
-  await seedCampaign(page, "m25", { done: true });
+  await seedCampaign(page, "c2-m025", { done: true });
   await expect(page.locator(".home .free")).toHaveText("Sandbox");
   await page.locator(".home .free").click();
   await ready(page);
@@ -276,7 +280,7 @@ test("free play opens after mission 15 with programs of its own, and grows into 
 });
 
 test("Start over on the title page forgets the campaign, free play and replays, after asking", async ({ page }) => {
-  await seedCampaign(page, "m05");
+  await seedCampaign(page, "c2-m005");
   await page.getByRole("button", { name: "Start over…" }).click();
   await expect(page.locator(".start-over .ask")).toBeVisible();
   await page.getByRole("button", { name: "Keep it" }).click();
@@ -288,4 +292,21 @@ test("Start over on the title page forgets the campaign, free play and replays, 
   await expect(page.locator(".missions .chapter li.done")).toHaveCount(0);
   await expect(page.locator(".missions .chapter li.current")).toContainText("You're here");
   expect(await page.evaluate(() => localStorage.getItem("robot-island:save.campaign"))).toBeNull();
+});
+
+test("in mission 15 the child writes the construction site's program, while the courier brings its planks; the bridge opens free play", async ({ page }) => {
+  await page.goto("/?dev");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/replay?mission=c2-m015&dev");
+  await opened(page);
+  await expect(page.locator(".briefing h2")).toHaveText("Across the Stream");
+  await letsGo(page);
+  await openDrawer(page, "mission");
+  await page.getByRole("button", { name: "Open the program" }).click();
+  await expect(page.locator(".code-title")).toHaveText("Mission 15: Construction site");
+  expect(await island(page, () => window.islandPage.editor().workspace.getAllBlocks(false).map((b) => b.type))).toEqual(["island_when_started"]);
+  expect((await toolbox(page)).Buildings).toEqual(["building_build"]);
+  expect(await solveMission(page)).toBeLessThanOrEqual(600);
+  await expect(page.locator(".win .win-reward")).toHaveText("The bridge is open! Robo 2 is crossing the stream to fetch stone. Free play is open too.");
+  expect(await island(page, () => window.islandPage.game.world.entities.find((e) => e.id === "site").built)).toBe(true);
 });

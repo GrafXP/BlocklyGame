@@ -963,13 +963,13 @@ Asked for after playing on an iPad, where the bar along the top took two lines a
 
 Applied in: 8 (main layout).
 
-### The campaign's second plan, phases 1 and 2 (18 October 2026)
+### The campaign's second plan (18 October 2026)
 
-The second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) was reviewed against the engine and corrected (its “Review and delivery phases”), and is built in ten delivery phases alongside this campaign, which stays at `/play` until the second has everything this one teaches.
+The second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) was reviewed against the engine and corrected (its “Review and delivery phases”), and is built in ten delivery phases. It's the game's campaign now: after its phases 1 and 2 had been played alongside this one at `/play2`, it replaced this one at `/play` the same day, asked for while the game is in development. This campaign's 40 missions, their words and their tests are gone (docs/campaign-plan.md stays as their record), and its saves aren't carried over: one that can't be read starts the campaign afresh.
 
-- Phase 1 is in place: the second campaign's infrastructure, and its chapters 1–2 (missions 1–10), at `/play2`, with a save and progress of its own and a map among the prototypes on the title page. Its missions are `c2-m001`… (`src/content/missions/v2/`): each says what its focus program opens with (Build, the start block alone; Repair; Change; Explore), stands alone with a complete setup, and names the missions it needs, a requirement on one not built yet standing for the last built below it. The toolbox offers what a mission and the missions it needs introduced. The first time it's opened, this campaign's progress on the device counts for the same lessons.
-- “Show me a start” and “Show me the whole program” keep a draft with changes not applied in the history, to go back to (`giveDraft`, `src/programming/programs.js`), in both campaigns.
-- Phase 2 is in place too: chapters 3–5 (missions 11–25), the second campaign's foundation. Free play opens after its mission 15 and the sandbox after its 25, as after the first campaign's; its settings wait for its chapter 17.
-- `npm run verify:missions` plays both campaigns, and checks the second's authoring rules: a Build mission's program is the start block alone, a Repair or Change starter doesn't already do the mission, and through mission 40 the reference changes the focus program alone.
+- The campaign is the second plan's foundation, chapters 1–5 (missions 1–25, `src/content/missions/`). Its missions are `c2-m001`…: each says what its focus program opens with (Build, the start block alone; Repair; Change; Explore), stands alone with a complete setup, and names the missions it needs, a requirement on one not built yet standing for the last built below it. The toolbox offers what a mission and the missions it needs introduced. Free play opens after mission 15 and the sandbox after 25; free play's settings tool waits for mission 82.
+- Until the plan's phases 3 and 4, the campaign has no lessons for teams, settings and copies, memory, blocks of one's own, or messages. The engine and the free island (`/island`) still have them all, and Phase 8's browser tests run there (`e2e/memory.spec.js`).
+- “Show me a start” and “Show me the whole program” keep a draft with changes not applied in the history, to go back to (`giveDraft`, `src/programming/programs.js`).
+- `npm run verify:missions` checks the plan's authoring rules as well: a Build mission's program is the start block alone, a Repair or Change starter doesn't already do the mission, and through mission 40 the reference changes the focus program alone.
 
 Applied in: 9 (campaign and sandbox).

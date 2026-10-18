@@ -427,7 +427,7 @@ if (want("library")) {
 // program the hint shows), `solved` (with the win showing), and `chosen`
 // selected. With `briefing`, the mission's briefing is left showing.
 async function openCampaign(browser, opts = {}) {
-  const { context = DESKTOP, lang = "en", mission = "m01", done = false, home = false, replay = null, free = false, briefing = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
+  const { context = DESKTOP, lang = "en", mission = "c2-m001", done = false, home = false, replay = null, free = false, briefing = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
   const page = await (await browser.newContext(context)).newPage();
   const m = campaignMission(mission);
   // The starters' names worded in `lang`, as the game words them.
@@ -501,18 +501,18 @@ if (want("campaign")) {
   await fresh.goto(`${base}/?dev&lang=en`);
   await fresh.waitForTimeout(500);
   await shot(fresh, "home-en", PHASE7);
-  await shot(await openCampaign(browser, { lang: "de", mission: "m16", home: true }), "home-missions-de", PHASE7);
+  await shot(await openCampaign(browser, { lang: "de", mission: "c2-m016", home: true }), "home-missions-de", PHASE7);
   await shot(await openCampaign(browser, { guess: "grove" }), "m01-guess-en", PHASE7);
-  await shot(await openCampaign(browser, { panel: ["editor", "m01"] }), "m01-editor-en", PHASE7);
+  await shot(await openCampaign(browser, { panel: ["editor", "c2-m001"] }), "m01-editor-en", PHASE7);
   await shot(await openCampaign(browser, { solved: true }), "m01-done-en", PHASE7);
-  await shot(await openCampaign(browser, { mission: "m08", run: true, hints: 2 }), "m08-full-en", PHASE7);
-  for (const lang of ["en", "de"]) await shot(await openCampaign(browser, { lang, mission: "m16", passed: true }), `m16-trial-${lang}`, PHASE7);
-  await shot(await openCampaign(browser, { mission: "m05", hints: 3 }), "m05-hints-en", PHASE7);
-  await shot(await openCampaign(browser, { lang: "de", mission: "m22", chosen: "r1" }), "m22-settings-de", PHASE7);
-  await shot(await openCampaign(browser, { mission: "m25", solved: true, chosen: "workshop" }), "m25-done-en", PHASE7);
-  await shot(await openCampaign(browser, { mission: "m06", replay: "m03" }), "replay-en", PHASE7);
-  await shot(await openCampaign(browser, { mission: "m16", free: true, chosen: "r1" }), "free-en", PHASE7);
-  const sandbox = await openCampaign(browser, { mission: "m25", done: true, free: true, chosen: "grove" });
+  await shot(await openCampaign(browser, { mission: "c2-m008", run: true, hints: 2 }), "m08-full-en", PHASE7);
+  for (const lang of ["en", "de"]) await shot(await openCampaign(browser, { lang, mission: "c2-m016", passed: true }), `m16-trial-${lang}`, PHASE7);
+  await shot(await openCampaign(browser, { mission: "c2-m005", hints: 3 }), "m05-hints-en", PHASE7);
+  await shot(await openCampaign(browser, { lang: "de", mission: "c2-m020", chosen: "sawmill" }), "m20-reserve-de", PHASE7);
+  await shot(await openCampaign(browser, { mission: "c2-m025", solved: true, chosen: "workshop" }), "m25-done-en", PHASE7);
+  await shot(await openCampaign(browser, { mission: "c2-m006", replay: "c2-m003" }), "replay-en", PHASE7);
+  await shot(await openCampaign(browser, { mission: "c2-m016", free: true, chosen: "r1" }), "free-en", PHASE7);
+  const sandbox = await openCampaign(browser, { mission: "c2-m025", done: true, free: true, chosen: "grove" });
   await sandbox.click('[data-sandbox="new"]');
   await sandbox.waitForTimeout(300);
   await shot(sandbox, "sandbox-en", PHASE7);
@@ -521,7 +521,7 @@ await browser.close();
 
 if (want("campaign")) {
   const safari = await webkit.launch();
-  await shot(await openCampaign(safari, { context: IPAD, mission: "m16", passed: true }), "m16-ipad", PHASE7);
+  await shot(await openCampaign(safari, { context: IPAD, mission: "c2-m016", passed: true }), "m16-ipad", PHASE7);
   await safari.close();
 }
 
