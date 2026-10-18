@@ -10,10 +10,9 @@ import { blank } from "./chapter1.js";
 // touches what's counted. The bridge is open from here on.
 
 const sawmill = ref("entity.sawmill");
-// The island after the bridge: the stone pit across the stream, and the way
-// there open.
-const BRIDGE = ["site", "quarry"];
-const bridged = (add, rest) => ({ add: [...BRIDGE, ...add], open: ["site"], ...rest });
+// The island after the bridge: the bridge built, without its construction
+// site, and the stone pit across the stream.
+const bridged = (add, rest) => ({ add: ["quarry", ...add], bridges: ["site"], ...rest });
 
 export const CHAPTER_4 = [
   // A sensor gives a number from the world, and Repeat reads it as it starts:

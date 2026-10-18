@@ -10,6 +10,7 @@ import { COMPILER_VERSION } from "../src/programming/compiler.js";
 import { giveDraft, programDoc, sameBlocks, setDraft } from "../src/programming/programs.js";
 import { goalProgress } from "../src/sim/objectives.js";
 import { checkPlacement } from "../src/sim/placement.js";
+import { cellAt, kindOf } from "../src/sim/terrain.js";
 import { stateHash } from "../src/sim/replay.js";
 import { checkWorld } from "../src/sim/validate.js";
 import { SIM_VERSION } from "../src/sim/world.js";
@@ -108,7 +109,9 @@ test("every mission stands alone: the island's base and its own setup, nothing o
     assert.deepEqual(things(world), ["camp", "grove", "r1", ...(m.setup.add ?? []), ...(m.setup.plots ?? [])].sort(), `${m.id}: the base and what its setup adds`);
     assert.deepEqual(ids(library.programs), ids(m.programs).sort(), `${m.id}'s library: its own programs alone`);
     if (m.focus) assert.ok(world.entities.some((e) => e.own === m.focus), `${m.id}'s focus program is run`);
-    assert.equal(byId(world, "site")?.built ?? false, m.n > 15, `${m.id}: the bridge is open after mission 15`);
+    const stream = [20, 21].map((x) => kindOf(world.terrain, cellAt(world.terrain, x, 15)));
+    assert.deepEqual(stream, Array(2).fill(m.n > 15 ? "bridge" : m.n === 15 ? "gap" : "water"), `${m.id}: the stream whole, the bridge planned, or built`);
+    assert.equal(!!byId(world, "site"), m.n === 15, `${m.id}: the bridge's construction site is there in mission 15 alone`);
     assert.deepEqual(copy(world), copy(missionStart(m).world), `${m.id} starts the same every time`);
   }
   assert.deepEqual(byId(missionStart(mission("c2-m003")).world, "r1").store.items, { wood: 1 }, "mission 3 starts with the wood");

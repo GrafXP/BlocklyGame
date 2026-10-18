@@ -87,7 +87,7 @@ export const ISLAND = {
     { id: "camp", type: "camp", name: ref("entity.camp"), area: { x: 8, z: 15, w: 2, d: 2 }, access: [[10, 15], [10, 16], [8, 17], [9, 17]], caps: { wood: 10, stone: 10, plank: 10 } },
     { id: "sawmill", type: "sawmill", name: ref("entity.sawmill"), area: { x: 13, z: 6, w: 3, d: 2 }, access: [[13, 8], [14, 8]], caps: { wood: 4, plank: 4 } },
     { id: "depot", type: "depot", name: ref("entity.depot"), area: { x: 6, z: 21, w: 2, d: 2 }, access: [[8, 21], [8, 22]], caps: { wood: 20, stone: 20, plank: 20, kit: 20 } },
-    { id: "site", type: "site", name: ref("entity.site"), area: { x: 16, z: 13, w: 2, d: 2 }, access: [[18, 13], [18, 14]], caps: { plank: 4 }, blueprint: "bridge", gap: [[20, 15], [21, 15]], program: "bridge" },
+    { id: "site", type: "site", name: ref("entity.site"), area: { x: 17, z: 14, w: 2, d: 2 }, access: [[19, 14], [19, 15]], caps: { plank: 4 }, blueprint: "bridge", gap: [[20, 15], [21, 15]], program: "bridge" },
   ],
   nodes: [
     { id: "grove", type: "grove", name: ref("entity.grove"), area: { x: 7, z: 5, w: 4, d: 3 }, access: [[11, 6], [11, 7], [8, 8], [9, 8]], items: { wood: 12 }, caps: { wood: 12 }, regrow: { every: 40 } },

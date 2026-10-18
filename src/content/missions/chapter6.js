@@ -12,9 +12,9 @@ import { blank } from "./chapter1.js";
 
 const site = ref("entity.workshopSite");
 const workshop = ref("entity.workshop");
-// The island after the bridge, with what else mission `add` lists, and Robo 1
-// at the camp.
-const bridged = (add, rest) => ({ add: ["site", "quarry", ...add], open: ["site"], robots: { r1: { at: "camp", basket: {} } }, ...rest });
+// The island after the bridge, built, without its construction site, with what
+// else mission `add` lists, and Robo 1 at the camp.
+const bridged = (add, rest) => ({ add: ["quarry", ...add], bridges: ["site"], robots: { r1: { at: "camp", basket: {} } }, ...rest });
 // The construction site's job: build the workshop, once its bill is there.
 const builder = (id, n) => named(id, n, site, program(id, (p) => p.workspace(p.start(p.build("workshop")))));
 // The workshop as the reference places it: where the island's catalogue has

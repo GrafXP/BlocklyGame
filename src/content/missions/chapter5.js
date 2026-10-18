@@ -10,8 +10,9 @@ import { blank } from "./chapter1.js";
 // kits, and the sandbox opens.
 
 const workshop = ref("entity.workshop");
-// The island after the bridge, with what else mission `add` lists.
-const bridged = (add, rest) => ({ add: ["site", "quarry", ...add], open: ["site"], robots: { r1: { at: "camp", basket: {} } }, ...rest });
+// The island after the bridge, built, without its construction site, with what
+// else mission `add` lists.
+const bridged = (add, rest) => ({ add: ["quarry", ...add], bridges: ["site"], robots: { r1: { at: "camp", basket: {} } }, ...rest });
 // Program `id` of mission `n`, the workshop's job: `count` kits, one after
 // another.
 const kits = (id, n, count) => named(id, n, workshop, program(id, (p) => p.workspace(p.start(count === 1 ? p.make("kit") : p.repeat(count, p.make("kit"))))));
@@ -60,7 +61,7 @@ export const CHAPTER_5 = [
     id: "c2-m023",
     workspace: "build",
     focus: "c2-m023",
-    setup: { add: ["site", "quarry", "workshop"], open: ["site"], stock: { workshop: { plank: 2, stone: 1 } }, run: { workshop: "c2-m023" } },
+    setup: { add: ["quarry", "workshop"], bridges: ["site"], stock: { workshop: { plank: 2, stone: 1 } }, run: { workshop: "c2-m023" } },
     programs: [blank("c2-m023", 23, workshop)],
     blocks: [],
     goals: [{ id: "kit", type: "made", at: "workshop", item: "kit", count: 1 }],

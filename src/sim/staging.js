@@ -25,7 +25,8 @@ import { thing } from "./things.js";
 //   { add: [id, …]                    things from the island's catalogue that arrive
 //     plots: [id, …]                  buildings from the catalogue that arrive as their
 //                                     construction site, to be built (missions 27–30)
-//     open: [site, …]                 bridges that are there by now, built or not
+//     bridges: [site, …]              the bridges of these construction sites of the
+//                                     catalogue, built, without their sites
 //     stock: { at: { item: n } }      a store's exact count of each item
 //     room: { at: { item: n } }       room for at least n more of each item
 //     robots: { id: { at, basket } }  a robot at a place (or cell [x, z]), its basket exactly
@@ -54,12 +55,14 @@ function stopAll(world) {
 
 // Thing `given` from the catalogue, added to `world` unless it's there, with
 // no program of its own until the setup gives it one. A robot standing where a
-// building now stands steps to its front.
+// building now stands steps to its front. A bridge's construction site plans
+// its bridge over the water as it arrives: the gap it will fill.
 function addThing(world, given) {
   if (thing(world, given.id)) return;
   const t = makeThing(world.terrain, given, `stage ${given.id}`);
   if (t.kind !== "node") t.own = null;
   insertById(t.kind === "node" ? world.nodes : world.entities, t);
+  if (t.gap) setKind(world.terrain, t.gap, t.built ? "+" : "=");
   if (t.area) {
     world.nav++;
     const under = new Set(areaCells(world.terrain, t.area));
@@ -67,12 +70,11 @@ function addThing(world, given) {
   }
 }
 
-// Construction site `id`'s bridge, there now: its gap can be walked on.
-function openBridge(world, id) {
-  const site = thing(world, id);
-  if (!site?.gap || site.built) return;
-  setKind(world.terrain, site.gap, "+");
-  site.built = true;
+// The bridge of construction site `given` (from the catalogue) built, and
+// there without its site: its gap can be walked on.
+function layBridge(world, given) {
+  if (!given?.gap) throw new Error(`stage: no bridge ${given?.id} in the catalogue`);
+  setKind(world.terrain, given.gap.map(([x, z]) => cellAt(world.terrain, x, z)), "+");
   world.nav++;
 }
 
@@ -124,7 +126,7 @@ export function stage(world, spec, things = []) {
     if (!given || !RECIPES[given.type]?.builds) throw new Error(`stage: no building ${id} in the catalogue to build`);
     addThing(world, { ...given, type: "site", blueprint: given.type, name: placedName(given.type, 1, true), items: undefined, caps: { ...RECIPES[given.type].inputs } });
   }
-  for (const id of spec.open ?? []) openBridge(world, id);
+  for (const id of spec.bridges ?? []) layBridge(world, things.find((t) => t.id === id));
   for (const [at, counts] of entries(spec.stock)) {
     const store = storeOf(world, at);
     for (const [item, n] of entries(counts)) {
