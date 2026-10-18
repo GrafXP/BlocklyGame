@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phase 1, the v2 infrastructure and missions 01–10, is implemented alongside v1; the rest is proposed
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1 and 2, the v2 infrastructure and the foundation (missions 01–25), are implemented alongside v1; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -1638,7 +1638,7 @@ The first time a device opens v2, the v1 progress on it is credited through the 
 | Phase | Content | Engine work | Status |
 | --- | --- | --- | --- |
 | 1 | v2 infrastructure; chapters 1–2 (01–10) | None: content and campaign code | Implemented 18 October 2026 |
-| 2 | Chapters 3–5 (11–25) | None | |
+| 2 | Chapters 3–5 (11–25) | None | Implemented 18 October 2026 |
 | 3 | Missions 81–84; workshops A and B (A01–A10) | None; interim gates | |
 | 4 | Workshop C (A11–A15); switch-over | None; interim gate for 85 | |
 | 5 | Chapter 6 (26–30) | Building-finished and placement goals | |

@@ -453,6 +453,9 @@ export default {
   // The second campaign's chapters (docs/campaign-planv2.md).
   "chapter2.1": "Hello, Helper!",
   "chapter2.2": "Do It Again",
+  "chapter2.3": "A Working Island",
+  "chapter2.4": "Look Before You Act",
+  "chapter2.5": "One Helper, Useful Jobs",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",

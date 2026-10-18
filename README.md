@@ -22,7 +22,7 @@ Phase 7 (the main campaign and free play) is in place: **Play** on the title pag
 
 Phase 8 (memory, blocks of one's own and messages) is in place: missions 26–40 go on with **variables** that each robot remembers for itself, shown beside it as it runs; **blocks of one's own** (“my block bring wood”) with one input, which the debugger follows in and out of; and **messages** from one program to another, waited for and shown in the inbox. The campaign ends with four kits for the island's celebration. Findings are in [docs/phase8.md](docs/phase8.md).
 
-The campaign's second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) is being built alongside it, in delivery phases. Phase 1 is in place: missions 1–10, in which the child writes each program from the briefing, at `/play2` (*The new campaign* among the prototypes on the title page), with a save and progress of its own.
+The campaign's second plan ([docs/campaign-planv2.md](docs/campaign-planv2.md)) is being built alongside it, in delivery phases. Phases 1 and 2 are in place: missions 1–25, the foundation, in which the child writes each program from the briefing, at `/play2` (*The new campaign* among the prototypes on the title page), with a save and progress of its own.
 
 ## Development
 

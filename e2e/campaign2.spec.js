@@ -2,11 +2,12 @@ import { test, expect } from "@playwright/test";
 import { letsGo, solveMission } from "./campaign-seed.js";
 import { openDrawer } from "./ui.js";
 
-// The second campaign in a browser (docs/campaign-planv2.md, delivery phase
-// 1): at /play2, apart from the first, listed with the prototypes on the
+// The second campaign in a browser (docs/campaign-planv2.md, delivery phases
+// 1 and 2): at /play2, apart from the first, listed with the prototypes on the
 // title page with a map of its own. Its mission 1 begins with its briefing and
 // a program that's the start block alone; the win leads on to mission 2; and
-// the first campaign doesn't move.
+// the first campaign doesn't move. A building's program is the child's to
+// write too: the bridge's construction site in mission 15.
 
 const opened = async (page) => {
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag:not([hidden])"));
@@ -29,7 +30,13 @@ test("the new campaign starts at its mission 1 with the start block alone; its w
   await page.evaluate(() => localStorage.clear());
   await page.goto("/?dev");
   const map = page.locator(".chapters2");
-  await expect(map.locator(".chapter h3")).toHaveText(["Chapter 1: Hello, Helper!0/5", "Chapter 2: Do It Again0/5"]);
+  await expect(map.locator(".chapter h3")).toHaveText([
+    "Chapter 1: Hello, Helper!0/5",
+    "Chapter 2: Do It Again0/5",
+    "Chapter 3: A Working Island0/5",
+    "Chapter 4: Look Before You Act0/5",
+    "Chapter 5: One Helper, Useful Jobs0/5",
+  ]);
   await expect(map.locator("li.current")).toHaveText(/Hello, Helper!/);
   await page.getByRole("link", { name: "The new campaign" }).click();
   await opened(page);
@@ -65,4 +72,21 @@ test("the new campaign starts at its mission 1 with the start block alone; its w
   await expect(map.locator("li.current")).toHaveText(/One Piece of Wood/);
   await expect(page.locator(".missions .chapter li.done")).toHaveCount(0);
   await expect(page.locator(".home .play")).toHaveText("Play");
+});
+
+test("in mission 15 the child writes the construction site's program, while the courier brings its planks; the bridge opens free play", async ({ page }) => {
+  await page.goto("/?dev");
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/replay?mission=c2-m015&dev");
+  await opened(page);
+  await expect(page.locator(".briefing h2")).toHaveText("Across the Stream");
+  await letsGo(page);
+  await openDrawer(page, "mission");
+  await page.getByRole("button", { name: "Open the program" }).click();
+  await expect(page.locator(".code-title")).toHaveText("Mission 15: Construction site");
+  expect(await page.evaluate(() => window.islandPage.editor().workspace.getAllBlocks(false).map((b) => b.type))).toEqual(["island_when_started"]);
+  expect((await toolbox(page)).Buildings).toEqual(["building_build"]);
+  expect(await solveMission(page)).toBeLessThanOrEqual(600);
+  await expect(page.locator(".win .win-reward")).toHaveText("The bridge is open! Robo 2 is crossing the stream to fetch stone. Free play is open too.");
+  expect(await page.evaluate(() => window.islandPage.game.world.entities.find((e) => e.id === "site").built)).toBe(true);
 });
