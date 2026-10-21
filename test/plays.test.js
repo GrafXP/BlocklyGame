@@ -110,17 +110,16 @@ test("a mission done and saved isn't played again after a reload: the next one s
     assert.deepEqual(play.progress.completed, ["c2-m001"]);
   }));
 
-test("Start again in a mission with trials goes back to its first, keeping the player's programs but not the trials' own", () =>
+test("Start again goes back to the mission's one start, keeping the player's programs", () =>
   withStorage(async () => {
     saveCampaignAt("c2-m019");
     const session = await reload();
     const play = session.usePlay("campaign");
     assert.equal(play.mission.id, "c2-m019");
     solve(session, play);
-    assert.equal(byId(play.game.world, "sawmill").own, "c2-m019-late", "the second trial's sawmill");
     const game = session.newGame();
-    assert.equal(game.world.mission.trial, 0);
-    assert.equal(byId(game.world, "sawmill").own, "c2-m019-mill", "the first trial's again");
+    assert.deepEqual([game.world.tick, game.world.mission.done], [0, null]);
+    assert.equal(byId(game.world, "sawmill").own, "c2-m019-mill", "the mission's own sawmill program");
     assert.equal(byId(game.world, "r1").runtime.revision, 2, "Robo 1's program as applied");
   }));
 

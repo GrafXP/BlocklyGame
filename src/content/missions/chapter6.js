@@ -8,7 +8,7 @@ import { blank } from "./chapter1.js";
 // the right place, and a building that, once built, makes something. The
 // workshop arrives on the east bank. Missions 26 and 28 are about placing, with
 // the Build tool, and need no code; in 27 and 30 the child writes one helper's
-// deliveries; 29 is a repair.
+// deliveries; 29 is a repair. Each has one goal.
 
 const site = ref("entity.workshopSite");
 const workshop = ref("entity.workshop");
@@ -70,25 +70,22 @@ export const CHAPTER_6 = [
     steps: 1000,
   },
   // A building needs a way in: of the two plots, one would block the bridge,
-  // and placing refuses it. Once the site is placed, Robo 1 brings its bill,
-  // and the site builds.
+  // and placing refuses it. The goal is the site on the plot with a way in;
+  // then, as the reward, Robo 1 sets off with its bill, and the site builds.
   {
     id: "c2-m028",
     workspace: "explore",
     focus: null,
-    setup: bridged(["sawmill"], { stock: { sawmill: { plank: 4 } } }),
+    setup: bridged(["sawmill"], { stock: { sawmill: { plank: 4 } }, run: { r1: "c2-m028-courier" }, parked: ["r1"] }),
     blueprints: [{ blueprint: "workshop", program: "c2-m028-site", plots: [LANDING, PLOT] }],
     tools: ["build"],
-    trials: [
-      { goals: [{ id: "site", type: "placed", blueprint: "workshop" }] },
-      { stage: { run: { r1: "c2-m028-courier" } }, goals: [{ id: "workshop", type: "constructed", blueprint: "workshop" }] },
-    ],
     programs: [builder("c2-m028-site", 28), named("c2-m028-courier", 28, robo(1), program("c2-m028-courier", (p) => p.workspace(p.start(...bill(p)))))],
     blocks: [],
+    goals: [{ id: "site", type: "placed", blueprint: "workshop" }],
+    reward: [{ type: "start", entity: "r1" }],
     look: "sawmill",
     reference: { commands: [{ ...PLACE, program: "c2-m028-site" }] },
-    budget: { stone: 2 },
-    steps: 1000,
+    steps: 20,
   },
   // All the pieces are at the camp, and Robo 1 carries them about, but back
   // to the camp: the site waits. A total isn't stock at the place that uses it.
@@ -120,10 +117,10 @@ export const CHAPTER_6 = [
     },
     steps: 1000,
   },
-  // Build the workshop, then bring what its first kit needs: the building
-  // uses its bill up, so the kit needs pieces of its own. Robo 2 and the sawmill
-  // make the planks from the grove's wood; the site builds, and the workshop,
-  // once built, makes a kit.
+  // The workshop's first kit: build the workshop, then bring what the kit
+  // needs, as the building uses its bill up and the kit needs pieces of its
+  // own. Robo 2 and the sawmill make the planks from the grove's wood; the site
+  // builds, and the workshop, once built, makes the kit, the one goal.
   {
     id: "c2-m030",
     workspace: "build",
@@ -142,10 +139,7 @@ export const CHAPTER_6 = [
       named("c2-m030-kit", 30, workshop, program("c2-m030-kit", (p) => p.workspace(p.start(p.make("kit"))))),
     ],
     blocks: [],
-    goals: [
-      { id: "workshop", type: "constructed", blueprint: "workshop" },
-      { id: "kit", type: "made", at: "workshop", item: "kit", count: 1 },
-    ],
+    goals: [{ id: "kit", type: "made", at: "workshop", item: "kit", count: 1 }],
     look: "workshop",
     problems: [{ entity: "workshop", code: "wait.item", key: "missing" }],
     scaffold: { "c2-m030": program("c2-m030", (p) => p.workspace(p.start(...bill(p)))) },

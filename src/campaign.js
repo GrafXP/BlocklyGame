@@ -3,7 +3,7 @@ import { unlockedBlocks } from "./content/missions/campaign.js";
 import { BASE, THINGS } from "./content/missions/island.js";
 import { compile } from "./programming/compiler.js";
 import { applyDraft, latest, newProgram, programDoc, setDraft, wordStarter } from "./programming/programs.js";
-import { beginTrial, createMission, needOf } from "./sim/objectives.js";
+import { createMission, needOf } from "./sim/objectives.js";
 import { room } from "./sim/inventory.js";
 import { BLUEPRINTS } from "./sim/placement.js";
 import { enter } from "./sim/staging.js";
@@ -46,8 +46,8 @@ function compiledPrograms(library, places) {
 }
 
 // Mission `mission`'s setup made on `world`, with `library` its programs: the
-// world gets every one it can run and no other, its resources are reset, the
-// setup is made (src/sim/staging.js) and the first trial staged. A program may
+// world gets every one it can run and no other, its resources are reset, and
+// the setup is made (src/sim/staging.js), the mission's one start. A program may
 // name what the setup brings, and a building the mission lets the player
 // place: the first placed takes its blueprint's name as its id (placement.js,
 // freeId), such as `workshop`.
@@ -55,8 +55,7 @@ function enterMission(world, library, mission) {
   const coming = [...(mission.setup.add ?? []), ...(mission.setup.plots ?? []), ...(mission.blueprints ?? []).map((b) => b.blueprint)];
   const places = [...new Set([...world.entities, ...world.nodes].map((t) => t.id).concat(coming))];
   enter(world, mission.setup, { things: THINGS, programs: compiledPrograms(library, places), restock: true });
-  world.mission = createMission({ id: mission.id, trials: mission.trials, goals: mission.goals, reward: mission.reward ?? [] });
-  beginTrial(world);
+  world.mission = createMission({ id: mission.id, goals: mission.goals, reward: mission.reward ?? [] });
 }
 
 // Mission `mission`'s start: { world, library }, the world its checkpoint,
@@ -131,8 +130,7 @@ const BUILT_IN = ["controls_repeat_ext", "controls_if", "controls_if_else", "log
 // - Its reference programs, and the starters of the programs they change, use
 //   only blocks the mission has unlocked: what its toolbox offers.
 // - At its checkpoint `world`, every store its goals deliver to or make in
-//   has room for what they count, and the deposits hold its budget, with what
-//   later trials stage in them.
+//   has room for what they count, and the deposits hold its budget.
 // - It keeps the campaign plan's authoring rules (authoringProblems).
 export function missionProblems(mission, world) {
   const problems = authoringProblems(mission);
@@ -148,8 +146,7 @@ export function missionProblems(mission, world) {
       else if (!GAME_BLOCKS.has(type) && !BUILT_IN.includes(type)) problems.push(`${mission.id}: ${what} uses ${type}`);
     }
   }
-  const goals = (mission.trials ?? [{ goals: mission.goals }]).flatMap((t) => t.goals);
-  for (const goal of goals) {
+  for (const goal of mission.goals ?? []) {
     const at = goal.type === "delivered" ? goal.to : goal.type === "made" ? goal.at : null;
     if (!at) continue;
     const t = thing(world, at);
@@ -159,12 +156,9 @@ export function missionProblems(mission, world) {
     if (!t?.store) problems.push(`${mission.id}: goal ${goal.id} counts at ${at}, which isn't there`);
     else if (goal.item && free < needOf(goal)) problems.push(`${mission.id}: ${at} has room for ${free} ${goal.item}, goal ${goal.id} counts ${needOf(goal)}`);
   }
-  // The deposits as the checkpoint has them, and what each later trial stages
-  // in them again.
   const deposits = world.nodes.filter((d) => d.store.caps);
   for (const [item, n] of Object.entries(mission.budget ?? {})) {
-    let held = deposits.reduce((sum, d) => sum + (d.store.items[item] ?? 0), 0);
-    for (const trial of (mission.trials ?? []).slice(1)) for (const d of deposits) held += trial.stage?.stock?.[d.id]?.[item] ?? 0;
+    const held = deposits.reduce((sum, d) => sum + (d.store.items[item] ?? 0), 0);
     if (held < n) problems.push(`${mission.id}: the deposits hold ${held} ${item}, its budget is ${n}`);
   }
   return problems;
@@ -177,6 +171,8 @@ const WORKSPACES = ["build", "repair", "change", "explore"];
 // What's wrong with mission `mission` by the campaign plan's authoring rules
 // (docs/campaign-planv2.md, “Teaching boundaries”, “Independent authoring”),
 // for a developer to read: [] when it keeps them.
+// - It has one goal, from one start: one clear thing to do, which the card
+//   shows and the world checks (decided 19 October 2026).
 // - It says what its focus program opens with, and names one of its programs;
 //   an Explore mission may have none (no code is needed).
 // - A Build mission's focus starter is its start block alone: the child
@@ -189,6 +185,8 @@ const WORKSPACES = ["build", "repair", "change", "explore"];
 // for every mission (scripts/verify-missions.js).
 function authoringProblems(mission) {
   const problems = [];
+  if ("trials" in mission) problems.push(`${mission.id}: it has trials; a mission has one start`);
+  if (mission.goals?.length !== 1) problems.push(`${mission.id}: it has ${mission.goals?.length ?? 0} goals; a mission has one`);
   if (!WORKSPACES.includes(mission.workspace)) problems.push(`${mission.id}: its workspace is ${mission.workspace}`);
   const focus = mission.programs.find((p) => p.id === mission.focus);
   if (!focus && !(mission.workspace === "explore" && mission.focus === null)) problems.push(`${mission.id}: its focus ${mission.focus} isn't one of its programs`);

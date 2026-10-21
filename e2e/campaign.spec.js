@@ -5,8 +5,8 @@ import { openDrawer } from "./ui.js";
 // The campaign in a browser (PLAN.md §11, Phase 7; docs/campaign-planv2.md):
 // at /play, from a fresh player's mission 1, its program the start block
 // alone, on to the next, each mission beginning with its briefing and ending
-// with the win; the mission card's prediction, hints that answer the problem
-// in view, trials, and “Show me a start”; a building's program the child
+// with the win; the mission card's one goal, its prediction, hints that answer
+// the problem in view, and “Show me a start”; a building's program the child
 // writes; missions played again on their own; free play after mission 15, the
 // sandbox after 25; and the title page's Start over. Later missions start from
 // a campaign saved at them (campaign-seed.js).
@@ -134,12 +134,11 @@ test("a fresh player starts at mission 1 with its briefing: the card asks for a 
   await expect(page.locator(".missions .chapter li.done")).toContainText("Hello, Helper!");
 });
 
-test("a mission with trials pauses when one is passed, saying what changes next, then goes on to the next; the win's Next mission goes on too", async ({ page }) => {
+test("a mission has one goal, from one start: once it's met the mission is done, and the win's Next mission goes on", async ({ page }) => {
   await seedCampaign(page, "c2-m016");
   await page.goto("/play?dev");
   await ready(page);
-  await expect(page.locator(".trial")).toHaveText(["Trial 1: One plank at the sawmill", "Trial 2: Two planks at the sawmill"]);
-  await expect(page.locator(".trial.current")).toHaveText("Trial 1: One plank at the sawmill");
+  await expect(page.locator(".mission-card .goal")).toHaveText(["Depot · Planks: 0 of 2"]);
   await openDrawer(page, "mission");
   for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
   await page.getByRole("button", { name: "Show me the whole program" }).click();
@@ -147,15 +146,10 @@ test("a mission with trials pauses when one is passed, saying what changes next,
   await page.waitForTimeout(400);
   await page.locator('[data-code="apply"]').click();
   await island(page, () => window.islandPage.close());
-  const passed = await runUntil(page, (w) => w.mission.trial === 1);
+  const seen = await runUntil(page, (w) => w.mission.done !== null);
   await frames(page);
-  expect(await island(page, () => window.islandPage.game.clock.running)).toBe(false);
-  expect(await island(page, () => window.islandPage.game.world.mission.passed)).toEqual([passed]);
-  await expect(page.locator(".mission-passed")).toHaveText("Trial 1 passed! Next: Two planks at the sawmill. Press Run.");
-  await expect(page.locator(".trial.passed")).toHaveCount(1);
-  await runUntil(page, (w) => w.mission.done !== null);
-  await frames(page);
-  await expect(page.locator(".trial.passed")).toHaveCount(2);
+  expect(await island(page, () => window.islandPage.game.world.mission.done)).toBeLessThanOrEqual(seen);
+  await expect(page.locator(".mission-card .goal.met")).toHaveText(["Depot · Planks: 2 of 2"]);
   await expect(page.locator(".mission-card")).toHaveClass(/done/);
   await page.locator(".win").getByRole("button", { name: "Next mission" }).click();
   await opened(page);
@@ -346,6 +340,7 @@ test("in mission 28 the plan starts on the plot that would block the bridge, and
   await page.locator('[data-build="place"]').click();
   await island(page, () => window.islandPage.game.step());
   await frames(page);
-  expect(await island(page, () => window.islandPage.game.world.mission.trial)).toBe(1);
-  expect(await runUntil(page, (w) => w.mission.done !== null)).toBeLessThan(1500);
+  expect(await island(page, () => window.islandPage.game.world.mission.done)).not.toBeNull();
+  await expect(page.locator(".win .win-reward")).toHaveText("The site has a way in! Watch Robo 1 bring the pieces, and the workshop being built.");
+  expect(await runUntil(page, (w) => w.entities.find((e) => e.id === "workshop").type === "workshop")).toBeLessThan(1500);
 });

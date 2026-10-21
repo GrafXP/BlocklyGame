@@ -369,15 +369,8 @@ export default {
   "mission.chapter": "Chapter {chapter} · Mission {n}",
   // A mission done before, played again on its own. {n}: its number.
   "mission.replaying": "You're playing mission {n} again, from the beginning. The other missions stay as they are.",
-  // For screen readers: the list of the mission's goals, and of its trials.
+  // For screen readers: the list of the mission's goals.
   "mission.goals": "Goals",
-  "mission.trials": "Trials",
-  // A trial: the same programs, starting from another variation, such as one
-  // plank and then two. {n}: its number.
-  "mission.trialLabel": "Trial {n}:",
-  // Shown, with the world paused, when a trial is passed. {what}: the next
-  // trial's variation, such as “Two planks at the sawmill”.
-  "mission.trialPassed": "Trial {n} passed! Next: {what}. Press Run.",
   // Opens the program the mission is about in the editor.
   "mission.open": "Open the program",
   // The prediction before Run: said aloud, or by pointing at something on the
@@ -422,6 +415,9 @@ export default {
   "goal.holds": "Basket of {robot}: {have} of {need}",
   "goal.delivered": "{place} · {item}: {have} of {need}",
   "goal.deliveredBy": "{robot} → {place}: {have} of {need}",
+  // Different things unloaded at once, in one basket, beside their pictures.
+  "goal.together": "{place} · together in one basket: {have} of {need}",
+  "goal.togetherBy": "{robot} → {place}, together in one basket: {have} of {need}",
   "goal.trips": "Trips by {robot}: {have} of {need}",
   "goal.made": "{place} · {item} made: {have} of {need}",
   // A goal of making none at all: {have} made so far.
@@ -440,7 +436,7 @@ export default {
   "goal.load": "Two at a time, in full baskets.",
   "goal.noWait": "{robot} sets off only when everything is ready.",
   "goal.steadyNote": "Keep it so for a while after {name} has finished.",
-  "goal.steadyAlone": "Keep it so for a while: no more come.",
+  "goal.steadyAlone": "Keep it so for a while.",
   "goal.remembersNote": "Counted when its job is done.",
   "goal.failed": "Not this time. Start again to try once more.",
 

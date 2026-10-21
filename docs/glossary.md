@@ -75,7 +75,7 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | from the next step | ab dem nächsten Schritt | A change waiting for the next step. |
 | chapter | Kapitel | “Kapitel 1 · Auftrag 3”. |
 | missions (the campaign) | Aufträge | The title page's list, “Alle Aufträge”. |
-| trial (a mission's starting variation) | Versuch | “Versuch 1 geschafft!” |
+
 | goal | Ziel | The card's list of what must happen. Also a setting's name (*Ziel*, destination), which reads the same. |
 | prediction, guess | “Bevor es losgeht”, “Du meinst: …” | Not *getippt*: a *Tipp* is a hint, and *antippen* is to tap. |
 | tell someone (after success) | erzähl es jemandem | |

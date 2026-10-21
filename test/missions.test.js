@@ -55,18 +55,15 @@ test("a world's mission has its goals unmet until they hold; a world without one
   const goal = { id: "bridge", type: "built", at: "site" };
   assert.deepEqual(world.mission, {
     id: "m",
-    trials: [{ stage: null, goals: [goal] }],
-    trial: 0,
-    passed: [],
     goals: [{ ...goal, done: null, failed: null }],
-    tally: { unloads: {}, made: {}, waited: {} },
+    tally: { unloads: {}, together: {}, made: {}, waited: {} },
     collected: {},
     reward: [],
     done: null,
   });
   assert.deepEqual(checkWorld(world), []);
   assert.equal(tinyWorld().mission, null);
-  assert.deepEqual(checkGoals(tinyWorld(), 1), { met: [], passed: null, done: false });
+  assert.deepEqual(checkGoals(tinyWorld(), 1), { met: [], done: false });
   assert.throws(() => createMission({ id: "m", goals: [{ id: "x", type: "wished" }] }), /no goal type "wished"/);
 });
 

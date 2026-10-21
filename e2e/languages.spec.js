@@ -420,13 +420,13 @@ async function playAt(page, query, { broken = false, fixed = false, ticks = 0, d
 const PLAY_STATES = [{ hints: 3 }, { broken: true }, { fixed: true, ticks: 60, changed: true }, { fixed: true, done: true }];
 
 // The campaign's pages, as `state` asks, from a campaign saved at mission
-// `mission` (campaign-seed.js): `hints` of its ladder showing; with `passed`,
-// its whole program shown and applied and the first trial passed; `stuck`, run
+// `mission` (campaign-seed.js): `hints` of its ladder showing; with `applied`,
+// its whole program shown and applied, and run a little; `stuck`, run
 // until everything waits; `chosen`, a robot or building chosen; `done`, solved,
 // with the win showing; or `replay`, a mission done before played again; or
 // free play grown into the sandbox, with the grove chosen and the new island's
 // layout asked for. With `briefing`, the mission's briefing is left showing.
-async function campaignAt(page, query, { mission = "c2-m001", briefing = false, hints = 0, passed = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
+async function campaignAt(page, query, { mission = "c2-m001", briefing = false, hints = 0, applied = false, stuck = false, chosen = null, done = false, replay = null, sandbox = false, steps = 0 } = {}) {
   await seedCampaign(page, sandbox ? "c2-m025" : mission, { done: sandbox, query });
   await page.goto(sandbox ? `/free?dev${query}` : replay ? `/replay?dev${query}&mission=${replay}` : `/play?dev${query}`);
   await page.waitForFunction(() => window.islandPage && document.querySelector(".tag"));
@@ -437,7 +437,7 @@ async function campaignAt(page, query, { mission = "c2-m001", briefing = false, 
     await openDrawer(page, "overview");
   };
   if (!briefing) await panels();
-  if (passed) {
+  if (applied) {
     for (let i = 0; i < 3; i++) await page.locator(".mission-hint").click();
     await page.locator('[data-mission="whole"]').click();
     await page.waitForFunction(() => window.islandPage.panel()?.kind === "editor");
@@ -446,7 +446,7 @@ async function campaignAt(page, query, { mission = "c2-m001", briefing = false, 
     await page.evaluate(() => {
       window.islandPage.close();
       const game = window.islandPage.game;
-      while (game.world.mission.trial === 0) game.step();
+      for (let i = 0; i < 20; i++) game.step();
     });
     await panels();
   } else for (let i = 0; i < hints; i++) await page.locator(".mission-hint").click();
@@ -468,7 +468,7 @@ const CAMPAIGN_STATES = [
   { mission: "c2-m016", briefing: true },
   { mission: "c2-m001", hints: 3 },
   { mission: "c2-m010", stuck: true, hints: 2 },
-  { mission: "c2-m016", passed: true },
+  { mission: "c2-m016", applied: true },
   { mission: "c2-m020", chosen: "r1", hints: 1 },
   { mission: "c2-m025", done: true },
   { mission: "c2-m006", replay: "c2-m003" },
@@ -477,7 +477,7 @@ const CAMPAIGN_STATES = [
   // and a robot on its way across the bridge.
   { mission: "c2-m024", chosen: "workshop", stuck: true, hints: 2 },
   { mission: "c2-m021", chosen: "r1", steps: 40 },
-  // Construction: a briefing with trials, and a construction site chosen.
+  // Construction: a briefing about placing, and a construction site chosen.
   { mission: "c2-m028", briefing: true },
   { mission: "c2-m030", chosen: "workshop", hints: 1 },
 ];

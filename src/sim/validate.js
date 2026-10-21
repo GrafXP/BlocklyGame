@@ -155,47 +155,35 @@ export function checkWorld(world) {
   return problems;
 }
 
-// The mission (objectives.js): its trials' goals of known types; the trial
-// under way one there is, with its own goals, each met or failed at a tick
-// that has been, never both; the trials before it passed in order; and the
-// mission done when, and only when, its last trial was passed.
+// The mission (objectives.js): its goals of known types, each one, each met or
+// failed at a tick that has been, never both; and the mission done when, and
+// only when, its last goal was met.
 function checkMission(world, fail) {
   const { mission } = world;
   if (mission === null) return;
   const when = (t) => t === null || (Number.isInteger(t) && t >= 1 && t <= world.tick);
   const isList = (value) => Array.isArray(value);
-  if (typeof mission?.id !== "string" || !isList(mission.trials) || !mission.trials.length || !isList(mission.goals) || !isList(mission.passed) || !isList(mission.reward)) {
+  if (typeof mission?.id !== "string" || !isList(mission.goals) || !mission.goals.length || !isList(mission.reward)) {
     fail("the mission isn't one");
     return;
   }
-  for (const trial of mission.trials) {
-    if (!isList(trial?.goals) || !trial.goals.length) fail("a trial without goals");
-    else for (const goal of trial.goals) if (goalProblem(goal)) fail(`mission ${mission.id}: ${goalProblem(goal)}`);
-  }
-  if (!Number.isInteger(mission.trial) || mission.trial < 0 || mission.trial >= mission.trials.length) {
-    fail(`the mission is at trial ${mission.trial}`);
-    return;
-  }
-  const specs = mission.trials[mission.trial].goals ?? [];
-  if (mission.goals.length !== specs.length || mission.goals.some((g, i) => g?.id !== specs[i]?.id || g.type !== specs[i].type)) fail(`the goals aren't trial ${mission.trial}'s`);
+  // A goal as content wrote it: without how far it has got.
+  const spec = ({ done, failed, since, ...rest }) => rest;
   for (const goal of mission.goals) {
     if (!GOALS.includes(goal?.type)) fail(`the mission has a goal ${JSON.stringify(goal)}`);
+    else if (goalProblem(spec(goal))) fail(`mission ${mission.id}: ${goalProblem(spec(goal))}`);
     else if (!when(goal.done) || !when(goal.failed)) fail(`goal ${goal.id} was met at ${goal.done} or failed at ${goal.failed}`);
     else if (goal.done !== null && goal.failed !== null) fail(`goal ${goal.id} was met and failed`);
   }
   const { tally, collected } = mission;
   const isMap = (value) => !!value && typeof value === "object" && !isList(value);
-  if (!isMap(tally) || ["unloads", "made", "waited"].some((part) => !isMap(tally[part])) || !isMap(collected)) fail("the mission's tally isn't one");
-  if (!mission.passed.every((t, i) => when(t) && t !== null && (i === 0 || mission.passed[i - 1] <= t))) fail(`trials passed at ${mission.passed}`);
+  if (!isMap(tally) || ["unloads", "together", "made", "waited"].some((part) => !isMap(tally[part])) || !isMap(collected)) fail("the mission's tally isn't one");
   const allMet = mission.goals.every((g) => g?.done !== null);
   if (mission.done === null) {
-    if (mission.passed.length !== mission.trial) fail(`${mission.passed.length} trials passed, at trial ${mission.trial}`);
-    if (allMet) fail("every goal is met, but the trial isn't passed");
+    if (allMet) fail("every goal is met, but the mission isn't done");
   } else {
     const last = Math.max(...mission.goals.map((g) => g.done));
-    if (mission.trial !== mission.trials.length - 1 || mission.passed.length !== mission.trials.length || !allMet || mission.done !== last || mission.passed.at(-1) !== last) {
-      fail(`the mission was done at ${mission.done}, its goals at ${allMet ? last : "–"}`);
-    }
+    if (!allMet || mission.done !== last) fail(`the mission was done at ${mission.done}, its goals at ${allMet ? last : "–"}`);
   }
 }
 

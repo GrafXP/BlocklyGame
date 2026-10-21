@@ -27,8 +27,8 @@ export const CHAPTER_2 = [
     budget: { wood: 2 },
     steps: 120,
   },
-  // A loop can repeat a whole trip: three trips of one piece each. Three
-  // pieces in fewer trips aren't what was asked.
+  // A loop can repeat a whole trip: three trips to the camp, each ending with
+  // an unload. One piece a trip is enough; what counts is the trips.
   {
     id: "c2-m007",
     workspace: "build",
@@ -36,10 +36,7 @@ export const CHAPTER_2 = [
     setup: atCamp("c2-m007"),
     programs: [blank("c2-m007", 7, robo(1))],
     blocks: [],
-    goals: [
-      { id: "camp", type: "delivered", to: "camp", item: "wood", count: 3, exact: true },
-      { id: "trips", type: "trips", by: "r1", to: "camp", count: 3 },
-    ],
+    goals: [{ id: "trips", type: "trips", by: "r1", to: "camp", count: 3 }],
     look: "camp",
     predict: true,
     scaffold: { "c2-m007": program("c2-m007", (p) => p.workspace(p.start(...trip(p)))) },

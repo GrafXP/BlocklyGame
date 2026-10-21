@@ -6,7 +6,7 @@ import { applyCommand } from "./commands.js";
 import { makeThing } from "./content.js";
 import { TYPES } from "./entities.js";
 import { count } from "./inventory.js";
-import { beginTrial, checkGoals, createMission, recordWait, recordWork } from "./objectives.js";
+import { checkGoals, createMission, recordWait, recordWork } from "./objectives.js";
 import { runtimeOf } from "./runtimes.js";
 import { script } from "./script.js";
 import { statusOf } from "./status.js";
@@ -56,7 +56,9 @@ export { reasonOf, statusOf } from "./status.js";
 // 6: missions have trials and count completed work (deliveries, things made,
 //    waits), with exact orders, steady goals and goals that fail; choosing a
 //    missing setting lets a robot stopped for it go on; robots can be added.
-export const SIM_VERSION = 6;
+// 7: a mission is one start and its goals, without trials; a goal can ask for
+//    kinds unloaded together.
+export const SIM_VERSION = 7;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -75,8 +77,8 @@ const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 // starting it (src/programming/runtime.js). Robots start with the `settings`
 // content gives them, and nothing chosen for the rest. A construction site
 // that's `built` has its bridge already. Content with a `mission`
-// (src/content/missions/) makes a world with that mission's goals to meet,
-// from its first trial's stage (objectives.js).
+// (src/content/missions/) makes a world with that mission's goals to meet
+// (objectives.js).
 export function createWorld(content) {
   const terrain = parseTerrain(content.terrain);
   const places = [...content.entities, ...content.nodes].map((t) => t.id);
@@ -142,7 +144,6 @@ export function createWorld(content) {
     }
     e.runtime = startProgram(world.programs.find((p) => p.id === id), { parked: !!given.parked });
   }
-  if (world.mission?.trials[0].stage) beginTrial(world);
   return world;
 }
 
@@ -150,7 +151,7 @@ export function createWorld(content) {
 // the tick's trace, the debugger's account of the tick (it isn't part of the
 // world):
 //
-//   { tick, commands, evaluated, started, ended, waiting, errors, goals, passed, done, states }
+//   { tick, commands, evaluated, started, ended, waiting, errors, goals, done, states }
 //
 // - commands: what each command did, { ok, reason? }.
 // - evaluated: each entity that evaluated a step, { entity, block?, … }: the
@@ -160,9 +161,8 @@ export function createWorld(content) {
 // - started, ended: actions, { entity, type }.
 // - waiting: intents that couldn't start, { entity, reason }.
 // - errors: entities whose program stopped, { entity, reason }.
-// - goals: the ids of the mission's goals met in this tick; passed: the trial
-//   passed in it (its index), the next one staged at its end, or null; done:
-//   whether the mission was done in it, and its reward given (objectives.js).
+// - goals: the ids of the mission's goals met in this tick; done: whether the
+//   mission was done in it, and its reward given (objectives.js).
 // - states: every robot and building after the tick, { entity, state, block }:
 //   statusOf's word and the active block.
 //
@@ -184,9 +184,9 @@ export function createWorld(content) {
 //    otherwise it waits, with the reason, and is tried again next tick. A wait
 //    for a way somewhere is only tried again once the ways have changed.
 // 6. The mission's goals are checked, against work that has ended (the
-//    trial's tally, noted in phase 2); when the last of a trial is met, the
-//    next trial is staged, or after the last the mission's reward is given
-//    (objectives.js). Then whether the world has stalled, and the tick is done.
+//    mission's tally, noted in phase 2); when the last is met, the mission's
+//    reward is given (objectives.js). Then whether the world has stalled, and
+//    the tick is done.
 export function advanceWorld(world, commands = []) {
   const now = world.tick + 1;
   const trace = { tick: now, commands: [], evaluated: [], started: [], ended: [], waiting: [], errors: [] };
@@ -256,13 +256,12 @@ export function advanceWorld(world, commands = []) {
     }
   }
 
-  // 6. Goals, stalled? Then the tick is done. A trial staged or a reward given
-  // here happens at the boundary after this tick, so the clock says so first:
-  // a move they cancel ends where it has got to in this tick (actions.js).
+  // 6. Goals, stalled? Then the tick is done. A reward given here happens at
+  // the boundary after this tick, so the clock says so first: a move it
+  // cancels ends where it has got to in this tick (actions.js).
   world.tick = now;
-  const { met, passed, done } = checkGoals(world, now);
+  const { met, done } = checkGoals(world, now);
   trace.goals = met;
-  trace.passed = passed;
   trace.done = done;
   world.stall = stalled(world) ? (world.stall ?? { since: now }) : null;
   trace.states = world.entities.map((e) => ({ entity: e.id, state: statusOf(e), block: runtimeOf(e)?.active(e) ?? null }));

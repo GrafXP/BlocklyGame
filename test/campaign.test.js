@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toolboxFor } from "../src/blockly/toolboxes.js";
 import { readFileSync } from "node:fs";
-import { missionStart, playMission, referenceCommands } from "../src/campaign.js";
+import { missionProblems, missionStart, playMission, referenceCommands } from "../src/campaign.js";
 import { CAMPAIGN, CHAPTERS, campaignMission, firstOpen, gateOf, gatesOf, isOpen, nextMission, unlockedBlocks } from "../src/content/missions/campaign.js";
 import { missionById } from "../src/content/missions/index.js";
 import { program as write } from "../src/content/missions/write.js";
@@ -14,17 +14,18 @@ import { checkPlacement, layout } from "../src/sim/placement.js";
 import { cellAt, kindOf } from "../src/sim/terrain.js";
 import { stateHash } from "../src/sim/replay.js";
 import { checkWorld } from "../src/sim/validate.js";
-import { SIM_VERSION } from "../src/sim/world.js";
+import { SIM_VERSION, advanceWorld } from "../src/sim/world.js";
 import { verifyCampaign } from "../scripts/verify-missions.js";
 import { byId } from "./helpers.js";
 
 // The campaign (PLAN.md §9; docs/campaign-planv2.md), as far as it's built:
 // every mission's reference does it from its start and its starters don't,
 // and played so it gives the recorded world; a Build mission's program is the
-// start block alone; every mission stands alone, its setup complete; the gates
-// follow the map, with interim gates for missions not yet built; the toolbox
-// offers what the missions it needs introduced; and each lesson's deliberate
-// mistake fails as the lesson says.
+// start block alone; every mission stands alone, its setup complete, with one
+// goal; the gates follow the map, with interim gates for missions not yet
+// built; the toolbox offers what the missions it needs introduced; and each
+// lesson's deliberate mistake fails as the lesson says, while the ways a child
+// may well write it, a Forever among them, pass.
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
 const mission = (id) => campaignMission(id);
@@ -45,6 +46,15 @@ test("every mission is verified: its reference does it from its start, its start
   assert.deepEqual(problems, []);
   assert.equal(rows.length, CAMPAIGN.length);
   for (const row of rows) assert.ok(row.ticks !== null, row.id);
+});
+
+test("every mission has one goal, from one start; the authoring rules refuse trials or a second goal", () => {
+  for (const m of CAMPAIGN) assert.deepEqual([m.goals?.length, "trials" in m], [1, false], m.id);
+  const m = mission("c2-m016");
+  const { world } = missionStart(m);
+  const two = { ...m, goals: [...m.goals, { id: "more", type: "reached", robot: "r1", at: "depot" }] };
+  assert.ok(missionProblems(two, world).includes("c2-m016: it has 2 goals; a mission has one"));
+  assert.ok(missionProblems({ ...m, trials: [] }, world).includes("c2-m016: it has trials; a mission has one start"));
 });
 
 test("every mission played from its start by its reference solution gives the recorded world", () => {
@@ -187,11 +197,11 @@ test("mission 5: two trips of one piece do it too", () => {
   assert.notEqual(playWith("c2-m005", { "c2-m005": twice }).mission.done, null);
 });
 
-test("mission 7: three pieces in two trips aren't one on each trip", () => {
+test("mission 7: three pieces in two trips aren't three trips; three trips of two are", () => {
   const full = write("c2-m007", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload(), p.go("grove"), p.collect(), p.go("camp"), p.unload())));
-  const world = playWith("c2-m007", { "c2-m007": full });
-  assert.equal(world.mission.done, null);
-  assert.equal(world.mission.goals.find((g) => g.id === "trips").done, null);
+  assert.equal(playWith("c2-m007", { "c2-m007": full }).mission.done, null);
+  const twos = write("c2-m007", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload()))));
+  assert.notEqual(playWith("c2-m007", { "c2-m007": twos }).mission.done, null);
 });
 
 test("mission 8: a third Collect waits for room in the basket", () => {
@@ -237,31 +247,45 @@ test("mission 15: the courier alone fills the site but builds nothing; once the 
   assert.ok(!byId(world, "r2").runtime.parked, "the reward started it");
 });
 
-test("mission 16: a number in the Repeat passes one trial only; the sensor passes both", () => {
-  const one = write("c2-m016", (p) => p.workspace(p.start(p.repeat(1, p.pickUp()), p.go("depot"), p.unload())));
+test("mission 16: one pickup leaves a plank on the shelf; the trip in a Forever does it too", () => {
+  const one = write("c2-m016", (p) => p.workspace(p.start(p.pickUp(), p.go("depot"), p.unload())));
   const world = playWith("c2-m016", { "c2-m016": one });
-  assert.equal(world.mission.passed.length, 1, "one pickup passes the first trial");
-  assert.equal(world.mission.done, null, "but not the second");
-});
-
-test("mission 17: making a plank without looking makes one too many in the second trial", () => {
-  const always = write("c2-m017", (p) => p.workspace(p.start(p.make())));
-  const world = playWith("c2-m017", { "c2-m017": always });
-  assert.deepEqual([world.mission.passed.length, !!world.mission.goals[0].failed], [1, true]);
-});
-
-test("mission 18: without Else, the second trial brings no wood", () => {
-  const onlyIf = write("c2-m018", (p) => p.workspace(p.start(p.when(p.compare(p.stock("plank", "sawmill"), "GT", 0), [p.go("sawmill"), p.pickUp(), p.go("depot"), p.unload()]))));
-  const world = playWith("c2-m018", { "c2-m018": onlyIf });
-  assert.equal(world.mission.passed.length, 1);
   assert.equal(world.mission.done, null);
+  assert.equal(byId(world, "sawmill").store.items.plank, 1);
+  const again = write("c2-m016", (p) => p.workspace(p.start(p.forever(p.go("sawmill"), p.repeat(p.stock("plank", "sawmill"), p.pickUp()), p.go("depot"), p.unload()))));
+  assert.notEqual(playWith("c2-m016", { "c2-m016": again }).mission.done, null);
+});
+
+test("mission 17: making without looking fills the shelf past two; looking again and again keeps it at two", () => {
+  for (const [what, blocks] of [
+    ["twice", (p) => [p.make(), p.make()]],
+    ["forever", (p) => [p.forever(p.make())]],
+  ]) {
+    const world = playWith("c2-m017", { "c2-m017": write("c2-m017", (p) => p.workspace(p.start(...blocks(p)))) });
+    assert.equal(world.mission.done, null, what);
+    assert.equal(byId(world, "sawmill").store.items.plank, 3, what);
+  }
+  const looking = write("c2-m017", (p) => p.workspace(p.start(p.forever(p.when(p.compare(p.stock("plank", "sawmill"), "LT", 2), [p.make()])))));
+  assert.notEqual(playWith("c2-m017", { "c2-m017": looking }).mission.done, null);
+});
+
+test("mission 18: with the jobs the wrong way round, Robo 1 waits at the empty shelf; inside a Forever, the Else still does it", () => {
+  const plankTrip = (p) => [p.go("sawmill"), p.pickUp(), p.go("depot"), p.unload()];
+  const woodTrip = (p) => [p.go("grove"), p.collect(), p.go("sawmill"), p.unload()];
+  const swapped = write("c2-m018", (p) => p.workspace(p.start(p.when(p.compare(p.stock("plank", "sawmill"), "GT", 0), woodTrip(p), plankTrip(p)))));
+  const world = playWith("c2-m018", { "c2-m018": swapped });
+  assert.equal(world.mission.done, null);
+  assert.equal(byId(world, "r1").pending.reason.code, "wait.item", "the problem its hints answer");
+  const again = write("c2-m018", (p) => p.workspace(p.start(p.forever(p.when(p.compare(p.stock("plank", "sawmill"), "GT", 0), plankTrip(p), woodTrip(p))))));
+  assert.notEqual(playWith("c2-m018", { "c2-m018": again }).mission.done, null);
 });
 
 test("mission 19: setting off before both planks are ready fails, though both get delivered", () => {
   const early = write("c2-m019", (p) => p.workspace(p.start(p.go("sawmill"), p.pickUp(), p.pickUp(), p.go("depot"), p.unload())));
   const world = playWith("c2-m019", { "c2-m019": early });
   assert.ok(world.mission.goals[0].failed, "Robo 1 waited at the sawmill");
-  assert.equal(world.mission.trial, 0);
+  assert.equal(byId(world, "depot").store.items.plank, 2);
+  assert.equal(world.mission.done, null);
 });
 
 test("mission 20: a sawmill that makes planks without looking keeps more than two, as the wood keeps coming", () => {
@@ -275,14 +299,7 @@ test("mission 22: wood and stone brought home on two trips aren't one basket", (
   const apart = write("c2-m022", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.go("camp"), p.unload(), p.go("quarry"), p.collect("stone"), p.go("camp"), p.unload())));
   const world = playWith("c2-m022", { "c2-m022": apart });
   assert.equal(world.mission.done, null);
-  assert.deepEqual(
-    world.mission.goals.map((g) => [g.id, g.done !== null]),
-    [
-      ["wood", true],
-      ["stone", true],
-      ["together", false],
-    ],
-  );
+  assert.deepEqual(byId(world, "camp").store.items, { wood: 1, stone: 1 }, "both came home, apart");
 });
 
 test("missions 24 and 25: the planks alone leave the workshop waiting for its stone, and one kit's trips make one kit", () => {
@@ -346,17 +363,17 @@ test("mission 27: the planks alone leave the site waiting for its stone", () => 
   assert.equal(world.mission.done, null);
 });
 
-test("mission 28: Robo 1 has no job until the site is placed; then it brings the bill and the site builds", () => {
+test("mission 28: Robo 1 waits, parked, until the site is placed; placing it is the goal, and then Robo 1 brings the bill and the site builds", () => {
   const m = mission("c2-m028");
   const { world } = missionStart(m);
-  assert.equal(byId(world, "r1").runtime, null);
+  assert.equal(byId(world, "r1").runtime.parked, true);
   playMission(world, [], 30);
-  assert.deepEqual([world.mission.trial, world.mission.done], [0, null], "nothing happens before it's placed");
+  assert.equal(world.mission.done, null, "nothing happens before it's placed");
   playMission(world, m.reference.commands, world.tick + 5);
-  assert.equal(world.mission.trial, 1, "placed: the first trial is passed");
-  assert.equal(byId(world, "r1").own, "c2-m028-courier");
-  playMission(world, [], world.tick + m.steps);
-  assert.notEqual(world.mission.done, null);
+  assert.notEqual(world.mission.done, null, "placed: done");
+  assert.ok(!byId(world, "r1").runtime.parked, "the reward started Robo 1");
+  for (let i = 0; i < 1000 && byId(world, "workshop").type !== "workshop"; i++) advanceWorld(world, []);
+  assert.equal(byId(world, "workshop").type, "workshop", "Robo 1 found its way in");
 });
 
 test("mission 29: its job takes the pieces back to the camp, and the site waits for them", () => {
@@ -371,9 +388,8 @@ test("mission 30: the kit's pieces can't go in before the workshop is built; the
     p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload()), p.go("quarry"), p.repeat(2, p.collect("stone")), p.go("workshop"), p.unload())),
   );
   const world = playWith("c2-m030", { "c2-m030": buildOnly });
-  assert.equal(byId(world, "workshop").type, "workshop");
-  assert.equal(world.mission.goals.find((g) => g.id === "workshop").done !== null, true);
-  assert.equal(world.mission.done, null, "no kit");
+  assert.equal(byId(world, "workshop").type, "workshop", "built");
+  assert.equal(world.mission.done, null, "but no kit");
   assert.equal(byId(world, "workshop").pending.reason.code, "wait.item", "the workshop waits for the kit's pieces");
 });
 

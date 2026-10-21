@@ -200,17 +200,11 @@ function applyCommands(world, publish) {
 // The checkpoint's world, running the programs of `library` as last applied,
 // with what the checkpoint gave each robot to carry; parked programs stay
 // parked. With `from`, a world played since, the player's choices in it are
-// made again: who runs what, settings and names (src/sim/bindings.js); but not
-// the programs mission `mission`'s trials gave out, which are the mission's.
-function fromCheckpoint(checkpoint, library, from = null, mission = null) {
+// made again: who runs what, settings and names (src/sim/bindings.js).
+function fromCheckpoint(checkpoint, library, from = null) {
   const world = clone(checkpoint);
   for (const { program } of pendingPublishes(library, world)) installProgram(world, program, { fresh: false });
-  if (from) {
-    const choices = choicesOf(from);
-    const staged = new Set((mission?.trials ?? []).flatMap((t) => Object.keys(t.stage?.run ?? {})));
-    choices.entities = choices.entities.map((c) => (staged.has(c.id) ? { ...c, own: world.entities.find((e) => e.id === c.id)?.own ?? null } : c));
-    makeChoices(world, choices);
-  }
+  if (from) makeChoices(world, choicesOf(from));
   return world;
 }
 
@@ -224,7 +218,7 @@ export function newGame() {
   const speed = p.game.clock.speed;
   const from = peekWorld();
   p.game.pause();
-  p.game = createGame(fromCheckpoint(p.checkpoint, p.library, from, p.mission));
+  p.game = createGame(fromCheckpoint(p.checkpoint, p.library, from));
   p.game.clock.setSpeed(speed);
   p.changed = false;
   changes++;

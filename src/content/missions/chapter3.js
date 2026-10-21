@@ -42,7 +42,8 @@ export const CHAPTER_3 = [
     steps: 300,
   },
   // A delivery puts ingredients where a building can use them: the sawmill
-  // already knows how to make two planks, and waits for its wood.
+  // already knows how to make two planks, and waits for its wood. The goal is
+  // the planks, which only the wood delivered there makes.
   {
     id: "c2-m013",
     workspace: "build",
@@ -50,10 +51,7 @@ export const CHAPTER_3 = [
     setup: { add: ["sawmill"], robots: { r1: { at: "camp", basket: {} } }, run: { r1: "c2-m013", sawmill: "c2-m013-mill" } },
     programs: [blank("c2-m013", 13, robo(1)), named("c2-m013-mill", 13, sawmill, program("c2-m013-mill", (p) => p.workspace(p.start(p.repeat(2, p.make())))))],
     blocks: [],
-    goals: [
-      { id: "wood", type: "delivered", to: "sawmill", item: "wood", count: 2 },
-      { id: "planks", type: "made", at: "sawmill", item: "plank", count: 2 },
-    ],
+    goals: [{ id: "planks", type: "made", at: "sawmill", item: "plank", count: 2 }],
     look: "sawmill",
     problems: [{ entity: "sawmill", code: "wait.item", key: "hungry" }],
     predict: "point",

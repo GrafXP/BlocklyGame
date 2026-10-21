@@ -352,14 +352,9 @@
   color: #123d7d;
 }
 
-.mission-passed,
 .mission-explain {
   background: #d6f2df;
   color: #134a29;
-}
-
-.mission-passed {
-  font-weight: 700;
 }
 
 .mission-stuck {
@@ -395,8 +390,7 @@
 /* --- The mission's panel ----------------------------------------------------- */
 
 /* Below the mission's title, when asked for (src/ui/mission.js): the goal with
-   pictures, how far it has got, the trials, the hints, and the reward when
-   it's done. */
+   pictures, how far it has got, the hints, and the reward when it's done. */
 .mission-panel {
   position: absolute;
   top: var(--top);
@@ -506,8 +500,7 @@
   margin-top: 2px;
 }
 
-.mission-goals,
-.mission-trials {
+.mission-goals {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -549,33 +542,6 @@
 .goal.failed .goal-words small {
   color: #8a1f12;
   font-weight: 600;
-}
-
-.mission-trials {
-  margin-top: 6px;
-  font-size: 0.84rem;
-}
-
-.trial {
-  padding: 2px 0;
-}
-
-.trial.passed::before {
-  content: "✓ ";
-  color: #1d6b3a;
-  font-weight: 700;
-}
-
-.trial.current {
-  font-weight: 600;
-}
-
-.trial.current::before {
-  content: "▸ ";
-}
-
-.trial.later {
-  color: var(--ink-soft);
 }
 
 .mission-actions {

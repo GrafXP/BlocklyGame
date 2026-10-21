@@ -2,7 +2,8 @@
 // by mission id (src/content/missions/). Every other language has these keys,
 // with the same {name} placeholders. For each mission:
 //
-// - title, and goal: the goal in one short sentence;
+// - title, and goal: the goal in one short sentence, saying just what the
+//   mission's one goal checks;
 // - setup: the briefing, what to achieve, where the useful things are, and
 //   the rule that matters;
 // - predict: a question before Run, answered by saying or pointing, or skipped;
@@ -11,7 +12,6 @@
 //   thinking, to trying (docs/campaign-planv2.md, “Mission descriptions and
 //   optional help”);
 // - problem.<key>: the Think hint when that problem is in view;
-// - trial.<n>: what's different in each trial, as the card lists them;
 // - reward: what happened, when it's done.
 //
 // Write for children of 7 to 9: short sentences, the glossary's words
@@ -96,14 +96,14 @@ export default {
   "c2-m006.reward": "One block, two pieces of wood!",
 
   "c2-m007.title": "A Whole Trip Again",
-  "c2-m007.goal": "Bring three pieces of wood, one on each trip.",
-  "c2-m007.setup": "Bring three pieces of wood to the camp, carrying one on each trip. Each trip ends with an empty basket before the next one starts. Make Robo 1 repeat the whole trip.",
+  "c2-m007.goal": "Bring wood to the camp in three trips.",
+  "c2-m007.setup": "Bring wood to the camp in three trips: each trip walks to the grove, collects, walks back and unloads. One piece on each trip is enough. Make Robo 1 repeat the whole trip.",
   "c2-m007.predict": "How many trips will Robo 1 make? Say it.",
   "c2-m007.explain": "Which blocks happen on every trip?",
   "c2-m007.hint.look": "Watch one trip: Robo 1 walks, collects, walks back and unloads.",
   "c2-m007.hint.think": "Which parts must happen on every trip?",
   "c2-m007.hint.try": "Write one whole trip first, from the walk to the grove to the unloading. Then put all of it inside “repeat 3 times”.",
-  "c2-m007.reward": "Three trips, three pieces of wood!",
+  "c2-m007.reward": "Three trips, and wood every time!",
 
   "c2-m008.title": "Two Basket Spaces",
   "c2-m008.goal": "Bring four pieces of wood without overfilling the basket.",
@@ -158,7 +158,7 @@ export default {
   "c2-m012.reward": "Two planks are at the depot.",
 
   "c2-m013.title": "Wood Goes In, Planks Come Out",
-  "c2-m013.goal": "Bring the sawmill two pieces of wood, so that it makes two planks.",
+  "c2-m013.goal": "Bring the sawmill wood, so that it makes two planks.",
   "c2-m013.setup": "The sawmill needs two pieces of wood to make two planks. Robo 1 starts at the camp, and the wood is at the grove. Write Robo 1's delivery job; the sawmill already knows how to make the planks.",
   "c2-m013.predict": "Where must the wood go, so that the sawmill can use it? Point to it.",
   "c2-m013.explain": "What went into the sawmill, and what came out?",
@@ -191,53 +191,46 @@ export default {
   // --- Chapter 4: Look Before You Act ---------------------------------------
   "c2-m016.title": "How Many Are Ready?",
   "c2-m016.goal": "Bring every plank on the sawmill's shelf to the depot.",
-  "c2-m016.setup": "Robo 1 is beside the sawmill. Bring every plank on its shelf to the depot: this time there may be one or two. The stock block reads that number, and “repeat” uses the number when it starts.",
-  "c2-m016.trial.1": "One plank at the sawmill",
-  "c2-m016.trial.2": "Two planks at the sawmill",
-  "c2-m016.predict": "How many times will Robo 1 pick up in the first trial? Say it.",
+  "c2-m016.setup": "Robo 1 is beside the sawmill. Bring every plank on its shelf to the depot. The stock block counts the planks for you, and “repeat” uses that number when it starts.",
+  "c2-m016.predict": "How many times will Robo 1 pick up? Say it.",
   "c2-m016.explain": "Where did the number in “repeat” come from?",
-  "c2-m016.hint.look": "Look at the sawmill's shelf in each trial.",
+  "c2-m016.hint.look": "Look at the sawmill's shelf. How many planks are there?",
   "c2-m016.hint.think": "The number comes from the shelf. How can the repeat ask the shelf?",
   "c2-m016.hint.try": "Put “planks at sawmill” into the number gap of “repeat”, with “pick up planks” inside it. The repeat reads it once, when the loop starts.",
   "c2-m016.problem.fewer": "Robo 1 is waiting for a plank that isn't there. How many were on the shelf?",
-  "c2-m016.reward": "Right both times: Robo 1 took exactly what was ready.",
+  "c2-m016.reward": "Robo 1 took exactly what was ready.",
 
   "c2-m017.title": "Only When We Need It",
-  "c2-m017.goal": "Make a plank only when the shelf has fewer than two.",
-  "c2-m017.setup": "Program the sawmill to look at its plank shelf once. If there are fewer than two planks, make one; otherwise leave the shelf alone. The wood is already here.",
-  "c2-m017.trial.1": "One plank on the shelf: make one more",
-  "c2-m017.trial.2": "Two planks on the shelf: make none",
-  "c2-m017.predict": "Will the sawmill make a plank in the first trial? And in the second?",
+  "c2-m017.goal": "Fill the sawmill's shelf up to two planks, and no more.",
+  "c2-m017.setup": "The shelf should hold two planks, no more. Program the sawmill to look at its plank shelf: if there are fewer than two planks, make one. The wood is already here.",
+  "c2-m017.predict": "Will the sawmill make a plank? How many will be on the shelf then?",
   "c2-m017.explain": "How did the sawmill decide whether to make a plank?",
-  "c2-m017.hint.look": "Look at the sawmill's shelf in each trial.",
+  "c2-m017.hint.look": "Look at the sawmill's shelf. How many planks are there, and how many should there be?",
   "c2-m017.hint.think": "Is the shelf below the line? What should happen only then?",
   "c2-m017.hint.try": "Use “if” with the question “planks at sawmill < 2”, and put “make planks” inside it. One “if” checks once.",
-  "c2-m017.reward": "The sawmill makes planks only when they're needed.",
+  "c2-m017.reward": "Two planks, and not one more: the sawmill made only what was needed.",
 
   "c2-m018.title": "This Job or That Job",
-  "c2-m018.goal": "If the sawmill has a plank, take it to the depot. If not, bring the sawmill wood.",
-  "c2-m018.setup": "Robo 1 has two possible jobs. If a plank is ready at the sawmill, bring it to the depot. Otherwise, bring one piece of wood from the grove to the sawmill.",
-  "c2-m018.trial.1": "One plank at the sawmill",
-  "c2-m018.trial.2": "No planks at the sawmill",
-  "c2-m018.predict": "Which job will Robo 1 do in the first trial? And in the second?",
-  "c2-m018.explain": "Which path ran each time, and why?",
-  "c2-m018.hint.look": "Look at the sawmill's shelf in each trial.",
+  "c2-m018.goal": "Bring the sawmill one piece of wood, if it has no plank.",
+  "c2-m018.setup": "Robo 1 has two possible jobs. If a plank is ready at the sawmill, it takes the plank to the depot. If not, it brings one piece of wood from the grove to the sawmill. Write both jobs, then look at the shelf: which one will run?",
+  "c2-m018.predict": "Which job will Robo 1 do? Look at the sawmill's shelf, then say it.",
+  "c2-m018.explain": "Which path ran, and why?",
+  "c2-m018.hint.look": "Look at the sawmill's shelf. Is a plank ready?",
   "c2-m018.hint.think": "Which path will run this time? What should Robo 1 do when there's no plank?",
   "c2-m018.hint.try": "Use “if … else” with the question “planks at sawmill > 0”. Put the plank trip in the first part, and the wood trip in “else”. Each trip ends with “unload basket”.",
-  "c2-m018.reward": "One check, and the right job each time!",
+  "c2-m018.problem.none": "Robo 1 is waiting for a plank, but the shelf is empty. Which job is for when there's no plank?",
+  "c2-m018.reward": "One check, and the right job: no plank, so Robo 1 brought wood!",
 
   "c2-m019.title": "Wait for a Full Load",
   "c2-m019.goal": "Wait until two planks are ready, then take both to the depot.",
-  "c2-m019.setup": "Wait at the camp until the sawmill has two planks ready. Then bring both to the depot in one load. “Wait until” keeps checking a question, so you don't have to guess how long making takes.",
-  "c2-m019.trial.1": "The sawmill starts at once",
-  "c2-m019.trial.2": "The sawmill starts later",
+  "c2-m019.setup": "The sawmill takes a while before it starts making two planks. Wait at the camp until both are ready, then bring them to the depot in one load. “Wait until” keeps checking a question, so you don't have to guess how long the sawmill takes.",
   "c2-m019.predict": "When should Robo 1 set off for the sawmill?",
   "c2-m019.explain": "What had to be true before the trip started?",
   "c2-m019.hint.look": "Watch Robo 1 at the sawmill. Does it stand there, waiting for planks?",
   "c2-m019.hint.think": "What should be true before the trip starts?",
   "c2-m019.hint.try": "Start with “wait until planks at sawmill ≥ 2”, then make the whole trip.",
   "c2-m019.problem.early": "Robo 1 got there too early and had to wait. What should it wait for, and where?",
-  "c2-m019.reward": "Robo 1 waited for a full load, both times.",
+  "c2-m019.reward": "Robo 1 waited for a full load.",
 
   "c2-m020.title": "Just Enough Planks",
   "c2-m020.goal": "Keep two planks ready on the sawmill's shelf.",
@@ -322,15 +315,13 @@ export default {
   "c2-m027.reward": "The workshop is built!",
 
   "c2-m028.title": "Leave a Way Through",
-  "c2-m028.goal": "Choose the plot with a way in, then watch the workshop being built.",
-  "c2-m028.setup": "Two plots are marked for the workshop. Robots need a way to it, room in front of it to stand while they unload, and nothing else may be cut off. The plan turns red on a plot that blocks the way; Robo 1's delivery job is ready for when the site is there.",
-  "c2-m028.trial.1": "Place the workshop's site",
-  "c2-m028.trial.2": "Robo 1 brings what it needs",
-  "c2-m028.explain": "Where did Robo 1 stand to unload?",
+  "c2-m028.goal": "Place the workshop's site on the plot with a way in.",
+  "c2-m028.setup": "Two plots are marked for the workshop. Robots need a way to it, room in front of it to stand while they unload, and nothing else may be cut off. The plan turns red on a plot that blocks the way. Once the site stands, Robo 1 brings what it needs.",
+  "c2-m028.explain": "Watch Robo 1 bring the pieces. Where does it stand to unload?",
   "c2-m028.hint.look": "Press Build, and read what the card says about the red plot.",
   "c2-m028.hint.think": "Which plot would stand where robots walk off the bridge?",
-  "c2-m028.hint.try": "Tap the other plot, so that the plan turns green, and press “Build it here”. Then press Run.",
-  "c2-m028.reward": "Robo 1 found its way in, and the workshop is built!",
+  "c2-m028.hint.try": "Tap the other plot, so that the plan turns green, and press “Build it here”.",
+  "c2-m028.reward": "The site has a way in! Watch Robo 1 bring the pieces, and the workshop being built.",
 
   "c2-m029.title": "Right Pieces, Wrong Place",
   "c2-m029.goal": "Get the pieces at the camp to the workshop site.",
@@ -344,8 +335,8 @@ export default {
   "c2-m029.reward": "The same pieces, in the right place: the workshop is built!",
 
   "c2-m030.title": "Open for Work",
-  "c2-m030.goal": "Build the workshop, then bring what its first kit needs.",
-  "c2-m030.setup": "Build the workshop, then supply its first kit. The building takes four planks and two stones; the kit needs two more planks and one more stone. Write Robo 1's deliveries from the sawmill and the stone pit; Robo 2 and the sawmill make the planks, and the site and the workshop know their jobs.",
+  "c2-m030.goal": "Help the new workshop make its first kit.",
+  "c2-m030.setup": "First the workshop is built, then it can make its first kit. The building takes four planks and two stones; the kit needs two more planks and one more stone. Write Robo 1's deliveries from the sawmill and the stone pit; Robo 2 and the sawmill make the planks, and the site and the workshop know their jobs.",
   "c2-m030.explain": "Which pieces became the building, and which became the kit?",
   "c2-m030.hint.look": "Tap the workshop site, and later the workshop: what does each still need?",
   "c2-m030.hint.think": "The building uses up its pieces. What does the kit still need after that?",

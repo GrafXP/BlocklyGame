@@ -204,7 +204,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A loop can repeat an entire sequence.
 - **Setup and support:** One helper at camp and a pictured three-delivery order. No trip, loop, or ordered loose blocks are supplied.
 - **Player task:** Write a one-item round trip, decide which actions repeat, and set the count for three deliveries.
-- **Success:** Three one-item deliveries complete, with the robot ending empty at camp.
+- **Success:** Three trips to camp complete, each ending with an unload. *As built (19 October 2026):* the one goal counts the trips; one wood a trip is enough, and two a trip count too.
 - **Hint / talk:** “Which parts must happen on every trip?” Compare repeating Collect with repeating the whole journey.
 
 #### 08. Two Basket Spaces
@@ -272,7 +272,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A delivery puts ingredients where a building can use them.
 - **Setup and support:** The sawmill has a visible two-plank background program and no wood. The selected helper starts empty at camp. Show the sawmill's ingredient picture and identify its program as background support.
 - **Player task:** Author the complete two-wood delivery to the sawmill and run it until both planks finish.
-- **Success:** The robot supplies two wood and the sawmill produces two planks.
+- **Success:** The robot supplies two wood and the sawmill produces two planks. *As built:* the one goal is the two planks made, which only the wood delivered there makes.
 - **Hint / talk:** “Where does the sawmill need the wood?” Observe the material change without comparing two program highlights. Pause and Step still affect the whole world.
 
 #### 14. Keep It Going
@@ -301,13 +301,13 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 16. How Many Are Ready?
 
-“Your helper is beside the sawmill. Bring every plank on its shelf to the depot; this time there may be one or two. The stock block reads that number, and Repeat uses the number when it starts.”
+“Your helper is beside the sawmill. Bring every plank on its shelf to the depot. The stock block counts them for you, and Repeat uses the number when it starts.”
 
 - **Workspace:** Build.
 - **Learn:** A sensor supplies a number from the world.
-- **Setup and support:** One isolated helper at the sawmill; announced trials begin with one or two planks and no competing program. Explain the stock sensor and its number-shaped output without assembling a loop.
+- **Setup and support:** One isolated helper at the sawmill, two planks on its shelf, and no competing program. Explain the stock sensor and its number-shaped output without assembling a loop.
 - **Player task:** Build a pickup loop whose count reads the shelf, followed by the complete depot delivery.
-- **Success:** The courier transfers the starting stock correctly in two visible trials: one plank and two planks.
+- **Success:** Both planks reach the depot. A Repeat of 2 does it too: the lesson is in the briefing and the hints, not forced by the goal.
 - **Hint / talk:** “The number comes from the shelf.” Explain that Repeat reads its count when the loop starts; it does not keep changing the count as items are taken.
 
 #### 17. Only When We Need It
@@ -316,9 +316,9 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 - **Workspace:** Build.
 - **Learn:** If chooses whether to do an action, using a true-or-false comparison.
-- **Setup and support:** Announced trials start with one or two planks, enough wood, and output room. Explain If and the less-than comparison with a pictured shelf line; no condition or Make block is connected.
-- **Player task:** Build the stock comparison and conditional production action, then try both starting shelves.
-- **Success:** In two small trials, starting with one plank makes one more; starting with two makes none.
+- **Setup and support:** One plank on the shelf, wood for two more, and output room. Explain If and the less-than comparison with a pictured shelf line; no condition or Make block is connected.
+- **Player task:** Build the stock comparison and conditional production action.
+- **Success:** The shelf holds two planks, and keeps two for a while: a sawmill that makes without looking, twice or forever, fills it to three and doesn't do it. Looking again and again inside Forever does.
 - **Hint / talk:** “Is the shelf below the line?” A single If checks once. Repeated checking is reserved for mission 20.
 
 #### 18. This Job or That Job
@@ -327,9 +327,9 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 - **Workspace:** Build.
 - **Learn:** Else chooses another action when the condition is false.
-- **Setup and support:** One helper at camp and an inactive sawmill. Trials begin with one plank or none. Explain Else as the other path when If's question is false; neither delivery branch is supplied.
+- **Setup and support:** One helper at camp and an inactive sawmill with no plank, so Else's path is the one that runs. Explain Else as the other path when If's question is false; neither delivery branch is supplied.
 - **Player task:** Write the stock question and both complete delivery branches, each ending with an empty basket.
-- **Success:** One trial with a plank delivers it to the depot; another with none delivers wood to the sawmill.
+- **Success:** Wood reaches the sawmill. With the branches the wrong way round, the helper waits at the empty shelf, and the hint asks which job is for when there's no plank.
 - **Hint / talk:** “Which path will run this time?” Both branches return with an empty basket, and only one branch runs per check.
 
 #### 19. Wait for a Full Load
@@ -338,9 +338,9 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 - **Workspace:** Build.
 - **Learn:** Wait Until holds the program at a condition until it becomes true.
-- **Setup and support:** A background sawmill produces two planks over time. The selected helper begins at camp with no program. Explain Wait Until's condition; vary the producer's start time between visible trials.
+- **Setup and support:** A background sawmill produces two planks, after a while: it starts late, so a helper that goes at once stands at the sawmill waiting. The selected helper begins at camp with no program. Explain Wait Until's condition.
 - **Player task:** Write the waiting condition and the full pickup-and-delivery journey.
-- **Success:** The courier departs only once two planks are ready, then delivers both together. Repeat with the producer starting later.
+- **Success:** The courier departs only once two planks are ready, then delivers both together, never waiting at the sawmill.
 - **Hint / talk:** “What should become true before the trip starts?” Pick Up already waits for a missing item; this wait deliberately chooses when the whole batch journey begins. Do not guess a number of waiting steps.
 
 #### 20. Just Enough Planks
@@ -375,7 +375,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Different items use the same two basket spaces.
 - **Setup and support:** One empty helper and two nearby sources. The goal card shows one wood and one stone together, without an ordered route. Other workers are inactive.
 - **Player task:** Plan the two-source trip, collect a mixed load, and unload both items at camp.
-- **Success:** A mixed load of one wood and one stone is unloaded at camp without exceeding capacity.
+- **Success:** A mixed load of one wood and one stone is unloaded at camp without exceeding capacity. *As built:* one goal, the kinds unloaded together in one basket (`together`).
 - **Hint / talk:** “Is there a separate basket for each kind?” Keep the route finite and the other workers inactive.
 
 #### 23. What Makes a Kit?
@@ -441,7 +441,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Placement must preserve routes and interaction space.
 - **Setup and support:** Show a valid plot and an obstructing preview, with reachable interaction cells pictured. Reject invalid placement before accepting it. *As built:* two plots are marked, one on the bridge's east landing, which would cut the stone pit off and is refused with that reason, and the workshop's own plot, as in mission 26. Background couriers and site building behavior are prepared solely to demonstrate access.
 - **Player task:** Choose a reachable site, inspect the access preview, and watch a courier use the completed route.
-- **Success / observe:** The workshop is built and a courier reaches both it and the existing sawmill. “Where will the helper stand to unload?” No trial can permanently trap a robot.
+- **Success / observe:** The workshop is built and a courier reaches both it and the existing sawmill. “Where will the helper stand to unload?” No placement can permanently trap a robot. *As built (19 October 2026):* the one goal is the site placed on the plot with a way in; the courier, parked until then, sets off as the reward, and the child watches it use the route and the site build.
 
 #### 29. Right Pieces, Wrong Place
 
@@ -461,7 +461,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Combine familiar construction and production, without a new block.
 - **Setup and support:** Provide a working sawmill and wood collector, six raw wood, three raw stone, and a valid site. Background site behavior builds once then makes one kit. Display separate building and kit bills; the selected courier has no prepared route.
 - **Player task:** Write the complete delivery job in two pictured stages, accounting for consumed building materials before supplying the kit.
-- **Success / observe:** Four planks/two stone build the workshop; two more planks/one stone make a kit. “Which pieces became the building, and which became the kit?” Construction does not silently leave its consumed inputs available.
+- **Success / observe:** Four planks/two stone build the workshop; two more planks/one stone make a kit. “Which pieces became the building, and which became the kit?” Construction does not silently leave its consumed inputs available. *As built:* one goal, the kit made, which the workshop can only make once it's built.
 
 ### Chapter 7 — Water Makes Things Grow
 
@@ -1531,7 +1531,7 @@ Mission authoring must follow these rules:
 
 1. **Complete fixtures:** Every mission and trial defines its terrain/profile, reachable sources, placed buildings/sites, robot positions, stock, capacities, slots, shield state, available programs, plans/targets, opponent state, and unlocks. No unknown leftovers, program references, research, or names come from another mission. A story can show the same growing island while its state is freshly authored.
 2. **Visible staging:** Identify prebuilt chains, staged ingredients, preplaced training robots, and already completed improvements at the start. Tutorial staging happens before Run. Production and recovery objectives never rely on hidden top-ups or an opponent receiving free replacement units.
-3. **Small controlled trials:** Reset the world between announced condition fixtures; preserve the same child's program. Explain the changed stock, shield, danger, or route. Do not allow unrelated couriers to race for a sensing lesson's resources. Trials share the same global clock, not per-entity clocks.
+3. **One start, one goal:** A mission has one fixture and one goal, which its goal sentence states and the world checks as soon as it holds (decided 19 October 2026, after a playtest stuck at mission 18). No trials: children couldn't tell which variation was being judged, nor why a goal met in the first didn't end the mission, and a Forever, which never stops, could leave an exact goal unjudged between them. Check the goal against the programs a child may well write, a Forever among them, not only the reference. Where the cards from 31 on still announce trials or paired conditions, they are to be redesigned to one start and one goal as they're built: pick the condition that shows the new block at work, or let the world change during the run (as in mission 20). Do not allow unrelated couriers to race for a sensing lesson's resources.
 4. **Declared finite demand:** Exact orders publish their remaining recipe/assembly demand; targets stop requesting new inputs when the finite order finishes. Continuous reserve lessons use a visible ongoing target instead. This distinction prevents a parked producer from silently drawing endless supplies.
 5. **Completed evidence:** Count completed collection, transfer, production, construction, assembly, repair, and combat events. An order does not finish when Unload begins, a slot is reserved, or a hit is scheduled. Exact orders also check pending actions and excess deliveries. Placing a valid site is sufficient for placement-only mission 26.
 6. **Stable feedback:** Reserve lessons provide enough input and output room to expose overproduction, remove stock deliberately, and observe an entire subsequent control cycle. Fair scheduling checks both recipes with shared charcoal/water, not just independent stock. Verify temporary shortages recover instead of treating every pause as failure.
@@ -1608,6 +1608,10 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 - Missions 01–25, 81–84, and workshops A01–A15 use only what exists: wood, raw stone, planks, kits, the bridge, the workshop and its placement; Go To, Collect, Pick Up, Unload, Make and Build; Repeat, Forever, If, Else and Wait Until; stock and comparisons; shared programs, teams, settings and own copies; variables, blocks of one's own, and messages.
 - Missions 26–30 also need a goal for a building finished on its construction site (today's `built` goal knows only bridges) and a placement-only goal for 26.
 - Everything else needs engine work first, in the order of the skirmish plan's stages: water, food, charge packs and paid assembly (31–40); Supply, declared targets, Needs, Space and Ready to Make, stone blocks, charcoal, iron and buildings with two recipes (41–60, 85); gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105).
+
+### Corrections after playtesting
+
+- On 19 October 2026 a playtest got stuck at mission 18: its two trials, a plank and then none, judged one program twice, and a natural program with Forever met the first trial's count but never passed it, since an exact goal waits for the robot to stop. Missions 16–19 and 28 lost their trials, and 7, 13, 22 and 30 their second and third goals: every mission now has one start and one goal (rule 3), which `npm run verify:missions` checks.
 
 ### Corrections made in this review
 

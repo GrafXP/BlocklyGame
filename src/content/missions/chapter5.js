@@ -45,11 +45,7 @@ export const CHAPTER_5 = [
     setup: bridged([], { run: { r1: "c2-m022" } }),
     programs: [blank("c2-m022", 22, robo(1))],
     blocks: [],
-    goals: [
-      { id: "wood", type: "delivered", to: "camp", item: "wood", by: "r1", count: 1, exact: true },
-      { id: "stone", type: "delivered", to: "camp", item: "stone", by: "r1", count: 1, exact: true },
-      { id: "together", type: "delivered", to: "camp", by: "r1", count: 2, load: 2 },
-    ],
+    goals: [{ id: "together", type: "together", to: "camp", by: "r1", items: ["wood", "stone"] }],
     look: "r1",
     predict: true,
     reference: { programs: { "c2-m022": program("c2-m022", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.go("quarry"), p.collect("stone"), p.go("camp"), p.unload()))) } },

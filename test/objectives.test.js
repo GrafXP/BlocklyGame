@@ -9,11 +9,11 @@ import { collect, forever, go, make, my, pickUp, program, repeat, unload } from 
 
 // The mission engine of Phase 7 (src/sim/objectives.js; docs/campaign-plan.md,
 // “Checkpoints, resources, and reliable goals”): goals count work that has
-// ended in the trial, never work begun; an exact order is judged once the work
-// is over, and one too many fails it; a robot that was to set off only when
-// things were ready fails if it waits; a steady goal holds a count for a while;
-// and trials follow one another, each from its own start, with the same
-// programs.
+// ended, never work begun; different kinds unloaded together count as one
+// basket; an exact order is judged once the work is over, and one too many
+// fails it; a robot that was to set off only when things were ready fails if
+// it waits; a steady goal holds a count for a while; and a mission, from its
+// one start, is done at the tick its last goal is met.
 
 // A field with a pile of wood at the west, a depot at the east and a sawmill
 // in the middle; robots between. `mission` is the world's mission.
@@ -65,6 +65,27 @@ test("a delivery counts once the unload has ended, by item, by robot, and in ful
   assert.deepEqual(w.mission.collected, { wood: 3 }, "what came from the deposits");
 });
 
+test("different kinds unloaded together count as one basket, by robot; one kind twice doesn't", () => {
+  const mixed = program(go("g1", "pile"), collect("c"), go("g2", "mill"), pickUp("k", "plank"), go("g3", "depot"), unload("u"));
+  const w = world({
+    entities: [bot("a", [3, 1], "p"), bot("b", [3, 2], "q")],
+    programs: { p: mixed, q: trips(1, 2) },
+    mission: {
+      goals: [
+        { id: "any", type: "together", to: "depot", items: ["wood", "plank"] },
+        { id: "a", type: "together", to: "depot", by: "a", items: ["plank", "wood"] },
+        { id: "b", type: "together", to: "depot", by: "b", items: ["plank", "wood"] },
+      ],
+    },
+  });
+  byId(w, "mill").store.items = { plank: 1 };
+  runUntil(w, (it) => it.entities.every((e) => statusOf(e) === "stopped"));
+  assert.ok(goal(w, "any").done && goal(w, "a").done, "Robo a's basket held a plank and a wood");
+  assert.equal(goal(w, "b").done, null, "two wood aren't two kinds");
+  assert.deepEqual(goalProgress(w, goal(w, "b")), { have: 0, need: 1, done: false, failed: false });
+  assert.deepEqual(checkWorld(w), []);
+});
+
 test("an exact order is judged once the work is over, and one too many fails it", () => {
   const exact = (n, p) =>
     world({ entities: [bot("a", [3, 1], "p")], programs: { p }, mission: { goals: [{ id: "three", type: "delivered", to: "depot", item: "wood", count: n, exact: true }] } });
@@ -79,7 +100,7 @@ test("an exact order is judged once the work is over, and one too many fails it"
   runUntil(going, (w) => w.mission.goals[0].failed !== null);
   assert.equal(goalProgress(going, going.mission.goals[0]).have, 4);
   run(going, 200);
-  assert.equal(going.mission.done, null, "failed for good in this trial");
+  assert.equal(going.mission.done, null, "failed for good");
   assert.deepEqual(checkWorld(going), []);
 });
 
@@ -130,66 +151,19 @@ test("a goal of making nothing at all is met once the work is over, and making o
   assert.equal(busy.mission.done, null);
 });
 
-test("trials follow one another: each staged at the end of the tick the one before was passed, programs from their start", () => {
-  const stage = (n) => ({ stock: { mill: { plank: n } }, robots: { a: { at: "mill", basket: {} } } });
-  const w = createWorld({
-    id: "test",
-    version: 1,
-    terrain: FIELD,
-    entities: [depot, mill(), bot("a", [3, 1], "p")],
-    nodes: [pile],
-    programs: [{ id: "p", source: program(pickUp("k", "plank"), go("g", "depot"), unload("u")) }],
-    mission: {
-      id: "m",
-      trials: [1, 2].map((n) => ({ stage: stage(n), goals: [{ id: "one", type: "delivered", to: "depot", item: "plank", count: 1, exact: true }] })),
-    },
-  });
-  assert.deepEqual(byId(w, "mill").store.items, { plank: 1 }, "the first trial's stage is the start");
-  assert.equal(byId(w, "a").cell, byId(w, "mill").access[0]);
+test("a mission is done at the tick its goal is met, and the clock runs on: there's no second start", () => {
+  const w = world({ entities: [bot("a", [3, 1], "p")], programs: { p: trips(2) }, mission: { goals: [{ id: "one", type: "delivered", to: "depot", item: "wood", count: 1 }] } });
   const game = createGame(w);
   game.run();
   let now = 0;
-  while (w.mission.trial === 0) game.frame((now += 100));
-  const passed = w.mission.passed[0];
-  assert.equal(game.trace.passed, 0);
-  assert.equal(w.tick, passed, "the clock paused at the tick the trial was passed");
-  assert.equal(game.clock.running, false);
-  assert.deepEqual(byId(w, "mill").store.items, { plank: 2 }, "the second trial's stage");
-  assert.equal(byId(w, "a").cell, byId(w, "mill").access[0], "Robo a back at the sawmill");
-  assert.equal(byId(w, "a").runtime.at, 0, "its program from the start");
-  assert.deepEqual(w.mission.tally.unloads, {}, "nothing counted yet");
+  while (w.mission.done === null) game.frame((now += 100));
+  assert.equal(game.trace.done, true);
+  assert.equal(w.mission.done, goal(w, "one").done, "done with its goal");
+  assert.equal(game.clock.running, true, "the world goes on");
+  const delivered = goalProgress(w, goal(w, "one")).have;
+  runUntil(w, (it) => statusOf(byId(it, "a")) === "stopped");
+  assert.equal(goalProgress(w, goal(w, "one")).have, delivered + 1, "Robo a's second trip still counts, from the same start");
   assert.deepEqual(checkWorld(w), []);
-  runUntil(w, (it) => it.mission.done !== null);
-  assert.equal(w.mission.passed.length, 2);
-  assert.equal(w.mission.done, w.mission.passed[1]);
-  assert.deepEqual(checkWorld(w), []);
-});
-
-test("a trial staged while a robot sets off stops it where it stands at the end of that tick", () => {
-  // Robo a's unload passes the first trial, and in the same tick it sets off
-  // again; the next trial is staged at the end of that tick.
-  const w = createWorld({
-    id: "test",
-    version: 1,
-    terrain: FIELD,
-    entities: [depot, mill(), bot("a", [3, 1], "p")],
-    nodes: [pile],
-    programs: [{ id: "p", source: program(go("g1", "pile"), collect("c"), go("g2", "depot"), unload("u"), go("g3", "pile")) }],
-    mission: {
-      id: "m",
-      trials: [
-        { goals: [{ id: "one", type: "delivered", to: "depot", count: 1 }] },
-        { stage: { stock: { mill: { plank: 1 } } }, goals: [{ id: "two", type: "delivered", to: "depot", count: 2 }] },
-      ],
-    },
-  });
-  let passed = null;
-  while (passed === null) passed = advanceWorld(w, []).passed;
-  const a = byId(w, "a");
-  assert.equal(a.cell, byId(w, "depot").access[0], "still at the depot, where its move began");
-  assert.equal(a.action, null);
-  assert.deepEqual(checkWorld(w), []);
-  run(w, 5);
 });
 
 test("goals are checked as they're written", () => {
@@ -200,7 +174,8 @@ test("goals are checked as they're written", () => {
   assert.match(goalProblem({ id: "a", type: "delivered", to: "depot", count: 2, load: 3 }), /load 3/);
   assert.match(goalProblem({ id: "a", type: "delivered", to: "depot", count: 2, noWait: true }), /noWait without by/);
   assert.match(goalProblem({ id: "a", type: "made", at: "mill", item: "plank", count: 1, colour: "red" }), /has colour/);
-  assert.throws(() => createMission({ id: "m", trials: [] }), /no trials/);
+  assert.match(goalProblem({ id: "a", type: "together", to: "depot", items: ["wood"] }), /has items/, "together is of two kinds at least");
+  assert.throws(() => createMission({ id: "m", goals: [] }), /no goals/);
 });
 
 test("a robot stopped because a setting wasn't chosen goes on once it is", () => {

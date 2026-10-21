@@ -423,11 +423,11 @@ if (want("library")) {
 // the title page with its missions listed (`home`), a mission at /play, a
 // replay of mission `replay`, or free play (`free`). Then `hints` of the hint
 // ladder, its first prediction pointed at `guess`, the program `panel` open,
-// `run` until the world stalls, the first trial passed (`passed`, by the whole
-// program the hint shows), `solved` (with the win showing), and `chosen`
+// `run` until the world stalls, the whole program the hint shows applied and
+// run a little (`applied`), `solved` (with the win showing), and `chosen`
 // selected. With `briefing`, the mission's briefing is left showing.
 async function openCampaign(browser, opts = {}) {
-  const { context = DESKTOP, lang = "en", mission = "c2-m001", done = false, home = false, replay = null, free = false, briefing = false, hints = 0, guess = null, panel = null, run = false, passed = false, solved = false, chosen = null } = opts;
+  const { context = DESKTOP, lang = "en", mission = "c2-m001", done = false, home = false, replay = null, free = false, briefing = false, hints = 0, guess = null, panel = null, run = false, applied = false, solved = false, chosen = null } = opts;
   const page = await (await browser.newContext(context)).newPage();
   const m = campaignMission(mission);
   // The starters' names worded in `lang`, as the game words them.
@@ -453,7 +453,7 @@ async function openCampaign(browser, opts = {}) {
     await page.click('[data-mission="point"]');
     await page.evaluate((id) => window.islandPage.select(id), guess);
   }
-  if (passed) {
+  if (applied) {
     for (let i = 0; i < 3; i++) await page.click(".mission-hint");
     await page.click('[data-mission="whole"]');
     await page.waitForFunction(() => window.islandPage.panel()?.kind === "editor");
@@ -462,7 +462,7 @@ async function openCampaign(browser, opts = {}) {
     await page.evaluate(() => {
       window.islandPage.close();
       const game = window.islandPage.game;
-      while (game.world.mission.trial === 0) game.step();
+      for (let i = 0; i < 20; i++) game.step();
     });
   }
   if (run) await page.evaluate(() => {
@@ -506,7 +506,7 @@ if (want("campaign")) {
   await shot(await openCampaign(browser, { panel: ["editor", "c2-m001"] }), "m01-editor-en", PHASE7);
   await shot(await openCampaign(browser, { solved: true }), "m01-done-en", PHASE7);
   await shot(await openCampaign(browser, { mission: "c2-m008", run: true, hints: 2 }), "m08-full-en", PHASE7);
-  for (const lang of ["en", "de"]) await shot(await openCampaign(browser, { lang, mission: "c2-m016", passed: true }), `m16-trial-${lang}`, PHASE7);
+  for (const lang of ["en", "de"]) await shot(await openCampaign(browser, { lang, mission: "c2-m016", applied: true }), `m16-applied-${lang}`, PHASE7);
   await shot(await openCampaign(browser, { mission: "c2-m005", hints: 3 }), "m05-hints-en", PHASE7);
   await shot(await openCampaign(browser, { lang: "de", mission: "c2-m020", chosen: "sawmill" }), "m20-reserve-de", PHASE7);
   await shot(await openCampaign(browser, { mission: "c2-m025", solved: true, chosen: "workshop" }), "m25-done-en", PHASE7);
@@ -521,7 +521,7 @@ await browser.close();
 
 if (want("campaign")) {
   const safari = await webkit.launch();
-  await shot(await openCampaign(safari, { context: IPAD, mission: "c2-m016", passed: true }), "m16-ipad", PHASE7);
+  await shot(await openCampaign(safari, { context: IPAD, mission: "c2-m016", applied: true }), "m16-ipad", PHASE7);
   await safari.close();
 }
 

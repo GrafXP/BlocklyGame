@@ -9,7 +9,7 @@ import { RECIPES } from "./recipes.js";
 import { areaCells, cellAt, setKind } from "./terrain.js";
 import { thing } from "./things.js";
 
-// Setting the scene for a mission, and for each of its trials (PLAN.md §9,
+// Setting the scene for a mission (PLAN.md §9,
 // “Missions stand alone”; docs/campaign-plan.md, “Checkpoints, resources, and
 // reliable goals”). The campaign's island grows from mission to mission, and
 // a mission's setup is written as what it changes on the island the mission
@@ -207,13 +207,3 @@ export function enter(world, setup, { things = [], programs = world.programs, re
   return world;
 }
 
-// A trial's stage, made at the end of the tick the trial before was passed
-// (objectives.js): everything under way stops, the stage is made, and every
-// program starts again from its start, as at the beginning of the mission.
-export function stageTrial(world, spec) {
-  stopAll(world);
-  stage(world, spec);
-  for (const [id, program] of entries(spec.run)) thing(world, id).own = program;
-  const parked = world.entities.filter((e) => e.runtime?.parked).map((e) => e.id);
-  startAll(world, { parked, baskets: spec.robots });
-}

@@ -11,7 +11,7 @@ import { CHAPTER_6 } from "./chapter6.js";
 // far, the foundation, chapters 1–5. It took the first campaign's place on 18
 // October 2026, the first campaign's missions and saves let go. A mission is
 //
-//   { id, n, chapter, main, workspace, focus, requires?, setup, goals | trials,
+//   { id, n, chapter, main, workspace, focus, requires?, setup, goals,
 //     programs, blocks, reward?, look, problems?, predict?, scaffold?,
 //     reference, budget?, steps, milestone?, unlocks? }
 //
@@ -33,8 +33,9 @@ import { CHAPTER_6 } from "./chapter6.js";
 //   on its own: made on the island before mission 1 (Robo 1, the camp and the
 //   grove: island.js) with nothing of another mission's (src/campaign.js), as
 //   the map branches after mission 60.
-// - goals, or trials: what must happen (src/sim/objectives.js); trials are
-//   starting variations [{ stage, goals }], the first's stage made at the start.
+// - goals: what must happen (src/sim/objectives.js), one goal, met from the
+//   setup: no trials, no second start (decided 19 October 2026). A child sees
+//   one thing to do, and the world checks just that.
 // - programs: its programs, the focus and any background support that works
 //   already, [{ id, name, source }]; reward: commands given when it's done.
 // - blocks: the blocks it introduces. Its toolbox offers those and the blocks

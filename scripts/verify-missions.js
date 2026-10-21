@@ -5,7 +5,7 @@
 //
 // - its starter programs alone don't do it: the lesson needs the child (and a
 //   Repair or Change lesson's program needs its fault fixed, or its change);
-// - its reference solution does, every trial, within the mission's steps,
+// - its reference solution does, within the mission's steps,
 //   taking no more raw materials than its budget, the world keeping its rules
 //   after every tick;
 // - its toolbox offers every block the solution uses, its goals' stores have
@@ -30,7 +30,7 @@ function playReference(mission, world, library, rules) {
   const done = playMission(world, commands, mission.steps, (w) => {
     if (rules && !problems.length) for (const p of checkWorld(w)) problems.push(`${mission.id} at step ${w.tick}: ${p}`);
   });
-  if (!done) problems.push(`${mission.id}: not done in ${mission.steps} steps (trial ${world.mission.trial + 1} of ${world.mission.trials.length})`);
+  if (!done) problems.push(`${mission.id}: not done in ${mission.steps} steps`);
   for (const [item, n] of Object.entries(world.mission.collected)) {
     if (n > (mission.budget?.[item] ?? 0)) problems.push(`${mission.id}: took ${n} ${item} from the deposits, its budget is ${mission.budget?.[item] ?? 0}`);
   }
