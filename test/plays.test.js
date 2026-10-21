@@ -89,7 +89,7 @@ test("a mission done goes on to the next from its start, keeping nothing of the 
       ["c2-m002"],
       "its own programs alone",
     );
-    assert.deepEqual(session.rules().blocks, ["robot_go_to", "robot_collect"]);
+    assert.deepEqual(session.rules().blocks, ["robot_go_to", "robot_pick_up"]);
 
     const again = (await reload()).usePlay("campaign");
     assert.equal(again.mission.id, "c2-m002");

@@ -2,7 +2,7 @@ import { act, block, chain, input, mine, number, workspace } from "../src/conten
 
 // Programs for tests, written as Blockly's JSON (src/content/build.js) with
 // short block ids, so a test can say which block it expects: program(go("a",
-// "pile"), collect("b")) is "when started: go to pile, collect wood".
+// "pile"), pickUp("b")) is "when started: go to pile, pick up wood".
 
 export const start = (id = "start") => block("island_when_started", id);
 export const program = (...blocks) => workspace(chain(start(), ...blocks));
@@ -11,8 +11,7 @@ export const program = (...blocks) => workspace(chain(start(), ...blocks));
 // `${id}-item`), or a block over it, such as a setting: go("g", my("s",
 // "destination")).
 export const go = (id, place) => act("robot_go_to", id, place);
-export const collect = (id, item = "wood") => act("robot_collect", id, item);
-export const pickUp = (id, item) => act("robot_pick_up", id, item);
+export const pickUp = (id, item = "wood") => act("robot_pick_up", id, item);
 export const my = mine;
 export const unload = (id) => block("robot_unload", id);
 export const make = (id, item = "plank") => block("building_make", id, { fields: { ITEM: item } });

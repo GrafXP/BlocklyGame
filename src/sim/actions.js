@@ -1,5 +1,5 @@
 import { reason } from "./codes.js";
-import { ITEMS, RAW, TYPES, can, typeOf } from "./entities.js";
+import { ITEMS, TYPES, can, typeOf } from "./entities.js";
 import { available, reserve, release, room, settle } from "./inventory.js";
 import { INBOX_SIZE, deliver, queued } from "./messages.js";
 import { findPath } from "./navigation.js";
@@ -9,7 +9,7 @@ import { setKind } from "./terrain.js";
 import { thing, thingAt } from "./things.js";
 
 // Actions: what a robot or building is doing, over whole ticks (PLAN.md §4, §6).
-// An entity's runtime asks for one with an intent, such as { type: "collect",
+// An entity's runtime asks for one with an intent, such as { type: "pickUp",
 // item: "wood" }. If the world is ready, the action starts: it reserves what it
 // will take and the room for what it will leave, and keeps those holds until it
 // ends. Started in tick T with duration d (at least 1), it ends in tick T + d,
@@ -19,7 +19,7 @@ import { thing, thingAt } from "./things.js";
 // Action data is plain and serializable:
 //
 //   { type: "move", target, path: [cells], start, end, perCell, nav }
-//   { type: "collect" | "pickUp", from, item, start, end, holds }
+//   { type: "pickUp", from, item, start, end, holds }  from a deposit or a building
 //   { type: "unload", to, start, end, holds }
 //   { type: "make", recipe, start, end, holds }
 //   { type: "wait", start, end }
@@ -48,17 +48,12 @@ const STARTS = {
     return { action: action("move", now, (path.length - 1) * perCell, { target, path, perCell, nav: world.nav }) };
   },
 
-  collect(world, robot, { item }, now) {
-    if (!RAW.includes(item)) return { error: reason("error.collect", { item }) };
-    const node = thingAt(world, robot.cell, (t) => t.kind === "node" && TYPES[t.type].yields === item);
-    if (!node) return { error: reason("error.notHere", { action: "collect" }) };
-    return take(world, robot, node, item, now, "collect", typeOf(robot).collectTicks);
-  },
-
+  // One `item` from whatever here has it: a building that stores it, or a
+  // deposit that yields it. Taking from a deposit takes longer.
   pickUp(world, robot, { item }, now) {
-    const building = thingAt(world, robot.cell, (t) => t.kind === "building" && (t.store.caps?.[item] ?? 0) > 0);
-    if (!building) return { error: reason("error.notHere", { action: "pickUp" }) };
-    return take(world, robot, building, item, now, "pickUp", typeOf(robot).pickUpTicks);
+    const from = thingAt(world, robot.cell, (t) => (t.kind === "node" ? TYPES[t.type].yields === item : t.kind === "building" && (t.store.caps?.[item] ?? 0) > 0));
+    if (!from) return { error: reason("error.notHere", { action: "pickUp" }) };
+    return take(world, robot, from, item, now, typeOf(robot).pickUpTicks[from.kind]);
   },
 
   // Everything in the basket goes into the building here, or nothing does.
@@ -114,13 +109,13 @@ const STARTS = {
 export const ACTIONS = Object.keys(STARTS);
 
 // One `item` from `from` into the robot's basket.
-function take(world, robot, from, item, now, type, ticks) {
+function take(world, robot, from, item, now, ticks) {
   const have = available(from.store, item);
   if (have < 1) return { wait: reason("wait.item", { item, at: from.id, need: 1, have: Math.max(0, have) }) };
   const free = room(robot.store, item);
   if (free < 1) return { wait: reason("wait.space", { item, at: robot.id, need: 1, free: Math.max(0, free) }) };
   const holds = [reserve(world, from.id, "out", item, 1), reserve(world, robot.id, "in", item, 1)];
-  return { action: action(type, now, ticks, { from: from.id, item, holds }) };
+  return { action: action("pickUp", now, ticks, { from: from.id, item, holds }) };
 }
 
 // Moves `entity`'s action on to tick `now`: "done" when it has ended (call

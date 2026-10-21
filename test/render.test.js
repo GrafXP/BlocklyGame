@@ -84,7 +84,7 @@ test("a robot faces the way it walks, and the building it's at; robots sharing a
   const from = cellCentre(w.terrain, a.path[0]);
   const to = cellCentre(w.terrain, a.path[1]);
   assert.ok(near(headingOf(w, r1), Math.atan2(to.x - from.x, to.z - from.z)));
-  runUntil(w, () => r1.action?.type === "collect");
+  runUntil(w, () => r1.action?.type === "pickUp");
   const grove = areaCentre(w.terrain, byId(w, "grove").area);
   const here = cellCentre(w.terrain, r1.cell);
   assert.ok(near(headingOf(w, r1), Math.atan2(grove.x - here.x, grove.z - here.z)));

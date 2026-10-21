@@ -58,7 +58,8 @@ export { reasonOf, statusOf } from "./status.js";
 //    missing setting lets a robot stopped for it go on; robots can be added.
 // 7: a mission is one start and its goals, without trials; a goal can ask for
 //    kinds unloaded together.
-export const SIM_VERSION = 7;
+// 8: one Pick Up for deposits and buildings: Collect is gone.
+export const SIM_VERSION = 8;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -248,7 +249,7 @@ export function advanceWorld(world, commands = []) {
     } else if (result.wait) {
       entity.pending = { intent, order: pending?.order ?? world.serial++, since: pending?.since ?? now, reason: result.wait, nav: world.nav };
       trace.waiting.push({ entity: entity.id, reason: result.wait });
-      if (intent.type === "pickUp" && result.wait.code === "wait.item") recordWait(world, entity);
+      if (intent.type === "pickUp" && result.wait.code === "wait.item") recordWait(world, entity, result.wait.at);
     } else {
       entity.pending = null;
       entity.error = blame(entity, result.error);

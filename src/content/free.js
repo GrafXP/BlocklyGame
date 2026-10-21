@@ -44,7 +44,7 @@ export function freeContent(layout = LAYOUT) {
   const programs = [
     island("collector"),
     island("courier"),
-    { id: "courier-depot", name: ref("programName.courierDepot"), source: carry("courier-depot", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "depot" }) },
+    { id: "courier-depot", name: ref("programName.courierDepot"), source: carry("courier-depot", { from: "sawmill", item: "plank", to: "depot" }) },
     island("stones"),
     island("fetch"),
     island("planks"),

@@ -47,8 +47,6 @@ export function describeReason(world, reason) {
     case "error.notHere":
     case "program.cannot":
       return t(reason.code, { action: actionName(reason.action) });
-    case "error.collect":
-      return t(reason.code, { item: t(`item.${reason.item}`) });
     case "error.setting":
       return t(reason.code, { setting: t(`setting.${reason.setting}`) });
     case "place.taken":
@@ -71,9 +69,8 @@ export function describeAction(world, entity) {
   switch (a.type) {
     case "move":
       return t("action.move", { place: placeName(world, a.target) });
-    case "collect":
     case "pickUp":
-      return t(`action.${a.type}`, { amount: amount(a.item, 1) });
+      return t("action.pickUp", { amount: amount(a.item, 1) });
     case "unload": {
       const out = {};
       for (const { dir, item, n } of a.holds) if (dir === "out") out[item] = n;

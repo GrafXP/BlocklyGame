@@ -28,7 +28,7 @@ export const CHAPTER_4 = [
     look: "sawmill",
     problems: [{ entity: "r1", code: "wait.item", key: "fewer" }],
     predict: true,
-    reference: { programs: { "c2-m016": program("c2-m016", (p) => p.workspace(p.start(p.repeat(p.stock("plank", "sawmill"), p.pickUp()), p.go("depot"), p.unload()))) } },
+    reference: { programs: { "c2-m016": program("c2-m016", (p) => p.workspace(p.start(p.repeat(p.stock("plank", "sawmill"), p.pickUp("plank")), p.go("depot"), p.unload()))) } },
     steps: 200,
   },
   // If, with a comparison: make a plank only when the shelf has fewer than
@@ -63,7 +63,7 @@ export const CHAPTER_4 = [
     reference: {
       programs: {
         "c2-m018": program("c2-m018", (p) =>
-          p.workspace(p.start(p.when(p.compare(p.stock("plank", "sawmill"), "GT", 0), [p.go("sawmill"), p.pickUp(), p.go("depot"), p.unload()], [p.go("grove"), p.collect(), p.go("sawmill"), p.unload()]))),
+          p.workspace(p.start(p.when(p.compare(p.stock("plank", "sawmill"), "GT", 0), [p.go("sawmill"), p.pickUp("plank"), p.go("depot"), p.unload()], [p.go("grove"), p.pickUp(), p.go("sawmill"), p.unload()]))),
         ),
       },
     },
@@ -86,7 +86,7 @@ export const CHAPTER_4 = [
     predict: true,
     reference: {
       programs: {
-        "c2-m019": program("c2-m019", (p) => p.workspace(p.start(p.until(p.compare(p.stock("plank", "sawmill"), "GTE", 2)), p.go("sawmill"), p.pickUp(), p.pickUp(), p.go("depot"), p.unload()))),
+        "c2-m019": program("c2-m019", (p) => p.workspace(p.start(p.until(p.compare(p.stock("plank", "sawmill"), "GTE", 2)), p.go("sawmill"), p.pickUp("plank"), p.pickUp("plank"), p.go("depot"), p.unload()))),
       },
     },
     steps: 400,
@@ -106,12 +106,12 @@ export const CHAPTER_4 = [
     }),
     programs: [
       blank("c2-m020", 20, sawmill),
-      named("c2-m020-collector", 20, robo(1), program("c2-m020-collector", (p) => p.workspace(p.start(p.forever(p.go("grove"), p.collect(), p.go("sawmill"), p.unload()))))),
+      named("c2-m020-collector", 20, robo(1), program("c2-m020-collector", (p) => p.workspace(p.start(p.forever(p.go("grove"), p.pickUp(), p.go("sawmill"), p.unload()))))),
       named(
         "c2-m020-courier",
         20,
         robo(2),
-        program("c2-m020-courier", (p) => p.workspace(p.start(p.repeat(2, p.until(p.compare(p.stock("plank", "sawmill"), "GTE", 2)), p.go("sawmill"), p.pickUp(), p.go("depot"), p.unload())))),
+        program("c2-m020-courier", (p) => p.workspace(p.start(p.repeat(2, p.until(p.compare(p.stock("plank", "sawmill"), "GTE", 2)), p.go("sawmill"), p.pickUp("plank"), p.go("depot"), p.unload())))),
       ),
     ],
     blocks: [],

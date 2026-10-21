@@ -8,11 +8,11 @@ import { blank } from "./chapter1.js";
 // and 9 changes a working program.
 
 const atCamp = (id) => ({ robots: { r1: { at: "camp", basket: {} } }, run: { r1: id } });
-// One trip from the camp to the grove and back, collecting `take` times.
-const trip = (p, take = 1) => [p.go("grove"), ...(take === 1 ? [p.collect()] : [p.repeat(take, p.collect())]), p.go("camp"), p.unload()];
+// One trip from the camp to the grove and back, picking up `take` times.
+const trip = (p, take = 1) => [p.go("grove"), ...(take === 1 ? [p.pickUp()] : [p.repeat(take, p.pickUp())]), p.go("camp"), p.unload()];
 
 export const CHAPTER_2 = [
-  // Repeat does what's inside it a number of times: two Collects in one.
+  // Repeat does what's inside it a number of times: two Pick Ups in one.
   {
     id: "c2-m006",
     workspace: "build",
@@ -23,7 +23,7 @@ export const CHAPTER_2 = [
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 2 }],
     look: "r1",
     predict: true,
-    reference: { programs: { "c2-m006": program("c2-m006", (p) => p.workspace(p.start(p.repeat(2, p.collect()), p.go("camp"), p.unload()))) } },
+    reference: { programs: { "c2-m006": program("c2-m006", (p) => p.workspace(p.start(p.repeat(2, p.pickUp()), p.go("camp"), p.unload()))) } },
     budget: { wood: 2 },
     steps: 120,
   },
@@ -44,13 +44,13 @@ export const CHAPTER_2 = [
     budget: { wood: 3 },
     steps: 400,
   },
-  // Three Collects before unloading: the third waits for room in the basket.
+  // Three Pick Ups before unloading: the third waits for room in the basket.
   {
     id: "c2-m008",
     workspace: "repair",
     focus: "c2-m008",
     setup: atCamp("c2-m008"),
-    programs: [named("c2-m008", 8, robo(1), program("c2-m008", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.collect(), p.collect(), p.collect(), p.go("camp"), p.unload())))))],
+    programs: [named("c2-m008", 8, robo(1), program("c2-m008", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.pickUp(), p.pickUp(), p.pickUp(), p.go("camp"), p.unload())))))],
     blocks: [],
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 4 }],
     look: "r1",
@@ -84,7 +84,7 @@ export const CHAPTER_2 = [
     workspace: "repair",
     focus: "c2-m010",
     setup: atCamp("c2-m010"),
-    programs: [named("c2-m010", 10, robo(1), program("c2-m010", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect()), p.go("camp"), p.unload()))))],
+    programs: [named("c2-m010", 10, robo(1), program("c2-m010", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.pickUp()), p.go("camp"), p.unload()))))],
     blocks: [],
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 3, exact: true }],
     look: "r1",

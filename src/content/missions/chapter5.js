@@ -18,7 +18,7 @@ const bridged = (add, rest) => ({ add: ["quarry", ...add], bridges: ["site"], ro
 const kits = (id, n, count) => named(id, n, workshop, program(id, (p) => p.workspace(p.start(count === 1 ? p.make("kit") : p.repeat(count, p.make("kit"))))));
 // One kit's ingredients to the workshop: two planks from the sawmill, then a
 // stone from the pit.
-const kitTrips = (p) => [p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload(), p.go("quarry"), p.collect("stone"), p.go("workshop"), p.unload()];
+const kitTrips = (p) => [p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload(), p.go("quarry"), p.pickUp("stone"), p.go("workshop"), p.unload()];
 
 export const CHAPTER_5 = [
   // The familiar trip, for another raw material: stone, across the stream.
@@ -32,7 +32,7 @@ export const CHAPTER_5 = [
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "stone", count: 2 }],
     look: "quarry",
     predict: "point",
-    reference: { programs: { "c2-m021": program("c2-m021", (p) => p.workspace(p.start(p.go("quarry"), p.repeat(2, p.collect("stone")), p.go("camp"), p.unload()))) } },
+    reference: { programs: { "c2-m021": program("c2-m021", (p) => p.workspace(p.start(p.go("quarry"), p.repeat(2, p.pickUp("stone")), p.go("camp"), p.unload()))) } },
     budget: { stone: 2 },
     steps: 400,
   },
@@ -48,7 +48,7 @@ export const CHAPTER_5 = [
     goals: [{ id: "together", type: "together", to: "camp", by: "r1", items: ["wood", "stone"] }],
     look: "r1",
     predict: true,
-    reference: { programs: { "c2-m022": program("c2-m022", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.go("quarry"), p.collect("stone"), p.go("camp"), p.unload()))) } },
+    reference: { programs: { "c2-m022": program("c2-m022", (p) => p.workspace(p.start(p.go("grove"), p.pickUp(), p.go("quarry"), p.pickUp("stone"), p.go("camp"), p.unload()))) } },
     budget: { wood: 1, stone: 1 },
     steps: 500,
   },
@@ -94,7 +94,7 @@ export const CHAPTER_5 = [
     goals: [{ id: "kits", type: "made", at: "workshop", item: "kit", count: 2 }],
     look: "workshop",
     problems: [{ entity: "workshop", code: "wait.item", key: "missing" }],
-    scaffold: { "c2-m025": program("c2-m025", (p) => p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload()))) },
+    scaffold: { "c2-m025": program("c2-m025", (p) => p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload()))) },
     reference: { programs: { "c2-m025": program("c2-m025", (p) => p.workspace(p.start(p.repeat(2, ...kitTrips(p))))) } },
     budget: { stone: 2 },
     steps: 1200,

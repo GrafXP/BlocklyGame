@@ -43,12 +43,12 @@
                         },
                         "DO": {
                           "block": {
-                            "type": "robot_collect",
+                            "type": "robot_pick_up",
                             "id": "9wS`Iitjt!kwr+p3i(zg",
                             "inputs": {
                               "ITEM": {
                                 "shadow": {
-                                  "type": "value_raw",
+                                  "type": "value_item",
                                   "id": "-qeTQnBA%|y|]K}O+53f",
                                   "fields": {
                                     "ITEM": "wood"
@@ -68,12 +68,12 @@
                                 },
                                 "next": {
                                   "block": {
-                                    "type": "robot_collect",
+                                    "type": "robot_pick_up",
                                     "id": "DW[UFnI1Zh,1ka,h4b.S",
                                     "inputs": {
                                       "ITEM": {
                                         "shadow": {
-                                          "type": "value_raw",
+                                          "type": "value_item",
                                           "id": "WkWont~TRqf~|tZJ{0O6",
                                           "fields": {
                                             "ITEM": "stone"

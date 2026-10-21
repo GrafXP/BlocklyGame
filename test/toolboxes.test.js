@@ -19,7 +19,7 @@ test("a robot's toolbox has a robot's actions and senses, and none of a building
   const robot = toolboxFor(["helper"]);
   assert.deepEqual(categories(robot), ["%{BKY_CAT_START}", "%{BKY_CAT_ROBOT}", "%{BKY_CAT_CONTROL}", "%{BKY_CAT_SENSING}", "%{BKY_CAT_VALUES}", "%{BKY_CAT_MEMORY}", "%{BKY_CAT_ROUTINES}", "%{BKY_CAT_MESSAGES}"]);
   const types = blocksIn(robot);
-  for (const type of ["robot_go_to", "robot_collect", "robot_pick_up", "robot_unload", "control_wait_steps", "control_wait_until", "sense_basket", "sense_stock"]) assert.ok(types.includes(type), type);
+  for (const type of ["robot_go_to", "robot_pick_up", "robot_unload", "control_wait_steps", "control_wait_until", "sense_basket", "sense_stock"]) assert.ok(types.includes(type), type);
   for (const type of ["building_make", "building_build"]) assert.ok(!types.includes(type), type);
 });
 

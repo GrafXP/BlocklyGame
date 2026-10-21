@@ -230,7 +230,7 @@ function addUnload(unloads, key, n) {
 // before the world settles it (world.js, phase 2). An unload counts what went
 // into the building, by item and in all, for the robot and for anyone, and an
 // unload of several kinds the kinds it held together; a make what it made; a
-// collect what it took from the deposit.
+// pick-up from a deposit what it took.
 export function recordWork(world, entity) {
   const tally = world.mission?.tally;
   const a = entity.action;
@@ -250,14 +250,15 @@ export function recordWork(world, entity) {
     if (kinds.includes("+")) for (const by of [entity.id, "*"]) tally.together[`${a.to}|${by}|${kinds}`] = (tally.together[`${a.to}|${by}|${kinds}`] ?? 0) + 1;
   } else if (a.type === "make") {
     for (const [item, n] of Object.entries(RECIPES[a.recipe].outputs)) tally.made[`${entity.id}|${item}`] = (tally.made[`${entity.id}|${item}`] ?? 0) + n;
-  } else if (a.type === "collect") {
+  } else if (a.type === "pickUp" && thing(world, a.from)?.kind === "node") {
     const { collected } = world.mission;
     collected[a.item] = (collected[a.item] ?? 0) + 1;
   }
 }
 
-// Robot `entity` waited this tick at a building for something to pick up.
-export function recordWait(world, entity) {
+// Robot `entity` waited this tick at `at` for something to pick up: counted at
+// a building, not at a deposit growing back.
+export function recordWait(world, entity, at) {
   const tally = world.mission?.tally;
-  if (tally) tally.waited[entity.id] = (tally.waited[entity.id] ?? 0) + 1;
+  if (tally && thing(world, at)?.kind === "building") tally.waited[entity.id] = (tally.waited[entity.id] ?? 0) + 1;
 }

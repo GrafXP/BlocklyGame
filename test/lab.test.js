@@ -40,9 +40,9 @@ test("the sample program's block ids are unique, and the sample markers point at
 
 test("the sample markers move along their paths, and two robots meet at one block", () => {
   const at = (step) => Object.fromEntries(demoMarkers(step).map((m) => [m.entity.id, m.blockId]));
-  assert.deepEqual(at(0), { r1: "collect", r2: "go-grove", saw: "if" });
-  assert.equal(at(1).r1, "collect", "Robo 1 is on a long action");
-  assert.equal(at(1).r2, "collect", "and Robo 2 catches up with it");
+  assert.deepEqual(at(0), { r1: "pick-up", r2: "go-grove", saw: "if" });
+  assert.equal(at(1).r1, "pick-up", "Robo 1 is on a long action");
+  assert.equal(at(1).r2, "pick-up", "and Robo 2 catches up with it");
   assert.equal(at(2).r1, "go-mill");
 });
 

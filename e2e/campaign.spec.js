@@ -174,7 +174,7 @@ test("the hints answer the problem in view, and the card offers one once everyth
   await expect(page.locator(".coach-hint")).toBeHidden();
   expect(await island(page, () => window.islandPage.selected)).toBe("r1");
   await page.locator(".mission-hint").click();
-  await expect(page.locator(".mission-hints .hint-think")).toHaveText("Think: The basket is full. What must happen before another collection?");
+  await expect(page.locator(".mission-hints .hint-think")).toHaveText("Think: The basket is full. What must happen before Robo 1 can pick up more?");
 });
 
 test("the help offers a start; Starter program goes back to the start block alone, and “Undo changes” brings the blocks back", async ({ page }) => {
@@ -186,14 +186,14 @@ test("the help offers a start; Starter program goes back to the start block alon
   await page.getByRole("button", { name: "Show me a start" }).click();
   await expect(page.locator(".code-title")).toHaveText("Mission 5: Robo 1");
   const blocks = () => island(page, () => window.islandPage.editor().workspace.getAllBlocks(true).filter((b) => !b.isShadow()).map((b) => b.type));
-  expect(await blocks()).toEqual(["island_when_started", "robot_go_to", "robot_collect"]);
+  expect(await blocks()).toEqual(["island_when_started", "robot_go_to", "robot_pick_up"]);
   await page.waitForTimeout(400);
   await page.locator('[data-code="apply"]').click();
   await expect(page.getByRole("button", { name: "Start from nothing" })).toHaveCount(0);
   await page.getByRole("button", { name: "Starter program" }).click();
   expect(await blocks()).toEqual(["island_when_started"]);
   await page.getByRole("button", { name: "Undo changes" }).click();
-  expect(await blocks()).toEqual(["island_when_started", "robot_go_to", "robot_collect"]);
+  expect(await blocks()).toEqual(["island_when_started", "robot_go_to", "robot_pick_up"]);
   expect(await island(page, () => window.islandPage.editor().workspace.getBlockById("c2-m005-start").isDeletable())).toBe(false);
 });
 

@@ -23,7 +23,6 @@ export const CODES = {
   "error.target": ["target"], // there's no thing `target` to go to
   "error.cannot": ["action"], // this robot or building can't do `action`
   "error.notHere": ["action"], // not where `action` can be done
-  "error.collect": ["item"], // `item` isn't one a deposit yields, so it can't be collected
   "error.setting": ["setting"], // the program reads setting `setting`, and none is chosen
   "error.recipient": ["target"], // a message for `target`, which is no robot or building
   "error.busy": ["block"], // a program did more in one tick than it may (never, compiled from blocks)

@@ -22,10 +22,9 @@ const unload = (p) => block("robot_unload", `${p}-unload`);
 const forever = (id, ...body) => block("control_forever", id, { inputs: { DO: input(...body) } });
 const twice = (p, ...body) => block("controls_repeat_ext", `${p}-repeat`, { inputs: { TIMES: number(2, `${p}-times`), DO: input(...body) } });
 
-// Fetches two of `item` from `from` to `to`, again and again: `take` is
-// robot_collect or robot_pick_up.
-export function carry(p, { from, item, take, to }) {
-  return workspace(chain(start(p), forever(`${p}-forever`, goTo(p, from), twice(p, act(take, `${p}-take`, item)), goTo(p, to), unload(p))));
+// Fetches two of `item` from `from` to `to`, again and again.
+export function carry(p, { from, item, to }) {
+  return workspace(chain(start(p), forever(`${p}-forever`, goTo(p, from), twice(p, act("robot_pick_up", `${p}-take`, item)), goTo(p, to), unload(p))));
 }
 
 // The same, from the robot's own source to its own destination, with its own
@@ -37,7 +36,7 @@ export function fetchBySettings(p) {
       forever(
         `${p}-forever`,
         act("robot_go_to", `${p}-go-source`, mine(`${p}-source`, "source")),
-        twice(p, act("robot_collect", `${p}-take`, mine(`${p}-item`, "item"))),
+        twice(p, act("robot_pick_up", `${p}-take`, mine(`${p}-item`, "item"))),
         act("robot_go_to", `${p}-go-destination`, mine(`${p}-destination`, "destination")),
         unload(p),
       ),
@@ -74,9 +73,9 @@ export const builder = (p, what) => workspace(chain(start(p), block("building_bu
 const kits = workspace(chain(start("kits"), forever("kits-forever", block("building_make", "kits-make", { fields: { ITEM: "kit" } }))));
 
 export const ISLAND_PROGRAMS = [
-  { id: "collector", name: ref("programName.collector"), source: carry("collector", { from: "grove", item: "wood", take: "robot_collect", to: "sawmill" }) },
-  { id: "courier", name: ref("programName.courier"), source: carry("courier", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "site" }) },
-  { id: "stones", name: ref("programName.stones"), source: carry("stones", { from: "quarry", item: "stone", take: "robot_collect", to: "depot" }) },
+  { id: "collector", name: ref("programName.collector"), source: carry("collector", { from: "grove", item: "wood", to: "sawmill" }) },
+  { id: "courier", name: ref("programName.courier"), source: carry("courier", { from: "sawmill", item: "plank", to: "site" }) },
+  { id: "stones", name: ref("programName.stones"), source: carry("stones", { from: "quarry", item: "stone", to: "depot" }) },
   { id: "fetch", name: ref("programName.fetch"), source: fetchBySettings("fetch") },
   { id: "planks", name: ref("programName.planks"), source: planks },
   { id: "bridge", name: ref("programName.bridge"), source: builder("bridge", "bridge") },

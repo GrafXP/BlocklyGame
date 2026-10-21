@@ -157,7 +157,7 @@ Production reserves inputs and output capacity when it starts, then consumes inp
 
 Multiple actors requesting the same resource are handled by deterministic FIFO reservation queues, with entity ID as a final tie-breaker. A waiting actor does not retain unrelated reservations. Retry state is explicit and visible.
 
-Action blocks wait rather than fail when the world is not ready. Collect at an empty source, Pick Up with nothing available, Unload into full storage, Make Item without inputs or output space, and Assemble without every part all keep their block active in a visible waiting state, with the missing item or space as the reason. A rejected intent joins the FIFO queue and is retried in each tick's resolution phase; a block is never skipped silently. The campaign depends on this implicit waiting: Wait Until arrives only in mission 19, and mission 8 teaches the basket's limit by letting a third Collect wait visibly. Program errors are reserved for code that cannot work as written, such as a missing or incompatible target.
+Action blocks wait rather than fail when the world is not ready. Pick Up at an empty source or with nothing in store, Unload into full storage, Make Item without inputs or output space, and Assemble without every part all keep their block active in a visible waiting state, with the missing item or space as the reason. A rejected intent joins the FIFO queue and is retried in each tick's resolution phase; a block is never skipped silently. The campaign depends on this implicit waiting: Wait Until arrives only in mission 19, and mission 8 teaches the basket's limit by letting a third Pick Up wait visibly. Program errors are reserved for code that cannot work as written, such as a missing or incompatible target.
 
 When no action is in progress, no message is pending, and every entity is waiting, the world reports a stall. The clock keeps running, and mission hints can point to the waiting entities and their reasons.
 
@@ -204,7 +204,7 @@ For buildings, default programs are keyed by building type. For robots, one help
 
 An entity's program resolves in this order: individual override, then role default, then building-type or chassis default. A robot belongs to at most one role.
 
-In the first release, settings are a fixed set of named slots per entity kind: Source, Destination, and Item for robots; Target Stock for buildings. Programs read them with value blocks such as “my Source”, so one shared program can serve robots with different settings. Children do not define program parameters; procedure inputs in Phase 8 cover parameterised reuse. Mission 22 depends on these setting blocks, which must plug into action inputs (Go To my Destination, Collect my Item), not merely be stored on the entity.
+In the first release, settings are a fixed set of named slots per entity kind: Source, Destination, and Item for robots; Target Stock for buildings. Programs read them with value blocks such as “my Source”, so one shared program can serve robots with different settings. Children do not define program parameters; procedure inputs in Phase 8 cover parameterised reuse. Mission 22 depends on these setting blocks, which must plug into action inputs (Go To my Destination, Pick Up my Item), not merely be stored on the entity.
 
 ### Editing and applying
 
@@ -286,7 +286,7 @@ Given an initial state and a tick-indexed command sequence, continuous play and 
 | Family | In place (Phases 2–4) | Added for the campaign (the mission that first needs it) |
 | --- | --- | --- |
 | Entry | When Started | — |
-| Robot actions | Go To, Collect, Pick Up, Unload, with places and items chosen in dropdowns | Place and item inputs that take setting values, such as Go To my Destination (22) |
+| Robot actions | Go To, Pick Up (from a deposit or a building), Unload, with places and items chosen in dropdowns | Place and item inputs that take setting values, such as Go To my Destination (22) |
 | Building actions | Make Item, Build Blueprint | The workshop's kit (25) |
 | Control | Repeat N, Forever, If/Else, Wait N Steps, Wait Until | — (taught from missions 6, 14, 17, 18, and 19; Wait N Steps only in optional experiments) |
 | Sensing | Stock of an item at a place, items in the basket | — (stock counts are taught from mission 16) |

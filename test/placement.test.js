@@ -6,7 +6,7 @@ import { RECIPES } from "../src/sim/recipes.js";
 import { stateHash } from "../src/sim/replay.js";
 import { advanceWorld, createWorld, reasonOf, statusOf } from "../src/sim/world.js";
 import { byId, run, runUntil } from "./helpers.js";
-import { forever, go, make, pickUp, program, repeat, unload, collect } from "./programs.js";
+import { forever, go, make, pickUp, program, repeat, unload } from "./programs.js";
 
 // Placing buildings (PLAN.md §11, Phase 6): a blueprint fits only on open
 // ground clear of everything, and never cuts a robot off from anything it can
@@ -157,7 +157,7 @@ test("the site builds the workshop from four planks and two stone, and becomes i
 
 test("mission 25's chain: one robot brings four planks in two trips, another two stone in one, and the workshop makes two kits", () => {
   const twoTrips = program(repeat("trips", 2, go("g1", "mill"), repeat("picks", 2, pickUp("p", "plank")), go("g2", "shop"), unload("u")));
-  const stoneTrip = program(go("g1", "pit"), repeat("takes", 2, collect("c", "stone")), go("g2", "shop"), unload("u"));
+  const stoneTrip = program(go("g1", "pit"), repeat("takes", 2, pickUp("c", "stone")), go("g2", "shop"), unload("u"));
   const world = createWorld({
     id: "test",
     version: 1,

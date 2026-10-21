@@ -288,7 +288,7 @@ test("switching language in the lab keeps the program, markers, camera and selec
     live: await lab(page, () => window.island.counts()),
   };
   expect(before.camera.selected).toBe("rock-1");
-  expect(before.markers).toContain("r2@collect");
+  expect(before.markers).toContain("r2@pick-up");
 
   for (const [group, name, lang, selected] of [
     ["Language", "Deutsch", "de", "Ausgewählt: Felsen 1"],

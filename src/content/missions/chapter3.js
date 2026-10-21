@@ -4,9 +4,9 @@ import { named, program } from "./write.js";
 import { blank } from "./chapter1.js";
 
 // Chapter 3, “A Working Island” (docs/campaign-planv2.md): a building's
-// program, Pick Up, one delivery into a building, Forever, and Build. The
-// sawmill wakes up, the depot opens, and the bridge is built: basic free play
-// opens. The child writes one program in each mission; whatever else works
+// program, picking up from a building, one delivery into a building, Forever,
+// and Build. The sawmill wakes up, the depot opens, and the bridge is built:
+// basic free play opens. The child writes one program in each mission; whatever else works
 // already, and is background support.
 
 const sawmill = ref("entity.sawmill");
@@ -27,18 +27,19 @@ export const CHAPTER_3 = [
     reference: { programs: { "c2-m011": program("c2-m011", (p) => p.workspace(p.start(p.make()))) } },
     steps: 60,
   },
-  // Pick Up takes what a building made: two planks to the depot.
+  // Pick Up takes from a building's shelf too, what it made: two planks to the
+  // depot. No new block: the one that takes wood takes planks.
   {
     id: "c2-m012",
     workspace: "build",
     focus: "c2-m012",
     setup: { add: ["sawmill", "depot"], stock: { sawmill: { plank: 2 } }, robots: { r1: { at: "camp", basket: {} } }, run: { r1: "c2-m012" } },
     programs: [blank("c2-m012", 12, robo(1))],
-    blocks: ["robot_pick_up"],
+    blocks: [],
     goals: [{ id: "depot", type: "delivered", to: "depot", item: "plank", count: 2 }],
     look: "sawmill",
     predict: "point",
-    reference: { programs: { "c2-m012": program("c2-m012", (p) => p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("depot"), p.unload()))) } },
+    reference: { programs: { "c2-m012": program("c2-m012", (p) => p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("depot"), p.unload()))) } },
     steps: 300,
   },
   // A delivery puts ingredients where a building can use them: the sawmill
@@ -55,7 +56,7 @@ export const CHAPTER_3 = [
     look: "sawmill",
     problems: [{ entity: "sawmill", code: "wait.item", key: "hungry" }],
     predict: "point",
-    reference: { programs: { "c2-m013": program("c2-m013", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.collect(), p.go("sawmill"), p.unload()))) } },
+    reference: { programs: { "c2-m013": program("c2-m013", (p) => p.workspace(p.start(p.go("grove"), p.pickUp(), p.pickUp(), p.go("sawmill"), p.unload()))) } },
     budget: { wood: 2 },
     steps: 300,
   },
@@ -70,7 +71,7 @@ export const CHAPTER_3 = [
     goals: [{ id: "camp", type: "delivered", to: "camp", item: "wood", count: 4 }],
     look: "r1",
     predict: true,
-    reference: { programs: { "c2-m014": program("c2-m014", (p) => p.workspace(p.start(p.forever(p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload())))) } },
+    reference: { programs: { "c2-m014": program("c2-m014", (p) => p.workspace(p.start(p.forever(p.go("grove"), p.pickUp(), p.pickUp(), p.go("camp"), p.unload())))) } },
     budget: { wood: 6 },
     steps: 400,
   },
@@ -89,8 +90,8 @@ export const CHAPTER_3 = [
     },
     programs: [
       blank("c2-m015", 15, site),
-      named("c2-m015-courier", 15, robo(1), program("c2-m015-courier", (p) => p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("site"), p.unload()))))),
-      named("c2-m015-cross", 15, robo(2), program("c2-m015-cross", (p) => p.workspace(p.start(p.go("quarry"), p.repeat(2, p.collect("stone")), p.go("camp"), p.unload())))),
+      named("c2-m015-courier", 15, robo(1), program("c2-m015-courier", (p) => p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("site"), p.unload()))))),
+      named("c2-m015-cross", 15, robo(2), program("c2-m015-cross", (p) => p.workspace(p.start(p.go("quarry"), p.repeat(2, p.pickUp("stone")), p.go("camp"), p.unload())))),
     ],
     blocks: ["building_build"],
     goals: [{ id: "bridge", type: "built", at: "site" }],

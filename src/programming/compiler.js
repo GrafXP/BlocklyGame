@@ -1,6 +1,6 @@
 import { BLOCKS, SETTING_BLOCKS } from "../blockly/blocks.js";
 import { reason } from "../sim/codes.js";
-import { RAW, TYPES } from "../sim/entities.js";
+import { TYPES } from "../sim/entities.js";
 import { nameText, readWorkspace } from "./adapter.js";
 
 // The compiler (PLAN.md §7): a program's Blockly workspace, as JSON, to the game's
@@ -18,7 +18,7 @@ import { nameText, readWorkspace } from "./adapter.js";
 // has any, its variables, [{ id, name }], for the debugger to show their
 // values. The instructions:
 //
-//   { op: "act", block, intent, args? }                an action: go to, collect, make, send…
+//   { op: "act", block, intent, args? }                an action: go to, pick up, make, send…
 //   { op: "until", block, test }                       Wait Until: stays here while `test` is false
 //   { op: "repeat", block, times, exit }               Repeat N: into the next instruction, or on to `exit`
 //   { op: "forever", block }                           Forever: into the next instruction
@@ -101,7 +101,6 @@ const fieldNumber = (type, field) => BLOCKS.find((b) => b.type === type).args0.f
 // An input gives an expression (`input`), put into the intent or its args below.
 const ACTIONS = {
   robot_go_to: ({ input }, node) => ({ type: "goTo", target: input(node, "PLACE", "place") }),
-  robot_collect: ({ input }, node) => ({ type: "collect", item: input(node, "ITEM", "item") }),
   robot_pick_up: ({ input }, node) => ({ type: "pickUp", item: input(node, "ITEM", "item") }),
   robot_unload: () => ({ type: "unload" }),
   building_make: ({ field }, node) => ({ type: "make", recipe: field.choice(node, "ITEM") }),
@@ -252,7 +251,6 @@ export function compile(source, context = {}) {
         return { expr: { op: "basket", block }, type: "number" };
       case "value_place":
         return { expr: { op: "place", block, value: field.place(node, "PLACE") }, type: "place" };
-      case "value_raw":
       case "value_item":
         return { expr: { op: "item", block, value: field.choice(node, "ITEM") }, type: "item" };
       case "setting_source":
@@ -309,7 +307,6 @@ export function compile(source, context = {}) {
         else if (CONSTANT.has(v.op)) intent[key] = v.value;
         else args[key] = v;
       }
-      if (asked.type === "collect" && typeof intent.item === "string" && !RAW.includes(intent.item)) fail("program.unsupported", { block: node.inputs.ITEM[0].id, type: node.inputs.ITEM[0].type });
       emit({ op: "act", block, intent, ...(Object.keys(args).length && { args }) });
       return;
     }

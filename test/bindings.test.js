@@ -10,7 +10,7 @@ import { stateHash } from "../src/sim/replay.js";
 import { checkWorld } from "../src/sim/validate.js";
 import { advanceWorld, createWorld, reasonOf, statusOf } from "../src/sim/world.js";
 import { byId, run, runUntil, tinyWorld } from "./helpers.js";
-import { collect, go, my, program, unload, wait } from "./programs.js";
+import { go, my, pickUp, program, unload, wait } from "./programs.js";
 
 // Who runs what (PLAN.md §5, §11 Phase 6): an entity's own program, else its
 // team's, else its type's; a change to any of them starts again exactly those
@@ -28,7 +28,7 @@ const publish = (id, revision, edit = (json) => json) => {
 // A field with a wood pile at its west end and a stone pile at its east, a
 // depot between them, and two robots running the shared fetch-once program,
 // "f", each with its own settings.
-const fetchOnce = program(go("gs", my("src", "source")), collect("c", my("it", "item")), go("gd", my("dst", "destination")), unload("u"));
+const fetchOnce = program(go("gs", my("src", "source")), pickUp("c", my("it", "item")), go("gd", my("dst", "destination")), unload("u"));
 function piles({ settings = {}, robots = ["a", "b"] } = {}) {
   const at = { a: [3, 2], b: [5, 2] };
   return createWorld({
@@ -90,11 +90,11 @@ test("robots sharing a program each keep their own place in it, and each reads i
   const intents = (id) => traces.flatMap((t) => t.evaluated.filter((e) => e.entity === id && e.intent).map((e) => e.intent));
   assert.deepEqual(intents("a"), [
     { type: "goTo", target: "woods" },
-    { type: "collect", item: "wood" },
+    { type: "pickUp", item: "wood" },
     { type: "goTo", target: "depot" },
     { type: "unload" },
   ]);
-  assert.deepEqual(intents("b")[1], { type: "collect", item: "stone" });
+  assert.deepEqual(intents("b")[1], { type: "pickUp", item: "stone" });
 });
 
 test("a setting that isn't chosen stops the program at the block that reads it; one changed is read when the block next runs", () => {
@@ -112,6 +112,17 @@ test("a setting that isn't chosen stops the program at the block that reads it; 
   run(world, 1, { [world.tick + 1]: [{ type: "settings", entity: "a", settings: { destination: "woods" } }] });
   assert.equal(byId(world, "a").action.target, "depot");
   assert.equal(byId(world, "a").settings.destination, "woods");
+  assert.deepEqual(checkWorld(world), []);
+});
+
+test("an item the robot's place hasn't got stops its Pick Up there; choosing one it has, it goes on", () => {
+  const world = piles({ settings: { a: { source: "woods", item: "stone", destination: "depot" } }, robots: ["a"] });
+  runUntil(world, (w) => byId(w, "a").error);
+  assert.deepEqual(byId(world, "a").error, { code: "error.notHere", action: "pickUp", block: "c" });
+  run(world, 1, { [world.tick + 1]: [{ type: "settings", entity: "a", settings: { item: "wood" } }] });
+  assert.equal(byId(world, "a").error, null);
+  runUntil(world, (w) => byId(w, "a").runtime.ended);
+  assert.deepEqual(byId(world, "depot").store.items, { wood: 1 });
   assert.deepEqual(checkWorld(world), []);
 });
 

@@ -22,11 +22,10 @@ export const SETTINGS = { source: "place", item: "item", destination: "place" };
 export const TYPES = {
   helper: {
     kind: "robot",
-    can: ["goTo", "collect", "pickUp", "unload", "wait", "send", "basket", "settings"],
+    can: ["goTo", "pickUp", "unload", "wait", "send", "basket", "settings"],
     basket: 2, // items, of any kinds
     perCell: 3, // ticks to walk from a cell to its neighbour
-    collectTicks: 5,
-    pickUpTicks: 3,
+    pickUpTicks: { node: 5, building: 3 }, // to take an item from a deposit, from a building's store
     unloadTicks: 3,
   },
   camp: { kind: "building", can: ["wait", "send"] },
@@ -42,8 +41,3 @@ export const TYPES = {
 
 export const typeOf = (thing) => TYPES[thing.type];
 export const can = (thing, action) => typeOf(thing).can?.includes(action) ?? false;
-
-// The items a deposit yields: what can be collected.
-export const RAW = Object.values(TYPES)
-  .map((t) => t.yields)
-  .filter(Boolean);

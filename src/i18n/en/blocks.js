@@ -30,12 +30,10 @@ export default {
   // %2: a place, from PLACE_*.
   ROBOT_GO_TO: "%1 go to %2",
   ROBOT_GO_TO_TOOLTIP: "Walk to a place on the island.",
-  // %2: wood or stone, from ITEM_*.
-  ROBOT_COLLECT: "%1 collect %2",
-  ROBOT_COLLECT_TOOLTIP: "Put one item from here into the basket.",
-  // %2: what to take, from ITEM_*.
+  // %2: what to take, from ITEM_*: wood or stone from a grove or stone pit,
+  // anything from a building's store.
   ROBOT_PICK_UP: "%1 pick up %2",
-  ROBOT_PICK_UP_TOOLTIP: "Take one item from the building here into the basket.",
+  ROBOT_PICK_UP_TOOLTIP: "Take one item from here into the basket: from a grove, a stone pit or a building.",
   ROBOT_UNLOAD: "%1 unload basket",
   ROBOT_UNLOAD_TOOLTIP: "Put everything in the basket into the building here.",
   // %2: planks or kits, from ITEM_*.

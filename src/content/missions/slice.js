@@ -40,7 +40,7 @@ import { ISLAND_PROGRAMS, carry, start } from "../programs.js";
 // - tools: which of the program library, settings and placing buildings the
 //   player is offered; none unless said.
 
-const courier = carry("courier", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "depot" });
+const courier = carry("courier", { from: "sawmill", item: "plank", to: "depot" });
 
 // The site's start block, and “build bridge” lying below it, not attached.
 const bridge = workspace(start("bridge"), block("building_build", "bridge-build", { x: 40, y: 120, fields: { BLUEPRINT: "bridge" } }));
@@ -71,7 +71,7 @@ export const SLICE = {
   look: "site",
   progress: { at: "site", recipe: "bridge" },
   reference: {
-    courier: carry("courier", { from: "sawmill", item: "plank", take: "robot_pick_up", to: "site" }),
+    courier: carry("courier", { from: "sawmill", item: "plank", to: "site" }),
     bridge: workspace(chain(start("bridge"), block("building_build", "bridge-build", { fields: { BLUEPRINT: "bridge" } }))),
   },
   steps: 600,

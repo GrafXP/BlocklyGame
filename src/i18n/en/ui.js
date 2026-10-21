@@ -134,10 +134,10 @@ export default {
   // What a selected thing is.
   "inspector.robot": "Robot",
   "inspector.building": "Building",
-  // A grove or stone pit, where robots collect wood or stone.
+  // A grove or stone pit, where robots pick up wood or stone.
   "inspector.resource": "Resource",
   // Said of a resource when it's chosen: it does nothing by itself.
-  "inspector.resourceNote": "Robots collect from it. It has no program.",
+  "inspector.resourceNote": "Robots pick up from it. It has no program.",
   // A robot's basket: what's in it, then how full it is.
   "inspector.basket": "Basket",
   // How many there are of how many there's room for: "2 of 4".
@@ -406,7 +406,7 @@ export default {
   // When the mission has several programs to change. {name}: the program's.
   "mission.wholeOf": "Show me the whole program: {name}",
   // The Look hint when a robot or building's program stopped. {name}: it;
-  // {reason}: why, such as “Not in the right place for this: Collect”.
+  // {reason}: why, such as “Not in the right place for this: Pick up”.
   "problem.error": "Look at {name}. Its program stopped: {reason}",
 
   // The mission's goals on its card, each beside pictures. {place}, {robot}:
@@ -483,7 +483,6 @@ export default {
   // What it's doing, more exactly. {place} is a name; {amount} is a count of an
   // item (count.*), {amounts} a list of them.
   "action.move": "On the way to {place}",
-  "action.collect": "Collecting {amount}",
   "action.pickUp": "Picking up {amount}",
   "action.unload": "Unloading {amounts}",
   "action.make": "Making {amount}",
@@ -497,7 +496,6 @@ export default {
   "action.send": "Sending “{message}” to {name}",
   // Actions named on their own, after an error's colon.
   "action.name.goTo": "Go to",
-  "action.name.collect": "Collect",
   "action.name.pickUp": "Pick up",
   "action.name.unload": "Unload",
   "action.name.make": "Make",
@@ -541,8 +539,6 @@ export default {
   "error.target": "No such place: {target}",
   "error.cannot": "Can't do this: {action}",
   "error.notHere": "Not in the right place for this: {action}",
-  // {item}: an item's name, such as “Planks”.
-  "error.collect": "Only wood and stone can be collected, not this: {item}",
   // {setting}: a setting's name, such as “Destination”.
   "error.setting": "Choose a setting first: {setting}",
   // A message for {target}, which isn't a robot or building.

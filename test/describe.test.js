@@ -13,7 +13,7 @@ import { amounts, describeAction, describeReason } from "../src/ui/describe.js";
 // every other language has the same messages, with the same placeholders.
 
 const world = createWorld(ISLAND);
-const SAMPLE = { item: "plank", at: "sawmill", target: "quarry", need: 2, have: 1, free: 0, action: "collect", type: "fly", block: "b1", min: 1, max: 999, limit: 10 };
+const SAMPLE = { item: "plank", at: "sawmill", target: "quarry", need: 2, have: 1, free: 0, action: "pickUp", type: "fly", block: "b1", min: 1, max: 999, limit: 10 };
 
 test("every code the simulation reports has a message, and its words fill every placeholder", () => {
   for (const [code, values] of Object.entries(CODES)) {
@@ -43,7 +43,7 @@ test("every item, action, state and thing built has words", () => {
 test("what a robot or building is doing, in words", () => {
   const doing = (action) => describeAction({ ...world, tick: 10 }, { action });
   assert.equal(doing({ type: "move", target: "site" }), "On the way to Construction site");
-  assert.equal(doing({ type: "collect", item: "wood" }), "Collecting 1 wood");
+  assert.equal(doing({ type: "pickUp", item: "wood" }), "Picking up 1 wood");
   assert.equal(doing({ type: "pickUp", item: "plank" }), "Picking up 1 plank");
   assert.equal(doing({ type: "unload", holds: [{ at: "r1", dir: "out", item: "wood", n: 2 }, { at: "sawmill", dir: "in", item: "wood", n: 2 }] }), "Unloading 2 wood");
   assert.equal(doing({ type: "make", recipe: "plank" }), "Making 1 plank");

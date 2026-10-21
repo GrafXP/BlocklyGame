@@ -196,7 +196,7 @@ if (want("programs")) {
         blocks: {
           languageVersion: 0,
           blocks: [
-            { type: "island_when_started", id: "start", x: 40, y: 90, next: { block: { type: "controls_repeat_ext", id: "repeat", inputs: { DO: { block: { type: "robot_collect", id: "collect", fields: { ITEM: "wood" } } } } } } },
+            { type: "island_when_started", id: "start", x: 40, y: 90, next: { block: { type: "controls_repeat_ext", id: "repeat", inputs: { DO: { block: { type: "robot_pick_up", id: "pick-up", fields: { ITEM: "wood" } } } } } } },
             { type: "robot_unload", id: "stray", x: 70, y: 300 },
           ],
         },

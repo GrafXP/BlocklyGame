@@ -17,7 +17,7 @@ export const LAB_TOOLBOX = {
   kind: "categoryToolbox",
   contents: [
     category("CAT_START", "entry", [block("island_when_started")]),
-    category("CAT_ROBOT", "robot", [block("robot_go_to"), block("robot_collect"), block("robot_unload")]),
+    category("CAT_ROBOT", "robot", [block("robot_go_to"), block("robot_pick_up"), block("robot_unload")]),
     category("CAT_BUILDING", "building", [block("building_make")]),
     category("CAT_CONTROL", "control", [
       block("controls_repeat_ext", { inputs: { TIMES: number(3) } }),
@@ -46,7 +46,6 @@ const recipes = (type) => TYPES[type]?.recipes ?? [];
 // Each block's use, from the robot or building type: whether it can use it.
 const USE = {
   robot_go_to: (type) => can(type, "goTo"),
-  robot_collect: (type) => can(type, "collect"),
   robot_pick_up: (type) => can(type, "pickUp"),
   robot_unload: (type) => can(type, "unload"),
   building_make: (type) => can(type, "make") && recipes(type).some((r) => !RECIPES[r].builds),
@@ -58,7 +57,7 @@ const USE = {
 
 const GAME = [
   ["CAT_START", "entry", [block("island_when_started")]],
-  ["CAT_ROBOT", "robot", [block("robot_go_to"), block("robot_collect"), block("robot_pick_up"), block("robot_unload")]],
+  ["CAT_ROBOT", "robot", [block("robot_go_to"), block("robot_pick_up"), block("robot_unload")]],
   ["CAT_BUILDING", "building", [block("building_make"), block("building_build")]],
   [
     "CAT_CONTROL",

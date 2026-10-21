@@ -59,7 +59,7 @@ async function applyIn(page, id, source) {
 }
 
 const start = (...blocks) => chain(block("island_when_started", "start", { x: 20, y: 20, deletable: false }), ...blocks);
-const trip = (n) => [act("robot_go_to", `go-${n}`, "grove"), act("robot_collect", `collect-${n}`, "wood"), act("robot_go_to", `home-${n}`, "camp"), block("robot_unload", `unload-${n}`)];
+const trip = (n) => [act("robot_go_to", `go-${n}`, "grove"), act("robot_pick_up", `pick-${n}`, "wood"), act("robot_go_to", `home-${n}`, "camp"), block("robot_unload", `unload-${n}`)];
 const repeat = (id, times, ...blocks) => block("controls_repeat_ext", id, { inputs: { TIMES: { shadow: { type: "math_number", id: `${id}-n`, fields: { NUM: times } } }, DO: input(...blocks) } });
 
 test("Memory offers set, change and get of the program's variable; the robot's row shows what it remembers", async ({ page }) => {

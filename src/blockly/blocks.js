@@ -76,7 +76,6 @@ export const RECIPIENTS = [
 // name, the block's type, and its field.
 export const SHADOWS = {
   robot_go_to: { input: "PLACE", type: "value_place", field: "PLACE" },
-  robot_collect: { input: "ITEM", type: "value_raw", field: "ITEM" },
   robot_pick_up: { input: "ITEM", type: "value_item", field: "ITEM" },
 };
 
@@ -106,16 +105,6 @@ export const BLOCKS = [
     nextStatement: null,
     style: "robot_blocks",
     tooltip: "%{BKY_ROBOT_GO_TO_TOOLTIP}",
-  },
-  {
-    type: "robot_collect",
-    message0: "%{BKY_ROBOT_COLLECT}",
-    args0: [icon("collect"), { type: "input_value", name: "ITEM", check: "Item" }],
-    inputsInline: true,
-    previousStatement: null,
-    nextStatement: null,
-    style: "robot_blocks",
-    tooltip: "%{BKY_ROBOT_COLLECT_TOOLTIP}",
   },
   {
     type: "robot_pick_up",
@@ -224,8 +213,8 @@ export const BLOCKS = [
     style: "sensing_blocks",
     tooltip: "%{BKY_SENSE_BASKET_TOOLTIP}",
   },
-  // The values an action's input starts with: a place, an item to collect, an
-  // item to pick up. They're the robot's colour, a lighter part of its block.
+  // The values an action's input starts with: a place, an item to pick up.
+  // They're the robot's colour, a lighter part of its block.
   {
     type: "value_place",
     message0: "%1",
@@ -235,17 +224,9 @@ export const BLOCKS = [
     tooltip: "%{BKY_VALUE_PLACE_TOOLTIP}",
   },
   {
-    type: "value_raw",
-    message0: "%1",
-    args0: [{ type: "field_dropdown", name: "ITEM", options: RAW }],
-    output: "Item",
-    style: "robot_blocks",
-    tooltip: "%{BKY_VALUE_ITEM_TOOLTIP}",
-  },
-  {
     type: "value_item",
     message0: "%1",
-    args0: [{ type: "field_dropdown", name: "ITEM", options: [...MADE, ...RAW] }],
+    args0: [{ type: "field_dropdown", name: "ITEM", options: [...RAW, ...MADE] }],
     output: "Item",
     style: "robot_blocks",
     tooltip: "%{BKY_VALUE_ITEM_TOOLTIP}",

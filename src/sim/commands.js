@@ -174,11 +174,11 @@ const COMMANDS = {
     const changes = Object.entries(settings);
     if (!changes.every(([slot, value]) => slot in SETTINGS && fitsSetting(world, slot, value))) return false;
     for (const [slot, value] of changes) e.settings[slot] = value;
-    // A robot stopped because the setting it read wasn't chosen, or held an
-    // item it can't collect, goes on now that one is: its program is still at
-    // that block, which it tries again next tick.
+    // A robot stopped because the setting it read wasn't chosen, or because
+    // nothing here has the item it was to pick up, goes on now that one is
+    // chosen: its program is still at that block, which it tries again next tick.
     const fixed = (slot) => e.settings[slot] !== null && changes.some(([s]) => s === slot);
-    if ((e.error?.code === "error.setting" && fixed(e.error.setting)) || (e.error?.code === "error.collect" && fixed("item"))) e.error = null;
+    if ((e.error?.code === "error.setting" && fixed(e.error.setting)) || (e.error?.code === "error.notHere" && e.error.action === "pickUp" && fixed("item"))) e.error = null;
     return true;
   },
   add(world, { robot: given }) {

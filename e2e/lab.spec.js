@@ -287,9 +287,9 @@ test("markers sit beside their blocks, follow them, and share a block side by si
 
   // One step on, Robo 2 has caught up with Robo 1, which is on a long action.
   await lab(page, () => window.lab.step());
-  await expect.poll(async () => (await lab(page, () => window.lab.markerRects())).filter((m) => m.block === "collect").length).toBe(2);
+  await expect.poll(async () => (await lab(page, () => window.lab.markerRects())).filter((m) => m.block === "pick-up").length).toBe(2);
   ({ marks } = await placed());
-  const [a, b] = marks.filter((m) => m.block === "collect").sort((p, q) => p.rect.left - q.rect.left);
+  const [a, b] = marks.filter((m) => m.block === "pick-up").sort((p, q) => p.rect.left - q.rect.left);
   expect(b.rect.left).toBeGreaterThanOrEqual(a.rect.right);
   expect(Math.abs(a.rect.top - b.rect.top)).toBeLessThan(1);
 });

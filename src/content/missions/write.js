@@ -4,11 +4,11 @@ import { act, block, call, chain, changeVar, getVar, number, routine, send, setV
 // Writing a mission's programs (docs/campaign-plan.md, “Authoring package for
 // each mission”), as Blockly's JSON, with readable block ids: each program's
 // ids begin with its own id and say what the block is, numbered from the
-// second of a kind (m08-collect, m08-collect-2…), so tests, hints and the
+// second of a kind (m08-pick, m08-pick-2…), so tests, hints and the
 // debugger can name them.
 //
 //   const p = writer("m07");
-//   p.workspace(p.start(p.go("grove"), p.collect()), p.loose(p.repeat(3)))
+//   p.workspace(p.start(p.go("grove"), p.pickUp()), p.loose(p.repeat(3)))
 //
 // A program's main stack hangs from its start block, at the top left; loose
 // stacks, blocks a mission lays beside it for the child to use, go below it,
@@ -87,8 +87,7 @@ export function writer(p) {
     // block”), and no mission's toolbox offers another.
     start: (...blocks) => chain(block("island_when_started", id("start"), { x: 20, y: 20, deletable: false }), ...blocks),
     go: (place) => act("robot_go_to", id(`go-${typeof place === "string" ? place : place.type.replace("setting_", "")}`), place),
-    collect: (item = "wood") => act("robot_collect", id("collect"), item),
-    pickUp: (item = "plank") => act("robot_pick_up", id("pick"), item),
+    pickUp: (item = "wood") => act("robot_pick_up", id("pick"), item),
     unload: () => block("robot_unload", id("unload")),
     make: (item = "plank") => block("building_make", id("make"), { fields: { ITEM: item } }),
     build: (what = "bridge") => block("building_build", id("build"), { fields: { BLUEPRINT: what } }),

@@ -170,9 +170,9 @@ const blocksIn = (toolbox) => toolbox.contents.flatMap((c) => c.offers ?? c.cont
 test("each mission's toolbox offers what it and the missions it needs introduced", () => {
   const box = (id, type = "helper") => blocksIn(toolboxFor([type], { blocks: unlockedBlocks(mission(id)) }));
   assert.deepEqual(box("c2-m001"), ["robot_go_to"]);
-  assert.deepEqual(box("c2-m003"), ["robot_go_to", "robot_collect", "robot_unload"]);
-  assert.deepEqual(box("c2-m005"), ["robot_go_to", "robot_collect", "robot_unload"]);
-  assert.deepEqual(box("c2-m006"), ["robot_go_to", "robot_collect", "robot_unload", "controls_repeat_ext"]);
+  assert.deepEqual(box("c2-m003"), ["robot_go_to", "robot_pick_up", "robot_unload"]);
+  assert.deepEqual(box("c2-m005"), ["robot_go_to", "robot_pick_up", "robot_unload"]);
+  assert.deepEqual(box("c2-m006"), ["robot_go_to", "robot_pick_up", "robot_unload", "controls_repeat_ext"]);
   assert.deepEqual(box("c2-m010"), box("c2-m006"));
   assert.deepEqual(box("c2-m011", "sawmill"), ["building_make", "controls_repeat_ext"]);
   assert.deepEqual(box("c2-m015", "site"), ["building_build", "controls_repeat_ext", "control_forever"]);
@@ -186,21 +186,21 @@ test("each mission's toolbox offers what it and the missions it needs introduced
 
 // --- Each lesson's mistake fails as the lesson says ---------------------------------------
 
-test("mission 4: collecting before going to the grove stops Robo 1 where it stands", () => {
+test("mission 4: picking up before going to the grove keeps Robo 1 waiting at the camp, for wood that isn't there", () => {
   const world = playWith("c2-m004");
-  assert.equal(byId(world, "r1").error.code, "error.notHere");
+  assert.deepEqual(byId(world, "r1").pending.reason, { code: "wait.item", item: "wood", at: "camp", need: 1, have: 0 });
   assert.equal(world.mission.done, null);
 });
 
 test("mission 5: two trips of one piece do it too", () => {
-  const twice = write("c2-m005", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.collect(), p.go("camp"), p.unload()))));
+  const twice = write("c2-m005", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.pickUp(), p.go("camp"), p.unload()))));
   assert.notEqual(playWith("c2-m005", { "c2-m005": twice }).mission.done, null);
 });
 
 test("mission 7: three pieces in two trips aren't three trips; three trips of two are", () => {
-  const full = write("c2-m007", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload(), p.go("grove"), p.collect(), p.go("camp"), p.unload())));
+  const full = write("c2-m007", (p) => p.workspace(p.start(p.go("grove"), p.pickUp(), p.pickUp(), p.go("camp"), p.unload(), p.go("grove"), p.pickUp(), p.go("camp"), p.unload())));
   assert.equal(playWith("c2-m007", { "c2-m007": full }).mission.done, null);
-  const twos = write("c2-m007", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload()))));
+  const twos = write("c2-m007", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.pickUp(), p.pickUp(), p.go("camp"), p.unload()))));
   assert.notEqual(playWith("c2-m007", { "c2-m007": twos }).mission.done, null);
 });
 
@@ -214,7 +214,7 @@ test("mission 9: its program as it starts brings two pieces in loads of one, not
   const start = playWith("c2-m009");
   assert.equal(start.mission.done, null);
   assert.equal(byId(start, "camp").store.items.wood, 2);
-  const twice = write("c2-m009", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload()))));
+  const twice = write("c2-m009", (p) => p.workspace(p.start(p.repeat(2, p.go("grove"), p.pickUp(), p.pickUp(), p.go("camp"), p.unload()))));
   assert.notEqual(playWith("c2-m009", { "c2-m009": twice }).mission.done, null);
 });
 
@@ -222,14 +222,14 @@ test("mission 10: the loop without the way home stalls, and a fourth delivery is
   const stalled = playWith("c2-m010");
   assert.ok(stalled.stall, "the world stalls");
   assert.equal(byId(stalled, "r1").pending.reason.code, "wait.space");
-  const four = write("c2-m010", (p) => p.workspace(p.start(p.repeat(4, p.go("grove"), p.collect(), p.go("camp"), p.unload()))));
+  const four = write("c2-m010", (p) => p.workspace(p.start(p.repeat(4, p.go("grove"), p.pickUp(), p.go("camp"), p.unload()))));
   const world = playWith("c2-m010", { "c2-m010": four });
   assert.ok(world.mission.goals[0].failed);
   assert.equal(world.mission.done, null);
 });
 
 test("mission 13: wood taken to the camp leaves the sawmill waiting for it", () => {
-  const camp = write("c2-m013", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.collect(), p.go("camp"), p.unload())));
+  const camp = write("c2-m013", (p) => p.workspace(p.start(p.go("grove"), p.pickUp(), p.pickUp(), p.go("camp"), p.unload())));
   const world = playWith("c2-m013", { "c2-m013": camp });
   assert.equal(byId(world, "sawmill").pending.reason.code, "wait.item");
   assert.equal(world.mission.done, null);
@@ -248,11 +248,11 @@ test("mission 15: the courier alone fills the site but builds nothing; once the 
 });
 
 test("mission 16: one pickup leaves a plank on the shelf; the trip in a Forever does it too", () => {
-  const one = write("c2-m016", (p) => p.workspace(p.start(p.pickUp(), p.go("depot"), p.unload())));
+  const one = write("c2-m016", (p) => p.workspace(p.start(p.pickUp("plank"), p.go("depot"), p.unload())));
   const world = playWith("c2-m016", { "c2-m016": one });
   assert.equal(world.mission.done, null);
   assert.equal(byId(world, "sawmill").store.items.plank, 1);
-  const again = write("c2-m016", (p) => p.workspace(p.start(p.forever(p.go("sawmill"), p.repeat(p.stock("plank", "sawmill"), p.pickUp()), p.go("depot"), p.unload()))));
+  const again = write("c2-m016", (p) => p.workspace(p.start(p.forever(p.go("sawmill"), p.repeat(p.stock("plank", "sawmill"), p.pickUp("plank")), p.go("depot"), p.unload()))));
   assert.notEqual(playWith("c2-m016", { "c2-m016": again }).mission.done, null);
 });
 
@@ -270,8 +270,8 @@ test("mission 17: making without looking fills the shelf past two; looking again
 });
 
 test("mission 18: with the jobs the wrong way round, Robo 1 waits at the empty shelf; inside a Forever, the Else still does it", () => {
-  const plankTrip = (p) => [p.go("sawmill"), p.pickUp(), p.go("depot"), p.unload()];
-  const woodTrip = (p) => [p.go("grove"), p.collect(), p.go("sawmill"), p.unload()];
+  const plankTrip = (p) => [p.go("sawmill"), p.pickUp("plank"), p.go("depot"), p.unload()];
+  const woodTrip = (p) => [p.go("grove"), p.pickUp(), p.go("sawmill"), p.unload()];
   const swapped = write("c2-m018", (p) => p.workspace(p.start(p.when(p.compare(p.stock("plank", "sawmill"), "GT", 0), woodTrip(p), plankTrip(p)))));
   const world = playWith("c2-m018", { "c2-m018": swapped });
   assert.equal(world.mission.done, null);
@@ -281,7 +281,7 @@ test("mission 18: with the jobs the wrong way round, Robo 1 waits at the empty s
 });
 
 test("mission 19: setting off before both planks are ready fails, though both get delivered", () => {
-  const early = write("c2-m019", (p) => p.workspace(p.start(p.go("sawmill"), p.pickUp(), p.pickUp(), p.go("depot"), p.unload())));
+  const early = write("c2-m019", (p) => p.workspace(p.start(p.go("sawmill"), p.pickUp("plank"), p.pickUp("plank"), p.go("depot"), p.unload())));
   const world = playWith("c2-m019", { "c2-m019": early });
   assert.ok(world.mission.goals[0].failed, "Robo 1 waited at the sawmill");
   assert.equal(byId(world, "depot").store.items.plank, 2);
@@ -296,19 +296,19 @@ test("mission 20: a sawmill that makes planks without looking keeps more than tw
 });
 
 test("mission 22: wood and stone brought home on two trips aren't one basket", () => {
-  const apart = write("c2-m022", (p) => p.workspace(p.start(p.go("grove"), p.collect(), p.go("camp"), p.unload(), p.go("quarry"), p.collect("stone"), p.go("camp"), p.unload())));
+  const apart = write("c2-m022", (p) => p.workspace(p.start(p.go("grove"), p.pickUp(), p.go("camp"), p.unload(), p.go("quarry"), p.pickUp("stone"), p.go("camp"), p.unload())));
   const world = playWith("c2-m022", { "c2-m022": apart });
   assert.equal(world.mission.done, null);
   assert.deepEqual(byId(world, "camp").store.items, { wood: 1, stone: 1 }, "both came home, apart");
 });
 
 test("missions 24 and 25: the planks alone leave the workshop waiting for its stone, and one kit's trips make one kit", () => {
-  const planks = write("c2-m024", (p) => p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload())));
+  const planks = write("c2-m024", (p) => p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload())));
   const waiting = playWith("c2-m024", { "c2-m024": planks });
   assert.equal(byId(waiting, "workshop").pending.reason.code, "wait.item");
   assert.equal(waiting.mission.done, null);
   const once = write("c2-m025", (p) =>
-    p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload(), p.go("quarry"), p.collect("stone"), p.go("workshop"), p.unload())),
+    p.workspace(p.start(p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload(), p.go("quarry"), p.pickUp("stone"), p.go("workshop"), p.unload())),
   );
   const world = playWith("c2-m025", { "c2-m025": once });
   assert.equal(world.mission.done, null);
@@ -357,7 +357,7 @@ test("a building is placed only on a plot its mission marks, and every plot it f
 });
 
 test("mission 27: the planks alone leave the site waiting for its stone", () => {
-  const planks = write("c2-m027", (p) => p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload()))));
+  const planks = write("c2-m027", (p) => p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload()))));
   const world = playWith("c2-m027", { "c2-m027": planks });
   assert.equal(byId(world, "workshop").pending.reason.code, "wait.item");
   assert.equal(world.mission.done, null);
@@ -385,7 +385,7 @@ test("mission 29: its job takes the pieces back to the camp, and the site waits 
 
 test("mission 30: the kit's pieces can't go in before the workshop is built; the workshop's bill alone makes no kit", () => {
   const buildOnly = write("c2-m030", (p) =>
-    p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload()), p.go("quarry"), p.repeat(2, p.collect("stone")), p.go("workshop"), p.unload())),
+    p.workspace(p.start(p.repeat(2, p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload()), p.go("quarry"), p.repeat(2, p.pickUp("stone")), p.go("workshop"), p.unload())),
   );
   const world = playWith("c2-m030", { "c2-m030": buildOnly });
   assert.equal(byId(world, "workshop").type, "workshop", "built");

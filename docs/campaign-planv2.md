@@ -102,7 +102,7 @@ Workshop progress grants no implicit main-path prerequisite and does not enlarge
 
 ## Shared world rules and teaching boundaries
 
-1. **Physical actions remain familiar.** Go To finds a route to a named place. Collect takes a raw item from a resource node; Pick Up takes stock from a building. Unload transfers the basket. No coordinates, steering, bucket returns, hunger, thirst, or consumable movement fuel are introduced.
+1. **Physical actions remain familiar.** Go To finds a route to a named place. Pick Up takes one item from where the robot stands: a raw item from a resource node, or stock from a building. Unload transfers the basket. No coordinates, steering, bucket returns, hunger, thirst, or consumable movement fuel are introduced. *Decided 21 October 2026:* Collect and Pick Up are one block. Both offered stone, and a playtester at the stone pit couldn't tell which one worked there. The missions below that set them against each other (33, 37, 93) need another point when they're built.
 2. **Stock belongs somewhere.** Materials must reach the building that uses them. A global total is informational. Source choices for Supply name neutral resource sites or friendly stores, never the recipient itself or an opposing store.
 3. **Capacity matters.** Helpers initially carry two items total, including water and mixed loads. Bigger baskets adds one slot, once per side. Building inputs must fit a whole recipe, outputs a whole batch, and construction sites their whole bill.
 4. **Programs share one clock.** An action finishes before its following block. Make and Pick Up may wait for missing supplies; this is observable, normal behavior. Forever never reaches a block placed after it. One-time construction belongs outside it.
@@ -141,11 +141,11 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 02. One Piece of Wood
 
-“Robo 1 is already beside the trees. Use Collect Wood to put one piece in its basket. Watch the basket picture when the action finishes.”
+“Robo 1 is already beside the trees. Use Pick Up Wood to put one piece in its basket. Watch the basket picture when the action finishes.”
 
 - **Workspace:** Build.
 - **Learn:** An action can change what a robot carries.
-- **Setup and support:** Robo 1 starts at the grove with an empty two-space basket. Introduce Collect Wood in the toolbox; other workers are inactive.
+- **Setup and support:** Robo 1 starts at the grove with an empty two-space basket. Introduce Pick Up Wood in the toolbox; other workers are inactive.
 - **Player task:** Write the collection instruction and run it.
 - **Success:** The robot holds one wood after collection completes.
 - **Hint / talk:** “The robot is already beside the wood.” Ask what changed and what did not.
@@ -167,9 +167,9 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 - **Workspace:** Repair.
 - **Learn:** Debugging means noticing what happened and changing a cause.
-- **Setup and support:** An empty robot starts at camp with a complete four-action program that tries Collect before Go To Grove. Keep the misplaced action unmarked; the toolbox contains the familiar actions.
+- **Setup and support:** An empty robot starts at camp with a complete four-action program that tries Pick Up before Go To Grove. Keep the misplaced action unmarked; the toolbox contains the familiar actions.
 - **Player task:** Inspect the failed action, repair the order, and test the complete delivery. Demonstrate Next block as a navigation control if requested.
-- **Success:** The repaired program delivers one wood without the location error.
+- **Success:** The repaired program delivers one wood. *As built (21 October 2026):* Pick Up at the camp waits there for wood the camp hasn't got; there's no location error.
 - **Hint / talk:** “Which instruction needs the robot to be at the grove?” Change one thing, then try again.
 
 #### 05. Camp Is Ready
@@ -187,11 +187,11 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 06. Again, Please!
 
-“Your robot is already at the grove. Collect two wood and bring them to camp. Repeat runs the instructions inside it as many times as its number says.”
+“Your robot is already at the grove. Pick up two wood and bring them to camp. Repeat runs the instructions inside it as many times as its number says.”
 
 - **Workspace:** Build.
 - **Learn:** Repeat does its inside instructions a chosen number of times.
-- **Setup and support:** An empty robot at the grove and a two-wood camp order. Demonstrate Repeat's meaning separately with a two-clap animation; leave the player's workspace empty apart from Start. Collect is a single toolbox block, never a prepared stack.
+- **Setup and support:** An empty robot at the grove and a two-wood camp order. Demonstrate Repeat's meaning separately with a two-clap animation; leave the player's workspace empty apart from Start. Pick Up is a single toolbox block, never a prepared stack.
 - **Player task:** Build a counted collection loop and the return-and-unload sequence; choose the repeat count.
 - **Success:** Two wood are collected and delivered.
 - **Hint / talk:** “What happens once? How many times should it happen?” Point to each basket space as a round finishes.
@@ -205,7 +205,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Setup and support:** One helper at camp and a pictured three-delivery order. No trip, loop, or ordered loose blocks are supplied.
 - **Player task:** Write a one-item round trip, decide which actions repeat, and set the count for three deliveries.
 - **Success:** Three trips to camp complete, each ending with an unload. *As built (19 October 2026):* the one goal counts the trips; one wood a trip is enough, and two a trip count too.
-- **Hint / talk:** “Which parts must happen on every trip?” Compare repeating Collect with repeating the whole journey.
+- **Hint / talk:** “Which parts must happen on every trip?” Compare repeating Pick Up with repeating the whole journey.
 
 #### 08. Two Basket Spaces
 
@@ -220,13 +220,13 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 09. A Repeat Inside a Repeat
 
-“This program makes two trips, but each trip brings only one wood. Change it so every trip brings a full basket of two, still in two trips. Try a Repeat inside the trip's Repeat to collect them.”
+“This program makes two trips, but each trip brings only one wood. Change it so every trip brings a full basket of two, still in two trips. Try a Repeat inside the trip's Repeat to pick them up.”
 
 - **Workspace:** Change.
 - **Learn:** An inner loop finishes as part of each outer round.
 - **Setup and support:** Provide the complete working two-trip, one-wood-per-trip program because the lesson is about changing its structure. Its outcome (two wood, in two one-item loads) must not already meet the goal. Explain that the inside loop finishes before the rest of that trip; do not highlight a replacement socket.
 - **Player task:** Make each trip's collection happen twice, preferably with an inner loop, and check that both full-basket trips finish.
-- **Success:** Four wood arrive in two full-basket deliveries. Two Collect blocks in a row are an accepted alternative; the goal judges the world, not the blocks.
+- **Success:** Four wood arrive in two full-basket deliveries. Two Pick Up blocks in a row are an accepted alternative; the goal judges the world, not the blocks.
 - **Hint / talk:** “Two pieces for this trip; then the next trip begins.” Animate the two loop counts separately. Do not require multiplication vocabulary.
 
 #### 10. The Loop Detective
@@ -255,14 +255,14 @@ These adapt the original foundation around one editable worker. Missions 13–15
 
 #### 12. The Plank Courier
 
-“Two finished planks are waiting at the sawmill. Program your helper to bring both to the depot. Use Pick Up for items on a building's shelf.”
+“Two finished planks are waiting at the sawmill. Program your helper to bring both to the depot. Pick Up takes things from a building's shelf too.”
 
 - **Workspace:** Build.
-- **Learn:** Pick Up takes a finished item from a building.
-- **Setup and support:** A helper starts at camp; the sawmill holds two planks. Explain Pick Up separately from raw-material Collect. No travel, pickup, unloading, or loop is placed.
-- **Player task:** Write the full journey to the sawmill and depot, including collecting the stored load and unloading it.
+- **Learn:** Pick Up takes a finished item from a building, as it takes wood at the grove.
+- **Setup and support:** A helper starts at camp; the sawmill holds two planks. No new block: mission 2's Pick Up takes from the shelf too. No travel, pickup, unloading, or loop is placed.
+- **Player task:** Write the full journey to the sawmill and depot, including picking up the stored load and unloading it.
 - **Success:** Two planks move from the sawmill into the depot.
-- **Hint / talk:** “Collect finds raw materials. Pick Up takes something stored here.” Use different source pictures as well as words.
+- **Hint / talk:** “The block that took wood at the grove takes planks from a shelf too.”
 
 #### 13. Wood Goes In, Planks Come Out
 
@@ -1015,7 +1015,7 @@ Return to a small peaceful island with wood, stone, and short trips. This chapte
 
 - **Workspace:** Change.
 - **Learn:** Applying an edit to a shared program updates everyone assigned to it.
-- **Setup and support:** Two configured collectors share a complete one-item trip, paused with empty baskets. Show the affected-helpers preview but do not highlight Collect or prescribe a replacement fragment.
+- **Setup and support:** Two configured collectors share a complete one-item trip, paused with empty baskets. Show the affected-helpers preview but do not highlight Pick Up or prescribe a replacement fragment.
 - **Player task:** Decide how to change the carried amount, edit once, and test both full-basket deliveries.
 - **Success:** Both helpers use the revised shared program and complete a two-item delivery of their configured material.
 - **Hint / talk:** “Who will use this change?” Compare both baskets. Restart from a clean mission checkpoint for comparisons; cargo-preserving live edits have their own later lesson in 99.
@@ -1605,7 +1605,7 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 
 ### What the engine can teach today
 
-- Missions 01–25, 81–84, and workshops A01–A15 use only what exists: wood, raw stone, planks, kits, the bridge, the workshop and its placement; Go To, Collect, Pick Up, Unload, Make and Build; Repeat, Forever, If, Else and Wait Until; stock and comparisons; shared programs, teams, settings and own copies; variables, blocks of one's own, and messages.
+- Missions 01–25, 81–84, and workshops A01–A15 use only what exists: wood, raw stone, planks, kits, the bridge, the workshop and its placement; Go To, Pick Up, Unload, Make and Build; Repeat, Forever, If, Else and Wait Until; stock and comparisons; shared programs, teams, settings and own copies; variables, blocks of one's own, and messages.
 - Missions 26–30 also need a goal for a building finished on its construction site (today's `built` goal knows only bridges) and a placement-only goal for 26.
 - Everything else needs engine work first, in the order of the skirmish plan's stages: water, food, charge packs and paid assembly (31–40); Supply, declared targets, Needs, Space and Ready to Make, stone blocks, charcoal, iron and buildings with two recipes (41–60, 85); gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105).
 

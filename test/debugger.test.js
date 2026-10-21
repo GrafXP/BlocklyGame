@@ -8,7 +8,7 @@ import { runtimeOf } from "../src/sim/runtimes.js";
 import { createWorld } from "../src/sim/world.js";
 import { takeSnapshot, entryIn } from "../src/ui/snapshot.js";
 import { bot, byId, tinyWorld } from "./helpers.js";
-import { collect, compare, go, num, program, stock, until, wait, when } from "./programs.js";
+import { compare, go, num, pickUp, program, stock, until, wait, when } from "./programs.js";
 
 // The world-wide debugger (PLAN.md §6, §8, §11 Phase 4): Step to Next Block on
 // the one clock, and the snapshot every execution view draws from.
@@ -89,7 +89,7 @@ test("with nothing chosen, or one that can't go on, Next block stops when anyone
 });
 
 test("Next block stops when the whole world stalls, and gives up after its limit", () => {
-  const stalled = createGame(tinyWorld({ entities: [bot("r1", [5, 1], "p")], nodes: [pile(0)], programs: { p: program(collect("c")) } }));
+  const stalled = createGame(tinyWorld({ entities: [bot("r1", [5, 1], "p")], nodes: [pile(0)], programs: { p: program(pickUp("c")) } }));
   assert.equal(stalled.nextBlock("r1"), 1);
   assert.ok(stalled.world.stall, "collecting at an empty pile, with nothing else going on");
   assert.equal(stalled.nextBlock("r1"), 1, "stalled: nothing can change, so it stops at once");

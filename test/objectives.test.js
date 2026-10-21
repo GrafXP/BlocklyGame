@@ -5,7 +5,7 @@ import { createMission, goalProblem, goalProgress } from "../src/sim/objectives.
 import { checkWorld } from "../src/sim/validate.js";
 import { advanceWorld, createWorld, statusOf } from "../src/sim/world.js";
 import { byId, run, runUntil } from "./helpers.js";
-import { collect, forever, go, make, my, pickUp, program, repeat, unload } from "./programs.js";
+import { forever, go, make, my, pickUp, program, repeat, unload } from "./programs.js";
 
 // The mission engine of Phase 7 (src/sim/objectives.js; docs/campaign-plan.md,
 // “Checkpoints, resources, and reliable goals”): goals count work that has
@@ -37,7 +37,7 @@ function world({ entities, programs, mission }) {
 const goal = (w, id) => w.mission.goals.find((g) => g.id === id);
 
 // Brings wood from the pile to the depot, `n` trips of `take` each.
-const trips = (n, take = 1) => program(repeat("r", n, go("g1", "pile"), repeat("t", take, collect("c")), go("g2", "depot"), unload("u")));
+const trips = (n, take = 1) => program(repeat("r", n, go("g1", "pile"), repeat("t", take, pickUp("c")), go("g2", "depot"), unload("u")));
 
 test("a delivery counts once the unload has ended, by item, by robot, and in full baskets only when asked", () => {
   const w = world({
@@ -66,7 +66,7 @@ test("a delivery counts once the unload has ended, by item, by robot, and in ful
 });
 
 test("different kinds unloaded together count as one basket, by robot; one kind twice doesn't", () => {
-  const mixed = program(go("g1", "pile"), collect("c"), go("g2", "mill"), pickUp("k", "plank"), go("g3", "depot"), unload("u"));
+  const mixed = program(go("g1", "pile"), pickUp("c"), go("g2", "mill"), pickUp("k", "plank"), go("g3", "depot"), unload("u"));
   const w = world({
     entities: [bot("a", [3, 1], "p"), bot("b", [3, 2], "q")],
     programs: { p: mixed, q: trips(1, 2) },
@@ -94,7 +94,7 @@ test("an exact order is judged once the work is over, and one too many fails it"
   assert.equal(statusOf(byId(right, "a")), "stopped", "met only once Robo a's program is over");
 
   // Forever never stops: three are there, but more are on their way.
-  const going = exact(3, program(forever("f", go("g1", "pile"), collect("c"), go("g2", "depot"), unload("u"))));
+  const going = exact(3, program(forever("f", go("g1", "pile"), pickUp("c"), go("g2", "depot"), unload("u"))));
   runUntil(going, (w) => goalProgress(w, w.mission.goals[0]).have === 3);
   assert.equal(going.mission.goals[0].done, null);
   runUntil(going, (w) => w.mission.goals[0].failed !== null);
@@ -179,7 +179,7 @@ test("goals are checked as they're written", () => {
 });
 
 test("a robot stopped because a setting wasn't chosen goes on once it is", () => {
-  const w = world({ entities: [bot("a", [3, 1], "p")], programs: { p: program(go("g", my("s", "source")), collect("c")) }, mission: { goals: [{ id: "w", type: "holds", robot: "a", item: "wood", count: 1 }] } });
+  const w = world({ entities: [bot("a", [3, 1], "p")], programs: { p: program(go("g", my("s", "source")), pickUp("c")) }, mission: { goals: [{ id: "w", type: "holds", robot: "a", item: "wood", count: 1 }] } });
   run(w, 2);
   assert.deepEqual(byId(w, "a").error, { code: "error.setting", setting: "source", block: "s" });
   run(w, 1, { [w.tick + 1]: [{ type: "settings", entity: "a", settings: { destination: "depot" } }] });

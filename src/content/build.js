@@ -23,9 +23,9 @@ export const input = (...blocks) => ({ block: chain(...blocks) });
 export const number = (n, id) => ({ shadow: { type: "math_number", id, fields: { NUM: n } } });
 
 // The choice each shadow's dropdown starts at, as Blockly gives it: its first.
-const FIRST = { value_place: "grove", value_raw: "wood", value_item: "plank" };
+const FIRST = { value_place: "grove", value_item: "wood" };
 
-// Robot action `type` (go to, collect, pick up) with id `id`, its input
+// Robot action `type` (go to, pick up) with id `id`, its input
 // holding `value`: a place or an item, in the shadow block the toolbox gives
 // it, whose id is `id` and the input's name (`${id}-place`, `${id}-item`); or a
 // block, such as a setting, over that shadow, which then holds `under`, the

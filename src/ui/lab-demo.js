@@ -14,7 +14,7 @@ export function demoProgram() {
         TIMES: number(3, "times"),
         DO: input(
           act("robot_go_to", "go-grove", "grove"),
-          act("robot_collect", "collect", "wood"),
+          act("robot_pick_up", "pick-up", "wood"),
           act("robot_go_to", "go-mill", "sawmill"),
           block("robot_unload", "unload"),
         ),
@@ -54,8 +54,8 @@ export function demoProgram() {
 // steps each one takes per block, so a robot on a long action falls behind and
 // the two meet.
 export const DEMO_ENTITIES = [
-  { id: "r1", name: ref("entity.robo", { n: 1 }), colour: "#c2410c", ink: "#ffffff", shape: "circle", every: 2, path: ["repeat", "go-grove", "collect", "go-mill", "unload"], at: 2 },
-  { id: "r2", name: ref("entity.robo", { n: 2 }), colour: "#1864ab", ink: "#ffffff", shape: "square", every: 1, path: ["repeat", "go-grove", "collect", "go-mill", "unload"], at: 1 },
+  { id: "r1", name: ref("entity.robo", { n: 1 }), colour: "#c2410c", ink: "#ffffff", shape: "circle", every: 2, path: ["repeat", "go-grove", "pick-up", "go-mill", "unload"], at: 2 },
+  { id: "r2", name: ref("entity.robo", { n: 2 }), colour: "#1864ab", ink: "#ffffff", shape: "square", every: 1, path: ["repeat", "go-grove", "pick-up", "go-mill", "unload"], at: 1 },
   { id: "saw", name: ref("entity.sawmill"), colour: "#24733a", ink: "#ffffff", shape: "triangle", every: 1, path: ["forever", "if", "make"], at: 1 },
 ];
 

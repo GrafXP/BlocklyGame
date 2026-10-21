@@ -210,7 +210,7 @@ export const programRuntime = {
 
 // --- Checking compiled programs ----------------------------------------------
 
-const ROUTES = { goTo: "target", collect: "item", pickUp: "item", make: "recipe" };
+const ROUTES = { goTo: "target", pickUp: "item", make: "recipe" };
 const CMPS = ["EQ", "NEQ", "LT", "LTE", "GT", "GTE"];
 const isId = (value) => typeof value === "string" && value.length > 0;
 

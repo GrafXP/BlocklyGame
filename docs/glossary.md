@@ -12,7 +12,7 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | gap (where a block plugs into another) | Lücke | |
 | condition (true or false) | Bedingung; stimmt, stimmt nicht | “Wartet, bis die Bedingung stimmt”. Children say *stimmt* more than *wahr*. |
 | wait until … | warte bis … | Like Blockly's “wiederhole bis”. |
-| pick up (from a building) | nimm | “nimm Bretter”. Collecting (from a grove, a stone pit) is *sammle*. |
+| pick up (from a grove, a stone pit or a building) | nimm | “nimm Holz”, “nimm Bretter”. One block wherever the robot stands; there is no *sammle* block (decided 21 October 2026). |
 | build | baue | “baue Brücke”. |
 | stopped (nothing more to do) | angehalten | |
 | on the way to: … | unterwegs zu: … | With a colon, so any place fits without an article. |
@@ -29,7 +29,7 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | stone pit | Steinbruch | |
 | bridge | Brücke | |
 | wood | Holz | |
-| stone | Steine | Plural on blocks: “sammle Steine”. |
+| stone | Steine | Plural on blocks: “nimm Steine”. |
 | planks | Bretter | |
 | kits | Bausätze | |
 | tree, rock | Baum, Felsen | Not “Stein”, which is the item. |

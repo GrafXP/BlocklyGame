@@ -21,17 +21,17 @@ const mill = (items = {}, steps = null) => ({
   items,
   ...(steps && { script: { steps, loop: true } }),
 });
-const collect = { type: "collect", item: "wood" };
+const pickUp = { type: "pickUp", item: "wood" };
 
-test("collecting and unloading move items from deposit to basket to building, each when its action ends", () => {
+test("picking up and unloading move items from deposit to basket to building, each when its action ends", () => {
   const world = tinyWorld({
-    entities: [robot("r1", [5, 1], [collect, collect, { type: "goTo", target: "mill" }, { type: "unload" }]), mill()],
+    entities: [robot("r1", [5, 1], [pickUp, pickUp, { type: "goTo", target: "mill" }, { type: "unload" }]), mill()],
     nodes: [pile(3)],
   });
   const [r1, p, m] = ["r1", "pile", "mill"].map((id) => byId(world, id));
   run(world, 1);
   assert.deepEqual([p.store.items, p.store.out, r1.store.in], [{ wood: 3 }, { wood: 1 }, { wood: 1 }], "promised, not yet moved");
-  run(world, 5); // tick 6: the first collect (5 ticks) ends, the second starts
+  run(world, 5); // tick 6: the first pick-up (5 ticks, from a deposit) ends, the second starts
   assert.deepEqual([p.store.items, r1.store.items], [{ wood: 2 }, { wood: 1 }]);
   run(world, 5); // tick 11
   assert.deepEqual([p.store.items, r1.store.items], [{ wood: 1 }, { wood: 2 }]);
@@ -60,27 +60,27 @@ test("on the island, no item is made or lost but by recipes, and every rule hold
 });
 
 test("two robots after the last item: the first in id order gets it, the other waits, and gets the next", () => {
-  const world = tinyWorld({ entities: [robot("r1", [5, 1], [collect]), robot("r2", [5, 1], [collect])], nodes: [pile(1)] });
+  const world = tinyWorld({ entities: [robot("r1", [5, 1], [pickUp]), robot("r2", [5, 1], [pickUp])], nodes: [pile(1)] });
   const traces = run(world, 2, { 3: [{ type: "stock", at: "pile", item: "wood", count: 2 }] });
-  assert.deepEqual(traces[0].started, [{ entity: "r1", type: "collect" }]);
+  assert.deepEqual(traces[0].started, [{ entity: "r1", type: "pickUp" }]);
   assert.deepEqual(byId(world, "r2").pending.reason, { code: "wait.item", item: "wood", at: "pile", need: 1, have: 0 });
   assert.equal(byId(world, "pile").store.items.wood, 1, "still there, but promised to r1");
   const [third] = run(world, 1, { 3: [{ type: "stock", at: "pile", item: "wood", count: 2 }] });
-  assert.deepEqual(third.started, [{ entity: "r2", type: "collect" }]);
+  assert.deepEqual(third.started, [{ entity: "r2", type: "pickUp" }]);
 });
 
 test("intents waiting for the same thing are served in the order they began to wait, whatever the ids", () => {
-  const late = [{ type: "wait", steps: 2 }, collect];
-  const world = tinyWorld({ entities: [robot("r1", [5, 1], late), robot("r2", [5, 1], late), robot("r3", [5, 1], [collect])], nodes: [pile(0)] });
+  const late = [{ type: "wait", steps: 2 }, pickUp];
+  const world = tinyWorld({ entities: [robot("r1", [5, 1], late), robot("r2", [5, 1], late), robot("r3", [5, 1], [pickUp])], nodes: [pile(0)] });
   run(world, 4); // r3 waits from tick 1, r1 and r2 from tick 3
   assert.deepEqual(
     world.entities.map((e) => e.pending?.since),
     [3, 3, 1],
   );
   const [t5] = run(world, 1, { 5: [{ type: "stock", at: "pile", item: "wood", count: 1 }] });
-  assert.deepEqual(t5.started, [{ entity: "r3", type: "collect" }]);
+  assert.deepEqual(t5.started, [{ entity: "r3", type: "pickUp" }]);
   const [t6] = run(world, 1, { 6: [{ type: "stock", at: "pile", item: "wood", count: 2 }] });
-  assert.deepEqual(t6.started, [{ entity: "r1", type: "collect" }], "r1 and r2 began to wait together; r1 is first by id");
+  assert.deepEqual(t6.started, [{ entity: "r1", type: "pickUp" }], "r1 and r2 began to wait together; r1 is first by id");
 });
 
 test("a building's work reserves its inputs and room for its output, so no one else can take them", () => {
@@ -97,14 +97,14 @@ test("a building's work reserves its inputs and room for its output, so no one e
 });
 
 test("a waiting block stays the active one, and runs when the world is ready, skipping nothing", () => {
-  const world = tinyWorld({ entities: [robot("r1", [5, 1], [collect, { type: "wait", steps: 1 }])], nodes: [pile(0)] });
+  const world = tinyWorld({ entities: [robot("r1", [5, 1], [pickUp, { type: "wait", steps: 1 }])], nodes: [pile(0)] });
   const r1 = byId(world, "r1");
   run(world, 10);
   assert.equal(statusOf(r1), "waiting");
   assert.equal(r1.runtime.at, 0);
   assert.equal(r1.pending.since, 1);
   const traces = run(world, 7, { 11: [{ type: "stock", at: "pile", item: "wood", count: 1 }] });
-  assert.deepEqual(traces[0].started, [{ entity: "r1", type: "collect" }]);
+  assert.deepEqual(traces[0].started, [{ entity: "r1", type: "pickUp" }]);
   assert.deepEqual(traces[5].started, [{ entity: "r1", type: "wait" }], "then the next step");
   assert.deepEqual(r1.store.items, { wood: 1 });
 });
@@ -122,9 +122,9 @@ test("unloading into a full store waits until everything fits, then all goes in 
 });
 
 test("cancelling lets go of what an action held and moves nothing; finished work stays done", () => {
-  const world = tinyWorld({ entities: [robot("r1", [5, 1], [collect, collect]), mill({ wood: 1 }, [{ type: "make", recipe: "plank" }])], nodes: [pile(5)] });
+  const world = tinyWorld({ entities: [robot("r1", [5, 1], [pickUp, pickUp]), mill({ wood: 1 }, [{ type: "make", recipe: "plank" }])], nodes: [pile(5)] });
   const [r1, p, m] = ["r1", "pile", "mill"].map((id) => byId(world, id));
-  run(world, 8); // r1 has one wood and is collecting the second; the mill is making a plank
+  run(world, 8); // r1 has one wood and is picking up the second; the mill is making a plank
   assert.deepEqual(r1.store.items, { wood: 1 });
   const traces = run(world, 1, {
     9: [
@@ -184,7 +184,7 @@ test("a robot with no way waits, is tried again only when the ways change, and g
 });
 
 test("when nothing is under way and every robot left is waiting, the world reports a stall, until something changes", () => {
-  const world = tinyWorld({ entities: [robot("r1", [5, 1], [collect])], nodes: [pile(0)] });
+  const world = tinyWorld({ entities: [robot("r1", [5, 1], [pickUp])], nodes: [pile(0)] });
   run(world, 5);
   assert.deepEqual(world.stall, { since: 1 });
   run(world, 1, { 6: [{ type: "stock", at: "pile", item: "wood", count: 1 }] });
@@ -193,7 +193,7 @@ test("when nothing is under way and every robot left is waiting, the world repor
   assert.equal(statusOf(byId(world, "r1")), "stopped");
   assert.equal(world.stall, null, "stopped with nothing to wait for isn't a stall");
 
-  const growing = tinyWorld({ entities: [robot("r1", [5, 1], [collect])], nodes: [pile(0, { regrow: { every: 10 } })] });
+  const growing = tinyWorld({ entities: [robot("r1", [5, 1], [pickUp])], nodes: [pile(0, { regrow: { every: 10 } })] });
   run(growing, 5);
   assert.equal(growing.stall, null, "the pile is growing back");
 });
@@ -211,7 +211,7 @@ test("a deposit grows back one item every so many ticks, up to its cap", () => {
 test("what can't work as written is an error, with its reason, until a restart", () => {
   const world = tinyWorld({
     entities: [
-      robot("r1", [1, 1], [collect]),
+      robot("r1", [1, 1], [pickUp]),
       robot("r2", [1, 2], [{ type: "goTo", target: "nowhere" }]),
       robot("r3", [1, 3], [{ type: "unload" }]),
       mill({}, [{ type: "goTo", target: "pile" }]),
@@ -223,7 +223,7 @@ test("what can't work as written is an error, with its reason, until a restart",
     world.entities.map((e) => e.error),
     [
       { code: "error.cannot", action: "goTo" },
-      { code: "error.notHere", action: "collect" },
+      { code: "error.notHere", action: "pickUp" },
       { code: "error.target", target: "nowhere" },
       { code: "error.notHere", action: "unload" },
     ],
@@ -231,7 +231,7 @@ test("what can't work as written is an error, with its reason, until a restart",
   assert.ok(world.entities.every((e) => statusOf(e) === "error"));
   run(world, 5);
   assert.ok(world.entities.every((e) => !e.action && !e.pending), "nothing more happens");
-  run(world, 1, { 7: [{ type: "script", entity: "r1", steps: [{ type: "goTo", target: "pile" }, collect] }] });
+  run(world, 1, { 7: [{ type: "script", entity: "r1", steps: [{ type: "goTo", target: "pile" }, pickUp] }] });
   assert.equal(byId(world, "r1").error, null);
   assert.equal(byId(world, "r1").action.type, "move");
 });

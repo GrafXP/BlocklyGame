@@ -120,7 +120,7 @@ export function blocksUsed(source) {
 
 // Blocks every program has, or holds without offering them: the start block,
 // and the values an action's gap starts with.
-const ALWAYS = ["island_when_started", "value_place", "value_raw", "value_item"];
+const ALWAYS = ["island_when_started", "value_place", "value_item"];
 const GAME_BLOCKS = new Set(BLOCKS.map((b) => b.type));
 // Blockly's own blocks a mission may use, by the names their unlocks go by.
 const BUILT_IN = ["controls_repeat_ext", "controls_if", "controls_if_else", "logic_compare", "math_number", "variables_set", "math_change", "variables_get", "procedures_defnoreturn", "procedures_callnoreturn"];

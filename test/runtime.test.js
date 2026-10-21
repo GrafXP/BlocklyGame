@@ -10,7 +10,7 @@ import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { createWorld, reasonOf, statusOf } from "../src/sim/world.js";
 import { stateHash } from "../src/sim/replay.js";
 import { bot, byId, run, runUntil, tinyWorld } from "./helpers.js";
-import { basket, collect, compare, forever, go, make, num, program, repeat, stock, unload, until, wait, when } from "./programs.js";
+import { basket, compare, forever, go, make, num, pickUp, program, repeat, stock, unload, until, wait, when } from "./programs.js";
 
 // Programs on the world clock (PLAN.md §6, §7, §12): one visible block an
 // entity a tick at most, long actions keeping their block, waits that wait, and
@@ -39,7 +39,7 @@ test("the start block takes no step; every other block takes one tick, loops and
 });
 
 test("a long action keeps its block active; the block after it runs in the very tick it ends", () => {
-  const world = tinyWorld({ entities: [bot("r1", [1, 1], "p")], nodes: [pile(5)], programs: { p: program(go("g", "pile"), collect("c"), unload("u")) } });
+  const world = tinyWorld({ entities: [bot("r1", [1, 1], "p")], nodes: [pile(5)], programs: { p: program(go("g", "pile"), pickUp("c"), unload("u")) } });
   const traces = run(world, 18);
   const r1 = (t) => t.states.find((s) => s.entity === "r1");
   // Four cells at 3 ticks a cell: on the way from tick 1 to tick 13.
@@ -47,8 +47,8 @@ test("a long action keeps its block active; the block after it runs in the very 
   for (const t of traces.slice(0, 12)) assert.deepEqual(r1(t), { entity: "r1", state: "moving", block: "g" }, `tick ${t.tick}`);
   assert.deepEqual(r1(traces[12]), { entity: "r1", state: "working", block: "c" });
   assert.deepEqual(traces[12].ended, [{ entity: "r1", type: "move" }]);
-  assert.deepEqual(traces[12].started, [{ entity: "r1", type: "collect" }], "collecting starts the tick the walk ends");
-  // Collecting takes 5 ticks; then Unload, with no building here, can't work,
+  assert.deepEqual(traces[12].started, [{ entity: "r1", type: "pickUp" }], "picking up starts the tick the walk ends");
+  // Picking up from a deposit takes 5 ticks; then Unload, with no building here, can't work,
   // and the error names its block.
   assert.equal(seen(traces)[17], "u");
   assert.deepEqual(byId(world, "r1").error, { code: "error.notHere", action: "unload", block: "u" });
@@ -60,7 +60,7 @@ test("Wait Until stays active and waiting while its condition is false; the next
   const world = tinyWorld({
     entities: [bot("r1", [5, 1], "p")],
     nodes: [pile(0)],
-    programs: { p: program(until("u", compare("c", stock("s", "wood", "pile"), "GT", num("n", 0))), collect("k")) },
+    programs: { p: program(until("u", compare("c", stock("s", "wood", "pile"), "GT", num("n", 0))), pickUp("k")) },
   });
   const r1 = byId(world, "r1");
   const waiting = run(world, 5);
@@ -79,8 +79,8 @@ test("Wait Until stays active and waiting while its condition is false; the next
   assert.equal(world.stall, null);
   assert.deepEqual(holds.started, [], "not in the same tick");
   const [next] = run(world, 1);
-  assert.deepEqual(next.evaluated, [{ entity: "r1", block: "k", intent: { type: "collect", item: "wood" } }]);
-  assert.deepEqual(next.started, [{ entity: "r1", type: "collect" }]);
+  assert.deepEqual(next.evaluated, [{ entity: "r1", block: "k", intent: { type: "pickUp", item: "wood" } }]);
+  assert.deepEqual(next.started, [{ entity: "r1", type: "pickUp" }]);
 });
 
 test("If takes the first branch whose condition holds, in order, or else the else", () => {
@@ -140,8 +140,8 @@ test("a damaged program that never reaches a visible block stops with an error, 
 });
 
 test("what a program senses is the world as it stood before any program ran this tick, whichever runs first", () => {
-  // One robot collects from the pile; another waits until the pile has less.
-  // The collect's wood leaves the pile when the collect ends, in tick 6, and the
+  // One robot picks up from the pile; another waits until the pile has less.
+  // The pick-up's wood leaves the pile when the pick-up ends, in tick 6, and the
   // other sees it go in that tick, whether it runs before the collector or after.
   for (const [collector, watcher] of [
     ["a", "b"],
@@ -150,7 +150,7 @@ test("what a program senses is the world as it stood before any program ran this
     const world = tinyWorld({
       entities: [bot(collector, [5, 1], "take"), bot(watcher, [5, 1], "watch")],
       nodes: [pile(5)],
-      programs: { take: program(collect("k")), watch: program(until("u", compare("c", stock("s", "wood", "pile"), "LT", num("five", 5))), wait("w", 1)) },
+      programs: { take: program(pickUp("k")), watch: program(until("u", compare("c", stock("s", "wood", "pile"), "LT", num("five", 5))), wait("w", 1)) },
     });
     const traces = run(world, 7);
     const tests = traces.map((t) => t.evaluated.find((e) => e.entity === watcher)?.test);
@@ -175,19 +175,19 @@ test("publishing a new revision starts exactly the entities running it again, ba
     tinyWorld({
       entities: [bot("r1", [5, 1], "p"), bot("r2", [5, 1], "q")],
       nodes: [pile(9)],
-      programs: { p: program(collect("k1"), collect("k2")), q: program(forever("f", wait("w", 3))) },
+      programs: { p: program(pickUp("k1"), pickUp("k2")), q: program(forever("f", wait("w", 3))) },
     });
   const world = fresh();
   const twin = fresh(); // the same world, given nothing
   const r1 = byId(world, "r1");
-  run(world, 8); // r1 has one wood and is collecting another
+  run(world, 8); // r1 has one wood and is picking up another
   run(twin, 9);
   assert.deepEqual([r1.store.items, r1.runtime.block, byId(world, "pile").store.out], [{ wood: 1 }, "k2", { wood: 1 }]);
   const revision = { id: "p", revision: 2, ...compile(program(wait("new", 1))).program };
   const [trace] = run(world, 1, { 9: [{ type: "publish", program: revision }] });
   assert.deepEqual(trace.commands, [{ ok: true }]);
   assert.deepEqual([r1.store.items, byId(world, "pile").store.out], [{}, {}], "the basket is emptied; the second's hold is gone");
-  assert.deepEqual(byId(world, "pile").store.items, { wood: 8 }, "the wood collected left the pile for good");
+  assert.deepEqual(byId(world, "pile").store.items, { wood: 8 }, "the wood picked up left the pile for good");
   assert.equal(r1.runtime.revision, 2);
   assert.deepEqual(r1.runtime.evaluated, { block: "new", tick: 9 }, "from its start, in the same tick");
   assert.deepEqual(world.programs.map((p) => `${p.id} ${p.revision}`), ["p 2", "q 1"]);
@@ -199,7 +199,7 @@ test("a robot given a program starts with an empty basket; a building keeps its 
     tinyWorld({
       entities: [bot("r1", [5, 1], "p", { items: { wood: 2 } }), mill("m", { wood: 3 })],
       nodes: [pile(9)],
-      programs: { p: program(wait("w", 3)), q: program(collect("k")), m: program(make("mk")) },
+      programs: { p: program(wait("w", 3)), q: program(pickUp("k")), m: program(make("mk")) },
     });
   // Once it has begun its program, what it carries is that program's load.
   const assigned = fresh();
@@ -235,13 +235,13 @@ test("a parked program takes no steps and counts as stopped; a publish keeps it 
     terrain: ["~~~~~~~~~~", "~........~", "~........~", "~........~", "~~~~~~~~~~"],
     entities: [{ ...bot("r1", [5, 1], "p", { items: { wood: 1 } }), parked: true }],
     nodes: [pile(9)],
-    programs: [{ id: "p", source: program(collect("k")) }],
+    programs: [{ id: "p", source: program(pickUp("k")) }],
   });
   const r1 = byId(world, "r1");
   assert.deepEqual([r1.runtime.parked, statusOf(r1)], [true, "stopped"]);
   assert.deepEqual(run(world, 10).flatMap((t) => t.evaluated), []);
   assert.equal(world.stall, null, "stopped, not waiting: nothing stalls");
-  const p2 = { id: "p", revision: 2, ...compile(program(collect("k2"))).program };
+  const p2 = { id: "p", revision: 2, ...compile(program(pickUp("k2"))).program };
   run(world, 1, { 11: [{ type: "publish", program: p2 }] });
   assert.deepEqual([r1.runtime.revision, r1.runtime.parked, r1.store.items], [2, true, { wood: 1 }], "parked, at the new revision, its basket as it was");
   const [trace] = run(world, 1, { 12: [{ type: "assign", entity: "r1", program: "p" }] });
@@ -254,11 +254,11 @@ test("a parked program takes no steps and counts as stopped; a publish keeps it 
 });
 
 test("a command that gives a program to what can't run it, or a program that isn't sound, changes nothing", () => {
-  const world = tinyWorld({ entities: [bot("r1", [5, 1], "p"), mill("m")], programs: { p: program(collect("k")), m: program(make("mk")) } });
+  const world = tinyWorld({ entities: [bot("r1", [5, 1], "p"), mill("m")], programs: { p: program(pickUp("k")), m: program(make("mk")) } });
   const before = stateHash(world);
   const good = compile(program(wait("w", 1))).program;
   const bad = [
-    { type: "assign", entity: "mill", program: "p" }, // a sawmill can't collect
+    { type: "assign", entity: "mill", program: "p" }, // a sawmill can't pick up
     { type: "assign", entity: "r1", program: "m" }, // a robot can't make
     { type: "assign", entity: "r1", program: "none" },
     { type: "assign", entity: "pile", program: "p" },
@@ -267,7 +267,7 @@ test("a command that gives a program to what can't run it, or a program that isn
     { type: "publish", program: { id: "has space", revision: 1, ...good } },
     { type: "publish" },
   ];
-  const world2 = tinyWorld({ entities: [bot("r1", [5, 1], "p"), mill("m")], programs: { p: program(collect("k")), m: program(make("mk")) } });
+  const world2 = tinyWorld({ entities: [bot("r1", [5, 1], "p"), mill("m")], programs: { p: program(pickUp("k")), m: program(make("mk")) } });
   const [trace] = run(world, 1, { 1: bad });
   run(world2, 1);
   assert.deepEqual(

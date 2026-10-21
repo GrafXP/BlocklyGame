@@ -10,7 +10,7 @@ import { checkWorld } from "../src/sim/validate.js";
 import { reasonOf, statusOf } from "../src/sim/world.js";
 import { bot, byId, run, runUntil, tinyWorld } from "./helpers.js";
 import { chain } from "../src/content/build.js";
-import { collect, compare, forever, go, num, repeat, start, unload, until, wait } from "./programs.js";
+import { compare, forever, go, num, pickUp, repeat, start, unload, until, wait } from "./programs.js";
 
 // Phase 8's blocks on the world clock (PLAN.md §7, §11 Phase 8): variables
 // that each robot remembers for itself, blocks of the player's own with one
@@ -61,7 +61,7 @@ test("a variable stays within 99999 either side of 0", () => {
 test("a block of one's own is a step to use, its blocks run one by one, and the next block runs once it's done", () => {
   const source = prog(
     [call("c1", "fetch", place, input({ type: "value_place", id: "v1", fields: { PLACE: "pile" } })), call("c2", "twice"), unload("u")],
-    [routine("d1", "fetch", place, go("g", getVar("gw", place)), collect("k")), routine("d2", "twice", null, wait("w", 1), wait("w2", 1))],
+    [routine("d1", "fetch", place, go("g", getVar("gw", place)), pickUp("k")), routine("d2", "twice", null, wait("w", 1), wait("w2", 1))],
     [place],
   );
   const { program, errors } = compile(source, { type: "helper", places: ["pile", "shed"] });
@@ -161,7 +161,7 @@ test("a world with memories, routines under way and messages saves and loads exa
       programs: {
         a: prog(
           [forever("f", call("c", "trip", place, input({ type: "value_place", id: "v", fields: { PLACE: "shed" } })), changeVar("d", n, 1), send("s", "kitReady", "r2"))],
-          [routine("t", "trip", place, go("gp", "pile"), collect("k"), go("gs", getVar("gw", place)), unload("u"))],
+          [routine("t", "trip", place, go("gp", "pile"), pickUp("k"), go("gs", getVar("gw", place)), unload("u"))],
           [n, place],
         ),
         b: prog([forever("f2", waitFor("t2", "kitReady"), changeVar("d2", n, 1))]),
@@ -186,7 +186,7 @@ test("Wait Until can read a variable: a count down to 0 stops the work", () => {
   const world = tinyWorld({
     entities: [bot("r1", [4, 1], "p"), shed],
     nodes: [pile(9)],
-    programs: { p: prog([setVar("s", left, 2), forever("f", until("u", compare("cmp", getVar("g", left), "GT", num("z", 0))), go("g1", "pile"), collect("k"), go("g2", "shed"), unload("ul"), changeVar("c", left, -1))], [], [left]) },
+    programs: { p: prog([setVar("s", left, 2), forever("f", until("u", compare("cmp", getVar("g", left), "GT", num("z", 0))), go("g1", "pile"), pickUp("k"), go("g2", "shed"), unload("ul"), changeVar("c", left, -1))], [], [left]) },
   });
   runUntil(world, (w) => w.stall);
   assert.equal(byId(world, "shed").store.items.wood, 2);
@@ -210,7 +210,7 @@ test("robots sharing a program with a block of its own compete for one pile; eac
   const count = { id: "count", name: "count" };
   const source = prog(
     [setVar("s", count, 0), repeat("r", 3, call("c", "fetch", place, input({ type: "value_place", id: "v", fields: { PLACE: "shed" } })), changeVar("d", count, 1))],
-    [routine("f", "fetch", place, go("g", "pile"), collect("k"), go("h", getVar("gw", place)), unload("u"))],
+    [routine("f", "fetch", place, go("g", "pile"), pickUp("k"), go("h", getVar("gw", place)), unload("u"))],
     [count, place],
   );
   const world = tinyWorld({ entities: [bot("r1", [4, 1], "p"), bot("r2", [4, 2], "p"), bot("r3", [3, 3], "p"), shed], nodes: [pile(5)], programs: { p: source } });

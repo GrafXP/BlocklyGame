@@ -28,9 +28,9 @@ const PLACE = { type: "place", blueprint: "workshop", ...PLOT };
 // The workshop's bill, from the sawmill's planks and the stone pit: two loads of
 // planks, then one of stone.
 const bill = (p, from = "sawmill", to = "workshop") => [
-  p.repeat(2, p.go(from), p.repeat(2, p.pickUp()), p.go(to), p.unload()),
+  p.repeat(2, p.go(from), p.repeat(2, p.pickUp("plank")), p.go(to), p.unload()),
   p.go("quarry"),
-  p.repeat(2, p.collect("stone")),
+  p.repeat(2, p.pickUp("stone")),
   p.go(to),
   p.unload(),
 ];
@@ -133,7 +133,7 @@ export const CHAPTER_6 = [
     }),
     programs: [
       blank("c2-m030", 30, robo(1)),
-      named("c2-m030-collector", 30, robo(2), program("c2-m030-collector", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.repeat(2, p.collect()), p.go("sawmill"), p.unload()))))),
+      named("c2-m030-collector", 30, robo(2), program("c2-m030-collector", (p) => p.workspace(p.start(p.repeat(3, p.go("grove"), p.repeat(2, p.pickUp()), p.go("sawmill"), p.unload()))))),
       named("c2-m030-mill", 30, ref("entity.sawmill"), program("c2-m030-mill", (p) => p.workspace(p.start(p.repeat(6, p.make()))))),
       builder("c2-m030-site", 30),
       named("c2-m030-kit", 30, workshop, program("c2-m030-kit", (p) => p.workspace(p.start(p.make("kit"))))),
@@ -146,7 +146,7 @@ export const CHAPTER_6 = [
     reference: {
       programs: {
         "c2-m030": program("c2-m030", (p) =>
-          p.workspace(p.start(...bill(p), p.go("sawmill"), p.repeat(2, p.pickUp()), p.go("workshop"), p.unload(), p.go("quarry"), p.collect("stone"), p.go("workshop"), p.unload())),
+          p.workspace(p.start(...bill(p), p.go("sawmill"), p.repeat(2, p.pickUp("plank")), p.go("workshop"), p.unload(), p.go("quarry"), p.pickUp("stone"), p.go("workshop"), p.unload())),
         ),
       },
     },
