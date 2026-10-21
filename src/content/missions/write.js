@@ -22,7 +22,7 @@ import { act, block, call, chain, changeVar, getVar, number, routine, send, setV
 
 // The inputs of blocks that hold statements, rather than a value.
 const insides = (b) =>
-  ({ controls_repeat_ext: ["DO"], control_forever: ["DO"], controls_if: b.extraState?.hasElse ? ["DO0", "ELSE"] : ["DO0"], procedures_defnoreturn: ["STACK"] })[b.type] ?? [];
+  ({ controls_repeat_ext: ["DO"], control_forever: ["DO"], controls_if: b.extraState?.hasElse ? ["DO0", "ELSE"] : ["DO0"], procedures_defnoreturn: ["STACK"], robot_supply: ["FROM"] })[b.type] ?? [];
 
 // Roughly how tall `blocks` are on the workspace, in rows: a statement a row,
 // a loop's or an If's insides (one row when empty) and its foot more.
@@ -91,6 +91,14 @@ export function writer(p) {
     unload: () => block("robot_unload", id("unload")),
     make: (item = "plank") => block("building_make", id("make"), { fields: { ITEM: item } }),
     build: (what = "bridge") => block("building_build", id("build"), { fields: { BLUEPRINT: what } }),
+    // A new robot for team `team`.
+    assemble: (team) => block("building_assemble", id("assemble"), { fields: { TEAM: team } }),
+    // Supply building `to` from the places `from`, in that order.
+    supply: (to, ...from) =>
+      block("robot_supply", id("supply"), {
+        fields: { PLACE: to },
+        inputs: { FROM: { block: chain(...from.map((place) => block("supply_from", id(`from-${place}`), { fields: { PLACE: place } }))) } },
+      }),
     wait: (steps) => block("control_wait_steps", id("wait"), { fields: { STEPS: steps } }),
     repeat: (times, ...blocks) => block("controls_repeat_ext", id("repeat"), { inputs: inputs({ TIMES: gap(times, 2), DO: body(blocks) }) }),
     forever: (...blocks) => block("control_forever", id("forever"), { inputs: inputs({ DO: body(blocks) }) }),
@@ -102,6 +110,8 @@ export function writer(p) {
         inputs: inputs({ IF0: test && { block: test }, DO0: body(then), ELSE: otherwise ? body(otherwise) : undefined }),
       }),
     stock: (item, place) => block("sense_stock", id("stock"), { fields: { ITEM: item, PLACE: place } }),
+    needs: (place, item) => block("sense_needs", id("needs"), { fields: { PLACE: place, ITEM: item } }),
+    space: (item, place) => block("sense_space", id("space"), { fields: { ITEM: item, PLACE: place } }),
     compare: (a, op, b) => block("logic_compare", id("compare"), { fields: { OP: op }, inputs: { A: gap(a, 0), B: gap(b, 0) } }),
     mine: (slot) => block(`setting_${slot}`, id(slot)),
     // Memory: a variable of the program, Set, Change and Get.

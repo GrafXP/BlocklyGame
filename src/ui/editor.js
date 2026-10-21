@@ -82,7 +82,7 @@ export function openEditor(host, { blockly, markers: markerModule, programId, on
   // The island and robot or building type the dropdowns offer choices for;
   // the blocks the play has unlocked, of those they can use.
   const context = { world: currentGame().world, type: types.length === 1 ? types[0] : null, builds };
-  const toolbox = toolboxFor(types, { builds, blocks });
+  const toolbox = toolboxFor(types, { builds, blocks, world: context.world });
   const editor = blockly.createEditor(codeHost, { treatment: DEFAULT_TREATMENT, toolbox: toolbox.contents.length ? toolbox : null, state: doc.draft, context, onChange });
   const warnings = createWarnings(editor.workspace);
   const marks = markerModule.createMarkers(codeHost, editor, blockly.Blockly, { onPick });

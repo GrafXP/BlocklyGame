@@ -140,7 +140,7 @@ test("block dropdowns store the same ids in every language; only their labels ar
     for (const arg of def.args0.filter((a) => a.type === "field_dropdown" || a.type === "field_choice")) {
       for (const [label, value] of arg.options) {
         assert.match(label, /^%\{BKY_\w+\}$/, `${def.type} ${arg.name}`);
-        assert.match(value, /^[a-z][a-zA-Z0-9]*$/, `${def.type} ${arg.name}`);
+        assert.match(value, /^[a-z][a-zA-Z0-9-]*$/, `${def.type} ${arg.name}`);
       }
     }
   }

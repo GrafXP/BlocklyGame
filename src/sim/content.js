@@ -9,7 +9,7 @@ import { cellAt, inside } from "./terrain.js";
 //
 // A robot is { id, type, name, cell: [x, z], items?, role?, settings?,
 // program? }; a building { id, type, name, area, access: [[x, z], …], items?,
-// caps?, program?, blueprint?, gap?, built? }; a deposit { id, type, name,
+// caps?, order?, program?, blueprint?, gap?, built? }; a deposit { id, type, name,
 // area, access, items, caps, regrow? }. `built` is for a construction site
 // whose bridge is already there.
 
@@ -46,6 +46,7 @@ export function makeThing(terrain, given, where = "content") {
     area: { ...given.area },
     access: given.access.map(cell),
     store: makeStore({ items: given.items, caps: given.caps }),
+    ...(given.order && { order: { ...given.order } }),
     ...(blueprint && { blueprint, built: !!given.built }),
     ...(given.gap && { gap: given.gap.map(cell) }),
     ...runner,

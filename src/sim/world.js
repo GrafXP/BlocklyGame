@@ -10,6 +10,7 @@ import { checkGoals, createMission, recordWait, recordWork } from "./objectives.
 import { runtimeOf } from "./runtimes.js";
 import { script } from "./script.js";
 import { statusOf } from "./status.js";
+import { supplyStep } from "./supply.js";
 import { parseTerrain, setKind } from "./terrain.js";
 
 export { reasonOf, statusOf } from "./status.js";
@@ -20,24 +21,26 @@ export { reasonOf, statusOf } from "./status.js";
 // objects, so it saves and loads exactly; robots, buildings and deposits are kept
 // in order of id, and nothing depends on the order of an object's keys.
 //
-//   { sim, content, tick, terrain, nav, serial, programs, roles, defaults, entities, nodes, stall, mission }
+//   { sim, content, tick, terrain, nav, serial, programs, roles, defaults, entities, nodes, limit, stall, mission }
 //
 // `nav` is the navigation revision, counted up whenever the ways change; `serial`
 // numbers waiting intents in the order they started waiting; `programs` are the
 // compiled programs entities can run, { id, revision, …compiled } in order of
 // id (src/programming/compiler.js); `roles` and `defaults` are the teams' and
-// the types' programs (bindings.js); `stall` is { since } while nothing can
-// happen (codes.js); `mission` is the mission being played, with its goals
-// (objectives.js), or null.
+// the types' programs (bindings.js); `limit` is the most robots the island
+// may have, counting those being made (actions.js, robotsCounted), or null for
+// no limit; `stall` is { since } while nothing can happen (codes.js); `mission`
+// is the mission being played, with its goals (objectives.js), or null.
 //
 // An entity (robot or building) is
 //
 //   { id, kind, type, name, own, role?, settings?, cell | area + access, store,
-//     blueprint?, built?, gap?, action, pending, error, runtime }
+//     order?, blueprint?, built?, gap?, action, pending, error, runtime, supply? }
 //
 // with `own` the program given to it alone, a robot's `role` its team and its
 // `settings` what its program's “my source”, “my item” and “my destination”
-// read (entities.js, SETTINGS); a construction site's `blueprint` what it
+// read (entities.js, SETTINGS); a building's `order` what it wants on its
+// shelf, which Supply brings (supply.js); a construction site's `blueprint` what it
 // builds; `action` what it's doing (actions.js), `pending` an intent that's
 // waiting to start { intent, order, since, reason, nav }, `error` the reason its
 // program stopped, and `runtime` what decides its next intent: a program's
@@ -59,7 +62,10 @@ export { reasonOf, statusOf } from "./status.js";
 // 7: a mission is one start and its goals, without trials; a goal can ask for
 //    kinds unloaded together.
 // 8: one Pick Up for deposits and buildings: Collect is gone.
-export const SIM_VERSION = 8;
+// 9: water, food and charge packs, the well, the farm and the fuel station; the
+//    camp makes robots, within the island's robot limit; buildings' orders,
+//    Supply, and what a building needs and has room for.
+export const SIM_VERSION = 9;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -77,7 +83,8 @@ const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 // script follows the script; one with `parked` has its program without
 // starting it (src/programming/runtime.js). Robots start with the `settings`
 // content gives them, and nothing chosen for the rest. A construction site
-// that's `built` has its bridge already. Content with a `mission`
+// that's `built` has its bridge already. Content's `limit` is the most robots
+// the island may have, none when left out. Content with a `mission`
 // (src/content/missions/) makes a world with that mission's goals to meet
 // (objectives.js).
 export function createWorld(content) {
@@ -123,6 +130,7 @@ export function createWorld(content) {
     defaults: defaults.sort((a, b) => (a.type < b.type ? -1 : a.type > b.type ? 1 : 0)),
     entities: entities.sort(byId),
     nodes: nodes.sort(byId),
+    limit: content.limit ?? null,
     stall: null,
     mission: content.mission ? createMission(content.mission) : null,
   };
@@ -195,17 +203,23 @@ export function advanceWorld(world, commands = []) {
   // 1. Commands.
   for (const command of commands) trace.commands.push(applyCommand(world, command));
 
-  // 2. Actions under way, then deposits.
-  for (const entity of world.entities) {
+  // 2. Actions under way, then deposits. A robot made in this phase is there
+  // from now on, with its team's program, and takes its first step in phase 4.
+  for (const entity of [...world.entities]) {
     if (!entity.action) continue;
     const state = progress(world, entity, now);
     if (state === "done") {
       trace.ended.push({ entity: entity.id, type: entity.action.type });
       recordWork(world, entity);
       // A construction site that has become its building starts the program
-      // its new type runs; anything else goes on to its next step.
-      if (finish(world, entity)) rebind(world, [entity]);
-      else runtimeOf(entity)?.done(entity);
+      // its new type runs; anything else goes on to its next step: the next
+      // of its Supply's plan while it has one (supply.js).
+      const ended = finish(world, entity);
+      if (ended?.became) rebind(world, [entity]);
+      else {
+        if (ended?.born) rebind(world, [ended.born]);
+        if (!nextOfPlan(entity)) runtimeOf(entity)?.done(entity);
+      }
     } else if (state.wait) {
       // The way is gone: the move waits to start again from where the robot is.
       entity.pending = { intent: { type: "goTo", target: state.wait.target }, order: world.serial++, since: now, reason: state.wait, nav: world.nav };
@@ -217,10 +231,18 @@ export function advanceWorld(world, commands = []) {
 
   // 3. Messages have arrived, with the Sends that ended in phase 2.
 
-  // 4. Runtimes.
+  // 4. Runtimes; a robot supplying a building has its plan's next step,
+  // with its Supply block still the active one.
   const intents = [];
   for (const entity of world.entities) {
     if (entity.action || entity.pending || entity.error) continue;
+    const planned = supplyStep(entity);
+    if (planned) {
+      const intent = { ...planned };
+      trace.evaluated.push({ entity: entity.id, block: runtimeOf(entity)?.active(entity) ?? null, intent, step: entity.supply.step });
+      intents.push({ entity, intent });
+      continue;
+    }
     const step = runtimeOf(entity)?.next(entity, world, now);
     if (!step) continue;
     const { intent, error, ...seen } = step;
@@ -247,11 +269,14 @@ export function advanceWorld(world, commands = []) {
       entity.pending = null;
       trace.started.push({ entity: entity.id, type: result.action.type });
     } else if (result.wait) {
-      entity.pending = { intent, order: pending?.order ?? world.serial++, since: pending?.since ?? now, reason: result.wait, nav: world.nav };
+      // A Supply waits at the step of its plan it couldn't start.
+      const waiting = result.intent ?? intent;
+      entity.pending = { intent: waiting, order: pending?.order ?? world.serial++, since: pending?.since ?? now, reason: result.wait, nav: world.nav };
       trace.waiting.push({ entity: entity.id, reason: result.wait });
-      if (intent.type === "pickUp" && result.wait.code === "wait.item") recordWait(world, entity, result.wait.at);
+      if ((waiting.type === "pickUp" && result.wait.code === "wait.item") || (waiting.type === "unload" && result.wait.code === "wait.space")) recordWait(world, entity, result.wait.at);
     } else {
       entity.pending = null;
+      delete entity.supply;
       entity.error = blame(entity, result.error);
       trace.errors.push({ entity: entity.id, reason: entity.error });
     }
@@ -278,11 +303,24 @@ function blame(entity, problem) {
 // Nothing under way, nothing growing back, somebody waiting, and nobody ready to
 // go on: everyone else has stopped or failed, so nothing can change until the
 // player does something. (A program going round a loop of conditions without
-// acting is ready, not waiting: it isn't stalled, though it changes nothing.)
+// acting is ready, not waiting: it isn't stalled, though it changes nothing. A
+// Supply with nothing to bring waits a moment: that's waiting too, since it
+// will find nothing again.)
 function stalled(world) {
-  if (world.entities.some((e) => e.action) || world.nodes.some(growing)) return false;
+  if (world.entities.some((e) => e.action && !e.supply?.idle) || world.nodes.some(growing)) return false;
   const states = world.entities.map(statusOf);
   return states.includes("waiting") && !states.includes("ready");
+}
+
+// The step of `entity`'s Supply that has just ended moves its plan on: true
+// while there's another step to take, false, and the plan gone, when it's over
+// or it has none (supply.js).
+function nextOfPlan(entity) {
+  const plan = entity.supply;
+  if (!plan) return false;
+  if (!plan.idle && ++plan.step < plan.steps.length) return true;
+  delete entity.supply;
+  return false;
 }
 
 // A deposit that grows back, one item every regrow.every ticks, up to its cap.

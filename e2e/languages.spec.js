@@ -227,7 +227,7 @@ test.describe("with a German browser", () => {
     expect(await page.locator(".execution-markers text").allTextContents()).toEqual(expect.arrayContaining(["Robo 1", "Robo 2", "Sägewerk"]));
 
     await openDropdown(page, "go-grove-place", "PLACE");
-    expect(await menuTexts(page, ".blocklyDropDownDiv")).toEqual(["Wäldchen", "Sägewerk", "Baustelle", "Lagerhaus", "Camp", "Steinbruch", "Werkstatt"]);
+    expect(await menuTexts(page, ".blocklyDropDownDiv")).toEqual(["Wäldchen", "Sägewerk", "Baustelle", "Lagerhaus", "Camp", "Steinbruch", "Werkstatt", "Wasserquelle", "Beerensträucher", "Brunnen", "Bauernhof", "Ladestation"]);
     await page.locator(".blocklyDropDownDiv .blocklyMenuItem", { hasText: "Lagerhaus" }).click();
     expect(await lab(page, () => window.lab.save().blocks.blocks[0].next.block.inputs.DO.block.inputs.PLACE.shadow.fields.PLACE)).toBe("depot");
 

@@ -1,6 +1,6 @@
 import { TYPES } from "../sim/entities.js";
 import { RECIPES } from "../sim/recipes.js";
-import { BLUEPRINTS, MADE, PLACES } from "./blocks.js";
+import { BLUEPRINTS, ITEM_CHOICES, MADE, PLACES, TEAMS } from "./blocks.js";
 
 // What a "field_choice" dropdown offers in the editor of a program (PLAN.md §7,
 // valid-target dropdowns): only what makes sense on this island, for what will
@@ -23,14 +23,39 @@ const rank = (id) => {
 // The recipes of robot or building type `type`, or null for any.
 const recipesOf = (type) => (type ? (TYPES[type]?.recipes ?? []) : null);
 
+// The places of `world` that `fits`, in the order the game's own places are
+// listed, then by id.
+const placesOf = (world, fits) =>
+  [...world.entities, ...world.nodes]
+    .filter((t) => t.access?.length && fits(t))
+    .sort((a, b) => rank(a.id) - rank(b.id) || (a.id < b.id ? -1 : 1))
+    .map((t) => [labelIn(PLACES, t.id) ?? t.name, t.id]);
+
+// The items there are on `world`'s island: what its deposits yield, what its
+// buildings make or order, and what anything holds.
+function itemsOn(world) {
+  const there = new Set();
+  for (const t of [...world.entities, ...world.nodes]) {
+    if (TYPES[t.type]?.yields) there.add(TYPES[t.type].yields);
+    for (const r of TYPES[t.type]?.recipes ?? []) for (const item of Object.keys(RECIPES[r].outputs)) there.add(item);
+    for (const item of [...Object.keys(t.store?.items ?? {}), ...Object.keys(t.order ?? {})]) there.add(item);
+  }
+  return there;
+}
+
 export const CHOICES = {
   // Every building and deposit on the island a robot can go to, whose store can
-  // be counted, in the order the game's own places are listed, then by id.
-  places: ({ world }) =>
-    [...world.entities, ...world.nodes]
-      .filter((t) => t.access?.length)
-      .sort((a, b) => rank(a.id) - rank(b.id) || (a.id < b.id ? -1 : 1))
-      .map((t) => [labelIn(PLACES, t.id) ?? t.name, t.id]),
+  // be counted.
+  places: ({ world }) => placesOf(world, () => true),
+  // The buildings alone: what can be supplied, and has an order.
+  buildings: ({ world }) => placesOf(world, (t) => t.kind === "building"),
+  // The items there are on the island, in the order the game lists them.
+  items: ({ world }) => {
+    const there = itemsOn(world);
+    return ITEM_CHOICES.filter(([, item]) => there.has(item));
+  },
+  // The island's teams, which a new robot can be made for.
+  teams: ({ world }) => world.roles.map((r) => [labelIn(TEAMS, r.id) ?? r.name, r.id]),
   // Every robot and building, which a message can go to: robots first, then
   // buildings in the order the game's places are listed.
   recipients: ({ world }) =>

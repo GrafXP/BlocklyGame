@@ -10,6 +10,12 @@ const SHAPES = {
   stone: `<path d="M4 17l2.5-7 6-3 6.5 3 1 7z"/><path d="M9 11l3 2 4-2" fill="none"/>`,
   plank: `<rect x="1.5" y="7.5" width="21" height="9" rx="1.5"/><path d="M4.5 10.5h8M9 13.5h10" fill="none"/>`,
   kit: `<path d="M4 9l8-4 8 4v8l-8 4-8-4z"/><path d="M4 9l8 4 8-4M12 13v8" fill="none"/>`,
+  // A bucket of water, an apple for food, a charge pack's battery.
+  water: `<path d="M5 9h14l-1.7 11H6.7z"/><path d="M5.5 9q6.5-7 13 0" fill="none"/><path d="M7.5 12.5q2.3 1.5 4.5 0t4.5 0" fill="none"/>`,
+  food: `<circle cx="12" cy="14" r="6.5"/><path d="M12 7.5c0-2 .9-3.4 2.8-4" fill="none"/><path d="M11.8 7.6c-2.2-1.6-4.6-.9-5.3 1 1.9.9 3.9.6 5.3-1z"/>`,
+  pack: `<rect x="5.5" y="6" width="13" height="15" rx="2"/><path d="M9.5 6V3.5h5V6"/><path d="M13 9.5l-3 4.5h4l-3 4.5" fill="none"/>`,
+  // A new robot, for a goal that makes one.
+  robot: `<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5" fill="none"/><circle cx="12" cy="4" r="1.2"/><path d="M9 13h.01M15 13h.01" fill="none" stroke-width="2.6"/>`,
   bridge: `<path d="M2 11h20v3H2z"/><path d="M4 14v4M20 14v4M4 18q8-6 16 0" fill="none"/><path d="M3 11V8M21 11V8M3 8h18" fill="none"/>`,
   workshop: `<path d="M3 20V11l9-6 9 6v9z"/><path d="M9 20v-5h6v5M16 7V4h2v4.5" fill="none"/>`,
   // Places a robot goes to, and a basket for a trip.
@@ -27,6 +33,10 @@ const COLOURS = {
   stone: ["#aab1b9", "#4d555e"],
   plank: ["#d39a5b", "#7a4a1f"],
   kit: ["#f0a830", "#7a4d06"],
+  water: ["#6db5ea", "#1f5f99"],
+  food: ["#e8594a", "#8a2318"],
+  pack: ["#86d35f", "#2f6b1c"],
+  robot: ["#f4f1ea", "#475467"],
   bridge: ["#a8713f", "#5c3a17"],
   workshop: ["#f4f1ea", "#7a3a26"],
   grove: ["#5fae5a", "#2d6a2a"],

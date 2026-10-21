@@ -7,7 +7,9 @@ import { cellAt, kindOf, setKind } from "../src/sim/terrain.js";
 import { FLOOR_Y, TOP, areaCentre, cellCentre, facing, headingOf, pointAt, sharedSpots } from "../src/render/grid.js";
 import { bridgeParts, terrainGeometry } from "../src/render/terrain.js";
 import { lookFrom, panDelta } from "../src/render/stage.js";
-import { createGrove, createQuarry, createStock, stackSlots } from "../src/render/resources.js";
+import { createBerries, createGrove, createQuarry, createSpring, createStock, stackSlots } from "../src/render/resources.js";
+import { BASE, THINGS } from "../src/content/missions/island.js";
+import { TYPES } from "../src/sim/entities.js";
 import { BUILDINGS } from "../src/render/buildings.js";
 import { createMaterials } from "../src/render/models.js";
 import { identityOf } from "../src/render/identity.js";
@@ -154,20 +156,31 @@ test("items stack in rows across a pad, then deeper, then a layer higher, and st
   assert.equal(new Set(slots.map((s) => s.join())).size, 20, "no two in one place");
 });
 
-test("every building and deposit on the island has a model, and its store shows what it holds", () => {
+test("every building and deposit on the island and in the campaign has a model, and its store shows what it holds", () => {
   const m = createMaterials();
-  for (const t of [...world.entities, ...world.nodes].filter((it) => it.area)) {
-    const make = BUILDINGS[t.type] ?? { grove: createGrove, quarry: createQuarry }[t.type];
-    assert.ok(make, t.type);
-    const { across, deep } = facing(terrain, t);
-    const model = make(m, { across, deep, caps: t.store.caps });
-    assert.ok(model.group.children.length > 0 && model.top > 0, t.id);
-    model.update(world, t, world.tick);
-    const shown = {};
-    model.group.traverse((o) => {
-      if (o.isInstancedMesh) shown[o.material === m.log ? "wood" : o.material === m.stone ? "stone" : o.material === m.plank ? "plank" : "kit"] = o.count;
-    });
-    for (const item of Object.keys(t.store.caps)) assert.equal(shown[item] ?? 0, t.store.items[item] ?? 0, `${t.id} ${item}`);
+  // The campaign's catalogue, every store holding one of each item it can.
+  const campaign = createWorld({
+    ...BASE,
+    terrain: BASE.terrain.map((row) => row.replaceAll("=", "~")),
+    entities: THINGS.filter((t) => t.type !== "helper" && TYPES[t.type].kind === "building" && t.id !== "site"),
+    nodes: THINGS.filter((t) => TYPES[t.type].kind === "node"),
+  });
+  for (const t of [...campaign.entities, ...campaign.nodes]) t.store.items = Object.fromEntries(Object.keys(t.store.caps).map((item) => [item, 1]));
+  const MADE_OF = { log: "wood", stone: "stone", plank: "plank", kit: "kit", water: "water", berry: "food", pack: "pack" };
+  for (const w of [world, campaign]) {
+    for (const t of [...w.entities, ...w.nodes].filter((it) => it.area)) {
+      const make = BUILDINGS[t.type] ?? { grove: createGrove, quarry: createQuarry, spring: createSpring, berries: createBerries }[t.type];
+      assert.ok(make, t.type);
+      const { across, deep } = facing(w.terrain, t);
+      const model = make(m, { across, deep, caps: t.store.caps });
+      assert.ok(model.group.children.length > 0 && model.top > 0, t.id);
+      model.update(w, t, w.tick);
+      const shown = {};
+      model.group.traverse((o) => {
+        if (o.isInstancedMesh) shown[Object.entries(MADE_OF).find(([name]) => m[name] === o.material)[1]] = o.count;
+      });
+      for (const item of Object.keys(t.store.caps)) assert.equal(shown[item] ?? 0, t.store.items[item] ?? 0, `${t.id} ${item}`);
+    }
   }
   const stock = createStock(m, { wood: 4 }, { wood: { x: 0, z: 0, w: 1, d: 1 } });
   assert.equal(stock.update({ wood: 9 }), true);

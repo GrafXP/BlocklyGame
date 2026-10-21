@@ -6,7 +6,7 @@ import { TOP, areaCentre, facing, headingOf, pointAt, sharedSpots, topOf } from 
 import { identityOf } from "./identity.js";
 import { createMaterials, createRobot, named } from "./models.js";
 import { robotPose } from "./pose.js";
-import { createGrove, createQuarry, itemGeometry, itemMaterial } from "./resources.js";
+import { createBerries, createGrove, createQuarry, createSpring, itemGeometry, itemMaterial } from "./resources.js";
 import { createMarks } from "./selection.js";
 import { createStage } from "./stage.js";
 import { createTerrain } from "./terrain.js";
@@ -26,7 +26,7 @@ import { light } from "./view.js";
 // building, its plan is drawn where it would go (showPlan): its footprint, in
 // green where it fits and red where it doesn't, and its front.
 
-const NODES = { grove: createGrove, quarry: createQuarry };
+const NODES = { grove: createGrove, quarry: createQuarry, spring: createSpring, berries: createBerries };
 const ROBOT_SCALE = 0.5; // the robot model is two cells high at scale 1
 const TURN_RATE = 12; // how quickly a robot turns to face its way, a second
 

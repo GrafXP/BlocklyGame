@@ -48,6 +48,8 @@ import { nameText, readWorkspace } from "./adapter.js";
 //
 //   { op: "number", block, value }                     a whole number
 //   { op: "stock", block, item, at }                   how many of `item` thing `at` has
+//   { op: "needs", block, item, at }                   whether `at`'s order still needs `item`
+//   { op: "space", block, item, at }                   room for more `item` at `at`
 //   { op: "basket", block }                            how many items are in my basket
 //   { op: "compare", block, cmp, a, b }                cmp: EQ NEQ LT LTE GT GTE, of two numbers
 //   { op: "place", block, value }                      a place: a thing's id
@@ -89,22 +91,29 @@ export const LIMITS = {
   calls: 8, // routines inside routines: a use of one in another's, and so on
 };
 
-const options = (type, field) =>
-  BLOCKS.find((b) => b.type === type)
-    .args0.find((a) => a.name === field)
-    .options.map(([, value]) => value);
-const fieldNumber = (type, field) => BLOCKS.find((b) => b.type === type).args0.find((a) => a.name === field);
+// Field `field` of block `type`'s definition, on whichever of its rows.
+const fieldOf = (type, field) => {
+  const def = BLOCKS.find((b) => b.type === type);
+  return [...def.args0, ...(def.args1 ?? [])].find((a) => a.name === field);
+};
+const options = (type, field) => fieldOf(type, field).options.map(([, value]) => value);
+const fieldNumber = fieldOf;
 
 // The robot and building actions: the intent each block asks for, from its
 // fields and inputs. A field's value must be one its dropdown offers; a place
-// can be any id, checked against the world when there is one (context.places).
-// An input gives an expression (`input`), put into the intent or its args below.
+// can be any id, checked against the world when there is one (context.places),
+// and so can a team, checked as the block runs. An input gives an expression
+// (`input`), put into the intent or its args below; a list of places, the
+// blocks of a statement input (`list`), goes into the intent as it is.
 const ACTIONS = {
   robot_go_to: ({ input }, node) => ({ type: "goTo", target: input(node, "PLACE", "place") }),
   robot_pick_up: ({ input }, node) => ({ type: "pickUp", item: input(node, "ITEM", "item") }),
   robot_unload: () => ({ type: "unload" }),
+  // Supply a building, from the places in it, in their order (src/sim/supply.js).
+  robot_supply: ({ field, list }, node) => ({ type: "supply", to: field.place(node, "PLACE"), from: list(node, "FROM", "supply_from") }),
   building_make: ({ field }, node) => ({ type: "make", recipe: field.choice(node, "ITEM") }),
   building_build: ({ field }, node) => ({ type: "make", recipe: field.choice(node, "BLUEPRINT") }),
+  building_assemble: ({ field }, node) => ({ type: "make", recipe: "helper", role: field.place(node, "TEAM", false) }),
   control_wait_steps: ({ field }, node) => {
     const { min, max } = fieldNumber("control_wait_steps", "STEPS");
     return { type: "wait", steps: field.whole(node, node.fields.STEPS, min, max) };
@@ -153,13 +162,15 @@ export function compile(source, context = {}) {
       fail("program.unsupported", { block: node.id, type: node.type });
       return null;
     },
-    place(node, field) {
+    // An id, of a place there is when `checked` and the island's places are
+    // known.
+    place(node, field, checked = true) {
       const value = node.fields[field];
       if (typeof value !== "string" || !/^[a-z][a-z0-9-]*$/.test(value)) {
         fail("program.unsupported", { block: node.id, type: node.type });
         return null;
       }
-      if (places && !places.has(value)) fail("program.target", { block: node.id, target: value });
+      if (checked && places && !places.has(value)) fail("program.target", { block: node.id, target: value });
       return value;
     },
     whole(node, raw, min, max) {
@@ -249,6 +260,11 @@ export function compile(source, context = {}) {
       case "sense_basket":
         need("basket", block);
         return { expr: { op: "basket", block }, type: "number" };
+      // What a building's order still needs, and room for more (src/sim/supply.js).
+      case "sense_needs":
+        return { expr: { op: "needs", block, at: field.place(node, "PLACE"), item: field.choice(node, "ITEM") }, type: "boolean" };
+      case "sense_space":
+        return { expr: { op: "space", block, at: field.place(node, "PLACE"), item: field.choice(node, "ITEM") }, type: "number" };
       case "value_place":
         return { expr: { op: "place", block, value: field.place(node, "PLACE") }, type: "place" };
       case "value_item":
@@ -294,7 +310,18 @@ export function compile(source, context = {}) {
     const block = node.id;
     if (ACTIONS[node.type]) {
       const input = (parent, name, want) => value(parent, name, want, 1);
-      const asked = ACTIONS[node.type]({ field, input }, node);
+      // The places of the `type` blocks in statement input `name`: at least one,
+      // and nothing else.
+      const list = (parent, name, type) => {
+        const blocks = parent.inputs[name] ?? [];
+        if (!blocks.length) fail("program.empty", { block: parent.id });
+        return blocks.map((b) => {
+          if (b.type === type) return field.place(b, "PLACE");
+          fail("program.unsupported", { block: b.id, type: b.type });
+          return null;
+        });
+      };
+      const asked = ACTIONS[node.type]({ field, input, list }, node);
       need(asked.type, block);
       const recipes = type?.can?.includes("make") ? type.recipes : null;
       if (recipes && asked.type === "make" && asked.recipe && !recipes.includes(asked.recipe)) fail("program.cannot", { block, action: "make" });
@@ -303,7 +330,7 @@ export function compile(source, context = {}) {
       const intent = {};
       const args = {};
       for (const [key, v] of Object.entries(asked)) {
-        if (v === null || typeof v !== "object") intent[key] = v;
+        if (v === null || typeof v !== "object" || Array.isArray(v)) intent[key] = v;
         else if (CONSTANT.has(v.op)) intent[key] = v.value;
         else args[key] = v;
       }

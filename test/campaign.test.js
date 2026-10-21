@@ -14,7 +14,7 @@ import { checkPlacement, layout } from "../src/sim/placement.js";
 import { cellAt, kindOf } from "../src/sim/terrain.js";
 import { stateHash } from "../src/sim/replay.js";
 import { checkWorld } from "../src/sim/validate.js";
-import { SIM_VERSION, advanceWorld } from "../src/sim/world.js";
+import { SIM_VERSION, advanceWorld, reasonOf } from "../src/sim/world.js";
 import { verifyCampaign } from "../scripts/verify-missions.js";
 import { byId } from "./helpers.js";
 
@@ -68,20 +68,20 @@ test("every mission played from its start by its reference solution gives the re
   }
 });
 
-test("its missions are chapters 1–6 so far, the foundation and construction, numbered on the main path", () => {
-  assert.deepEqual(ids(CAMPAIGN), Array.from({ length: 30 }, (_, i) => `c2-m${String(i + 1).padStart(3, "0")}`));
+test("its missions are chapters 1–9 so far, the foundation, construction, water, energy and supply, numbered on the main path", () => {
+  assert.deepEqual(ids(CAMPAIGN), Array.from({ length: 45 }, (_, i) => `c2-m${String(i + 1).padStart(3, "0")}`));
   assert.deepEqual(
     CAMPAIGN.map((m) => [m.n, m.chapter, m.main]),
-    Array.from({ length: 30 }, (_, i) => [i + 1, Math.floor(i / 5) + 1, true]),
+    Array.from({ length: 45 }, (_, i) => [i + 1, Math.floor(i / 5) + 1, true]),
   );
   assert.deepEqual(
     CHAPTERS.map((c) => [c.chapter, ids(c.missions)]),
-    [1, 2, 3, 4, 5, 6].map((n) => [n, ids(CAMPAIGN.slice((n - 1) * 5, n * 5))]),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => [n, ids(CAMPAIGN.slice((n - 1) * 5, n * 5))]),
   );
   for (const m of CAMPAIGN) assert.equal(missionById(m.id), m);
   assert.deepEqual(
     CAMPAIGN.filter((m) => m.milestone).map((m) => m.n),
-    [5, 10, 15, 20, 25, 30],
+    [5, 10, 15, 20, 25, 30, 35, 40, 45],
   );
   assert.deepEqual(
     CAMPAIGN.filter((m) => m.unlocks).map((m) => [m.n, m.unlocks]),
@@ -94,7 +94,7 @@ test("its missions are chapters 1–6 so far, the foundation and construction, n
 
 test("the child writes the program: a Build mission's starts with its start block alone; a Repair or Change mission's with a whole program; an Explore mission needs none", () => {
   const kinds = Object.fromEntries(CAMPAIGN.map((m) => [m.n, m.workspace]));
-  const other = { 4: "repair", 8: "repair", 9: "change", 10: "repair", 26: "explore", 28: "explore", 29: "repair" };
+  const other = { 4: "repair", 8: "repair", 9: "change", 10: "repair", 26: "explore", 28: "explore", 29: "repair", 39: "repair", 45: "repair" };
   assert.deepEqual(kinds, Object.fromEntries(CAMPAIGN.map((m) => [m.n, other[m.n] ?? "build"])));
   for (const m of CAMPAIGN) {
     if (m.workspace === "explore") {
@@ -152,12 +152,12 @@ test("each mission needs the one before it on the main path, and opens once that
 
 test("a requirement on a mission not built yet stands for the last one built below it, until it's built", () => {
   assert.equal(gateOf("c2-m003"), "c2-m003");
-  assert.equal(gateOf("c2-m060"), "c2-m030", "workshops A and B wait for 60: today, for 30");
-  assert.equal(gateOf("c2-m085"), "c2-m030");
+  assert.equal(gateOf("c2-m060"), "c2-m045", "workshops A and B wait for 60: today, for 45");
+  assert.equal(gateOf("c2-m085"), "c2-m045");
   assert.throws(() => gateOf("c2-a01"), /isn't a main-path mission/);
   // A workshop lesson after 60, as the plan has it.
   const lesson = { id: "c2-a01", main: false, requires: ["c2-m060"], blocks: ["variables_set"] };
-  assert.deepEqual(gatesOf(lesson), ["c2-m030"]);
+  assert.deepEqual(gatesOf(lesson), ["c2-m045"]);
   assert.equal(isOpen(lesson, ids(CAMPAIGN).slice(0, -1)), false);
   assert.equal(isOpen(lesson, ids(CAMPAIGN)), true);
   assert.ok(unlockedBlocks(lesson).includes("controls_repeat_ext"), "it offers what the main path taught");
@@ -391,6 +391,126 @@ test("mission 30: the kit's pieces can't go in before the workshop is built; the
   assert.equal(byId(world, "workshop").type, "workshop", "built");
   assert.equal(world.mission.done, null, "but no kit");
   assert.equal(byId(world, "workshop").pending.reason.code, "wait.item", "the workshop waits for the kit's pieces");
+});
+
+test("mission 31: water is picked up at the spring; looking for it at the camp waits for water the camp hasn't got", () => {
+  const camp = write("c2-m031", (p) => p.workspace(p.start(p.pickUp("water"), p.go("spring"), p.go("camp"), p.unload())));
+  const world = playWith("c2-m031", { "c2-m031": camp });
+  assert.deepEqual(byId(world, "r1").pending.reason, { code: "wait.item", item: "water", at: "camp", need: 1, have: 0 });
+  assert.equal(world.mission.done, null);
+});
+
+test("mission 32: one Make draws one bucket; the well needs no ingredient for it", () => {
+  const once = write("c2-m032", (p) => p.workspace(p.start(p.make("water"))));
+  const world = playWith("c2-m032", { "c2-m032": once });
+  assert.deepEqual(byId(world, "well").store.items, { water: 1 });
+  assert.equal(world.mission.done, null);
+  assert.notEqual(playWith("c2-m032", { "c2-m032": write("c2-m032", (p) => p.workspace(p.start(p.make("water"), p.make("water")))) }).mission.done, null, "two Makes do it too");
+});
+
+test("mission 33: two trips of one bucket aren't one load", () => {
+  const trips = write("c2-m033", (p) => p.workspace(p.start(p.repeat(2, p.go("well"), p.pickUp("water"), p.go("camp"), p.unload()))));
+  const world = playWith("c2-m033", { "c2-m033": trips });
+  assert.deepEqual(byId(world, "camp").store.items, { water: 2 });
+  assert.equal(world.mission.done, null);
+});
+
+test("mission 34: one bucket grows two food, and the farm's water is gone", () => {
+  const world = playWith("c2-m034", mission("c2-m034").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.deepEqual(byId(world, "farm").store.items, { food: 2 });
+});
+
+test("mission 35: food without water first leaves the farm waiting; a Forever round of the food trips does it too", () => {
+  const foodOnly = write("c2-m035", (p) => p.workspace(p.start(p.go("farm"), p.repeat(2, p.pickUp("food")), p.go("camp"), p.unload())));
+  const world = playWith("c2-m035", { "c2-m035": foodOnly });
+  assert.equal(byId(world, "farm").pending.reason.code, "wait.item");
+  assert.equal(world.mission.done, null);
+  const forever = write("c2-m035", (p) => p.workspace(p.start(p.go("well"), p.repeat(2, p.pickUp("water")), p.go("farm"), p.unload(), p.forever(p.go("farm"), p.repeat(2, p.pickUp("food")), p.go("camp"), p.unload()))));
+  assert.notEqual(playWith("c2-m035", { "c2-m035": forever }).mission.done, null);
+});
+
+test("mission 37: two food and a water don't fit one basket; food and water together, then the last food, do it", () => {
+  const all = write("c2-m037", (p) => p.workspace(p.start(p.go("berries"), p.repeat(2, p.pickUp("food")), p.go("spring"), p.pickUp("water"), p.go("station"), p.unload())));
+  const world = playWith("c2-m037", { "c2-m037": all });
+  assert.equal(byId(world, "r1").pending.reason.code, "wait.space");
+  assert.equal(world.mission.done, null);
+  const mixed = write("c2-m037", (p) =>
+    p.workspace(p.start(p.go("berries"), p.pickUp("food"), p.go("spring"), p.pickUp("water"), p.go("station"), p.unload(), p.go("berries"), p.pickUp("food"), p.go("station"), p.unload())),
+  );
+  assert.notEqual(playWith("c2-m037", { "c2-m037": mixed }).mission.done, null);
+});
+
+test("mission 38: the camp pays once for its robot, who stands at its front and does the wood team's job", () => {
+  const m = mission("c2-m038");
+  const { world, library } = missionStart(m);
+  playMission(world, referenceCommands(world, library, m), m.steps);
+  assert.notEqual(world.mission.done, null);
+  const r2 = byId(world, "r2");
+  assert.equal(r2.role, "wood-team");
+  assert.deepEqual(byId(world, "camp").store.items, {}, "two planks and a pack, spent");
+  for (let i = 0; i < 300 && !byId(world, "camp").store.items.wood; i++) advanceWorld(world, []);
+  assert.deepEqual(byId(world, "camp").store.items, { wood: 2 }, "its first delivery");
+});
+
+test("mission 39: Robo 1 looks for food at the grove and stops; with no food, no pack and no new robot, though Robo 2 and Robo 3 still work", () => {
+  const world = playWith("c2-m039");
+  assert.equal(byId(world, "r1").error.code, "error.notHere");
+  assert.deepEqual(byId(world, "station").store.items, { water: 1 }, "Robo 2 brought the water");
+  assert.equal(byId(world, "camp").pending.reason.item, "pack");
+  assert.equal(byId(world, "r3").pending.reason.code, "wait.item", "Robo 3 waits at the station for a pack");
+  assert.equal(world.mission.done, null);
+});
+
+test("mission 40: the planks alone leave the camp waiting for its pack", () => {
+  const world = playWith("c2-m040", mission("c2-m040").scaffold);
+  assert.deepEqual(byId(world, "camp").pending.reason, { code: "wait.item", item: "pack", at: "camp", need: 1, have: 0 });
+  assert.equal(world.mission.done, null);
+});
+
+test("mission 41: Supply finds the food only where it may look, and says what's missing where it isn't", () => {
+  const camp = write("c2-m041", (p) => p.workspace(p.start(p.supply("station", "camp"))));
+  const m = mission("c2-m041");
+  const { world, library } = missionStart(m);
+  playMission(world, referenceCommands(world, library, { ...m, reference: { programs: { "c2-m041": camp } } }), 3);
+  assert.deepEqual(reasonOf(byId(world, "r1")), { code: "supply.none", item: "food", to: "station" });
+  playMission(world, [], m.steps);
+  assert.equal(world.mission.done, null);
+  const done = playWith("c2-m041", m.reference.programs);
+  assert.ok(!byId(done, "station").runtime.parked, "the reward starts the station");
+});
+
+test("mission 42: one Supply is one load; Repeat four times does it too", () => {
+  const once = write("c2-m042", (p) => p.workspace(p.start(p.supply("station", "farm", "well"))));
+  assert.equal(playWith("c2-m042", { "c2-m042": once }).mission.done, null);
+  const four = write("c2-m042", (p) => p.workspace(p.start(p.repeat(4, p.supply("station", "farm", "well")))));
+  assert.notEqual(playWith("c2-m042", { "c2-m042": four }).mission.done, null);
+});
+
+test("mission 43: a bucket on every round overfills the farm's order; asking first keeps it at one, and so does Supply", () => {
+  const always = write("c2-m043", (p) => p.workspace(p.start(p.forever(p.go("well"), p.pickUp("water"), p.go("farm"), p.unload()))));
+  const world = playWith("c2-m043", { "c2-m043": always });
+  assert.equal(world.mission.done, null);
+  assert.deepEqual(byId(world, "farm").store.items.water, 2);
+  const supply = write("c2-m043", (p) => p.workspace(p.start(p.forever(p.supply("farm", "well")))));
+  assert.notEqual(playWith("c2-m043", { "c2-m043": supply }).mission.done, null);
+});
+
+test("mission 44: setting off at once waits at the farm for room, and fails; waiting at the well with the bucket doesn't", () => {
+  const atOnce = write("c2-m044", (p) => p.workspace(p.start(p.go("well"), p.pickUp("water"), p.go("farm"), p.unload())));
+  const world = playWith("c2-m044", { "c2-m044": atOnce });
+  assert.equal(world.mission.done, null);
+  assert.notEqual(world.mission.goals[0].failed, null);
+  const atWell = write("c2-m044", (p) => p.workspace(p.start(p.go("well"), p.pickUp("water"), p.until(p.compare(p.space("water", "farm"), "GT", 0)), p.go("farm"), p.unload())));
+  assert.notEqual(playWith("c2-m044", { "c2-m044": atWell }).mission.done, null);
+});
+
+test("mission 45: looking only at the farm, the supplier finds no water and says so, and the island stalls", () => {
+  const world = playWith("c2-m045");
+  assert.deepEqual(reasonOf(byId(world, "r1")), { code: "supply.none", item: "water", to: "station" });
+  assert.equal(byId(world, "station").pending.reason.item, "water");
+  assert.ok(world.stall);
+  assert.equal(world.mission.done, null);
 });
 
 // --- The help keeps the child's draft --------------------------------------------------------

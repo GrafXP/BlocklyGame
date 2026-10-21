@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; the rest is proposed
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; phase 6 and chapter 9 of phase 7 (missions 31–45: water, energy and Supply) followed on 21 October 2026; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -473,7 +473,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Water is another collectible item and uses one basket space.
 - **Setup and support:** One empty helper at camp and a reachable spring. Introduce the water icon and its raw-source Collect action; no delivery program is supplied.
 - **Player task:** Write and run the full water-collection trip.
-- **Success / observe:** One water reaches camp and the basket is empty. “Does water need a space too?” Empty-bucket returns are not a job.
+- **Success / observe:** One water reaches camp and the basket is empty. “Does water need a space too?” Empty-bucket returns are not a job. *As built (21 October 2026):* the spring's water is picked up with the one Pick Up block, as wood is at the grove; the goal is one water delivered to the camp.
 
 #### 32. Wake Up the Well
 
@@ -493,7 +493,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A well is a building source: use Pick Up for its output.
 - **Setup and support:** Stage two water at the well; the selected helper starts empty at camp. Keep all other routes inactive and show the well and spring source icons.
 - **Player task:** Write the full pickup-and-delivery program with a valid two-item load.
-- **Success / observe:** Two water move into camp in one load. “Which water is stored on a shelf?” Keep all other routes inactive.
+- **Success / observe:** Two water move into camp in one load. “Which water is stored on a shelf?” Keep all other routes inactive. *As built (21 October 2026):* with one Pick Up block for every place, the lesson is the well's shelf, as at the sawmill; the mission has no spring, so the two buckets can only come from the well, and the goal counts them in one load.
 
 #### 34. Water Becomes Food
 
@@ -535,7 +535,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Practise a mixed-input recipe using separate deliveries.
 - **Setup and support:** The station has a one-batch background production job and no inputs. Sources are reachable. The helper begins empty with no trip or destination filled in.
 - **Player task:** Plan and author the complete food and water deliveries, using Collect at both natural sources.
-- **Success / observe:** Two food and one water arrive and produce two packs. “Which ingredient is still missing?” Collect food at berries; do not use the farm's Pick Up action here.
+- **Success / observe:** Two food and one water arrive and produce two packs. “Which ingredient is still missing?” Collect food at berries; do not use the farm's Pick Up action here. *As built (21 October 2026):* Pick Up takes the food at the berry bushes and the water at the spring; the goal is the two packs made, and a mixed load of food and water, then the last food, does it too.
 
 #### 38. Make One More Helper
 
@@ -545,7 +545,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Camp spends ingredients to assemble a helper.
 - **Setup and support:** Stage the bill at camp and leave one population slot free. The Make a Helper block offers the mission's one fixed Collector job, whose program is background support. Explain the payment and assembly progress separately from job assignment.
 - **Player task:** Write the camp's one-time assembly instruction and observe the new helper's first delivery.
-- **Success / observe:** The costs are spent once, the new helper appears in a valid space and completes its supplied delivery. “Which pieces made this helper?” The engine gives it its job; job assignment and inheritance are not concepts the child must explain yet. No free Add Robot control is available.
+- **Success / observe:** The costs are spent once, the new helper appears in a valid space and completes its supplied delivery. “Which pieces made this helper?” The engine gives it its job; job assignment and inheritance are not concepts the child must explain yet. No free Add Robot control is available. *As built (21 October 2026):* the camp's block is “make a helper for [team]”, the team's program the new robot's job; the island's robot limit leaves room for one more, counting a robot being made. The goal is the camp making the helper (`assembled`); the mission is done as it appears, and its first delivery follows.
 
 #### 39. No Packs Left
 
@@ -555,7 +555,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Empty energy stock pauses expansion but does not stop recovery or existing work.
 - **Setup and support:** Start with zero packs, a prebuilt fuel station, reachable berries and spring, and paid assembly waiting at camp with planks staged. All other routes work. The selected collector has a complete faulty food trip with the wrong source place, not an empty input socket.
 - **Player task:** Follow the food shortage to the collector, diagnose its route, and repair the program until packs reach camp and assembly completes.
-- **Success / observe:** Gathered ingredients make packs and one paid helper completes. “Who can still work before the new pack exists?” No pack or intermediate ingredient is granted after start.
+- **Success / observe:** Gathered ingredients make packs and one paid helper completes. “Who can still work before the new pack exists?” No pack or intermediate ingredient is granted after start. *As built (21 October 2026):* the food collector looks for food at the grove and stops there; Robo 2 brings the spring's water and Robo 3 waits at the station for the pack, as background support.
 
 #### 40. A Growing Settlement
 
@@ -565,7 +565,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Integrate wood, water, food, fuel, and paid assembly.
 - **Setup and support:** Prebuild the full chain with independent background gathering, production, and camp assembly. Processed stocks begin empty; the selected final courier has only Start. Pin the two-source assembly bill instead of providing a route with a destination gap.
 - **Player task:** Author the whole plank-and-pack delivery with one helper, allowing pickups to wait for newly produced goods.
-- **Success / observe:** Two gathered wood become the helper's planks; two extracted water cover one farm cycle and one fuel cycle; one of the resulting packs pays assembly. The helper makes its first delivery. “Follow one ingredient all the way.” Unlock peaceful First settlement templates.
+- **Success / observe:** Two gathered wood become the helper's planks; two extracted water cover one farm cycle and one fuel cycle; one of the resulting packs pays assembly. The helper makes its first delivery. “Follow one ingredient all the way.” Unlock peaceful First settlement templates. *As built (21 October 2026):* the goal is the camp making its helper; peaceful First settlement templates aren't there yet, and wait for free play's next step.
 
 ### Chapter 9 — Supply What Is Needed
 
@@ -577,7 +577,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Supply is an inspectable delivery routine, not instant material creation.
 - **Setup and support:** Stage two food at a friendly farm and one water at the fuel station. Declare one batch's input target and park production. Explain Supply's source selection and bounded cycle outside the empty focus workspace.
 - **Player task:** Choose the source and destination, write one Supply action, and open its pictured travel, pickup, and unload steps.
-- **Success / observe:** One bounded cycle delivers the two food and returns to its caller. “Which ordinary actions are inside?” The station's production program is parked so arrival remains visible.
+- **Success / observe:** One bounded cycle delivers the two food and returns to its caller. “Which ordinary actions are inside?” The station's production program is parked so arrival remains visible. *As built (21 October 2026):* “supply [building]” holds “from [place]” blocks, the places it may look, in their order; a mission's setup gives the building its order (`orders`), and the plan of one load (`src/sim/supply.js`) shows in the robot's details, step by step. The station's job is parked, and starts as the reward.
 
 #### 42. Supply, Then Look Again
 
@@ -597,7 +597,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Needs compares a building's pictured order with what it already has.
 - **Setup and support:** One helper and a friendly well with water. The farm has a one-water target and parked production. Announced trials vary its stock; no other courier or incoming claim changes the result.
 - **Player task:** Build the Needs condition and the conditional Supply job, choosing the source and recipient yourself.
-- **Success / observe:** The empty-shelf trial receives one bucket; the full-shelf trial starts no delivery. “Which recipe picture is still empty?” The sensor still uses the engine's real demand rules; incoming claims from other helpers are introduced only in 85.
+- **Success / observe:** The empty-shelf trial receives one bucket; the full-shelf trial starts no delivery. “Which recipe picture is still empty?” The sensor still uses the engine's real demand rules; incoming claims from other helpers are introduced only in 85. *As built (21 October 2026):* trials are gone, so the shelf changes as the mission runs: the farm grows two batches, using a bucket each, and the goal is its water shelf at exactly its order of one once it has stopped (`steady`). A bucket on every round overfills it; Needs before each trip, Supply, or exactly two trips keep it.
 
 #### 44. Leave Room to Unload
 
@@ -607,7 +607,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Space for an item is a capacity observation, separate from stock need.
 - **Setup and support:** One courier begins at camp. A full-shelf trial includes a background farm cycle that frees space; a second trial starts with room. Stage pickup water at the well, with no prepared wait or trip.
 - **Player task:** Write the room condition, the wait at camp, and the complete one-water delivery.
-- **Success / observe:** The courier leaves after room exists and completes its delivery in both fixtures. “What made space?” Explain that the later unload still checks capacity; the condition did not reserve it.
+- **Success / observe:** The courier leaves after room exists and completes its delivery in both fixtures. “What made space?” Explain that the later unload still checks capacity; the condition did not reserve it. *As built (21 October 2026):* trials are gone: the farm starts with a full water shelf and makes room by growing a batch. The goal is the delivery with no wait at the farm (`noWait`, which counts a wait for room to unload as well as one to pick up); setting off at once waits at the farm and fails.
 
 #### 45. The Missing Water Route
 
@@ -617,7 +617,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Diagnose a source configuration through the visible supply steps.
 - **Setup and support:** One helper has a complete repeating Supply program whose source list omits the well. Provide adequate food and water, a one-batch input target, and a two-batch background producer. Do not highlight the missing source.
 - **Player task:** Inspect the waiting reason and source list, correct the configuration, and test both ingredients arriving.
-- **Success / observe:** The single helper supplies both ingredients across valid loads and two batches finish. “Where can this helper find water?” No shared edit, second supplier, or incoming-delivery comparison is required.
+- **Success / observe:** The single helper supplies both ingredients across valid loads and two batches finish. “Where can this helper find water?” No shared edit, second supplier, or incoming-delivery comparison is required. *As built (21 October 2026):* the supplier's “supply fuel station” holds “from farm” alone; it says it finds no water where it may look, and the island stalls until “from well” is added.
 
 ### Chapter 10 — Materials for Industry
 
@@ -1607,7 +1607,8 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 
 - Missions 01–25, 81–84, and workshops A01–A15 use only what exists: wood, raw stone, planks, kits, the bridge, the workshop and its placement; Go To, Pick Up, Unload, Make and Build; Repeat, Forever, If, Else and Wait Until; stock and comparisons; shared programs, teams, settings and own copies; variables, blocks of one's own, and messages.
 - Missions 26–30 also need a goal for a building finished on its construction site (today's `built` goal knows only bridges) and a placement-only goal for 26.
-- Everything else needs engine work first, in the order of the skirmish plan's stages: water, food, charge packs and paid assembly (31–40); Supply, declared targets, Needs, Space and Ready to Make, stone blocks, charcoal, iron and buildings with two recipes (41–60, 85); gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105).
+- Missions 31–45 have theirs since 21 October 2026: water, food, charge packs and paid assembly within a robot limit; buildings' orders, Supply, Needs and Space.
+- Everything else needs engine work first, in the order of the skirmish plan's stages: Ready to Make, stone blocks, charcoal, iron and buildings with two recipes (46–60, 85); gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105).
 
 ### Corrections after playtesting
 
@@ -1648,8 +1649,8 @@ The first time a device opens v2, the v1 progress on it is credited through the 
 | 1 | v2 infrastructure; chapters 1–2 (01–10) | None: content and campaign code | Implemented 18 October 2026 |
 | 2 | Chapters 3–5 (11–25) | None | Implemented 18 October 2026; v2 replaced v1 the same day |
 | 5 | Chapter 6 (26–30) | Goals for a placed site and a finished building; catalogue buildings staged as construction sites; missions that offer the Build tool | Implemented 18 October 2026 |
-| 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | |
-| 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | |
+| 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | Implemented 21 October 2026 |
+| 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | Chapter 9 (41–45), with Supply, orders, Needs and Space, implemented 21 October 2026; 46–60 and 85 to come |
 | 8 | Chapters 15–16 (71–80) | Gold, forge, lab, improvements | |
 | 9 | Chapters 13–14 (61–70) | Sides, shields, Guard and Advance, repair and reboot, paid guards | |
 | 10 | Chapters 18–21 (86–105) | Population, the opponent, matches and presets, safe edits | |

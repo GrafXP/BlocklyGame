@@ -16,5 +16,6 @@ export function statusOf(entity) {
   return runtime && !runtime.finished(entity) ? "ready" : "stopped";
 }
 
-// Why `entity` stopped or waits, a code with values (codes.js), or null.
-export const reasonOf = (entity) => entity.error ?? entity.pending?.reason ?? runtimeOf(entity)?.waiting(entity) ?? null;
+// Why `entity` stopped or waits, a code with values (codes.js), or null: a
+// Supply with nothing to bring says why (supply.js).
+export const reasonOf = (entity) => entity.error ?? entity.pending?.reason ?? entity.supply?.idle ?? runtimeOf(entity)?.waiting(entity) ?? null;

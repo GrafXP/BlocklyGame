@@ -229,7 +229,7 @@ export function checkProgram(program) {
     if (depth > LIMITS.expression + 1) return fail(i, "an expression too deep");
     if (!isId(e?.block)) return fail(i, "an expression without a block");
     if (e.op === "number" && Number.isInteger(e.value)) return;
-    if (e.op === "stock" && isId(e.item) && isId(e.at)) return;
+    if (["stock", "needs", "space"].includes(e.op) && isId(e.item) && isId(e.at)) return;
     if (e.op === "basket") return;
     if ((e.op === "place" || e.op === "item") && isId(e.value)) return;
     if (e.op === "setting" && e.slot in SETTINGS) return;
@@ -260,6 +260,8 @@ export function checkProgram(program) {
         else if (ROUTES[type] && !isId(ins.intent[ROUTES[type]]) && !(ROUTES[type] in args)) fail(i, `${type} without its ${ROUTES[type]}`);
         else if (type === "wait" && !(Number.isInteger(ins.intent.steps) && ins.intent.steps >= 1)) fail(i, "a wait without its steps");
         else if (type === "send" && !(MESSAGES.includes(ins.intent.message) && isId(ins.intent.to))) fail(i, "a send without its message or recipient");
+        else if (type === "supply" && !(isId(ins.intent.to) && Array.isArray(ins.intent.from) && ins.intent.from.length && ins.intent.from.every(isId))) fail(i, "a supply without its building or places");
+        else if (type === "make" && "role" in ins.intent && !isId(ins.intent.role)) fail(i, "a new robot without its team");
         else for (const [key, e] of Object.entries(args)) {
           if (key !== ROUTES[type] || key in ins.intent) fail(i, `an arg ${key}`);
           else if (!["place", "item", "setting", "arg"].includes(e?.op)) fail(i, `an arg ${key} that isn't a place or item`);

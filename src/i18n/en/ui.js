@@ -140,6 +140,12 @@ export default {
   "inspector.resourceNote": "Robots pick up from it. It has no program.",
   // A robot's basket: what's in it, then how full it is.
   "inspector.basket": "Basket",
+  // A building's order: what it wants on its shelf, which Supply brings.
+  "inspector.order": "Order",
+  // What a robot's Supply brings. {amount}: such as “2 food”; {from} and {to}:
+  // places; {step} of {steps}: how far its trip has got.
+  "inspector.supply": "Supplies",
+  "inspector.supplying": "{amount} from {from} to {to} · step {step} of {steps}",
   // How many there are of how many there's room for: "2 of 4".
   "inspector.of": "{have} of {cap}",
   // Opens the chosen robot or building's program in the editor.
@@ -302,6 +308,9 @@ export default {
   "item.stone": "Stone",
   "item.plank": "Planks",
   "item.kit": "Kits",
+  "item.water": "Water",
+  "item.food": "Food",
+  "item.pack": "Charge packs",
   // The messages robots and buildings send each other, as said in a sentence
   // (in quotes, as the blocks show them: MESSAGE_* in blocks.js).
   "message.plankReady": "plank ready",
@@ -431,6 +440,8 @@ export default {
   "goal.steady": "{place} · {item}: {have}, keep it at {need}",
   // What a robot remembers in a variable: {have} now, {need} once it's done.
   "goal.remembers": "{robot} remembers: {have} of {need}",
+  // A building is to make new robots (helpers).
+  "goal.assembled": "{place} makes a new helper: {have} of {need}",
   // Notes under a goal.
   "goal.exact": "Exactly this many, then the job stops.",
   "goal.load": "Two at a time, in full baskets.",
@@ -448,6 +459,9 @@ export default {
   "chapter.4": "Look Before You Act",
   "chapter.5": "One Helper, Useful Jobs",
   "chapter.6": "Make Room to Grow",
+  "chapter.7": "Water Makes Things Grow",
+  "chapter.8": "Energy for More Helpers",
+  "chapter.9": "Supply What Is Needed",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",
@@ -488,6 +502,8 @@ export default {
   "action.make": "Making {amount}",
   "action.build.bridge": "Building the bridge",
   "action.build.workshop": "Building the workshop",
+  // {team}: the team the new robot is for, such as “Wood team”.
+  "action.assemble": "Making a helper for {team}",
   "action.wait": {
     one: "Waiting {count} more step",
     other: "Waiting {count} more steps",
@@ -501,6 +517,7 @@ export default {
   "action.name.make": "Make",
   "action.name.wait": "Wait",
   "action.name.send": "Send a message",
+  "action.name.supply": "Supply",
   // Counting what's in its basket, which only a robot has.
   "action.name.basket": "Look in the basket",
   // Reading its settings, which only a robot has.
@@ -523,6 +540,18 @@ export default {
     one: "{count} kit",
     other: "{count} kits",
   },
+  "count.water": {
+    one: "{count} water",
+    other: "{count} water",
+  },
+  "count.food": {
+    one: "{count} food",
+    other: "{count} food",
+  },
+  "count.pack": {
+    one: "{count} charge pack",
+    other: "{count} charge packs",
+  },
 
   // Why something waits (src/sim/codes.js). {have} and {free} are numbers of the
   // same item as {amount}.
@@ -535,6 +564,14 @@ export default {
   "wait.message": "Waiting for the message “{message}”",
   // A message can't be sent yet: {name}'s inbox has as many as it can hold.
   "wait.mailbox": "{name}'s inbox is full",
+  // Making a robot, when the island has as many as it may.
+  "wait.limit": "Robot limit reached: {limit}",
+  // A Supply with nothing to bring. {place}: the building it supplies; {item}:
+  // what that building needs, such as “Water”.
+  "supply.full": "{place} has all its order asks for",
+  "supply.noOrder": "{place} orders nothing",
+  "supply.none": "None where it may look: {item} for {place}",
+  "supply.basket": "No room in the basket for what {place} needs",
   // Why a program stopped. {target} is an id, as written in the program.
   "error.target": "No such place: {target}",
   "error.cannot": "Can't do this: {action}",
@@ -543,6 +580,9 @@ export default {
   "error.setting": "Choose a setting first: {setting}",
   // A message for {target}, which isn't a robot or building.
   "error.recipient": "Only robots and buildings get messages, not this: {target}",
+  // {team}: a team's name, or an id, as written in the program.
+  "error.team": "No such team: {team}",
+  "error.source": "Supply can't take from the building it supplies: {target}",
   // Can't happen with programs made of blocks; a damaged program.
   "error.busy": "This program did too much in one step.",
 
@@ -603,6 +643,11 @@ export default {
   "entity.workshopN": "Workshop {n}",
   "entity.workshopSite": "Workshop site",
   "entity.workshopSiteN": "Workshop site {n}",
+  "entity.spring": "Spring",
+  "entity.berries": "Berry bushes",
+  "entity.well": "Well",
+  "entity.farm": "Farm",
+  "entity.station": "Fuel station",
   // The starter programs' names, until the player gives them others.
   "programName.collector": "Wood collector",
   "programName.courier": "Plank courier",

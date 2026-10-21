@@ -31,6 +31,10 @@ const MATERIALS = () => ({
   log: material(0x9a6638),
   stone: material(0xa3a9b0),
   kit: material(0xf0a830),
+  berry: material(0xd9453b),
+  pack: material(0x6cc04a),
+  bolt: material(0xf6d03c),
+  crop: material(0x8fc94b),
   scaffold: material(0xc28a52),
   water: material(0x3c8fd6, { roughness: 0.4 }),
   // Matt, so it's the same blue from every side the camera turns to.

@@ -7,7 +7,7 @@ import { checkProgram } from "../src/programming/runtime.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { block, call, chain, changeVar, getVar, input, routine, setVar, withVariables, workspace } from "../src/content/build.js";
 import { CODES } from "../src/sim/codes.js";
-import { basket, compare, forever, go, make, my, num, pickUp, program, repeat, start, stock, unload, until, wait, when } from "./programs.js";
+import { assemble, basket, compare, forever, go, make, my, needs, num, pickUp, program, repeat, space, start, stock, supply, unload, until, wait, when } from "./programs.js";
 
 // The compiler (PLAN.md §7, §12): Blockly's JSON in, the game's instructions
 // out, each visible one with the id of its block; and what can't work as
@@ -224,6 +224,27 @@ test("an action's place or item is part of its intent when the blocks give it, a
   // the island hasn't is still fine, since the setting is what counts.
   assert.deepEqual(codes(compile(program(go("g", my("s", "source"))), { type: "sawmill" }).errors), ["program.cannot s", "program.cannot g"]);
   assert.deepEqual(compile(program(go("g", my("s", "source"), { under: "moon" })), { type: "helper", places: ["grove"] }).errors, []);
+});
+
+test("Supply compiles to its building and the places in it, in order; the camp makes a robot for a team; Needs and Space read a building", () => {
+  const { program: p, errors } = compile(program(supply("s", "station", "farm", "well"), until("u", needs("n", "farm", "water")), until("v", compare("c", space("sp", "water", "farm"), "GT", num("z", 0)))));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(p.code[0], { op: "act", block: "s", intent: { type: "supply", to: "station", from: ["farm", "well"] } });
+  assert.deepEqual(p.code[1].test, { op: "needs", block: "n", at: "farm", item: "water" });
+  assert.deepEqual(p.code[2].test.a, { op: "space", block: "sp", at: "farm", item: "water" });
+  assert.deepEqual(p.needs, ["supply"]);
+  assert.deepEqual(checkProgram(p), []);
+  assert.deepEqual(codes(compile(program(supply("s", "station"))).errors), ["program.empty s"], "somewhere to look");
+  const inside = program(block("robot_supply", "s", { fields: { PLACE: "station" }, inputs: { FROM: input(unload("u")) } }));
+  assert.deepEqual(codes(compile(inside).errors), ["program.unsupported u"], "only “from” blocks inside");
+  assert.deepEqual(codes(compile(program(supply("s", "station", "moon")), { places: ["station", "farm"] }).errors), ["program.target s-moon"]);
+  assert.deepEqual(codes(compile(program(supply("s", "station", "farm")), { type: "camp" }).errors), ["program.cannot s"], "a building doesn't supply");
+
+  const { program: camp } = compile(program(assemble("a", "wood-team")), { type: "camp", places: ["camp"] });
+  assert.deepEqual(camp.code[0], { op: "act", block: "a", intent: { type: "make", recipe: "helper", role: "wood-team" } });
+  assert.deepEqual(checkProgram(camp), []);
+  assert.deepEqual(codes(compile(program(assemble("a", "wood-team")), { type: "sawmill" }).errors), ["program.cannot a"], "a sawmill makes no robots");
+  assert.deepEqual(codes(compile(program(make("m", "plank")), { type: "camp" }).errors), ["program.cannot m"], "and the camp no planks");
 });
 
 test("blocks nested too deeply are an error, not a stack overflow", () => {

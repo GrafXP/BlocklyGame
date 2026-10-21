@@ -1,10 +1,12 @@
 import { reason } from "./codes.js";
-import { ITEMS, TYPES, can, typeOf } from "./entities.js";
+import { insertById, makeThing } from "./content.js";
+import { ITEMS, can, typeOf } from "./entities.js";
 import { available, reserve, release, room, settle } from "./inventory.js";
 import { INBOX_SIZE, deliver, queued } from "./messages.js";
 import { findPath } from "./navigation.js";
 import { BLUEPRINTS, placedName } from "./placement.js";
 import { RECIPES } from "./recipes.js";
+import { SUPPLY_IDLE, offers, planSupply } from "./supply.js";
 import { setKind } from "./terrain.js";
 import { thing, thingAt } from "./things.js";
 
@@ -21,7 +23,7 @@ import { thing, thingAt } from "./things.js";
 //   { type: "move", target, path: [cells], start, end, perCell, nav }
 //   { type: "pickUp", from, item, start, end, holds }  from a deposit or a building
 //   { type: "unload", to, start, end, holds }
-//   { type: "make", recipe, start, end, holds }
+//   { type: "make", recipe, role?, start, end, holds }  role: a new robot's team
 //   { type: "wait", start, end }
 //   { type: "send", to, message, start, end }      a message on its way (messages.js)
 //
@@ -31,7 +33,8 @@ import { thing, thingAt } from "./things.js";
 const action = (type, now, ticks, data) => ({ type, ...data, start: now, end: now + Math.max(1, ticks) });
 
 // Starts `intent` for `entity` in tick `now`: { action }, { wait: reason } or
-// { error: reason }. ACTIONS lists the intents there are.
+// { error: reason }; a Supply's result also has `intent`, the step of its plan
+// it started or waits to start (supply.js). ACTIONS lists the intents there are.
 export function tryStart(world, entity, intent, now) {
   const start = STARTS[intent.type];
   if (!start || !can(entity, intent.type)) return { error: reason("error.cannot", { action: intent.type }) };
@@ -51,7 +54,7 @@ const STARTS = {
   // One `item` from whatever here has it: a building that stores it, or a
   // deposit that yields it. Taking from a deposit takes longer.
   pickUp(world, robot, { item }, now) {
-    const from = thingAt(world, robot.cell, (t) => (t.kind === "node" ? TYPES[t.type].yields === item : t.kind === "building" && (t.store.caps?.[item] ?? 0) > 0));
+    const from = thingAt(world, robot.cell, (t) => offers(t, item));
     if (!from) return { error: reason("error.notHere", { action: "pickUp" }) };
     return take(world, robot, from, item, now, typeOf(robot).pickUpTicks[from.kind]);
   },
@@ -73,10 +76,13 @@ const STARTS = {
     return { action: action("unload", now, typeOf(robot).unloadTicks, { to: building.id, holds }) };
   },
 
-  make(world, building, { recipe }, now) {
+  // A recipe that makes a robot also needs a team for it, and room under the
+  // island's robot limit (world.limit): it holds a place there while it works.
+  make(world, building, { recipe, role }, now) {
     const r = RECIPES[recipe];
     const wrong = r?.builds && (building.blueprint !== r.builds || building.built);
     if (!r || !typeOf(building).recipes?.includes(recipe) || wrong) return { error: reason("error.cannot", { action: "make" }) };
+    if (r.assembles && !world.roles.some((t) => t.id === role)) return { error: reason("error.team", { team: role ?? "" }) };
     for (const [item, need] of Object.entries(r.inputs)) {
       const have = available(building.store, item);
       if (have < need) return { wait: reason("wait.item", { item, at: building.id, need, have }) };
@@ -85,11 +91,26 @@ const STARTS = {
       const free = room(building.store, item);
       if (free < need) return { wait: reason("wait.space", { item, at: building.id, need, free: Math.max(0, free) }) };
     }
+    if (r.assembles && world.limit !== null && robotsCounted(world) >= world.limit) return { wait: reason("wait.limit", { limit: world.limit }) };
     const holds = [
       ...Object.entries(r.inputs).map(([item, n]) => reserve(world, building.id, "out", item, n)),
       ...Object.entries(r.outputs).map(([item, n]) => reserve(world, building.id, "in", item, n)),
     ];
-    return { action: action("make", now, r.ticks, { recipe, holds }) };
+    return { action: action("make", now, r.ticks, { recipe, ...(r.assembles && { role }), holds }) };
+  },
+
+  // A Supply makes its plan, and starts its first step; with nothing to bring,
+  // it waits a moment instead (supply.js).
+  supply(world, robot, intent, now) {
+    const { plan, idle, error } = planSupply(world, robot, intent);
+    if (error) return { error };
+    if (idle) {
+      robot.supply = { to: intent.to, idle, steps: [], step: 0 };
+      return { action: action("wait", now, SUPPLY_IDLE, {}) };
+    }
+    robot.supply = plan;
+    const step = plan.steps[0];
+    return { ...tryStart(world, robot, step, now), intent: step };
   },
 
   wait(world, entity, { steps }, now) {
@@ -107,6 +128,11 @@ const STARTS = {
 };
 
 export const ACTIONS = Object.keys(STARTS);
+
+// The robots counted against the island's limit: those there are, and those a
+// building is making.
+export const robotsCounted = (world) =>
+  world.entities.filter((e) => e.kind === "robot").length + world.entities.filter((e) => e.action?.type === "make" && RECIPES[e.action.recipe].assembles).length;
 
 // One `item` from `from` into the robot's basket.
 function take(world, robot, from, item, now, ticks) {
@@ -143,23 +169,39 @@ export function progress(world, entity, now) {
   return now >= a.end ? "done" : "going";
 }
 
-// Ends `entity`'s action: what it promised happens, all at once. Returns
-// whether the entity has become another thing, as a construction site becomes
-// the building it was for: then its program is over, and it needs the one its
-// new type runs (bindings.js).
+// Ends `entity`'s action: what it promised happens, all at once. Returns null,
+// or what else came of it: { became: true } when the entity has become another
+// thing, as a construction site becomes the building it was for: then its
+// program is over, and it needs the one its new type runs (bindings.js);
+// { born } when it has made robot `born`, which needs its team's program.
 export function finish(world, entity) {
   const a = entity.action;
   if (a.holds) settle(world, a.holds);
   if (a.type === "send") deliver(thing(world, a.to), { message: a.message, from: entity.id, sent: a.start });
   entity.action = null;
-  const builds = a.type === "make" ? RECIPES[a.recipe].builds : null;
-  if (!builds) return false;
-  if (builds === "bridge") {
+  const r = a.type === "make" ? RECIPES[a.recipe] : null;
+  if (r?.assembles) return { born: assemble(world, entity, a.role) };
+  if (!r?.builds) return null;
+  if (r.builds === "bridge") {
     bridge(world, entity);
-    return false;
+    return null;
   }
-  become(entity, builds);
-  return true;
+  become(entity, r.builds);
+  return { became: true };
+}
+
+// A new helper, made by `building` for team `role`: Robo n, the first number
+// no robot has, at the building's first front cell no robot stands on (or its
+// first), with nothing chosen in its settings and an empty basket.
+function assemble(world, building, role) {
+  let n = 1;
+  while (thing(world, `r${n}`)) n++;
+  const taken = new Set(world.entities.filter((e) => e.kind === "robot").map((e) => e.cell));
+  const cell = building.access.find((c) => !taken.has(c)) ?? building.access[0];
+  const { width } = world.terrain;
+  const robot = makeThing(world.terrain, { id: `r${n}`, type: "helper", name: { key: "entity.robo", params: { n } }, cell: [cell % width, Math.floor(cell / width)], role });
+  insertById(world.entities, robot);
+  return robot;
 }
 
 // A bridge's construction site has built it: its gap becomes walkable, and
@@ -190,6 +232,7 @@ function become(site, what) {
 // A message on its way still arrives: it was sent, and messages are never lost
 // (PLAN.md §7).
 export function cancel(world, entity) {
+  delete entity.supply;
   const a = entity.action;
   if (!a) return;
   if (a.holds) release(world, a.holds);

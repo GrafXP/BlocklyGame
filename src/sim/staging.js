@@ -1,7 +1,7 @@
 import { startProgram } from "../programming/runtime.js";
 import { fitsSetting, programFor, roleOf, stop } from "./bindings.js";
 import { insertById, makeThing } from "./content.js";
-import { SETTINGS, TYPES } from "./entities.js";
+import { ITEMS, SETTINGS, TYPES } from "./entities.js";
 import { count, makeStore, room, setCount } from "./inventory.js";
 import { walkable } from "./navigation.js";
 import { placedName } from "./placement.js";
@@ -29,6 +29,9 @@ import { thing } from "./things.js";
 //                                     catalogue, built, without their sites
 //     stock: { at: { item: n } }      a store's exact count of each item
 //     room: { at: { item: n } }       room for at least n more of each item
+//     orders: { at: { item: n } }     what a building wants on its shelf, which
+//                                     Supply brings (supply.js); none otherwise
+//     limit: n                        the most robots the island may have (setup only)
 //     robots: { id: { at, basket } }  a robot at a place (or cell [x, z]), its basket exactly
 //     settings: { id: { slot: v } }   a robot's settings
 //     defaultSettings: { id: { slot: v } }   the same, for slots nothing is chosen for yet
@@ -133,6 +136,14 @@ export function stage(world, spec, things = []) {
       if (setCount(store, item, n) !== n) throw new Error(`stage: ${at} can't hold ${n} ${item}`);
     }
   }
+  for (const [at, counts] of entries(spec.orders)) {
+    const t = thing(world, at);
+    if (t?.kind !== "building") throw new Error(`stage: an order for ${at}, which isn't a building`);
+    for (const [item, n] of entries(counts)) {
+      if (!ITEMS.includes(item) || !Number.isInteger(n) || n < 1 || (t.store.caps?.[item] ?? 0) < n) throw new Error(`stage: ${at} can't order ${n} ${item}`);
+    }
+    t.order = Object.fromEntries(entries(counts));
+  }
   for (const [at, counts] of entries(spec.room)) {
     const store = storeOf(world, at);
     for (const [item, n] of entries(counts)) if (room(store, item) < n) setCount(store, item, count(store, item) - (n - room(store, item)));
@@ -176,8 +187,9 @@ function restockAll(world, things) {
 
 // A mission's setup, made on `world`, the island as the mission before left it
 // (or as the campaign starts): everything under way stops, with `restock` the
-// stores start afresh (restockAll), who runs what is the setup's alone, its
-// stage is made, and the clock starts from 0 again. `things` is the island's
+// stores start afresh (restockAll), who runs what, the buildings' orders and
+// the robot limit are the setup's alone, its stage is made, and the clock
+// starts from 0 again. `things` is the island's
 // catalogue; `programs` the compiled programs the world has from now on
 // (world.programs).
 export function enter(world, setup, { things = [], programs = world.programs, restock = false } = {}) {
@@ -186,8 +198,10 @@ export function enter(world, setup, { things = [], programs = world.programs, re
   world.programs = [...programs].sort((a, b) => (a.id < b.id ? -1 : 1));
   for (const e of world.entities) {
     e.own = null;
+    delete e.order;
     if (e.kind === "robot") e.role = null;
   }
+  world.limit = setup.limit ?? null;
   world.roles = (setup.teams ?? []).map(({ id, name, program }) => ({ id, name, program: program ?? null })).sort((a, b) => (a.id < b.id ? -1 : 1));
   world.defaults = (setup.defaults ?? []).map(({ type, program }) => ({ type, program: program ?? null })).sort((a, b) => (a.type < b.type ? -1 : 1));
   stage(world, setup, things);

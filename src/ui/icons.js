@@ -58,6 +58,9 @@ const PATHS = {
   memory: `<path d="M4 4h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9l-4 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 9.5h8"/>`,
   inside: `<rect x="3" y="3.5" width="18" height="17" rx="2.5"/><rect x="7" y="9" width="10" height="6" rx="1.2"/>`,
   inbox: `<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/>`,
+  // A building's order, a list on a clipboard; a robot's Supply, a load on its way.
+  order: `<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9.5 4V2.8h5V4"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/>`,
+  supply: `<rect x="2.5" y="8" width="8" height="7" rx="1.2"/><path d="M13 11.5h7.5M17.5 8.5l3 3-3 3"/><path d="M2.5 19h18"/>`,
   team: `<circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c0-3.4 2.8-6 6.2-6s6.2 2.6 6.2 6"/><circle cx="17.2" cy="9" r="2.6"/><path d="M16.5 14.1c2.8.4 4.7 2.8 4.7 5.9"/>`,
   // A robot or building's state.
   ready: `<circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/>`,

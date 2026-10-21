@@ -24,6 +24,12 @@ export function placeName(world, id) {
 
 const actionName = (action) => (hasMessage(`action.name.${action}`) ? t(`action.name.${action}`) : action);
 
+// The name of team `id` of `world`, or the id itself when there's no such team.
+export function teamName(world, id) {
+  const team = world?.roles.find((r) => r.id === id);
+  return team ? display(team.name) : id;
+}
+
 // A message's words, “plank ready”, or its id when the game has none for it.
 export const messageWords = (message) => (hasMessage(`message.${message}`) ? t(`message.${message}`) : message);
 
@@ -42,7 +48,16 @@ export function describeReason(world, reason) {
     case "wait.mailbox":
       return t("wait.mailbox", { name: placeName(world, reason.to) });
     case "error.recipient":
-      return t("error.recipient", { target: placeName(world, reason.target) });
+    case "error.source":
+      return t(reason.code, { target: placeName(world, reason.target) });
+    case "error.team":
+      return t(reason.code, { team: teamName(world, reason.team) });
+    case "supply.full":
+    case "supply.noOrder":
+    case "supply.basket":
+      return t(reason.code, { place: placeName(world, reason.to) });
+    case "supply.none":
+      return t(reason.code, { item: t(`item.${reason.item}`), place: placeName(world, reason.to) });
     case "error.cannot":
     case "error.notHere":
     case "program.cannot":
@@ -78,10 +93,12 @@ export function describeAction(world, entity) {
     }
     case "make": {
       const recipe = RECIPES[a.recipe];
+      if (recipe.assembles) return t("action.assemble", { team: teamName(world, a.role) });
       return recipe.builds ? t(`action.build.${recipe.builds}`) : t("action.make", { amount: amounts(recipe.outputs) });
     }
+    // A Supply with nothing to bring says why, while it waits its moment.
     case "wait":
-      return t("action.wait", { count: a.end - world.tick });
+      return entity.supply?.idle ? describeReason(world, entity.supply.idle) : t("action.wait", { count: a.end - world.tick });
     case "send":
       return t("action.send", { message: messageWords(a.message), name: placeName(world, a.to) });
     default:

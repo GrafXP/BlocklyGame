@@ -1,6 +1,7 @@
 import { checkProgram } from "../programming/runtime.js";
+import { ACTIONS, robotsCounted } from "./actions.js";
 import { fitsSetting, programFor, roleOf } from "./bindings.js";
-import { SETTINGS, TYPES } from "./entities.js";
+import { ITEMS, SETTINGS, TYPES } from "./entities.js";
 import { INBOX_SIZE, MESSAGES, queued } from "./messages.js";
 import { walkable } from "./navigation.js";
 import { GOALS, goalProblem } from "./objectives.js";
@@ -70,6 +71,27 @@ export function checkWorld(world) {
   for (const e of world.entities) {
     if ([e.action, e.pending, e.error].filter(Boolean).length > 1) fail(`${e.id} is doing, waiting or failed at once`);
     if (e.kind === "robot" && !walk[e.cell]) fail(`${e.id} stands on cell ${e.cell}, which can't be walked on`);
+  }
+
+  // The robot limit, orders and Supply's plans (supply.js): the island has no
+  // more robots than its limit, counting those being made; an order is of
+  // items a building can hold; a plan is a robot's, with its steps, an idle
+  // one only while it waits its moment, and a robot with a plan never failed.
+  if (world.limit !== null && !(Number.isInteger(world.limit) && world.limit >= 1)) fail(`limit ${world.limit}`);
+  else if (world.limit !== null && robotsCounted(world) > world.limit) fail(`${robotsCounted(world)} robots, over the limit of ${world.limit}`);
+  for (const e of world.entities) {
+    if ("order" in e && (e.kind !== "building" || !isMap(e.order) || !Object.entries(e.order).every(([item, n]) => ITEMS.includes(item) && Number.isInteger(n) && n >= 1 && n <= (e.store.caps?.[item] ?? 0)))) {
+      fail(`${e.id} orders ${JSON.stringify(e.order)}`);
+    }
+    if (!("supply" in e)) continue;
+    const p = e.supply;
+    const steps = Array.isArray(p?.steps) ? p.steps : null;
+    if (e.kind !== "robot" || e.error || typeof p?.to !== "string" || !steps || !Number.isInteger(p.step)) fail(`${e.id} supplies ${JSON.stringify(p)}`);
+    else if (p.idle) {
+      if (steps.length || p.step !== 0 || e.action?.type !== "wait") fail(`${e.id} has nothing to bring, but isn't waiting its moment`);
+    } else if (!(p.step >= 0 && p.step < steps.length) || !steps.every((s) => ACTIONS.includes(s?.type)) || !ITEMS.includes(p.item) || !(Number.isInteger(p.n) && p.n >= 1)) {
+      fail(`${e.id} has a plan ${JSON.stringify(p)}`);
+    }
   }
 
   // Messages (messages.js): an inbox is kept only with something in it, and
@@ -176,7 +198,6 @@ function checkMission(world, fail) {
     else if (goal.done !== null && goal.failed !== null) fail(`goal ${goal.id} was met and failed`);
   }
   const { tally, collected } = mission;
-  const isMap = (value) => !!value && typeof value === "object" && !isList(value);
   if (!isMap(tally) || ["unloads", "together", "made", "waited"].some((part) => !isMap(tally[part])) || !isMap(collected)) fail("the mission's tally isn't one");
   const allMet = mission.goals.every((g) => g?.done !== null);
   if (mission.done === null) {
@@ -186,6 +207,8 @@ function checkMission(world, fail) {
     if (!allMet || mission.done !== last) fail(`the mission was done at ${mission.done}, its goals at ${allMet ? last : "–"}`);
   }
 }
+
+const isMap = (value) => !!value && typeof value === "object" && !Array.isArray(value);
 
 // Only whole numbers, strings, booleans, null, plain arrays and objects: what
 // saves and loads exactly, and is the same on every machine (PLAN.md §6).

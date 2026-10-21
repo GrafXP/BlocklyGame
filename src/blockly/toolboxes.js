@@ -1,6 +1,6 @@
 import { TYPES } from "../sim/entities.js";
 import { RECIPES } from "../sim/recipes.js";
-import { SETTING_BLOCKS, SHADOWS } from "./blocks.js";
+import { BLOCKS, SETTING_BLOCKS, SHADOWS } from "./blocks.js";
 import { choicesFor } from "./choices.js";
 
 // A toolbox block; a robot action comes with its input's value as a shadow,
@@ -48,8 +48,11 @@ const USE = {
   robot_go_to: (type) => can(type, "goTo"),
   robot_pick_up: (type) => can(type, "pickUp"),
   robot_unload: (type) => can(type, "unload"),
-  building_make: (type) => can(type, "make") && recipes(type).some((r) => !RECIPES[r].builds),
+  robot_supply: (type) => can(type, "supply"),
+  supply_from: (type) => can(type, "supply"),
+  building_make: (type) => can(type, "make") && recipes(type).some((r) => !RECIPES[r].builds && !RECIPES[r].assembles),
   building_build: (type) => can(type, "make") && recipes(type).some((r) => RECIPES[r].builds),
+  building_assemble: (type) => can(type, "make") && recipes(type).some((r) => RECIPES[r].assembles),
   control_wait_steps: (type) => can(type, "wait"),
   sense_basket: (type) => can(type, "basket"),
   ...Object.fromEntries(Object.keys(SETTING_BLOCKS).map((b) => [b, (type) => can(type, "settings")])),
@@ -57,8 +60,12 @@ const USE = {
 
 const GAME = [
   ["CAT_START", "entry", [block("island_when_started")]],
-  ["CAT_ROBOT", "robot", [block("robot_go_to"), block("robot_pick_up"), block("robot_unload")]],
-  ["CAT_BUILDING", "building", [block("building_make"), block("building_build")]],
+  [
+    "CAT_ROBOT",
+    "robot",
+    [block("robot_go_to"), block("robot_pick_up"), block("robot_unload"), block("robot_supply", { inputs: { FROM: { block: { type: "supply_from" } } } }), block("supply_from")],
+  ],
+  ["CAT_BUILDING", "building", [block("building_make"), block("building_build"), block("building_assemble")]],
   [
     "CAT_CONTROL",
     "control",
@@ -71,7 +78,7 @@ const GAME = [
       block("control_wait_until"),
     ],
   ],
-  ["CAT_SENSING", "sensing", [block("sense_stock"), block("sense_basket")]],
+  ["CAT_SENSING", "sensing", [block("sense_stock"), block("sense_basket"), block("sense_needs"), block("sense_space")]],
   [
     "CAT_VALUES",
     "values",
@@ -92,13 +99,29 @@ export const DYNAMIC = {
   GAME_ROUTINES: ["procedures_defnoreturn", "procedures_callnoreturn"],
 };
 
-// The fields a toolbox block starts with for `type`: a Make or Build at the
-// first thing the building makes or builds (of `builds`, the blueprints of the
-// sites that run the program, when given).
-function startingFields(b, type, builds) {
-  const list = { building_make: ["ITEM", "makes"], building_build: ["BLUEPRINT", "builds"] }[b.type];
-  const first = list && choicesFor(list[1], { type, builds })[0];
-  return first ? { ...b, fields: { [list[0]]: first[1] } } : b;
+// What a toolbox block's dropdowns of choices (choices.js) start at, and the
+// blocks and shadows in its inputs': the first thing each offers here. A Make
+// or Build is at the first thing the building makes or builds (of `builds`,
+// the blueprints of the sites that run the program, when given), for one
+// `type`; a place, an item or a team at the first `world` has, when it's
+// known: “supply” at a building, not at the grove.
+const BY_TYPE = new Set(["makes", "builds"]);
+function startingFields(b, { type, builds, world }) {
+  const def = BLOCKS.find((d) => d.type === b.type);
+  const fields = { ...b.fields };
+  for (const arg of [...(def?.args0 ?? []), ...(def?.args1 ?? [])]) {
+    if (arg.type !== "field_choice" || arg.name in fields) continue;
+    if (BY_TYPE.has(arg.choices) ? !type : !world) continue;
+    const first = choicesFor(arg.choices, { type, builds, world })[0];
+    if (first) fields[arg.name] = first[1];
+  }
+  const inputs = Object.fromEntries(
+    Object.entries(b.inputs ?? {}).map(([name, input]) => [
+      name,
+      Object.fromEntries(Object.entries(input).map(([part, inner]) => [part, ["block", "shadow"].includes(part) ? startingFields(inner, { type, builds, world }) : inner])),
+    ]),
+  );
+  return { ...b, ...(Object.keys(fields).length && { fields }), ...(b.inputs && { inputs }) };
 }
 
 // The name a toolbox block's unlock goes by.
@@ -107,10 +130,12 @@ export const unlockName = (b) => (b.type === "controls_if" && b.extraState?.hasE
 // The toolbox for a program run by robots or buildings of `types`: the blocks
 // every one of them can use, in categories; a category with none left out.
 // `builds` is what the construction sites running it build, if they do;
-// `blocks`, when given, the unlocks a mission allows (unlockName).
+// `blocks`, when given, the unlocks a mission allows (unlockName); `world`,
+// when given, the island it runs on, whose places, items and teams the
+// dropdowns start at.
 // A category filled as it's opened has `custom`, the name of what fills it
 // (DYNAMIC), and `offers`, the unlocks it may offer; no contents.
-export function toolboxFor(types, { builds = null, blocks = null } = {}) {
+export function toolboxFor(types, { builds = null, blocks = null, world = null } = {}) {
   const allowed = blocks && new Set(blocks);
   const usable = (b) => types.every((type) => USE[b.type]?.(type) ?? true) && (!allowed || allowed.has(unlockName(b)));
   return {
@@ -120,7 +145,8 @@ export function toolboxFor(types, { builds = null, blocks = null } = {}) {
         const offers = DYNAMIC[blocks].filter((unlock) => !allowed || allowed.has(unlock));
         return offers.length ? { kind: "category", name: `%{BKY_${name}}`, categorystyle: `${style}_category`, custom: blocks, offers } : null;
       }
-      const offered = category(name, style, blocks.filter(usable).map((b) => (types.length === 1 ? startingFields(b, types[0], builds) : b)));
+      const context = { type: types.length === 1 ? types[0] : null, builds, world };
+      const offered = category(name, style, blocks.filter(usable).map((b) => startingFields(b, context)));
       return offered.contents.length ? offered : null;
     }).filter(Boolean),
   };

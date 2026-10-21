@@ -40,15 +40,26 @@ export const PLACES = [
   ["%{BKY_PLACE_CAMP}", "camp"],
   ["%{BKY_PLACE_QUARRY}", "quarry"],
   ["%{BKY_PLACE_WORKSHOP}", "workshop"],
+  ["%{BKY_PLACE_SPRING}", "spring"],
+  ["%{BKY_PLACE_BERRIES}", "berries"],
+  ["%{BKY_PLACE_WELL}", "well"],
+  ["%{BKY_PLACE_FARM}", "farm"],
+  ["%{BKY_PLACE_STATION}", "station"],
 ];
-export const RAW = [
+// Every item (src/sim/entities.js, ITEMS), as dropdowns list them: what's
+// found, then what's made. On an island, a dropdown offers only those found or
+// made there (src/blockly/choices.js, items).
+export const ITEM_CHOICES = [
   ["%{BKY_ITEM_WOOD}", "wood"],
   ["%{BKY_ITEM_STONE}", "stone"],
-];
-export const MADE = [
+  ["%{BKY_ITEM_WATER}", "water"],
+  ["%{BKY_ITEM_FOOD}", "food"],
   ["%{BKY_ITEM_PLANK}", "plank"],
   ["%{BKY_ITEM_KIT}", "kit"],
+  ["%{BKY_ITEM_PACK}", "pack"],
 ];
+// What buildings make: each has a recipe of the same name (src/sim/recipes.js).
+export const MADE = ITEM_CHOICES.filter(([, item]) => ["plank", "kit", "water", "food", "pack"].includes(item));
 export const BLUEPRINTS = [
   ["%{BKY_BLUEPRINT_BRIDGE}", "bridge"],
   ["%{BKY_BLUEPRINT_WORKSHOP}", "workshop"],
@@ -62,6 +73,13 @@ export const MESSAGE_CHOICES = [
   ["%{BKY_MESSAGE_STONEPLEASE}", "stonePlease"],
   ["%{BKY_MESSAGE_STONEDELIVERED}", "stoneDelivered"],
   ["%{BKY_MESSAGE_GO}", "go"],
+];
+// The teams a new robot can be made for: the island's own (src/blockly/
+// choices.js, teams); these where there's none.
+export const TEAMS = [
+  ["%{BKY_TEAM_WOOD}", "wood-team"],
+  ["%{BKY_TEAM_PLANK}", "plank-team"],
+  ["%{BKY_TEAM_STONE}", "stone-team"],
 ];
 // Who a message can go to: the island's robots and buildings. On an island,
 // its own (src/blockly/choices.js, recipients); these where there's none.
@@ -125,6 +143,28 @@ export const BLOCKS = [
     style: "robot_blocks",
     tooltip: "%{BKY_ROBOT_UNLOAD_TOOLTIP}",
   },
+  // Supply (src/sim/supply.js): one delivery of what a building's order still
+  // needs, from the places in it, each a “from” block, in their order.
+  {
+    type: "robot_supply",
+    message0: "%{BKY_ROBOT_SUPPLY}",
+    args0: [icon("supply"), { type: "field_choice", name: "PLACE", options: PLACES, choices: "buildings" }],
+    message1: "%1",
+    args1: [{ type: "input_statement", name: "FROM", check: "Source" }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "robot_blocks",
+    tooltip: "%{BKY_ROBOT_SUPPLY_TOOLTIP}",
+  },
+  {
+    type: "supply_from",
+    message0: "%{BKY_SUPPLY_FROM}",
+    args0: [{ type: "field_choice", name: "PLACE", options: PLACES, choices: "places" }],
+    previousStatement: "Source",
+    nextStatement: "Source",
+    style: "robot_blocks",
+    tooltip: "%{BKY_SUPPLY_FROM_TOOLTIP}",
+  },
   {
     type: "building_make",
     message0: "%{BKY_BUILDING_MAKE}",
@@ -142,6 +182,16 @@ export const BLOCKS = [
     nextStatement: null,
     style: "building_blocks",
     tooltip: "%{BKY_BUILDING_BUILD_TOOLTIP}",
+  },
+  // The camp makes a new robot for a team, which gives it its job.
+  {
+    type: "building_assemble",
+    message0: "%{BKY_BUILDING_ASSEMBLE}",
+    args0: [icon("assemble"), { type: "field_choice", name: "TEAM", options: TEAMS, choices: "teams" }],
+    previousStatement: null,
+    nextStatement: null,
+    style: "building_blocks",
+    tooltip: "%{BKY_BUILDING_ASSEMBLE_TOOLTIP}",
   },
   {
     type: "control_wait_steps",
@@ -198,12 +248,36 @@ export const BLOCKS = [
     type: "sense_stock",
     message0: "%{BKY_SENSE_STOCK}",
     args0: [
-      { type: "field_dropdown", name: "ITEM", options: [...RAW, ...MADE] },
+      { type: "field_choice", name: "ITEM", options: ITEM_CHOICES, choices: "items" },
       { type: "field_choice", name: "PLACE", options: PLACES, choices: "places" },
     ],
     output: "Number",
     style: "sensing_blocks",
     tooltip: "%{BKY_SENSE_STOCK_TOOLTIP}",
+  },
+  // Whether a building's order still needs an item, and how much room it has
+  // for one (src/sim/supply.js). Each is two rows, so it fits the toolbox in
+  // every language: the building and its verb, then the item; the room and
+  // the item, then where.
+  {
+    type: "sense_needs",
+    message0: "%{BKY_SENSE_NEEDS}",
+    args0: [{ type: "field_choice", name: "PLACE", options: PLACES, choices: "buildings" }],
+    message1: "%1",
+    args1: [{ type: "field_choice", name: "ITEM", options: ITEM_CHOICES, choices: "items" }],
+    output: "Boolean",
+    style: "sensing_blocks",
+    tooltip: "%{BKY_SENSE_NEEDS_TOOLTIP}",
+  },
+  {
+    type: "sense_space",
+    message0: "%{BKY_SENSE_SPACE}",
+    args0: [{ type: "field_choice", name: "ITEM", options: ITEM_CHOICES, choices: "items" }],
+    message1: "%{BKY_SENSE_SPACE_AT}",
+    args1: [{ type: "field_choice", name: "PLACE", options: PLACES, choices: "buildings" }],
+    output: "Number",
+    style: "sensing_blocks",
+    tooltip: "%{BKY_SENSE_SPACE_TOOLTIP}",
   },
   {
     type: "sense_basket",
@@ -226,7 +300,7 @@ export const BLOCKS = [
   {
     type: "value_item",
     message0: "%1",
-    args0: [{ type: "field_dropdown", name: "ITEM", options: [...RAW, ...MADE] }],
+    args0: [{ type: "field_choice", name: "ITEM", options: ITEM_CHOICES, choices: "items" }],
     output: "Item",
     style: "robot_blocks",
     tooltip: "%{BKY_VALUE_ITEM_TOOLTIP}",

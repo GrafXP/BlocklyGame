@@ -3,7 +3,7 @@ import { ITEMS } from "../sim/entities.js";
 import { thing, thingAt } from "../sim/things.js";
 import { identityOf } from "../render/identity.js";
 import { blockChip } from "./chips.js";
-import { amounts, describeAction, messageWords, placeName, progressOf } from "./describe.js";
+import { amount, amounts, describeAction, messageWords, placeName, progressOf } from "./describe.js";
 import { esc } from "./dom.js";
 import { icon } from "./icons.js";
 import { picture } from "./pictures.js";
@@ -59,6 +59,12 @@ export function readingWords(value, world) {
   if (typeof value === "string") return ITEMS.includes(value) ? t(`item.${value}`) : placeName(world, value);
   return formatNumber(value);
 }
+
+// A robot's Supply under way (src/sim/supply.js): what it brings, from where
+// to where, and which step it's at. (With nothing to bring, its Doing line says
+// why.)
+const supplyWords = (world, plan) =>
+  esc(t("inspector.supplying", { amount: amount(plan.item, plan.n), from: placeName(world, plan.from), to: placeName(world, plan.to), step: plan.step + 1, steps: plan.steps.length }));
 
 // What the active block read (snapshot.js), each sense, comparison or setting
 // as a chip with its value, in the order the block holds them.
@@ -120,7 +126,12 @@ export function detailsHtml(world, id, entry, words) {
     parts.push(row("where", t("world.where"), at ? esc(display(at.name)) : "–"));
     const held = Object.values(it.store.items).reduce((a, b) => a + b, 0);
     parts.push(row("basket", t("inspector.basket"), `<span class="basket"><span title="${esc(amounts(it.store.items))}">${itemsMarkup(it.store.items)}<span class="vh">${esc(amounts(it.store.items))}</span></span> ${fraction(held, it.store.total)}</span>`));
-  } else parts.push(row("has", t("world.has"), stock(it)));
+    if (it.supply && !it.supply.idle) parts.push(row("supply", t("inspector.supply"), supplyWords(world, it.supply)));
+  } else {
+    parts.push(row("has", t("world.has"), stock(it)));
+    // What it orders, which Supply brings.
+    if (it.order) parts.push(row("order", t("inspector.order"), `<span title="${esc(amounts(it.order))}">${itemsMarkup(it.order)}<span class="vh">${esc(amounts(it.order))}</span></span>`));
+  }
   if (entry) {
     parts.push(row("reads", t("inspector.reads"), readings(world, entry, words)));
     if (entry.round) parts.push(row("loop", t("inspector.loop"), esc(t("inspector.round", { count: entry.round.count, times: entry.round.times }))));

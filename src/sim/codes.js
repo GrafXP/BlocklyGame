@@ -16,6 +16,14 @@ export const CODES = {
   "wait.until": ["block"], // a Wait Until block whose condition isn't true yet
   "wait.message": ["message", "block"], // a Wait For block: no message `message` in the inbox yet
   "wait.mailbox": ["to"], // a Send: robot or building `to` has a full inbox
+  "wait.limit": ["limit"], // making a robot: the island has `limit` robots already, counting those being made
+
+  // A Supply with nothing to bring (supply.js): it waits a moment, then its
+  // block ends, so the program can look again.
+  "supply.full": ["to"], // building `to` has, or has coming, all its order asks for
+  "supply.noOrder": ["to"], // building `to` orders nothing
+  "supply.none": ["item", "to"], // none of the places the Supply may look has `item`, which `to` needs
+  "supply.basket": ["to"], // the robot's basket has no room for what `to` needs
 
   // Program errors: what can't work as written. The entity stops until it's
   // restarted or given another program. From a program, each also has the
@@ -25,6 +33,8 @@ export const CODES = {
   "error.notHere": ["action"], // not where `action` can be done
   "error.setting": ["setting"], // the program reads setting `setting`, and none is chosen
   "error.recipient": ["target"], // a message for `target`, which is no robot or building
+  "error.team": ["team"], // a new robot for team `team`, which there isn't
+  "error.source": ["target"], // a Supply that would take from `target`, the building it supplies
   "error.busy": ["block"], // a program did more in one tick than it may (never, compiled from blocks)
 
   // What the compiler finds wrong with a program (src/programming/compiler.js).

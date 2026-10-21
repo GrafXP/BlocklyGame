@@ -36,12 +36,22 @@ export default {
   ROBOT_PICK_UP_TOOLTIP: "Take one item from here into the basket: from a grove, a stone pit or a building.",
   ROBOT_UNLOAD: "%1 unload basket",
   ROBOT_UNLOAD_TOOLTIP: "Put everything in the basket into the building here.",
+  // %2: a building, from PLACE_*. Supply brings what the building's order
+  // still needs, once, from the places in the “from” blocks inside it.
+  ROBOT_SUPPLY: "%1 supply %2",
+  ROBOT_SUPPLY_TOOLTIP: "Bring what this building's order still needs, one load, from a place inside. Then look again.",
+  // %1: a place, from PLACE_*, where Supply may take things from. No picture.
+  SUPPLY_FROM: "from %1",
+  SUPPLY_FROM_TOOLTIP: "A place where Supply may take things from.",
   // %2: planks or kits, from ITEM_*.
   BUILDING_MAKE: "%1 make %2",
   BUILDING_MAKE_TOOLTIP: "Make one item from the materials in store.",
   // %2: what to build, from BLUEPRINT_*.
   BUILDING_BUILD: "%1 build %2",
   BUILDING_BUILD_TOOLTIP: "Build it from the materials in store.",
+  // %2: a team, from TEAM_*, or the island's own. A helper is a new robot.
+  BUILDING_ASSEMBLE: "%1 make a helper for %2",
+  BUILDING_ASSEMBLE_TOOLTIP: "Make a new robot from 2 planks and 1 charge pack. Its team gives it its job.",
   // %2: the number of steps, typed by the player. A step is one press of the
   // Step button.
   CONTROL_WAIT_STEPS: "%1 wait %2 steps",
@@ -66,6 +76,15 @@ export default {
   // picture and no inputs.
   SENSE_BASKET: "items in basket",
   SENSE_BASKET_TOOLTIP: "How many items the robot has in its basket.",
+  // A condition: whether building %1's order still needs an item, which is on
+  // a second row of its own. No picture.
+  SENSE_NEEDS: "%1 needs",
+  SENSE_NEEDS_TOOLTIP: "True while this building's order still needs some of this, counting what's on its way.",
+  // A value: how many more of item %1 a building has room for. No picture. Its
+  // second row: %1, the building.
+  SENSE_SPACE: "space for %1",
+  SENSE_SPACE_AT: "at %1",
+  SENSE_SPACE_TOOLTIP: "How many more of this the building has room for.",
 
   // A place or an item in an action's gap, chosen from a dropdown. No words of
   // their own besides the dropdown's.
@@ -90,10 +109,18 @@ export default {
   PLACE_CAMP: "camp",
   PLACE_QUARRY: "stone pit",
   PLACE_WORKSHOP: "workshop",
+  PLACE_SPRING: "spring",
+  PLACE_BERRIES: "berry bushes",
+  PLACE_WELL: "well",
+  PLACE_FARM: "farm",
+  PLACE_STATION: "fuel station",
   ITEM_WOOD: "wood",
   ITEM_STONE: "stone",
+  ITEM_WATER: "water",
+  ITEM_FOOD: "food",
   ITEM_PLANK: "planks",
   ITEM_KIT: "kits",
+  ITEM_PACK: "charge packs",
   // Messages, shown in quotes on their own in a dropdown: “plank ready”.
   MESSAGE_PLANKREADY: "“plank ready”",
   MESSAGE_KITREADY: "“kit ready”",
@@ -106,6 +133,10 @@ export default {
   ROBO_1: "Robo 1",
   ROBO_2: "Robo 2",
   ROBO_3: "Robo 3",
+  // The teams a new robot can be made for, where there's no island to name them.
+  TEAM_WOOD: "Wood team",
+  TEAM_PLANK: "Plank team",
+  TEAM_STONE: "Stone team",
   // What a construction site can build.
   BLUEPRINT_BRIDGE: "bridge",
   BLUEPRINT_WORKSHOP: "workshop",

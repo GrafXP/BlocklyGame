@@ -32,6 +32,20 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | stone | Steine | Plural on blocks: “nimm Steine”. |
 | planks | Bretter | |
 | kits | Bausätze | |
+| water (an item, a bucket) | Wasser | “nimm Wasser”, “2 Wasser”. |
+| food (an item: berries and crops alike) | Essen | “2 Essen”. |
+| charge pack | Akku, Akkus | What a new robot is made with. Robots need none to move. |
+| spring | Wasserquelle | Not “Quelle”, which is a robot's setting (*source*). |
+| berry bushes | Beerensträucher | |
+| well | Brunnen | It makes water: “stelle Wasser her”. |
+| farm | Bauernhof | It grows food from water. |
+| fuel station | Ladestation | It makes Akkus from Essen and Wasser. |
+| make a helper (for a team) | baue einen Roboter (für …) | The camp's block. A *helper* is a robot. |
+| robot limit | „Mehr Roboter gehen nicht“ | The most robots the island may have. |
+| order (what a building wants on its shelf) | Bestellung | “Die Ladestation bestellt zwei Essen und ein Wasser.” |
+| supply … from … | versorge … von … | “versorge Ladestation”, with “von Bauernhof” inside. |
+| needs (a condition) | braucht | “Bauernhof braucht Wasser”. |
+| space for … at … | Platz für … bei … | “Platz für Wasser bei Bauernhof”. |
 | tree, rock | Baum, Felsen | Not “Stein”, which is the item. |
 | marker (which entity is at which block) | Markierung | |
 | details (the inspector) | Einzelheiten | For screen readers. |

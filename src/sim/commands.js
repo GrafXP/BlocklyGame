@@ -1,4 +1,5 @@
 import { COMPILER_VERSION } from "../programming/compiler.js";
+import { robotsCounted } from "./actions.js";
 import { checkProgram, startProgram } from "../programming/runtime.js";
 import { canRun, emptyBasket, fitsSetting, programFor, rebind, roleOf, startResolved, stop } from "./bindings.js";
 import { reason } from "./codes.js";
@@ -181,8 +182,10 @@ const COMMANDS = {
     if ((e.error?.code === "error.setting" && fixed(e.error.setting)) || (e.error?.code === "error.notHere" && e.error.action === "pickUp" && fixed("item"))) e.error = null;
     return true;
   },
+  // A robot added in the sandbox, within the island's robot limit.
   add(world, { robot: given }) {
     if (!isId(given?.id) || thing(world, given.id) || !isName(given.name) || !Array.isArray(given.cell)) return false;
+    if (world.limit !== null && robotsCounted(world) >= world.limit) return false;
     const [x, z] = given.cell;
     if (!Number.isInteger(x) || !Number.isInteger(z) || !inside(world.terrain, x, z) || !walkable(world)[cellAt(world.terrain, x, z)]) return false;
     const e = makeThing(world.terrain, { id: given.id, type: "helper", name: copy(given.name), cell: [x, z] });

@@ -16,6 +16,12 @@ export const my = mine;
 export const unload = (id) => block("robot_unload", id);
 export const make = (id, item = "plank") => block("building_make", id, { fields: { ITEM: item } });
 export const build = (id, what = "bridge") => block("building_build", id, { fields: { BLUEPRINT: what } });
+export const assemble = (id, team) => block("building_assemble", id, { fields: { TEAM: team } });
+// Supply building `to` from places `from`, each a “from” block `${id}-<place>`.
+export const supply = (id, to, ...from) =>
+  block("robot_supply", id, { fields: { PLACE: to }, ...(from.length && { inputs: { FROM: input(...from.map((place) => block("supply_from", `${id}-${place}`, { fields: { PLACE: place } }))) } }) });
+export const needs = (id, place, item) => block("sense_needs", id, { fields: { PLACE: place, ITEM: item } });
+export const space = (id, item, place) => block("sense_space", id, { fields: { ITEM: item, PLACE: place } });
 export const wait = (id, steps) => block("control_wait_steps", id, { fields: { STEPS: steps } });
 
 // `body` is a list of blocks: an empty one is an empty statement input.

@@ -1,6 +1,7 @@
 import { reason } from "../sim/codes.js";
 import { can } from "../sim/entities.js";
-import { count } from "../sim/inventory.js";
+import { count, room } from "../sim/inventory.js";
+import { needs } from "../sim/supply.js";
 import { thing } from "../sim/things.js";
 
 // Evaluating a compiled expression (compiler.js) for `entity`, against the world
@@ -30,15 +31,25 @@ const COMPARE = {
   GTE: (a, b) => a >= b,
 };
 
+// The thing an expression's `at` names, or a Fault.
+function placeOf(expr, world) {
+  const t = thing(world, expr.at);
+  if (!t) throw new Fault(reason("error.target", { target: expr.at, block: expr.block }));
+  return t;
+}
+
 export function evaluate(expr, entity, world) {
   switch (expr.op) {
     case "number":
       return expr.value;
-    case "stock": {
-      const t = thing(world, expr.at);
-      if (!t) throw new Fault(reason("error.target", { target: expr.at, block: expr.block }));
-      return count(t.store, expr.item);
-    }
+    case "stock":
+      return count(placeOf(expr, world).store, expr.item);
+    // Whether the place's order still needs some of the item (supply.js); room
+    // for more of it, what isn't promised to arrive.
+    case "needs":
+      return needs(world, placeOf(expr, world), expr.item) > 0;
+    case "space":
+      return Math.max(0, room(placeOf(expr, world).store, expr.item));
     case "basket": {
       if (!can(entity, "basket")) throw new Fault(reason("error.cannot", { action: "basket", block: expr.block }));
       return Object.values(entity.store.items).reduce((a, b) => a + b, 0);

@@ -50,6 +50,7 @@ import { isAt, thing } from "./things.js";
 //        `items` at once, in one basket (mission 22)
 //   { type: "trips", by, to?, count, exact? }  unloads robot `by` finished (with something in them)
 //   { type: "made", at, item, count, exact? }  items building `at` made
+//   { type: "assembled", at, count? }          robots building `at` made (missions 38–40)
 //   { type: "steady", at, item, count, ticks, after? }
 //        building `at` has kept exactly `count` of `item` for `ticks` ticks, once
 //        `after` (a robot or building) has stopped: a settled cycle, not the
@@ -64,8 +65,8 @@ import { isAt, thing } from "./things.js";
 // has stopped, so an extra delivery under way can't pass unnoticed; one too
 // many fails it. So an exact goal is only for a job that ends: a Forever never
 // stops, and its goal would never be judged. `noWait` fails the goal if robot
-// `by` ever waits at a building for something to pick up: it was to set off
-// only once things were ready.
+// `by` ever waits at a building for something to pick up, or for room to
+// unload: it was to set off only once things were ready (missions 19, 20, 44).
 
 // Each goal's measure: a number its count is about (1 or 0 for yes or no).
 const MEASURES = {
@@ -90,6 +91,7 @@ const MEASURES = {
       .reduce((n, [, times]) => n + times, 0),
   trips: (world, g) => unloads(world, g).trips,
   made: (world, g) => world.mission.tally.made[`${g.at}|${g.item}`] ?? 0,
+  assembled: (world, g) => world.mission.tally.made[`${g.at}|helper`] ?? 0,
   steady: (world, g) => {
     const t = thing(world, g.at);
     return t ? count(t.store, g.item) : 0;
@@ -113,6 +115,7 @@ const FIELDS = {
   together: [["to", "items"], ["by", "count"]],
   trips: [["by", "count"], ["to", "exact"]],
   made: [["at", "item", "count"], ["exact"]],
+  assembled: [["at"], ["count"]],
   steady: [["at", "item", "count", "ticks"], ["after"]],
   remembers: [["robot", "count"], []],
 };
@@ -229,8 +232,8 @@ function addUnload(unloads, key, n) {
 // Notes in the mission's tally the work `entity`'s action did, as it ends:
 // before the world settles it (world.js, phase 2). An unload counts what went
 // into the building, by item and in all, for the robot and for anyone, and an
-// unload of several kinds the kinds it held together; a make what it made; a
-// pick-up from a deposit what it took.
+// unload of several kinds the kinds it held together; a make what it made, a
+// robot as `helper`; a pick-up from a deposit what it took.
 export function recordWork(world, entity) {
   const tally = world.mission?.tally;
   const a = entity.action;
@@ -249,15 +252,16 @@ export function recordWork(world, entity) {
     const kinds = Object.keys(items).sort().join("+");
     if (kinds.includes("+")) for (const by of [entity.id, "*"]) tally.together[`${a.to}|${by}|${kinds}`] = (tally.together[`${a.to}|${by}|${kinds}`] ?? 0) + 1;
   } else if (a.type === "make") {
-    for (const [item, n] of Object.entries(RECIPES[a.recipe].outputs)) tally.made[`${entity.id}|${item}`] = (tally.made[`${entity.id}|${item}`] ?? 0) + n;
+    const { outputs, assembles } = RECIPES[a.recipe];
+    for (const [item, n] of Object.entries(assembles ? { [assembles]: 1 } : outputs)) tally.made[`${entity.id}|${item}`] = (tally.made[`${entity.id}|${item}`] ?? 0) + n;
   } else if (a.type === "pickUp" && thing(world, a.from)?.kind === "node") {
     const { collected } = world.mission;
     collected[a.item] = (collected[a.item] ?? 0) + 1;
   }
 }
 
-// Robot `entity` waited this tick at `at` for something to pick up: counted at
-// a building, not at a deposit growing back.
+// Robot `entity` waited this tick at `at` for something to pick up, or for room
+// to unload: counted at a building, not at a deposit growing back.
 export function recordWait(world, entity, at) {
   const tally = world.mission?.tally;
   if (tally && thing(world, at)?.kind === "building") tally.waited[entity.id] = (tally.waited[entity.id] ?? 0) + 1;

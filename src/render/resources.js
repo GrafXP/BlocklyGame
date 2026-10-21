@@ -2,8 +2,9 @@ import * as THREE from "three";
 import { createBoulder, createTree, mesh } from "./models.js";
 
 // Items you can see (PLAN.md §4): what every store holds, stacked on a pad
-// beside the building or deposit, as many as it has; and the grove and the
-// stone pit themselves. A store's items are its committed counts, so a paused
+// beside the building or deposit, as many as it has; and the deposits
+// themselves: the grove, the stone pit, the spring and the berry bushes. Water
+// stands in buckets, food is a round fruit, a charge pack a little battery. A store's items are its committed counts, so a paused
 // world shows exactly what it holds.
 
 // Each item's look, small enough to stack, and the room it takes, across, high
@@ -13,6 +14,9 @@ const ITEMS = {
   stone: { make: () => new THREE.DodecahedronGeometry(0.08, 0), material: "stone", size: [0.17, 0.14, 0.17] },
   plank: { make: () => new THREE.BoxGeometry(0.34, 0.045, 0.1), material: "plank", size: [0.36, 0.05, 0.12] },
   kit: { make: () => new THREE.BoxGeometry(0.15, 0.13, 0.15), material: "kit", size: [0.17, 0.14, 0.17] },
+  water: { make: () => new THREE.CylinderGeometry(0.075, 0.06, 0.13, 8), material: "water", size: [0.17, 0.14, 0.17] },
+  food: { make: () => new THREE.IcosahedronGeometry(0.075, 0), material: "berry", size: [0.16, 0.15, 0.16] },
+  pack: { make: () => new THREE.BoxGeometry(0.1, 0.14, 0.07), material: "pack", size: [0.13, 0.15, 0.1] },
 };
 const geometries = new Map();
 export const itemGeometry = (item) => {
@@ -90,6 +94,53 @@ export function createGrove(m, { across, deep, caps }) {
   const stock = createStock(m, caps, { wood: { x: 0, z: deep / 2 - 0.35, w: across - 0.5, d: 0.5 } });
   group.add(stock.group);
   return { group, top: 1.7, update: (world, node) => stock.update(node.store.items) };
+}
+
+// The spring: a pool in a ring of stones, and its buckets along its front.
+export function createSpring(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  const r = Math.min(across, deep) / 2 - 0.25;
+  const pool = mesh(new THREE.CylinderGeometry(r, r, 0.06, 16), m.water, { cast: false, receive: true });
+  pool.position.set(0, 0.03, -0.15);
+  group.add(pool);
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2;
+    const stone = createBoulder(m, i);
+    stone.scale.setScalar(0.22);
+    stone.position.set(Math.cos(a) * (r + 0.05), 0, -0.15 + Math.sin(a) * (r + 0.05));
+    group.add(stone);
+  }
+  const stock = createStock(m, caps, { water: { x: 0, y: 0, z: deep / 2 - 0.2, w: across - 0.4, d: 0.35 } });
+  group.add(stock.group);
+  return { group, top: 0.9, update: (world, node) => stock.update(node.store.items) };
+}
+
+// The berry bushes: round bushes with red berries on them, and the food picked
+// heaped at their front.
+export function createBerries(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  const bush = new THREE.IcosahedronGeometry(0.42, 0);
+  const berry = new THREE.IcosahedronGeometry(0.06, 0);
+  [
+    [-0.25, -0.25, 1],
+    [0.25, -0.2, 0.85],
+    [0, 0.08, 0.75],
+  ].forEach(([fx, fz, s], i) => {
+    const b = mesh(bush, i % 2 ? m.leavesLight : m.leaves);
+    b.position.set(fx * across, 0.38 * s, fz * deep);
+    b.scale.setScalar(s);
+    b.rotation.y = i * 1.1;
+    group.add(b);
+    for (let j = 0; j < 5; j++) {
+      const a = (j / 5) * Math.PI * 2 + i;
+      const dot = mesh(berry, m.berry, { cast: false });
+      dot.position.set(fx * across + Math.cos(a) * 0.36 * s, 0.38 * s + (j % 2 ? 0.12 : -0.05) * s, fz * deep + Math.sin(a) * 0.36 * s);
+      group.add(dot);
+    }
+  });
+  const stock = createStock(m, caps, { food: { x: 0, y: 0, z: deep / 2 - 0.2, w: across - 0.4, d: 0.35 } });
+  group.add(stock.group);
+  return { group, top: 1.1, update: (world, node) => stock.update(node.store.items) };
 }
 
 // The stone pit: boulders at its back, and its stones heaped at its front.

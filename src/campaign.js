@@ -3,9 +3,11 @@ import { unlockedBlocks } from "./content/missions/campaign.js";
 import { BASE, THINGS } from "./content/missions/island.js";
 import { compile } from "./programming/compiler.js";
 import { applyDraft, latest, newProgram, programDoc, setDraft, wordStarter } from "./programming/programs.js";
+import { TYPES } from "./sim/entities.js";
 import { createMission, needOf } from "./sim/objectives.js";
-import { room } from "./sim/inventory.js";
+import { count, room } from "./sim/inventory.js";
 import { BLUEPRINTS } from "./sim/placement.js";
+import { RECIPES } from "./sim/recipes.js";
 import { enter } from "./sim/staging.js";
 import { thing } from "./sim/things.js";
 import { advanceWorld, createWorld } from "./sim/world.js";
@@ -130,7 +132,9 @@ const BUILT_IN = ["controls_repeat_ext", "controls_if", "controls_if_else", "log
 // - Its reference programs, and the starters of the programs they change, use
 //   only blocks the mission has unlocked: what its toolbox offers.
 // - At its checkpoint `world`, every store its goals deliver to or make in
-//   has room for what they count, and the deposits hold its budget.
+//   has room for what they count, or will have, using up what it holds in a
+//   recipe of its own (the farm's water, mission 44); and the deposits hold
+//   its budget.
 // - It keeps the campaign plan's authoring rules (authoringProblems).
 export function missionProblems(mission, world) {
   const problems = authoringProblems(mission);
@@ -152,7 +156,8 @@ export function missionProblems(mission, world) {
     const t = thing(world, at);
     // A construction site still to be built has the room its building will.
     const site = t?.type === "site" && !t.built ? BLUEPRINTS[t.blueprint] : null;
-    const free = !goal.item ? null : site ? (site.caps[goal.item] ?? 0) : t && room(t.store, goal.item);
+    const usesUp = t && (TYPES[t.type].recipes ?? []).some((r) => goal.item in RECIPES[r].inputs);
+    const free = !goal.item ? null : site ? (site.caps[goal.item] ?? 0) : t && room(t.store, goal.item) + (usesUp ? count(t.store, goal.item) : 0);
     if (!t?.store) problems.push(`${mission.id}: goal ${goal.id} counts at ${at}, which isn't there`);
     else if (goal.item && free < needOf(goal)) problems.push(`${mission.id}: ${at} has room for ${free} ${goal.item}, goal ${goal.id} counts ${needOf(goal)}`);
   }

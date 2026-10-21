@@ -126,6 +126,10 @@ function goalView(world, goal, size = 32) {
       pictures = pics(goal.item);
       label = t("goal.steady", { item, place: nameOf(world, goal.at), have, need });
       break;
+    case "assembled":
+      pictures = pics("robot");
+      label = t("goal.assembled", { place: nameOf(world, goal.at), have, need });
+      break;
     case "remembers":
       pictures = pics("memory");
       label = t("goal.remembers", { robot: nameOf(world, goal.robot), have, need });

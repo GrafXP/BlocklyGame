@@ -5,6 +5,8 @@ import { choicesFor } from "../src/blockly/choices.js";
 import { toolboxFor } from "../src/blockly/toolboxes.js";
 import { ISLAND } from "../src/content/island.js";
 import { createWorld } from "../src/sim/world.js";
+import { missionStart } from "../src/campaign.js";
+import { campaignMission } from "../src/content/missions/campaign.js";
 import { tinyWorld } from "./helpers.js";
 
 // The editor's toolboxes and dropdowns (PLAN.md §7): only the blocks the robot
@@ -35,8 +37,26 @@ test("a building's toolbox has Make only with a recipe that makes an item, and B
   assert.ok(!blocksIn(site).includes("building_make"));
   assert.deepEqual(blockIn(site, "building_build").fields, { BLUEPRINT: "bridge" });
   const camp = toolboxFor(["camp"]);
-  assert.ok(!categories(camp).includes("%{BKY_CAT_BUILDING}"), "a category with nothing in it is left out");
-  assert.ok(blocksIn(camp).includes("control_wait_steps"));
+  assert.deepEqual(toolboxFor(["camp"]).contents.find((c) => c.name === "%{BKY_CAT_BUILDING}").contents.map((b) => b.type), ["building_assemble"], "the camp makes robots, and no item");
+  const depot = toolboxFor(["depot"]);
+  assert.ok(!categories(depot).includes("%{BKY_CAT_BUILDING}"), "a category with nothing in it is left out");
+  assert.ok(blocksIn(camp).includes("control_wait_steps") && blocksIn(depot).includes("control_wait_steps"));
+});
+
+test("on an island, a toolbox's dropdowns start at what's there: Supply at a building, an item that's found or made, the camp's team", () => {
+  const { world } = missionStart(campaignMission("c2-m041"));
+  const robot = toolboxFor(["helper"], { world });
+  const supply = blockIn(robot, "robot_supply");
+  assert.equal(supply.fields.PLACE, "camp", "the first building, not the grove");
+  assert.equal(supply.inputs.FROM.block.fields.PLACE, "grove", "it may look anywhere");
+  assert.deepEqual(blockIn(robot, "robot_pick_up").inputs.ITEM.shadow.fields, { ITEM: "wood" });
+  assert.deepEqual(
+    choicesFor("items", { world }).map(([, item]) => item),
+    ["wood", "water", "food", "pack"],
+    "the grove's wood, the station's water, and what the farm and the station make",
+  );
+  const camp = toolboxFor(["camp"], { world: missionStart(campaignMission("c2-m038")).world });
+  assert.deepEqual(blockIn(camp, "building_assemble").fields, { TEAM: "wood-team" });
 });
 
 test("Memory and My blocks are filled as they're opened, offering what the play allows; messages are for everyone", () => {
@@ -93,8 +113,11 @@ test("what a building can make or build is what it has recipes for", () => {
   assert.deepEqual(
     choicesFor("makes", { world, type: null }),
     [
+      ["%{BKY_ITEM_WATER}", "water"],
+      ["%{BKY_ITEM_FOOD}", "food"],
       ["%{BKY_ITEM_PLANK}", "plank"],
       ["%{BKY_ITEM_KIT}", "kit"],
+      ["%{BKY_ITEM_PACK}", "pack"],
     ],
     "for no one type: whatever any recipe makes",
   );
