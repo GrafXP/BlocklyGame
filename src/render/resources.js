@@ -179,6 +179,52 @@ export function createMine(m, { across, deep, caps }) {
   return { group, top: 1.2, update: (world, node) => stock.update(node.store.items) };
 }
 
+// The markers, places that hold nothing (src/sim/entities.js): the rally flag,
+// a pole with its pennant; the crossing, a signpost with a shield on it; and
+// the landing, the visitors' boat drawn up on the beach.
+export function createFlag(m) {
+  const group = new THREE.Group();
+  const pole = mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.5, 6), m.trunk);
+  pole.position.y = 0.75;
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.62, 0.17);
+  shape.lineTo(0, 0.36);
+  shape.closePath();
+  const pennant = mesh(new THREE.ShapeGeometry(shape), m.flag);
+  pennant.position.set(0.03, 1.1, 0);
+  const foot = mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.08, 8), m.rock, { receive: true });
+  foot.position.y = 0.04;
+  group.add(pole, pennant, foot);
+  return { group, top: 1.6, update: () => false };
+}
+
+export function createCrossing(m) {
+  const group = new THREE.Group();
+  const post = mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), m.trunk);
+  post.position.y = 0.45;
+  const board = mesh(new THREE.BoxGeometry(0.62, 0.34, 0.05), m.wood);
+  board.position.set(0, 0.86, 0.05);
+  const badge = mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.03, 10), m.badge, { cast: false });
+  badge.rotation.x = Math.PI / 2;
+  badge.position.set(0, 0.86, 0.09);
+  group.add(post, board, badge);
+  return { group, top: 1.2, update: () => false };
+}
+
+export function createLanding(m) {
+  const group = new THREE.Group();
+  const hull = mesh(new THREE.CylinderGeometry(0.42, 0.3, 0.22, 8, 1, false), m.wood);
+  hull.scale.set(1, 1, 0.55);
+  hull.position.y = 0.11;
+  const mast = mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.9, 6), m.trunk);
+  mast.position.y = 0.65;
+  const sail = mesh(new THREE.BoxGeometry(0.02, 0.5, 0.36), m.canvas);
+  sail.position.set(0, 0.72, 0.14);
+  group.add(hull, mast, sail);
+  return { group, top: 1.1, update: () => false };
+}
+
 // The stone pit: boulders at its back, and its stones heaped at its front.
 export function createQuarry(m, { across, deep, caps }) {
   const group = new THREE.Group();

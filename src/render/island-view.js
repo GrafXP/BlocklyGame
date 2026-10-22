@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import { ITEMS } from "../sim/entities.js";
+import { ITEMS, TYPES } from "../sim/entities.js";
 import { thingsKey } from "../sim/things.js";
 import { BUILDINGS } from "./buildings.js";
 import { TOP, areaCentre, facing, headingOf, pointAt, sharedSpots, topOf } from "./grid.js";
 import { identityOf } from "./identity.js";
 import { createMaterials, createRobot, named } from "./models.js";
 import { robotPose } from "./pose.js";
-import { createBerries, createGrove, createMine, createQuarry, createSpring, itemGeometry, itemMaterial } from "./resources.js";
+import { createBerries, createCrossing, createFlag, createGrove, createLanding, createMine, createQuarry, createSpring, itemGeometry, itemMaterial } from "./resources.js";
 import { createMarks } from "./selection.js";
 import { createStage } from "./stage.js";
 import { createTerrain } from "./terrain.js";
@@ -26,7 +26,7 @@ import { light } from "./view.js";
 // building, its plan is drawn where it would go (showPlan): its footprint, in
 // green where it fits and red where it doesn't, and its front.
 
-const NODES = { grove: createGrove, quarry: createQuarry, spring: createSpring, berries: createBerries, mine: createMine };
+const NODES = { grove: createGrove, quarry: createQuarry, spring: createSpring, berries: createBerries, mine: createMine, flag: createFlag, crossing: createCrossing, landing: createLanding };
 const ROBOT_SCALE = 0.5; // the robot model is two cells high at scale 1
 const TURN_RATE = 12; // how quickly a robot turns to face its way, a second
 
@@ -35,9 +35,11 @@ const TURN_RATE = 12; // how quickly a robot turns to face its way, a second
 const HOME = { x: 3, z: -1, zoom: 1, turn: 0 };
 
 // A robot, with a box round it to tap, larger than it is, and two places in its
-// basket for what it carries.
-function robotModel(m, id, name, colour) {
-  const group = named(createRobot(m, { colour }), id, name);
+// basket for what it carries; its shield's segments over its head, lit while
+// it has them (src/sim/combat.js); and the pulse it sends, which flies from it
+// to its target while it fires, in the island's frame, not the robot's.
+function robotModel(m, robot, colour, layer) {
+  const group = named(createRobot(m, { colour, kind: robot.type }), robot.id, robot.name);
   group.scale.setScalar(ROBOT_SCALE);
   const target = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.8, 1.8), m.blueprint);
   target.position.y = 1.3;
@@ -52,8 +54,21 @@ function robotModel(m, id, name, colour) {
     group.add(slot);
     return slot;
   });
-  return { group, top: 1.35, slots, heading: 0 };
+  const whole = TYPES[robot.type].shield;
+  const segments = Array.from({ length: whole }, (_, i) => {
+    const seg = new THREE.Mesh(SEGMENT, m.shieldOn);
+    seg.position.set((i - (whole - 1) / 2) * 0.3, 2.7, 0);
+    seg.visible = false;
+    group.add(seg);
+    return seg;
+  });
+  const pulse = new THREE.Mesh(PULSE, m.pulse);
+  pulse.visible = false;
+  layer.add(pulse);
+  return { group, top: 1.35, slots, segments, pulse, heading: 0 };
 }
+const SEGMENT = new THREE.BoxGeometry(0.22, 0.16, 0.22);
+const PULSE = new THREE.IcosahedronGeometry(0.12, 0);
 
 export function createIslandView(container, { quality = "high" } = {}) {
   const stage = createStage(container, { view: 28, bounds: 18, home: HOME, quality });
@@ -91,7 +106,7 @@ export function createIslandView(container, { quality = "high" } = {}) {
     const { terrain: ground } = w;
     for (const t of [...w.entities, ...w.nodes]) {
       let model;
-      if (t.kind === "robot") model = robotModel(m, t.id, t.name, identityOf(w, t.id).colour);
+      if (t.kind === "robot") model = robotModel(m, t, identityOf(w, t.id).colour, layer);
       else {
         const make = BUILDINGS[t.type] ?? NODES[t.type];
         if (!make) continue;
@@ -139,8 +154,17 @@ export function createIslandView(container, { quality = "high" } = {}) {
     let y = topOf(w.terrain, cell) ?? TOP.grass;
     const a = r.action;
     const t = w.tick + alpha;
-    if (a && a.type !== "move" && a.type !== "wait") y += 0.05 * Math.abs(Math.sin(((t - a.start) / (a.end - a.start)) * Math.PI * 3));
+    if (a && !["move", "wait", "watch", "reboot"].includes(a.type)) y += 0.05 * Math.abs(Math.sin(((t - a.start) / (a.end - a.start)) * Math.PI * 3));
     model.group.position.set(x + spot.x, y, z + spot.z);
+    // Rebooting: slumped to one side, coming upright as it starts up again.
+    model.group.rotation.z = a?.type === "reboot" ? 0.45 * (1 - Math.min(1, (t - a.start) / (a.end - a.start))) : 0;
+    // Its shield: shown on a guard, and on any robot that has lost some.
+    const whole = model.segments.length;
+    const shown = r.type !== "helper" || r.shield < whole;
+    model.segments.forEach((seg, i) => {
+      seg.visible = shown;
+      seg.material = i < r.shield ? m.shieldOn : m.shieldOff;
+    });
     // Facing its way: turning there smoothly while playing, at once when paused.
     const heading = headingOf(w, r);
     if (heading !== null) {
@@ -199,6 +223,19 @@ export function createIslandView(container, { quality = "high" } = {}) {
           if (!model) continue;
           if (e.kind === "robot") placeRobot(w, e, alpha, spots, dt, running);
           else model.update?.(w, e, t);
+        }
+        // Pulses on their way, once every robot is where it's drawn: from the
+        // emitter to the robot it's for, landing as the action ends.
+        for (const e of w.entities) {
+          const model = things.get(e.id);
+          if (e.kind !== "robot" || !model) continue;
+          const a = e.action;
+          const to = a?.type === "fire" ? things.get(a.at)?.group.position : null;
+          model.pulse.visible = !!to;
+          if (!to) continue;
+          const f = Math.min(1, Math.max(0, (t - a.start) / (a.end - a.start)));
+          const from = model.group.position;
+          model.pulse.position.set(from.x + (to.x - from.x) * f, from.y + 0.62 + (to.y - from.y) * f, from.z + (to.z - from.z) * f);
         }
         for (const n of w.nodes) things.get(n.id)?.update?.(w, n, t);
         stage.invalidate();

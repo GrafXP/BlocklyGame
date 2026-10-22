@@ -2,6 +2,7 @@ import { compile } from "../programming/compiler.js";
 import { startProgram } from "../programming/runtime.js";
 import { finish, progress, tryStart } from "./actions.js";
 import { canRun, fitsSetting, programFor, rebind } from "./bindings.js";
+import { lands, strike } from "./combat.js";
 import { applyCommand } from "./commands.js";
 import { makeThing } from "./content.js";
 import { TYPES } from "./entities.js";
@@ -34,10 +35,13 @@ export { reasonOf, statusOf } from "./status.js";
 //
 // An entity (robot or building) is
 //
-//   { id, kind, type, name, own, role?, settings?, cell | area + access, store,
-//     order?, blueprint?, built?, gap?, action, pending, error, runtime, supply? }
+//   { id, kind, type, name, own, side?, role?, settings?, cell | area + access,
+//     shield?, store, order?, blueprint?, built?, gap?, action, pending, error,
+//     runtime, supply? }
 //
-// with `own` the program given to it alone, a robot's `role` its team and its
+// with `own` the program given to it alone, a robot's `side` the player's or
+// the opponent's and `shield` the segments it has left (combat.js), its
+// `role` its team and its
 // `settings` what its program's “my source”, “my item” and “my destination”
 // read (entities.js, SETTINGS); a building's `order` what it wants on its
 // shelf, which Supply brings (supply.js); a construction site's `blueprint` what it
@@ -68,7 +72,9 @@ export { reasonOf, statusOf } from "./status.js";
 // 10: stone blocks, charcoal, iron ore and iron bars; the stonecutter, the
 //    kiln, the smelter and the iron mine; whether a building is ready to make
 //    something; a building's waits to make are counted.
-export const SIM_VERSION = 10;
+// 11: sides and shields: guards, which Guard and Advance, pulses, repair and
+//    reboot; visitors; the workshop makes guards; markers.
+export const SIM_VERSION = 11;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -163,7 +169,7 @@ export function createWorld(content) {
 // the tick's trace, the debugger's account of the tick (it isn't part of the
 // world):
 //
-//   { tick, commands, evaluated, started, ended, waiting, errors, goals, done, states }
+//   { tick, commands, evaluated, started, ended, hits, waiting, errors, goals, done, states }
 //
 // - commands: what each command did, { ok, reason? }.
 // - evaluated: each entity that evaluated a step, { entity, block?, … }: the
@@ -171,6 +177,7 @@ export function createWorld(content) {
 //   If's `branch` (its index, or -1 for none), a Repeat's `round` (from 1, or 0
 //   when it's over). A script's step has an intent and no block.
 // - started, ended: actions, { entity, type }.
+// - hits: the pulses that landed, { by, at } (combat.js).
 // - waiting: intents that couldn't start, { entity, reason }.
 // - errors: entities whose program stopped, { entity, reason }.
 // - goals: the ids of the mission's goals met in this tick; done: whether the
@@ -181,7 +188,9 @@ export function createWorld(content) {
 // The phases, in order (PLAN.md §6):
 // 1. The player's commands.
 // 2. Actions under way move on; those that end settle their holds, in order of
-//    entity id. Then deposits grow back.
+//    entity id. Then the pulses that ended land, all together, and knock out
+//    the robots they leave without a shield (combat.js). Then deposits grow
+//    back.
 // 3. Messages sent in the tick before are in their inboxes: a Send is an action
 //    of one step, which ends in phase 2 and delivers its message there
 //    (messages.js). From here to phase 5 the world is read, not changed:
@@ -201,25 +210,29 @@ export function createWorld(content) {
 //    the tick is done.
 export function advanceWorld(world, commands = []) {
   const now = world.tick + 1;
-  const trace = { tick: now, commands: [], evaluated: [], started: [], ended: [], waiting: [], errors: [] };
+  const trace = { tick: now, commands: [], evaluated: [], started: [], ended: [], hits: [], waiting: [], errors: [] };
 
   // 1. Commands.
   for (const command of commands) trace.commands.push(applyCommand(world, command));
 
-  // 2. Actions under way, then deposits. A robot made in this phase is there
-  // from now on, with its team's program, and takes its first step in phase 4.
+  // 2. Actions under way, then the pulses that ended, together, then deposits.
+  // A robot made in this phase is there from now on, with its team's program,
+  // and takes its first step in phase 4.
+  const fired = [];
   for (const entity of [...world.entities]) {
     if (!entity.action) continue;
     const state = progress(world, entity, now);
     if (state === "done") {
       trace.ended.push({ entity: entity.id, type: entity.action.type });
       recordWork(world, entity);
+      if (entity.action.type === "fire") fired.push({ by: entity.id, at: entity.action.at });
       // A construction site that has become its building starts the program
-      // its new type runs; anything else goes on to its next step: the next
-      // of its Supply's plan while it has one (supply.js).
+      // its new type runs; a robot that has rebooted, its program from its
+      // start; anything else goes on to its next step: the next of its
+      // Supply's plan while it has one (supply.js).
       const ended = finish(world, entity);
       if (ended?.became) rebind(world, [entity]);
-      else {
+      else if (!ended?.rebooted) {
         if (ended?.born) rebind(world, [ended.born]);
         if (!nextOfPlan(entity)) runtimeOf(entity)?.done(entity);
       }
@@ -227,6 +240,14 @@ export function advanceWorld(world, commands = []) {
       // The way is gone: the move waits to start again from where the robot is.
       entity.pending = { intent: { type: "goTo", target: state.wait.target }, order: world.serial++, since: now, reason: state.wait, nav: world.nav };
     }
+  }
+  const hits = fired.map((f) => lands(world, f)).filter(Boolean);
+  trace.hits = hits;
+  for (const robot of strike(world, hits, now)) {
+    // Knocked out: its program will start again from its start once it has
+    // rebooted; a visitor's script is over (combat.js).
+    if (robot.runtime?.kind === "script") robot.runtime.at = robot.runtime.steps.length;
+    else runtimeOf(robot)?.restart(robot);
   }
   for (const node of world.nodes) {
     if (growing(node) && now % node.regrow.every === 0) node.store.items[TYPES[node.type].yields] = count(node.store, TYPES[node.type].yields) + 1;

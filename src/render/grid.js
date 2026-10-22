@@ -53,6 +53,13 @@ export function headingOf(world, robot) {
     const to = cellCentre(terrain, a.path[leg + 1]);
     return Math.atan2(to.x - from.x, to.z - from.z);
   }
+  // Sending a pulse: towards the robot it's for.
+  const target = a?.type === "fire" ? thing(world, a.at) : null;
+  if (target && target.cell !== robot.cell) {
+    const from = cellCentre(terrain, robot.cell);
+    const to = cellCentre(terrain, target.cell);
+    return Math.atan2(to.x - from.x, to.z - from.z);
+  }
   const at = thingAt(world, robot.cell);
   if (!at) return null;
   const here = cellCentre(terrain, robot.cell);

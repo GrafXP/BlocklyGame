@@ -65,13 +65,15 @@ export function applyCommand(world, command) {
   return done ? { ok: true } : { ok: false, reason: reason("command.invalid", { type: String(command?.type) }) };
 }
 
+// The player's robot or building `id`: the opponent's robots aren't the
+// player's to program, name or start (SKIRMISH_PLAN.md §7, ownership).
 const runner = (world, id) => {
   const e = thing(world, id);
-  return e && e.kind !== "node" ? e : null;
+  return e && e.kind !== "node" && e.side !== "opponent" ? e : null;
 };
 const robot = (world, id) => {
   const e = thing(world, id);
-  return e?.kind === "robot" ? e : null;
+  return e?.kind === "robot" && e.side !== "opponent" ? e : null;
 };
 
 const copy = (value) => JSON.parse(JSON.stringify(value));
@@ -154,7 +156,7 @@ const COMMANDS = {
       if (!TYPES[type] || TYPES[type].kind === "node") return false;
       // A type without a program yet gets one, in order of type.
       defaults = [...defaults.filter((d) => d.type !== type), { type, program }].sort((a, b) => (a.type < b.type ? -1 : 1));
-      affected = world.entities.filter((e) => e.type === type);
+      affected = world.entities.filter((e) => e.type === type && e.side !== "opponent");
     }
     if (!allCanRun({ ...world, roles, defaults }, affected)) return false;
     Object.assign(world, { roles, defaults });

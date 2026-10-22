@@ -56,7 +56,7 @@ test("a world's mission has its goals unmet until they hold; a world without one
   assert.deepEqual(world.mission, {
     id: "m",
     goals: [{ ...goal, done: null, failed: null }],
-    tally: { unloads: {}, together: {}, made: {}, waited: {} },
+    tally: { unloads: {}, together: {}, made: {}, waited: {}, hits: {}, hurt: {}, repairs: {} },
     collected: {},
     reward: [],
     done: null,

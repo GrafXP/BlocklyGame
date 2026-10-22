@@ -1,6 +1,6 @@
 import { TYPES } from "../sim/entities.js";
 import { RECIPES } from "../sim/recipes.js";
-import { BLUEPRINTS, ITEM_CHOICES, MADE, PLACES, TEAMS } from "./blocks.js";
+import { BLUEPRINTS, ITEM_CHOICES, MADE, PLACES, ROBOTS, TEAMS } from "./blocks.js";
 
 // What a "field_choice" dropdown offers in the editor of a program (PLAN.md §7,
 // valid-target dropdowns): only what makes sense on this island, for what will
@@ -64,6 +64,8 @@ export const CHOICES = {
       .map((t) => [labelIn(PLACES, t.id) ?? t.name, t.id]),
   // The items the building has a recipe for.
   makes: ({ type }) => MADE.filter(([, item]) => recipesOf(type)?.includes(item) ?? RECIPES[item]),
+  // The robots the building can make: the camp helpers, the workshop guards.
+  robots: ({ type }) => ROBOTS.filter(([, robot]) => recipesOf(type)?.includes(robot) ?? true),
   // What the building can build: a construction site, what its blueprint says.
   builds: ({ type, builds }) => BLUEPRINTS.filter(([, what]) => (builds?.length ? builds.includes(what) : (recipesOf(type)?.includes(what) ?? RECIPES[what]))),
 };

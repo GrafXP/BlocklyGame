@@ -49,6 +49,9 @@ export const PLACES = [
   ["%{BKY_PLACE_KILN}", "kiln"],
   ["%{BKY_PLACE_SMELTER}", "smelter"],
   ["%{BKY_PLACE_MINE}", "mine"],
+  ["%{BKY_PLACE_FLAG}", "flag"],
+  ["%{BKY_PLACE_CROSSING}", "crossing"],
+  ["%{BKY_PLACE_LANDING}", "landing"],
 ];
 // Every item (src/sim/entities.js, ITEMS), as dropdowns list them: what's
 // found, then what's made. On an island, a dropdown offers only those found or
@@ -89,6 +92,13 @@ export const TEAMS = [
   ["%{BKY_TEAM_WOOD}", "wood-team"],
   ["%{BKY_TEAM_PLANK}", "plank-team"],
   ["%{BKY_TEAM_STONE}", "stone-team"],
+  ["%{BKY_TEAM_DEFENDERS}", "defenders"],
+];
+// The robots a building can make, each with its recipe (src/sim/recipes.js):
+// the camp makes helpers, the workshop guards.
+export const ROBOTS = [
+  ["%{BKY_NEW_HELPER}", "helper"],
+  ["%{BKY_NEW_GUARD}", "guard"],
 ];
 // Who a message can go to: the island's robots and buildings. On an island,
 // its own (src/blockly/choices.js, recipients); these where there's none.
@@ -96,7 +106,7 @@ export const RECIPIENTS = [
   ["%{BKY_ROBO_1}", "r1"],
   ["%{BKY_ROBO_2}", "r2"],
   ["%{BKY_ROBO_3}", "r3"],
-  ...PLACES.filter(([, id]) => !["grove", "quarry", "spring", "berries", "mine"].includes(id)),
+  ...PLACES.filter(([, id]) => !["grove", "quarry", "spring", "berries", "mine", "flag", "crossing", "landing"].includes(id)),
 ];
 
 // The value block each action's input starts with, as its shadow: the input's
@@ -104,6 +114,8 @@ export const RECIPIENTS = [
 export const SHADOWS = {
   robot_go_to: { input: "PLACE", type: "value_place", field: "PLACE" },
   robot_pick_up: { input: "ITEM", type: "value_item", field: "ITEM" },
+  robot_advance: { input: "PLACE", type: "value_place", field: "PLACE" },
+  robot_guard: { input: "PLACE", type: "value_place", field: "PLACE" },
 };
 
 // The setting blocks, each reading one of a robot's settings (src/sim/
@@ -174,6 +186,40 @@ export const BLOCKS = [
     style: "robot_blocks",
     tooltip: "%{BKY_SUPPLY_FROM_TOOLTIP}",
   },
+  // A guard's short actions (src/sim/combat.js): Advance toward a place, a few
+  // cells of the way or a pulse at an opponent near; Guard a place, staying
+  // there and sending pulses at opponents near it. Each then lets the next
+  // block run. Go Home and Repair is any robot's: the walk to the camp, and
+  // its shield made whole there.
+  {
+    type: "robot_advance",
+    message0: "%{BKY_ROBOT_ADVANCE}",
+    args0: [icon("advance"), { type: "input_value", name: "PLACE", check: "Place" }],
+    inputsInline: true,
+    previousStatement: null,
+    nextStatement: null,
+    style: "robot_blocks",
+    tooltip: "%{BKY_ROBOT_ADVANCE_TOOLTIP}",
+  },
+  {
+    type: "robot_guard",
+    message0: "%{BKY_ROBOT_GUARD}",
+    args0: [icon("guard"), { type: "input_value", name: "PLACE", check: "Place" }],
+    inputsInline: true,
+    previousStatement: null,
+    nextStatement: null,
+    style: "robot_blocks",
+    tooltip: "%{BKY_ROBOT_GUARD_TOOLTIP}",
+  },
+  {
+    type: "robot_repair",
+    message0: "%{BKY_ROBOT_REPAIR}",
+    args0: [icon("repair")],
+    previousStatement: null,
+    nextStatement: null,
+    style: "robot_blocks",
+    tooltip: "%{BKY_ROBOT_REPAIR_TOOLTIP}",
+  },
   {
     type: "building_make",
     message0: "%{BKY_BUILDING_MAKE}",
@@ -192,11 +238,12 @@ export const BLOCKS = [
     style: "building_blocks",
     tooltip: "%{BKY_BUILDING_BUILD_TOOLTIP}",
   },
-  // The camp makes a new robot for a team, which gives it its job.
+  // A building makes a new robot, a helper at the camp or a guard at the
+  // workshop, for a team, which gives it its job.
   {
     type: "building_assemble",
     message0: "%{BKY_BUILDING_ASSEMBLE}",
-    args0: [icon("assemble"), { type: "field_choice", name: "TEAM", options: TEAMS, choices: "teams" }],
+    args0: [icon("assemble"), { type: "field_choice", name: "ROBOT", options: ROBOTS, choices: "robots" }, { type: "field_choice", name: "TEAM", options: TEAMS, choices: "teams" }],
     previousStatement: null,
     nextStatement: null,
     style: "building_blocks",
@@ -306,6 +353,24 @@ export const BLOCKS = [
     output: "Number",
     style: "sensing_blocks",
     tooltip: "%{BKY_SENSE_BASKET_TOOLTIP}",
+  },
+  // A robot's own conditions, naming no place: its shield half gone or more,
+  // and an opponent near it (src/sim/combat.js).
+  {
+    type: "sense_low",
+    message0: "%{BKY_SENSE_LOW}",
+    args0: [],
+    output: "Boolean",
+    style: "sensing_blocks",
+    tooltip: "%{BKY_SENSE_LOW_TOOLTIP}",
+  },
+  {
+    type: "sense_danger",
+    message0: "%{BKY_SENSE_DANGER}",
+    args0: [],
+    output: "Boolean",
+    style: "sensing_blocks",
+    tooltip: "%{BKY_SENSE_DANGER_TOOLTIP}",
   },
   // The values an action's input starts with: a place, an item to pick up.
   // They're the robot's colour, a lighter part of its block.

@@ -43,15 +43,27 @@ export default {
   // %1: a place, from PLACE_*, where Supply may take things from. No picture.
   SUPPLY_FROM: "from %1",
   SUPPLY_FROM_TOOLTIP: "A place where Supply may take things from.",
+  // A guard's. %2: a place, from PLACE_*. Advance goes a few steps toward the
+  // place, or sends a pulse at an opponent near, then lets the next block run.
+  ROBOT_ADVANCE: "%1 advance toward %2",
+  ROBOT_ADVANCE_TOOLTIP: "Go a few steps toward the place, or send a pulse at an opponent near. Then the next block runs.",
+  // %2: a place, from PLACE_*. Guard stays at the place and sends pulses at
+  // opponents near it; it doesn't chase them.
+  ROBOT_GUARD: "%1 guard %2",
+  ROBOT_GUARD_TOOLTIP: "Go to the place and watch it: send a pulse at an opponent near it. A short watch, then the next block runs.",
+  // Any robot's: the walk to the camp, and its shield repaired there.
+  ROBOT_REPAIR: "%1 go home and repair",
+  ROBOT_REPAIR_TOOLTIP: "Walk to the camp and repair the shield there. It costs nothing.",
   // %2: planks or kits, from ITEM_*.
   BUILDING_MAKE: "%1 make %2",
   BUILDING_MAKE_TOOLTIP: "Make one item from the materials in store.",
   // %2: what to build, from BLUEPRINT_*.
   BUILDING_BUILD: "%1 build %2",
   BUILDING_BUILD_TOOLTIP: "Build it from the materials in store.",
-  // %2: a team, from TEAM_*, or the island's own. A helper is a new robot.
-  BUILDING_ASSEMBLE: "%1 make a helper for %2",
-  BUILDING_ASSEMBLE_TOOLTIP: "Make a new robot from 2 planks and 1 charge pack. Its team gives it its job.",
+  // %2: which robot, from NEW_*: the camp makes helpers, the workshop
+  // guards. %3: a team, from TEAM_*, or the island's own.
+  BUILDING_ASSEMBLE: "%1 make a %2 for %3",
+  BUILDING_ASSEMBLE_TOOLTIP: "Make a new robot: a helper from 2 planks and 1 charge pack, a guard from a kit, an iron bar and a charge pack. Its team gives it its job.",
   // %2: the number of steps, typed by the player. A step is one press of the
   // Step button.
   CONTROL_WAIT_STEPS: "%1 wait %2 steps",
@@ -89,6 +101,11 @@ export default {
   // picture.
   SENSE_READY: "ready to make %1",
   SENSE_READY_TOOLTIP: "True when every ingredient is here and the whole batch will fit. It doesn't start the work.",
+  // Conditions, a robot's own. No picture and no inputs.
+  SENSE_LOW: "my shield is low",
+  SENSE_LOW_TOOLTIP: "True when half of the shield or more is gone. It's looked at each time the program comes to it.",
+  SENSE_DANGER: "opponent near",
+  SENSE_DANGER_TOOLTIP: "True while an opponent's robot is near this robot. It's looked at each time the program comes to it.",
 
   // A place or an item in an action's gap, chosen from a dropdown. No words of
   // their own besides the dropdown's.
@@ -122,6 +139,11 @@ export default {
   PLACE_KILN: "kiln",
   PLACE_SMELTER: "smelter",
   PLACE_MINE: "iron mine",
+  // The rally flag, the crossing at the bridge, and the beach where the
+  // practice visitors land.
+  PLACE_FLAG: "flag",
+  PLACE_CROSSING: "crossing",
+  PLACE_LANDING: "landing",
   ITEM_WOOD: "wood",
   ITEM_STONE: "stone",
   ITEM_WATER: "water",
@@ -150,6 +172,10 @@ export default {
   TEAM_WOOD: "Wood team",
   TEAM_PLANK: "Plank team",
   TEAM_STONE: "Stone team",
+  TEAM_DEFENDERS: "Defenders",
+  // The robots a building can make, in “make a … for …”.
+  NEW_HELPER: "helper",
+  NEW_GUARD: "guard",
   // What a construction site can build.
   BLUEPRINT_BRIDGE: "bridge",
   BLUEPRINT_WORKSHOP: "workshop",

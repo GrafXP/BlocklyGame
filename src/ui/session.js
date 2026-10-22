@@ -440,7 +440,8 @@ const fits = new WeakMap(); // applied source → Map(type → whether it compil
 export function canRunProgram(id, programId) {
   const e = peekWorld().entities.find((it) => it.id === id);
   const doc = programDoc(currentLibrary(), programId);
-  if (!e || !doc) return false;
+  // The opponent's robots aren't the player's to program.
+  if (!e || !doc || e.side === "opponent") return false;
   const { source } = latest(doc);
   if (!fits.has(source)) fits.set(source, new Map());
   const byType = fits.get(source);

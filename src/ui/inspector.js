@@ -1,5 +1,5 @@
 import { display, formatNumber, t } from "../i18n/index.js";
-import { ITEMS } from "../sim/entities.js";
+import { ITEMS, TYPES } from "../sim/entities.js";
 import { thing, thingAt } from "../sim/things.js";
 import { identityOf } from "../render/identity.js";
 import { blockChip } from "./chips.js";
@@ -123,9 +123,16 @@ export function detailsHtml(world, id, entry, words) {
   }
   if (it.kind === "robot") {
     const at = thingAt(world, it.cell);
+    if (it.side === "opponent") parts.push(row("opponent", t("inspector.opponent"), esc(t("inspector.opponent"))));
     parts.push(row("where", t("world.where"), at ? esc(display(at.name)) : "–"));
-    const held = Object.values(it.store.items).reduce((a, b) => a + b, 0);
-    parts.push(row("basket", t("inspector.basket"), `<span class="basket"><span title="${esc(amounts(it.store.items))}">${itemsMarkup(it.store.items)}<span class="vh">${esc(amounts(it.store.items))}</span></span> ${fraction(held, it.store.total)}</span>`));
+    // Its shield's segments, whole and gone, and how many of how many.
+    const whole = TYPES[it.type].shield;
+    const segments = Array.from({ length: whole }, (_, i) => `<span class="segment${i < it.shield ? "" : " gone"}"></span>`).join("");
+    parts.push(row("shield", t("inspector.shield"), `<span class="shield-segments" aria-hidden="true">${segments}</span> ${fraction(it.shield, whole)}`));
+    if (it.store.total > 0) {
+      const held = Object.values(it.store.items).reduce((a, b) => a + b, 0);
+      parts.push(row("basket", t("inspector.basket"), `<span class="basket"><span title="${esc(amounts(it.store.items))}">${itemsMarkup(it.store.items)}<span class="vh">${esc(amounts(it.store.items))}</span></span> ${fraction(held, it.store.total)}</span>`));
+    }
     if (it.supply && !it.supply.idle) parts.push(row("supply", t("inspector.supply"), supplyWords(world, it.supply)));
   } else {
     parts.push(row("has", t("world.has"), stock(it)));

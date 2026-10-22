@@ -7,7 +7,7 @@ import { checkProgram } from "../src/programming/runtime.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { block, call, chain, changeVar, getVar, input, routine, setVar, withVariables, workspace } from "../src/content/build.js";
 import { CODES } from "../src/sim/codes.js";
-import { assemble, basket, compare, forever, go, make, my, needs, num, pickUp, program, ready, repeat, space, start, stock, supply, unload, until, wait, when } from "./programs.js";
+import { advance, assemble, basket, compare, danger, forever, go, guard, low, make, my, needs, num, pickUp, program, ready, repair, repeat, space, start, stock, supply, unload, until, wait, when } from "./programs.js";
 
 // The compiler (PLAN.md §7, §12): Blockly's JSON in, the game's instructions
 // out, each visible one with the id of its block; and what can't work as
@@ -245,6 +245,33 @@ test("Supply compiles to its building and the places in it, in order; the camp m
   assert.deepEqual(checkProgram(camp), []);
   assert.deepEqual(codes(compile(program(assemble("a", "wood-team")), { type: "sawmill" }).errors), ["program.cannot a"], "a sawmill makes no robots");
   assert.deepEqual(codes(compile(program(make("m", "plank")), { type: "camp" }).errors), ["program.cannot m"], "and the camp no planks");
+});
+
+test("a guard's blocks: Advance and Guard name a place; Go Home and Repair is the walk home, then the repair, one block; the shield's conditions name nothing", () => {
+  const { program: p, errors } = compile(program(advance("a", "post"), guard("g", "post"), repair("r"), until("u", low("l")), until("d", danger("n"))), { type: "guard", places: ["post"] });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(p.code.slice(0, 6), [
+    { op: "act", block: "a", intent: { type: "advance", target: "post" } },
+    { op: "act", block: "g", intent: { type: "guard", target: "post" } },
+    { op: "act", block: "r", intent: { type: "home" } },
+    { op: "act", block: "r", intent: { type: "repair" } },
+    { op: "until", block: "u", test: { op: "low", block: "l" } },
+    { op: "until", block: "d", test: { op: "danger", block: "n" } },
+  ]);
+  assert.deepEqual(p.needs, ["advance", "guard", "home", "repair", "shield"]);
+  assert.deepEqual(checkProgram(p), []);
+  assert.deepEqual(codes(compile(program(advance("a", "post")), { type: "helper" }).errors), ["program.cannot a"], "a helper doesn't advance");
+  assert.deepEqual(codes(compile(program(pickUp("p")), { type: "guard" }).errors), ["program.cannot p"], "a guard carries nothing");
+  assert.deepEqual(codes(compile(program(until("u", low("l"))), { type: "camp" }).errors), ["program.cannot l"], "a building has no shield");
+  assert.deepEqual(compile(program(repair("r")), { type: "helper" }).errors, [], "any robot goes home to repair");
+});
+
+test("Make a robot names which robot: the camp makes helpers, the workshop guards", () => {
+  const { program: shop, errors } = compile(program(assemble("m", "defenders", "guard")), { type: "workshop" });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(shop.code[0].intent, { type: "make", recipe: "guard", role: "defenders" });
+  assert.deepEqual(codes(compile(program(assemble("m", "defenders", "guard")), { type: "camp" }).errors), ["program.cannot m"]);
+  assert.deepEqual(codes(compile(program(assemble("m", "defenders", "tank"))).errors), ["program.unsupported m"]);
 });
 
 test("Ready to Make is a building's own condition: it names an item the building makes, and no place", () => {

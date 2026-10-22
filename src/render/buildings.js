@@ -61,12 +61,12 @@ function depot(m, { across, deep, caps }) {
   const sign = mesh(new THREE.BoxGeometry(0.6, 0.34, 0.06), m.accent);
   sign.position.set(across / 2 - 0.45, 1.15, -deep / 2 + 0.15);
   group.add(platform, post, sign);
-  // Two rows of three pads: wood, stone and planks at the back, kits, iron
-  // bars and charge packs at the front.
-  const w = (across - 0.4) / 3;
+  // Two rows of four pads: wood, stone, planks and water at the back, kits,
+  // iron bars and charge packs at the front.
+  const w = (across - 0.45) / 4;
   const d = (deep - 0.4) / 2;
-  const pad = (col, row) => ({ x: (col - 1) * (w + 0.05), y: 0.2, z: (row - 0.5) * (d + 0.1), w, d });
-  const stock = createStock(m, caps, { wood: pad(0, 0), stone: pad(1, 0), plank: pad(2, 0), kit: pad(0, 1), iron: pad(1, 1), pack: pad(2, 1) });
+  const pad = (col, row) => ({ x: (col - 1.5) * (w + 0.05), y: 0.2, z: (row - 0.5) * (d + 0.1), w, d });
+  const stock = createStock(m, caps, { wood: pad(0, 0), stone: pad(1, 0), plank: pad(2, 0), water: pad(3, 0), kit: pad(0, 1), iron: pad(1, 1), pack: pad(2, 1) });
   group.add(stock.group);
   return { group, top: 1.5, update: (world, e) => stock.update(e.store.items) };
 }
@@ -192,6 +192,9 @@ function workshop(m, { across, deep, caps }) {
     plank: { x: -across / 3, y: 0, z: deep / 2 - 0.4, w: across / 3 - 0.15, d: 0.6 },
     stone: { x: 0, y: 0, z: deep / 2 - 0.4, w: across / 3 - 0.2, d: 0.5 },
     kit: { x: across / 3, y: 0.32, z: deep / 2 - 0.4, w: 0.8, d: 0.45 },
+    // A guard's bill besides: its iron bars and charge packs, in front of the hut.
+    iron: { x: -across / 3 + 0.2, y: 0, z: hutZ + 0.62, w: 0.6, d: 0.22 },
+    pack: { x: 0.1, y: 0, z: hutZ + 0.62, w: 0.5, d: 0.22 },
   });
   group.add(stock.group);
   return {

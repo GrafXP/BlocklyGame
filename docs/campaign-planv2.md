@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; phase 6 and chapters 9–12 of phase 7 (missions 31–60: water, energy, Supply and industry) followed on 21 October 2026; the rest is proposed
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; phase 6 and chapters 9–12 of phase 7 (missions 31–60: water, energy, Supply and industry) followed on 21 October 2026, and phase 9, chapters 13–14 (missions 61–70: guards), on 22 October 2026; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -785,7 +785,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A guard has a different job and toolbox from a helper.
 - **Setup and support:** One guard, a reachable flag, and no opponent. Explain Advance's short return and the guard's distinct toolbox; no Forever shell is placed.
 - **Player task:** Write a repeating movement program with the flag as its destination.
-- **Success / observe:** The guard reaches the flag. “Which robot carries things, and which protects them?” Collection and Supply choices are absent from the guard's toolbox.
+- **Success / observe:** The guard reaches the flag. “Which robot carries things, and which protects them?” Collection and Supply choices are absent from the guard's toolbox. *As built (22 October 2026):* Guard 1 starts by the camp, and the flag stands across the bridge, south of the iron mine. An Advance walks two cells (`src/sim/combat.js`). A guard has no basket, and its toolbox no Go To, Pick Up or Supply. The goal is Guard 1 at the flag.
 
 #### 62. Watch This Place
 
@@ -795,7 +795,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Guard approaches and protects an area without chasing across the map.
 - **Setup and support:** A healthy guard and one announced preplaced visitor on a short finite route. Explain Guard's bounded watch cycle; economy and assembly are outside this fixture.
 - **Player task:** Write the complete repeated protection program and select the crossing.
-- **Success / observe:** The guard reaches its area, responds to the visitor, and remains within its allowed protection area after the visitor leaves. “What is the guard watching?” Tune the fixture so defeat/reboot is not needed yet.
+- **Success / observe:** The guard reaches its area, responds to the visitor, and remains within its allowed protection area after the visitor leaves. “What is the guard watching?” Tune the fixture so defeat/reboot is not needed yet. *As built (22 October 2026):* the visitor, the opponent's robot, waits, walks over the bridge to the crossing, stays a moment and goes back to its landing on the east bank's north beach; it sends no pulses. The goal is two pulses landed by Guard 1 (`hits`). Advance toward the crossing does it too.
 
 #### 63. Move and Watch
 
@@ -805,7 +805,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Advance combines movement with nearby engagements, then continues toward its place.
 - **Setup and support:** One healthy guard, a short route, and an easy visible opponent. Show side shapes and badges. The focus guard has no program; no old Guard action is preselected for replacement.
 - **Player task:** Write the advancing job, test the encounter, and compare the observed travel with guarding one place.
-- **Success / observe:** The guard engages the opponent when eligible and continues to the flag when the path is clear. “How did this differ from watching one place?” Use an easy finite encounter, with no moving-target selection block to learn.
+- **Success / observe:** The guard engages the opponent when eligible and continues to the flag when the path is clear. “How did this differ from watching one place?” Use an easy finite encounter, with no moving-target selection block to learn. *As built (22 October 2026):* the visitor stands by the way, south of the bridge's east end, with two of its three segments, and sends no pulses; knocked out, its visit is over. The goal is Guard 1 at the flag with two pulses landed on the way (`reached` with `hits`): Guard of the flag walks past it without one.
 
 #### 64. Come Home for Repair
 
@@ -815,7 +815,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Go Home and Repair is a complete free recovery action.
 - **Setup and support:** One damaged guard away from camp, zero packs, and no opponents. Explain Go Home and Repair and show its progress bar.
 - **Player task:** Write the recovery instruction and observe a complete free repair.
-- **Success / observe:** The guard reaches its own camp and completes basic repair without spending resources. “Does an empty pack shelf stop this repair?” No speed comparison yet.
+- **Success / observe:** The guard reaches its own camp and completes basic repair without spending resources. “Does an empty pack shelf stop this repair?” No speed comparison yet. *As built (22 October 2026):* Guard 1 has one segment of four left, at the flag, and the camp has no packs. Go Home and Repair is the walk to the camp and the repair, two actions under one block. The goal is one repair finished (`repaired`).
 
 #### 65. Check the Shield Again
 
@@ -825,7 +825,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Repeated conditions make a guard respond to a changing shield.
 - **Setup and support:** Announced healthy and low-shield trials; the healthy trial includes a gentle encounter that later lowers the shield. Explain the Low Shield condition, but supply no loop or branch.
 - **Player task:** Author the repeated condition and both protection/recovery behaviors, then test a full protect-repair-return cycle.
-- **Success / observe:** The guard protects while healthy, returns and repairs when low, then resumes its job. “When does it look at the shield again?” Verify short Guard actions return to the condition; do not pretend If interrupts a running action.
+- **Success / observe:** The guard protects while healthy, returns and repairs when low, then resumes its job. “When does it look at the shield again?” Verify short Guard actions return to the condition; do not pretend If interrupts a running action. *As built (22 October 2026):* trials are gone: one visitor, guarding the crossing for a while, sends pulses back. “My shield is low” is half of it gone or more. The goal is Guard 1 at the crossing after a repair (`reached` with `repairs`): guarding without looking at the shield wins the fight, but never repairs.
 
 ### Chapter 14 — Back to Work Safely
 
@@ -837,7 +837,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Losing shield disables a robot temporarily; its assigned program remains.
 - **Setup and support:** A visibly rebooting guard, a complete Defender job, and an occupied population slot after an explained encounter. Keep the optional encounter replay separate.
 - **Player task:** Inspect the recovery and resumed job; explain whether a new robot or new payment was needed.
-- **Success / observe:** The same robot recovers through the documented restart rule and resumes protection without payment or reassignment. “Is it gone, or coming back?” Explain any program-local restart through the highlighted block, not through a new memory lesson.
+- **Success / observe:** The same robot recovers through the documented restart rule and resumes protection without payment or reassignment. “Is it gone, or coming back?” Explain any program-local restart through the highlighted block, not through a new memory lesson. *As built (22 October 2026):* a mission to watch (`watch`, src/campaign.js), which the world does alone: Guard 1 starts rebooting at the camp, its shield gone and its Defender job kept, and starts the job again from its start. The goal is Guard 1 at the crossing. There's no encounter replay.
 
 #### 67. Build a Guard
 
@@ -847,7 +847,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A workshop pays one kit, one iron bar, and one pack to assemble a guard.
 - **Setup and support:** Stage the exact bill and an available guard slot. A fixed Defender job is background support for the resulting guard, as in helper assembly; the workshop's program is empty.
 - **Player task:** Write the workshop's one-time paid assembly instruction and watch the guard take up its job.
-- **Success / observe:** One paid guard appears and reaches its assigned protection area. “Which building makes helpers, and which makes guards?” Assembly cannot consume the same kit twice.
+- **Success / observe:** One paid guard appears and reaches its assigned protection area. “Which building makes helpers, and which makes guards?” Assembly cannot consume the same kit twice. *As built (22 October 2026):* “make a … for …” names the robot: a helper at the camp, a guard at the workshop, whose store now takes a guard's bill. The new guard is Guard 1, on the Defenders, whose job guards the crossing. The goal is one robot made (`assembled`).
 
 #### 68. Protect the Other Place
 
@@ -857,7 +857,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A guard's destination determines which place it protects.
 - **Setup and support:** Two healthy guards; only the camp guard has a background program. The selected guard starts with Start, using literal places and no shared controls. Announce a short practice visit.
 - **Player task:** Author the selected guard's complete protection job and test both places remaining covered.
-- **Success / observe:** Each guard reaches and protects its intended area through a short announced visit. “Which place does this guard watch?” Editing the selected guard affects only its own program and never heals either shield.
+- **Success / observe:** Each guard reaches and protects its intended area through a short announced visit. “Which place does this guard watch?” Editing the selected guard affects only its own program and never heals either shield. *As built (22 October 2026):* the visitor comes to the crossing and goes, and Guard 1's job, background support, guards the camp. The goal is two pulses landed by Guard 2.
 
 #### 69. A Courier Notices Danger
 
@@ -867,7 +867,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Opponent Near? can choose between a delivery and a safe return.
 - **Setup and support:** One supplier, known sources and finite demand, with clear and threatened trials. Provide enough margin for a bounded delivery to finish before retreat is needed. Explain the new sensor; no branches are supplied.
 - **Player task:** Build the complete repeated danger decision, safe-return branch, and configured Supply branch.
-- **Success / observe:** The clear trial delivers; the threatened trial returns home and later resumes after the visitor leaves. “When will it check again?” Supply is bounded, but the condition is not an instant escape interrupt.
+- **Success / observe:** The clear trial delivers; the threatened trial returns home and later resumes after the visitor leaves. “When will it check again?” Supply is bounded, but the condition is not an instant escape interrupt. *As built (22 October 2026):* trials are gone: one start, the threatened one. The depot orders eight buckets of water, which Robo 1 brings from the well; the visitor comes over the bridge to the depot, waits there long enough for a delivery to finish, then guards it, and leaves. “Opponent near” is within six cells. The goal is eight buckets delivered by Robo 1, never hit by a pulse (`safe`); Supply without looking gets it hit.
 
 #### 70. Keep the Route Open
 
@@ -877,7 +877,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Production and protection can support one visible goal.
 - **Setup and support:** A complete background iron chain, water courier, and home defender. The focus guard is healthy and unprogrammed. Announce one finite raid and provide a planning pause before it.
 - **Player task:** Choose a protection area and author the full shield-aware guard job, then test it through the raid and completed production.
-- **Success / observe:** Two new iron batches finish after the raid has run its course, the player's camp remains active, and interrupted workers recover. “Which delivery did the guard help?” Unlock guard practice; no opponent-camp victory is required yet.
+- **Success / observe:** Two new iron batches finish after the raid has run its course, the player's camp remains active, and interrupted workers recover. “Which delivery did the guard help?” Unlock guard practice; no opponent-camp victory is required yet. *As built (22 October 2026):* there's no camp guard: the camp stands by the well, and its guard would protect the route by itself. The smelter has the ore and charcoal for two batches, Robo 1 carries water from the well, and the raid is one visitor, with two segments, advancing on the well. The goal is two batches made with Robo 1 never hit (`made` with `safe`): guarding the crossing does it, or the well; guarding the camp doesn't. Guard practice isn't there yet, as peaceful templates aren't (mission 40).
 
 ### Chapter 15 — Gold and Clever Parts
 
@@ -1609,7 +1609,8 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 - Missions 26–30 also need a goal for a building finished on its construction site (today's `built` goal knows only bridges) and a placement-only goal for 26.
 - Missions 31–45 have theirs since 21 October 2026: water, food, charge packs and paid assembly within a robot limit; buildings' orders, Supply, Needs and Space.
 - Missions 46–60 have theirs since the same day: stone blocks, charcoal, iron ore and iron bars; the stonecutter, the kiln, the smelter and its bill, the iron mine; Ready to Make; a building's waits counted against `noWait`; and an order of several items as a goal.
-- Everything else needs engine work first, in the order of the skirmish plan's stages: buildings with two recipes and gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105). Mission 85 needs none.
+- Missions 61–70 have theirs since 22 October 2026: sides and shields, guards, Advance and Guard, pulses, Go Home and Repair, reboot, paid guards, the low-shield and opponent-near conditions, practice visitors following a script, and markers (the flag, the crossing, the landing).
+- Everything else needs engine work first, in the order of the skirmish plan's stages: buildings with two recipes and gold, the forge, the lab and improvements (71–80); the opponent's camp, population, faster repair and the computer opponent (86–105). Mission 85 needs none.
 
 ### Corrections after playtesting
 
@@ -1653,7 +1654,7 @@ The first time a device opens v2, the v1 progress on it is credited through the 
 | 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | Implemented 21 October 2026 |
 | 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | Chapters 9–12 (41–60), with Supply, orders, Needs, Space, Ready to Make, stone blocks, charcoal and iron, implemented 21 October 2026; 85 to come |
 | 8 | Chapters 15–16 (71–80) | Gold, forge, lab, improvements | |
-| 9 | Chapters 13–14 (61–70) | Sides, shields, Guard and Advance, repair and reboot, paid guards | |
+| 9 | Chapters 13–14 (61–70) | Sides, shields, Guard and Advance, repair and reboot, paid guards | Implemented 22 October 2026, before phase 8 |
 | 10 | Chapters 18–21 (86–105) | Population, the opponent, matches and presets, safe edits | |
 | 3 | Missions 81–84; workshops A and B (A01–A10) | None; interim gates | |
 | 4 | Workshop C (A11–A15) | None; interim gate for 85 | |

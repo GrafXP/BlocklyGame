@@ -16,6 +16,11 @@ const SHAPES = {
   supply: `<path d="M4 18.5h16"/><rect x="5" y="11" width="6" height="5" rx=".8"/><path d="M13.5 13.5h5M16.5 11l2.5 2.5-2.5 2.5" fill="none"/><path d="M14 7.5l4-3 4 3" fill="none" stroke-width="1.4"/>`,
   // A new robot: its head, and a plus.
   assemble: `<rect x="5" y="8" width="10" height="8" rx="1.5"/><path d="M10 8V5.5" fill="none"/><path d="M18.5 9v6M15.5 12h6" fill="none"/>`,
+  // A guard's: going forward, step by step; a shield, watching a place; a
+  // wrench, its shield repaired at home.
+  advance: `<path d="M6 7.5l4.5 4.5L6 16.5M12.5 7.5L17 12l-4.5 4.5" fill="none"/>`,
+  guard: `<path d="M12 4.5l6.5 2.5v4.6c0 4-2.9 6.6-6.5 7.9-3.6-1.3-6.5-3.9-6.5-7.9V7z" fill="none"/><path d="M12 8v7.5" fill="none" stroke-width="1.4"/>`,
+  repair: `<path d="M15.2 4.8a3.6 3.6 0 0 0-4.4 4.6l-5.6 5.6 2.3 2.3 5.6-5.6a3.6 3.6 0 0 0 4.6-4.4L15.6 9.4l-2.2-.6-.6-2.2z" fill="none" stroke-width="1.5"/>`,
   make: `<circle cx="12" cy="12" r="4.2" fill="none" stroke-width="2.6" stroke-dasharray="2.2 1.1"/><circle cx="12" cy="12" r="1.3" stroke="none"/>`,
   build: `<path d="M5 15.5h14M6.5 15.5V12M17.5 15.5V12M6.5 12q5.5-5 11 0" fill="none"/>`,
   wait: `<path d="M8.5 6h7l-3.5 6 3.5 6h-7l3.5-6z" stroke-width="1.4"/>`,

@@ -70,6 +70,10 @@ export function shapePath(shape, cx, cy) {
   if (shape === "triangle") return `M${cx} ${cy - r - 0.5}L${cx + r + 0.5} ${cy + r}H${cx - r - 0.5}z`;
   if (shape === "diamond") return `M${cx} ${cy - r - 1}L${cx + r + 1} ${cy}L${cx} ${cy + r + 1}L${cx - r - 1} ${cy}z`;
   if (shape === "house") return `M${cx} ${cy - r - 0.5}L${cx + r + 0.5} ${cy - 0.5}V${cy + r}H${cx - r - 0.5}V${cy - 0.5}z`;
+  if (shape === "cross") {
+    const a = r * 0.4;
+    return `M${cx - r} ${cy - r + a}L${cx - r + a} ${cy - r}L${cx} ${cy - a}L${cx + r - a} ${cy - r}L${cx + r} ${cy - r + a}L${cx + a} ${cy}L${cx + r} ${cy + r - a}L${cx + r - a} ${cy + r}L${cx} ${cy + a}L${cx - r + a} ${cy + r}L${cx - r} ${cy + r - a}L${cx - a} ${cy}z`;
+  }
   return `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
 }
 

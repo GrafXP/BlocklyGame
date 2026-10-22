@@ -10,14 +10,16 @@ import { CHAPTER_9 } from "./chapter9.js";
 import { CHAPTER_10 } from "./chapter10.js";
 import { CHAPTER_11 } from "./chapter11.js";
 import { CHAPTER_12 } from "./chapter12.js";
+import { CHAPTER_13 } from "./chapter13.js";
+import { CHAPTER_14 } from "./chapter14.js";
 
 // The campaign (PLAN.md §9; docs/campaign-planv2.md): 105 missions in 21
 // chapters on the main path, and 15 lessons in three optional workshops, built
 // in delivery phases (“Review and delivery phases”); this is what's built so
-// far, chapters 1–12, missions 1–60. It took the first campaign's place on 18
+// far, chapters 1–14, missions 1–70. It took the first campaign's place on 18
 // October 2026, the first campaign's missions and saves let go. A mission is
 //
-//   { id, n, chapter, main, workspace, focus, requires?, setup, goals,
+//   { id, n, chapter, main, workspace, watch?, focus, requires?, setup, goals,
 //     programs, blocks, reward?, look, problems?, predict?, scaffold?,
 //     reference, budget?, steps, milestone?, unlocks? }
 //
@@ -30,6 +32,9 @@ import { CHAPTER_12 } from "./chapter12.js";
 //   block alone: the child writes the program), "repair" (a whole program
 //   with a fault), "change" (a working program to change) or "explore" (no
 //   code needed). A Repair or Change starter must not meet the goals already.
+// - watch: an Explore mission that the world does alone, which the child
+//   watches, as a guard reboots and goes back to its job (mission 66); its
+//   reference changes nothing.
 // - focus: the program the child edits, which the mission card opens.
 // - requires: the missions it needs done, by id; by default the main-path
 //   mission before it. A requirement on a mission not yet built stands for the
@@ -74,6 +79,8 @@ const CHAPTERS_BUILT = [
   [10, CHAPTER_10],
   [11, CHAPTER_11],
   [12, CHAPTER_12],
+  [13, CHAPTER_13],
+  [14, CHAPTER_14],
 ];
 
 const ID = /^c2-(m|a)(\d+)$/;

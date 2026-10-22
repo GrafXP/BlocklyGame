@@ -82,8 +82,15 @@ export function describeAction(world, entity) {
   const a = entity.action;
   if (!a) return "";
   switch (a.type) {
+    // A Guard's or an Advance's few steps, or a whole Go To's way.
     case "move":
-      return t("action.move", { place: placeName(world, a.target) });
+      return t(a.cells === undefined ? "action.move" : "action.toward", { place: placeName(world, a.target) });
+    case "fire":
+      return t("action.fire", { name: placeName(world, a.at) });
+    case "watch":
+    case "repair":
+    case "reboot":
+      return t(`action.${a.type}`);
     case "pickUp":
       return t("action.pickUp", { amount: amount(a.item, 1) });
     case "unload": {
@@ -93,7 +100,7 @@ export function describeAction(world, entity) {
     }
     case "make": {
       const recipe = RECIPES[a.recipe];
-      if (recipe.assembles) return t("action.assemble", { team: teamName(world, a.role) });
+      if (recipe.assembles) return t(recipe.assembles === "guard" ? "action.assembleGuard" : "action.assemble", { team: teamName(world, a.role) });
       return recipe.builds ? t(`action.build.${recipe.builds}`) : t("action.make", { amount: amounts(recipe.outputs) });
     }
     // A Supply with nothing to bring says why, while it waits its moment.

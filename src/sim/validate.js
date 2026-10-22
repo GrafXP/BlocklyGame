@@ -1,7 +1,7 @@
 import { checkProgram } from "../programming/runtime.js";
 import { ACTIONS, robotsCounted } from "./actions.js";
 import { fitsSetting, programFor, roleOf } from "./bindings.js";
-import { ITEMS, SETTINGS, TYPES } from "./entities.js";
+import { ITEMS, SETTINGS, SIDES, TYPES } from "./entities.js";
 import { INBOX_SIZE, MESSAGES, queued } from "./messages.js";
 import { walkable } from "./navigation.js";
 import { GOALS, goalProblem } from "./objectives.js";
@@ -71,6 +71,23 @@ export function checkWorld(world) {
   for (const e of world.entities) {
     if ([e.action, e.pending, e.error].filter(Boolean).length > 1) fail(`${e.id} is doing, waiting or failed at once`);
     if (e.kind === "robot" && !walk[e.cell]) fail(`${e.id} stands on cell ${e.cell}, which can't be walked on`);
+  }
+
+  // Sides and shields (combat.js): every robot is on a side, with no more
+  // shield than a whole one, and none only while it reboots; a pulse is at a
+  // robot of the other side.
+  for (const e of world.entities) {
+    if (e.kind !== "robot") {
+      if ("side" in e || "shield" in e) fail(`${e.id} is a building with a side or a shield`);
+      continue;
+    }
+    if (!SIDES.includes(e.side)) fail(`${e.id} is on side ${e.side}`);
+    if (!(Number.isInteger(e.shield) && e.shield >= 0 && e.shield <= TYPES[e.type].shield)) fail(`${e.id}'s shield is ${e.shield}`);
+    else if ((e.shield === 0) !== (e.action?.type === "reboot")) fail(`${e.id} has a shield of ${e.shield}, ${e.action?.type === "reboot" ? "" : "not "}rebooting`);
+    if (e.action?.type === "fire") {
+      const target = world.entities.find((it) => it.id === e.action.at);
+      if (target?.kind !== "robot" || target.side === e.side) fail(`${e.id} fires at ${e.action.at}`);
+    }
   }
 
   // The robot limit, orders and Supply's plans (supply.js): the island has no
@@ -198,7 +215,7 @@ function checkMission(world, fail) {
     else if (goal.done !== null && goal.failed !== null) fail(`goal ${goal.id} was met and failed`);
   }
   const { tally, collected } = mission;
-  if (!isMap(tally) || ["unloads", "together", "made", "waited"].some((part) => !isMap(tally[part])) || !isMap(collected)) fail("the mission's tally isn't one");
+  if (!isMap(tally) || ["unloads", "together", "made", "waited", "hits", "hurt", "repairs"].some((part) => !isMap(tally[part])) || !isMap(collected)) fail("the mission's tally isn't one");
   const allMet = mission.goals.every((g) => g?.done !== null);
   if (mission.done === null) {
     if (allMet) fail("every goal is met, but the mission isn't done");

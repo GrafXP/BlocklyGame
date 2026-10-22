@@ -61,6 +61,9 @@ const PATHS = {
   // A building's order, a list on a clipboard; a robot's Supply, a load on its way.
   order: `<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9.5 4V2.8h5V4"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/>`,
   supply: `<rect x="2.5" y="8" width="8" height="7" rx="1.2"/><path d="M13 11.5h7.5M17.5 8.5l3 3-3 3"/><path d="M2.5 19h18"/>`,
+  // A robot's shield, and the opponent's side.
+  shield: `<path d="M12 3l7.5 3v5.5c0 4.8-3.3 7.9-7.5 9.5-4.2-1.6-7.5-4.7-7.5-9.5V6z"/>`,
+  opponent: `<path d="M12 3l7.5 3v5.5c0 4.8-3.3 7.9-7.5 9.5-4.2-1.6-7.5-4.7-7.5-9.5V6z"/><path d="M9 9l6 6M15 9l-6 6"/>`,
   team: `<circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c0-3.4 2.8-6 6.2-6s6.2 2.6 6.2 6"/><circle cx="17.2" cy="9" r="2.6"/><path d="M16.5 14.1c2.8.4 4.7 2.8 4.7 5.9"/>`,
   // A robot or building's state.
   ready: `<circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/>`,

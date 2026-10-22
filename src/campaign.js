@@ -186,11 +186,18 @@ const WORKSPACES = ["build", "repair", "change", "explore"];
 //   and its only commands place buildings: no team, setting or copy.
 // - A building is placed on a plot the mission marks, so its island stays as
 //   the missions after it have it.
-// That a Repair or Change starter doesn't meet the goals already is played
-// for every mission (scripts/verify-missions.js).
+// - A mission to watch (`watch`) is an Explore mission whose world gets there
+//   by itself, as a guard reboots and goes back to its job (mission 66): its
+//   reference changes nothing.
+// That a Repair or Change starter doesn't meet the goals already, and that a
+// mission to watch is done by itself, is played for every mission
+// (scripts/verify-missions.js).
 function authoringProblems(mission) {
   const problems = [];
   if ("trials" in mission) problems.push(`${mission.id}: it has trials; a mission has one start`);
+  if (mission.watch && (mission.workspace !== "explore" || Object.keys(mission.reference.programs ?? {}).length || mission.reference.commands?.length)) {
+    problems.push(`${mission.id}: a mission to watch is an Explore mission whose reference changes nothing`);
+  }
   if (mission.goals?.length !== 1) problems.push(`${mission.id}: it has ${mission.goals?.length ?? 0} goals; a mission has one`);
   if (!WORKSPACES.includes(mission.workspace)) problems.push(`${mission.id}: its workspace is ${mission.workspace}`);
   const focus = mission.programs.find((p) => p.id === mission.focus);

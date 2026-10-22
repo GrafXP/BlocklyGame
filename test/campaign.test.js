@@ -6,7 +6,7 @@ import { missionProblems, missionStart, playMission, referenceCommands } from ".
 import { CAMPAIGN, CHAPTERS, campaignMission, firstOpen, gateOf, gatesOf, isOpen, nextMission, unlockedBlocks } from "../src/content/missions/campaign.js";
 import { missionById } from "../src/content/missions/index.js";
 import { program as write } from "../src/content/missions/write.js";
-import { COMPILER_VERSION } from "../src/programming/compiler.js";
+import { COMPILER_VERSION, compile } from "../src/programming/compiler.js";
 import { giveDraft, programDoc, sameBlocks, setDraft } from "../src/programming/programs.js";
 import { goalProgress } from "../src/sim/objectives.js";
 import { thingOf } from "../src/content/missions/island.js";
@@ -68,20 +68,20 @@ test("every mission played from its start by its reference solution gives the re
   }
 });
 
-test("its missions are chapters 1–12 so far, the foundation, construction, water, energy, supply and industry, numbered on the main path", () => {
-  assert.deepEqual(ids(CAMPAIGN), Array.from({ length: 60 }, (_, i) => `c2-m${String(i + 1).padStart(3, "0")}`));
+test("its missions are chapters 1–14 so far, the foundation, construction, water, energy, supply, industry and guards, numbered on the main path", () => {
+  assert.deepEqual(ids(CAMPAIGN), Array.from({ length: 70 }, (_, i) => `c2-m${String(i + 1).padStart(3, "0")}`));
   assert.deepEqual(
     CAMPAIGN.map((m) => [m.n, m.chapter, m.main]),
-    Array.from({ length: 60 }, (_, i) => [i + 1, Math.floor(i / 5) + 1, true]),
+    Array.from({ length: 70 }, (_, i) => [i + 1, Math.floor(i / 5) + 1, true]),
   );
   assert.deepEqual(
     CHAPTERS.map((c) => [c.chapter, ids(c.missions)]),
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => [n, ids(CAMPAIGN.slice((n - 1) * 5, n * 5))]),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((n) => [n, ids(CAMPAIGN.slice((n - 1) * 5, n * 5))]),
   );
   for (const m of CAMPAIGN) assert.equal(missionById(m.id), m);
   assert.deepEqual(
     CAMPAIGN.filter((m) => m.milestone).map((m) => m.n),
-    [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
+    [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70],
   );
   assert.deepEqual(
     CAMPAIGN.filter((m) => m.unlocks).map((m) => [m.n, m.unlocks]),
@@ -94,13 +94,15 @@ test("its missions are chapters 1–12 so far, the foundation, construction, wat
 
 test("the child writes the program: a Build mission's starts with its start block alone; a Repair or Change mission's with a whole program; an Explore mission needs none", () => {
   const kinds = Object.fromEntries(CAMPAIGN.map((m) => [m.n, m.workspace]));
-  const other = { 4: "repair", 8: "repair", 9: "change", 10: "repair", 26: "explore", 28: "explore", 29: "repair", 39: "repair", 45: "repair", 49: "repair", 54: "repair", 58: "repair" };
+  const other = { 4: "repair", 8: "repair", 9: "change", 10: "repair", 26: "explore", 28: "explore", 29: "repair", 39: "repair", 45: "repair", 49: "repair", 54: "repair", 58: "repair", 66: "explore" };
   assert.deepEqual(kinds, Object.fromEntries(CAMPAIGN.map((m) => [m.n, other[m.n] ?? "build"])));
   for (const m of CAMPAIGN) {
     if (m.workspace === "explore") {
       assert.equal(m.focus, null, `${m.id} has no focus program`);
       assert.deepEqual(m.reference.programs ?? {}, {}, `${m.id}'s reference writes no program`);
-      assert.ok(m.reference.commands.every((c) => c.type === "place"), `${m.id}'s reference places a building`);
+      // A mission to watch changes nothing; the others place a building.
+      if (m.watch) assert.deepEqual(m.reference, {}, `${m.id} is watched`);
+      else assert.ok(m.reference.commands.every((c) => c.type === "place"), `${m.id}'s reference places a building`);
       continue;
     }
     const focus = m.programs.find((p) => p.id === m.focus);
@@ -153,12 +155,12 @@ test("each mission needs the one before it on the main path, and opens once that
 test("a requirement on a mission not built yet stands for the last one built below it, until it's built", () => {
   assert.equal(gateOf("c2-m003"), "c2-m003");
   assert.equal(gateOf("c2-m060"), "c2-m060", "workshops A and B wait for 60, which is built");
-  assert.equal(gateOf("c2-m085"), "c2-m060", "85 isn't built yet: it stands for 60");
+  assert.equal(gateOf("c2-m085"), "c2-m070", "85 isn't built yet: it stands for 70");
   assert.throws(() => gateOf("c2-a01"), /isn't a main-path mission/);
   // A workshop lesson after 60, as the plan has it.
   const lesson = { id: "c2-a01", main: false, requires: ["c2-m060"], blocks: ["variables_set"] };
   assert.deepEqual(gatesOf(lesson), ["c2-m060"]);
-  assert.equal(isOpen(lesson, ids(CAMPAIGN).slice(0, -1)), false);
+  assert.equal(isOpen(lesson, ids(CAMPAIGN).filter((id) => id !== "c2-m060")), false);
   assert.equal(isOpen(lesson, ids(CAMPAIGN)), true);
   assert.ok(unlockedBlocks(lesson).includes("controls_repeat_ext"), "it offers what the main path taught");
   assert.ok(!unlockedBlocks(mission("c2-m025")).includes("variables_set"), "and its blocks don't reach the main path");
@@ -641,6 +643,104 @@ test("mission 60: the bars alone don't fill the depot's order; Supply of the dep
   const world = playWith("c2-m060", { "c2-m060": supply });
   assert.notEqual(world.mission.done, null);
   assert.deepEqual(byId(world, "depot").store.items, { iron: 4, kit: 2, pack: 2 });
+});
+
+// A guard's job for missions 61–70: `blocks(p)` again and again.
+const forever = (id, blocks) => write(id, (p) => p.workspace(p.start(p.forever(...blocks(p)))));
+// The defender's job: repair when the shield is low, else guard `place`.
+const defend = (id, place) => forever(id, (p) => [p.when(p.low(), [p.repair()], [p.guard(place)])]);
+
+test("mission 61: one Advance is a few steps, and five aren't the whole way; again and again, the guard gets to the flag", () => {
+  const once = playWith("c2-m061", { "c2-m061": write("c2-m061", (p) => p.workspace(p.start(p.advance("flag")))) });
+  assert.equal(once.mission.done, null);
+  assert.notEqual(byId(once, "g1").cell, byId(missionStart(mission("c2-m061")).world, "g1").cell, "it went a few steps");
+  assert.equal(playWith("c2-m061", { "c2-m061": write("c2-m061", (p) => p.workspace(p.start(p.repeat(5, p.advance("flag"))))) }).mission.done, null);
+  assert.notEqual(playWith("c2-m061", mission("c2-m061").reference.programs).mission.done, null);
+  assert.deepEqual(toolboxFor(["guard"], { blocks: unlockedBlocks(mission("c2-m061")) }).contents.find((c) => c.name === "%{BKY_CAT_ROBOT}").contents.map((b) => b.type), ["robot_advance"], "a guard's own toolbox");
+});
+
+test("mission 62: a few Guards are over before the visitor comes, and guarding the camp sees nothing; guarding the crossing again and again does it", () => {
+  const few = playWith("c2-m062", { "c2-m062": write("c2-m062", (p) => p.workspace(p.start(p.repeat(5, p.guard("crossing"))))) });
+  assert.deepEqual([few.mission.done, few.mission.tally.hits], [null, {}]);
+  assert.equal(playWith("c2-m062", { "c2-m062": forever("c2-m062", (p) => [p.guard("camp")]) }).mission.done, null);
+  const world = playWith("c2-m062", mission("c2-m062").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.equal(byId(world, "v1").action?.type === "reboot", false, "the visitor wasn't knocked out: its visit goes on");
+});
+
+test("mission 63: guarding the flag walks past the visitor and gets there without a pulse; Advance stops for it, and goes on", () => {
+  const past = playWith("c2-m063", { "c2-m063": forever("c2-m063", (p) => [p.guard("flag")]) });
+  assert.deepEqual([past.mission.done, past.mission.tally.hits], [null, {}]);
+  const world = playWith("c2-m063", mission("c2-m063").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.deepEqual(world.mission.tally.hits, { g1: 2 });
+});
+
+test("mission 64: Go Home and Repair is the walk and the repair, for free; Advancing to the flag doesn't repair", () => {
+  assert.equal(playWith("c2-m064", { "c2-m064": forever("c2-m064", (p) => [p.advance("flag")]) }).mission.done, null);
+  const world = playWith("c2-m064", mission("c2-m064").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.deepEqual([byId(world, "g1").shield, byId(world, "camp").store.items], [4, {}]);
+});
+
+test("mission 65: guarding without looking at the shield never repairs, and looking once isn't enough; looking in a Forever, before or after Guard, does it", () => {
+  const blind = playWith("c2-m065", { "c2-m065": forever("c2-m065", (p) => [p.guard("crossing")]) });
+  assert.deepEqual([blind.mission.done, blind.mission.tally.repairs], [null, {}]);
+  assert.ok(blind.mission.tally.hurt.g1 >= 2, "the visitor sends pulses back");
+  const once = playWith("c2-m065", { "c2-m065": write("c2-m065", (p) => p.workspace(p.start(p.when(p.low(), [p.repair()], [p.guard("crossing")])))) });
+  assert.equal(once.mission.done, null);
+  assert.notEqual(playWith("c2-m065", { "c2-m065": defend("c2-m065", "crossing") }).mission.done, null);
+  assert.notEqual(playWith("c2-m065", { "c2-m065": forever("c2-m065", (p) => [p.guard("crossing"), p.when(p.low(), [p.repair()])]) }).mission.done, null);
+});
+
+test("mission 66: the guard starts out rebooting at the camp, its job kept; it starts again and goes back to the crossing by itself", () => {
+  const { world } = missionStart(mission("c2-m066"));
+  const g1 = byId(world, "g1");
+  assert.deepEqual([g1.shield, g1.action.type, g1.runtime.program, g1.runtime.at], [0, "reboot", "c2-m066", 0]);
+  assert.ok(byId(world, "camp").access.includes(g1.cell));
+  assert.notEqual(playWith("c2-m066").mission.done, null);
+});
+
+test("mission 67: the workshop can't make a helper; a kit isn't a guard; a guard for the Defenders goes off to the crossing", () => {
+  const { world } = missionStart(mission("c2-m067"));
+  const errors = (source) => compile(source, { type: "workshop", places: world.entities.map((e) => e.id) }).errors.map((e) => e.code);
+  assert.deepEqual(errors(write("c2-m067", (p) => p.workspace(p.start(p.assemble("defenders", "helper"))))), ["program.cannot"]);
+  const kit = playWith("c2-m067", { "c2-m067": write("c2-m067", (p) => p.workspace(p.start(p.make("kit")))) });
+  assert.equal(kit.mission.done, null);
+  const made = playWith("c2-m067", mission("c2-m067").reference.programs);
+  assert.notEqual(made.mission.done, null);
+  assert.deepEqual([byId(made, "g1").type, byId(made, "g1").role, byId(made, "workshop").store.items], ["guard", "defenders", {}]);
+});
+
+test("mission 68: Guard 2 at the camp beside Guard 1 sees nothing of the visitor; its own job at the crossing does, and Guard 1's job stays", () => {
+  assert.equal(playWith("c2-m068", { "c2-m068": forever("c2-m068", (p) => [p.guard("camp")]) }).mission.done, null);
+  const world = playWith("c2-m068", mission("c2-m068").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.equal(byId(world, "g1").runtime.program, "c2-m068-camp");
+});
+
+test("mission 69: supplying without looking for danger gets Robo 1 hit; looking once isn't enough; looking between deliveries keeps it safe", () => {
+  const blind = playWith("c2-m069", mission("c2-m069").scaffold);
+  assert.notEqual(blind.mission.goals[0].failed, null);
+  assert.ok(blind.mission.tally.hurt.r1 > 0);
+  const once = playWith("c2-m069", { "c2-m069": write("c2-m069", (p) => p.workspace(p.start(p.when(p.danger(), [p.repair()], [p.supply("depot", "well")])))) });
+  assert.equal(once.mission.done, null);
+  const world = playWith("c2-m069", mission("c2-m069").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.deepEqual([world.mission.tally.hurt, byId(world, "depot").store.items], [{}, { water: 8 }]);
+  const trips = forever("c2-m069", (p) => [p.when(p.danger(), [p.repair()], [p.go("well"), p.repeat(2, p.pickUp("water")), p.go("depot"), p.unload()])]);
+  assert.notEqual(playWith("c2-m069", { "c2-m069": trips }).mission.done, null, "trips of its own, asking first, do it too");
+});
+
+test("mission 70: with no guard on the way, the visitor reaches the water route and hits Robo 1; a guard at the crossing keeps it away", () => {
+  const none = playWith("c2-m070");
+  assert.notEqual(none.mission.goals[0].failed, null);
+  const camp = playWith("c2-m070", { "c2-m070": defend("c2-m070", "camp") });
+  assert.notEqual(camp.mission.goals[0].failed, null, "guarding the camp leaves the route open");
+  const world = playWith("c2-m070", mission("c2-m070").reference.programs);
+  assert.notEqual(world.mission.done, null);
+  assert.deepEqual(world.mission.tally.hurt.r1, undefined);
+  assert.equal(world.mission.tally.made["smelter|iron"], 4);
 });
 
 // --- The help keeps the child's draft --------------------------------------------------------

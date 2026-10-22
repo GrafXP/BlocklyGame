@@ -15,8 +15,16 @@ export const IDENTITIES = [
 // of its own and is told apart by its name.
 export const BUILDING_MARK = { colour: "#475467", ink: "#ffffff", shape: "house" };
 
+// The opponent's robots: all one look, dark, with a cross, never one of the
+// player's (src/sim/combat.js).
+export const OPPONENT = { colour: "#3b3540", ink: "#ffffff", shape: "cross" };
+
+// The player's robots take the identities in order of id; the opponent's are
+// left out of the count, so a visitor arriving changes no one else's.
 export function identityOf(world, id) {
-  const robots = world.entities.filter((e) => e.kind === "robot");
+  const robot = world.entities.find((e) => e.id === id);
+  if (robot?.side === "opponent") return OPPONENT;
+  const robots = world.entities.filter((e) => e.kind === "robot" && e.side !== "opponent");
   const i = robots.findIndex((e) => e.id === id);
   return i < 0 ? null : IDENTITIES[i % IDENTITIES.length];
 }

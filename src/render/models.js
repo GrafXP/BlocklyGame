@@ -41,6 +41,13 @@ const MATERIALS = () => ({
   iron: material(0xc3cbd5, { roughness: 0.45, metalness: 0.35 }),
   // The fire in a kiln or a smelter, which glows while it works, and its smoke.
   fire: material(0xff8a2a, { emissive: 0xff5a10, emissiveIntensity: 0.9 }),
+  // A pennant, both sides; a guard's shield, whole and gone, and its pulse; the
+  // opponent's robots' shell.
+  flag: new THREE.MeshStandardMaterial({ color: 0xe0503c, flatShading: true, roughness: 0.8, side: THREE.DoubleSide }),
+  shieldOn: material(0x8fd3ff, { emissive: 0x2f9be0, emissiveIntensity: 0.5 }),
+  shieldOff: material(0x58606b),
+  pulse: material(0xffe066, { emissive: 0xffc21a, emissiveIntensity: 1 }),
+  rival: material(0x4a4350),
   smoke: material(0xd3d6da),
   scaffold: material(0xc28a52),
   water: material(0x3c8fd6, { roughness: 0.4 }),
@@ -214,13 +221,15 @@ const SHARED = {
 // A friendly helper robot: body, head with two eyes and an antenna, wheels, a
 // basket on its back and a role badge on its front. Faces +Z. `colour`, when
 // given, is its own colour for its badge and antenna, so robots can be told
-// apart.
-export function createRobot(materials, { colour = null } = {}) {
+// apart. A guard (`kind` "guard") has no basket, and a pulse emitter on its
+// shoulder; a visitor, the opponent's guard, is the same in a dark shell.
+export function createRobot(materials, { colour = null, kind = "helper" } = {}) {
   const m = materials;
   const group = named(new THREE.Group(), "robot", ref("entity.robot"));
-  const body = mesh(new THREE.BoxGeometry(1.2, 0.9, 1), m.shell);
+  const shell = kind === "visitor" ? m.rival : m.shell;
+  const body = mesh(new THREE.BoxGeometry(1.2, 0.9, 1), shell);
   body.position.y = 0.75;
-  const head = mesh(new THREE.BoxGeometry(0.95, 0.62, 0.82), m.shell);
+  const head = mesh(new THREE.BoxGeometry(0.95, 0.62, 0.82), shell);
   head.position.y = 1.55;
   const eyeGeo = new THREE.SphereGeometry(0.11, 10, 8);
   const eyes = [-0.22, 0.22].map((x) => {
@@ -239,14 +248,25 @@ export function createRobot(materials, { colour = null } = {}) {
     w.position.set(x, 0.3, 0);
     return w;
   });
-  const basket = mesh(new THREE.BoxGeometry(0.9, 0.55, 0.45), m.basket);
-  basket.position.set(0, 0.95, -0.7);
   const badge = mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), colour ? m.tinted(colour) : m.badge, { cast: false });
   badge.rotation.x = Math.PI / 2;
   badge.position.set(0, 0.85, 0.52);
-  group.add(body, head, ...eyes, stalk, bulb, ...wheels, basket, badge);
+  group.add(body, head, ...eyes, stalk, bulb, ...wheels, badge);
   group.userData.wheels = wheels;
   group.userData.bulb = bulb;
-  group.userData.basket = basket;
+  if (kind === "helper") {
+    const basket = mesh(new THREE.BoxGeometry(0.9, 0.55, 0.45), m.basket);
+    basket.position.set(0, 0.95, -0.7);
+    group.add(basket);
+    group.userData.basket = basket;
+  } else {
+    // A pulse emitter on its right shoulder, pointing ahead.
+    const emitter = mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.55, 8), m.dark);
+    emitter.rotation.x = Math.PI / 2;
+    emitter.position.set(0.72, 1.25, 0.15);
+    const tip = mesh(new THREE.SphereGeometry(0.1, 8, 6), m.pulse, { cast: false });
+    tip.position.set(0.72, 1.25, 0.45);
+    group.add(emitter, tip);
+  }
   return group;
 }

@@ -13,9 +13,10 @@ import { areaCells, cellAt, groundWalkable, inside, kindOf } from "./terrain.js"
 // `caps` is the building's store once it's built. It's laid with its
 // footprint's north-west corner at cell (x, z), facing south, west, north or
 // east.
-// The smelter holds what three batches of iron take, and three batches' bars.
+// The smelter holds what three batches of iron take, and three batches' bars;
+// the workshop a guard's bill besides its kits' (recipes.js).
 export const BLUEPRINTS = {
-  workshop: { size: [3, 2], caps: { plank: 4, stone: 2, kit: 4 } },
+  workshop: { size: [3, 2], caps: { plank: 4, stone: 2, kit: 4, iron: 2, pack: 2 } },
   smelter: { size: [3, 2], caps: { ironOre: 6, charcoal: 3, water: 3, iron: 6 } },
 };
 

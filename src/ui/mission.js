@@ -1,5 +1,6 @@
 import { display, missionText, t } from "../i18n/index.js";
 import { mainProgram } from "../content/missions/campaign.js";
+import { TYPES } from "../sim/entities.js";
 import { count } from "../sim/inventory.js";
 import { goalProgress } from "../sim/objectives.js";
 import { RECIPES } from "../sim/recipes.js";
@@ -85,9 +86,29 @@ function goalView(world, goal, size = 32) {
   let pictures = "";
   let label = "";
   switch (goal.type) {
-    case "reached":
+    case "reached": {
+      // With pulses to land on the way, or a repair first: their pictures too.
+      const robot = nameOf(world, goal.robot);
+      const place = nameOf(world, goal.at);
+      const tally = world.mission.tally;
+      const along = (name, n, got) => Array.from({ length: n }, (_, i) => picture(name, { there: done || i < got, size })).join("");
       pictures = picture(placePicture(goal.at), { there: done, size });
-      label = t("goal.reached", { robot: nameOf(world, goal.robot), place: nameOf(world, goal.at) });
+      if (goal.hits) {
+        pictures = along("pulse", goal.hits, tally.hits[goal.robot] ?? 0) + pictures;
+        label = t("goal.reachedHits", { robot, place, need: goal.hits });
+      } else if (goal.repairs) {
+        pictures = along("shield", goal.repairs, tally.repairs[goal.robot] ?? 0) + pictures;
+        label = t("goal.reachedRepairs", { robot, place });
+      } else label = t("goal.reached", { robot, place });
+      break;
+    }
+    case "hits":
+      pictures = pics("pulse");
+      label = t("goal.hits", { robot: nameOf(world, goal.by), have, need });
+      break;
+    case "repaired":
+      pictures = pics("shield");
+      label = t("goal.repaired", { robot: nameOf(world, goal.robot), have, need });
       break;
     case "holds":
       pictures = pics(goal.item);
@@ -135,10 +156,13 @@ function goalView(world, goal, size = 32) {
       pictures = pics(goal.item);
       label = t("goal.steady", { item, place: nameOf(world, goal.at), have, need });
       break;
-    case "assembled":
-      pictures = pics("robot");
-      label = t("goal.assembled", { place: nameOf(world, goal.at), have, need });
+    case "assembled": {
+      // A building that makes guards (the workshop) makes a guard.
+      const guards = TYPES[thing(world, goal.at)?.type]?.recipes?.includes("guard");
+      pictures = pics(guards ? "guard" : "robot");
+      label = t(guards ? "goal.assembledGuard" : "goal.assembled", { place: nameOf(world, goal.at), have, need });
       break;
+    }
     case "remembers":
       pictures = pics("memory");
       label = t("goal.remembers", { robot: nameOf(world, goal.robot), have, need });
@@ -150,6 +174,7 @@ function goalView(world, goal, size = 32) {
   if (goal.noWait) notes.push(goal.type === "made" ? t("goal.noWaitMake", { name: nameOf(world, goal.at) }) : t("goal.noWait", { robot: nameOf(world, goal.by) }));
   if (goal.type === "steady") notes.push(goal.after ? t("goal.steadyNote", { name: nameOf(world, goal.after) }) : t("goal.steadyAlone"));
   if (goal.type === "remembers") notes.push(t("goal.remembersNote"));
+  if (goal.safe) notes.push(t("goal.safe", { robot: nameOf(world, goal.safe) }));
   return { pictures, label, note: failed ? t("goal.failed") : notes.join(" "), done, failed };
 }
 

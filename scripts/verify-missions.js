@@ -5,6 +5,7 @@
 //
 // - its starter programs alone don't do it: the lesson needs the child (and a
 //   Repair or Change lesson's program needs its fault fixed, or its change);
+//   but a mission to watch, they do (src/campaign.js, authoringProblems);
 // - its reference solution does, within the mission's steps,
 //   taking no more raw materials than its budget, the world keeping its rules
 //   after every tick;
@@ -48,7 +49,10 @@ export async function verifyCampaign({ rules = true, missions = CAMPAIGN } = {})
     const { world: checkpoint, library } = missionStart(mission);
     problems.push(...missionProblems(mission, checkpoint), ...checkWorld(checkpoint).map((p) => `${mission.id} checkpoint: ${p}`));
     const starter = copy(checkpoint);
-    if (playMission(starter, [], mission.steps)) problems.push(`${mission.id}: its starter programs do it alone, at step ${starter.tick}`);
+    const alone = playMission(starter, [], mission.steps);
+    // A mission to watch (src/campaign.js) is done by the world alone.
+    if (alone && !mission.watch) problems.push(`${mission.id}: its starter programs do it alone, at step ${starter.tick}`);
+    if (!alone && mission.watch) problems.push(`${mission.id}: a mission to watch, not done by itself in ${mission.steps} steps`);
     const run = playReference(mission, copy(checkpoint), copy(library), rules);
     problems.push(...run.problems);
     rows.push({ id: mission.id, steps: mission.steps, ticks: run.done ? run.ticks : null });

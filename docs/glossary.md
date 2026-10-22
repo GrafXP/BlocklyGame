@@ -40,7 +40,7 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | well | Brunnen | It makes water: “stelle Wasser her”. |
 | farm | Bauernhof | It grows food from water. |
 | fuel station | Ladestation | It makes Akkus from Essen and Wasser. |
-| make a helper (for a team) | baue einen Roboter (für …) | The camp's block. A *helper* is a robot. |
+| make a helper, a guard (for a team) | baue einen Helfer, einen Wächter (für …) | The camp makes helpers, the workshop guards. |
 | robot limit | „Mehr Roboter gehen nicht“ | The most robots the island may have. |
 | order (what a building wants on its shelf) | Bestellung | “Die Ladestation bestellt zwei Essen und ein Wasser.” |
 | supply … from … | versorge … von … | “versorge Ladestation”, with “von Bauernhof” inside. |
@@ -56,6 +56,18 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | iron mine | Eisenmine | A deposit, like the stone pit. |
 | batch (what one Make makes) | Ladung | “Eine Ladung macht zwei Eisenbarren.” Also a basket's load. |
 | ready to make … (a condition) | bereit für … | “bereit für Eisenbarren”: every ingredient there, and room for the batch. |
+| guard (a robot) | Wächter | “Wächter 1”. It protects places, and has no basket. |
+| helper (a robot) | Helfer | In “baue einen Helfer für …”, beside “baue einen Wächter für …”. |
+| shield, its segments | Schild | “mein Schild ist schwach”. Masculine: „der Schild“ protects; „das Schild“ is a sign. |
+| pulse | Impuls | What a guard sends at an opponent: “schickt einen Impuls an …”. |
+| advance toward … | rücke vor zu … | A few steps, or a pulse at an opponent near. |
+| guard … (a block) | bewache … | It stays at the place and doesn't chase. |
+| go home and repair | geh heim und repariere | Home is the camp. Repairing is free. |
+| reboot | Neustart, startet neu | Knocked out, it starts up again at the camp, with its job. |
+| opponent | Gegner | The practice opponent; “Gegner in der Nähe”. |
+| visitor (the opponent's robot) | Besucher | “Besucher 1”, a practice visitor: „Übungsbesucher“. |
+| flag, crossing, landing | Fahne, Übergang, Anlegestelle | Markers: places to go to that hold nothing. |
+| Defenders (a team) | Verteidiger | |
 | tree, rock | Baum, Felsen | Not “Stein”, which is the item. |
 | marker (which entity is at which block) | Markierung | |
 | details (the inspector) | Einzelheiten | For screen readers. |

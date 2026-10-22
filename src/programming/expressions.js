@@ -1,5 +1,6 @@
 import { shortOf } from "../sim/actions.js";
 import { reason } from "../sim/codes.js";
+import { inDanger, isLow } from "../sim/combat.js";
 import { can, typeOf } from "../sim/entities.js";
 import { count, room } from "../sim/inventory.js";
 import { RECIPES } from "../sim/recipes.js";
@@ -62,6 +63,13 @@ export function evaluate(expr, entity, world) {
     case "basket": {
       if (!can(entity, "basket")) throw new Fault(reason("error.cannot", { action: "basket", block: expr.block }));
       return Object.values(entity.store.items).reduce((a, b) => a + b, 0);
+    }
+    // A robot's own: whether its shield is half gone or more, and whether an
+    // opponent is within DANGER of it, as it stands now (combat.js).
+    case "low":
+    case "danger": {
+      if (!can(entity, "shield")) throw new Fault(reason("error.cannot", { action: "shield", block: expr.block }));
+      return expr.op === "low" ? isLow(entity) : inDanger(world, entity);
     }
     case "compare":
       return COMPARE[expr.cmp](evaluate(expr.a, entity, world), evaluate(expr.b, entity, world));

@@ -210,7 +210,7 @@ export const programRuntime = {
 
 // --- Checking compiled programs ----------------------------------------------
 
-const ROUTES = { goTo: "target", pickUp: "item", make: "recipe" };
+const ROUTES = { goTo: "target", pickUp: "item", make: "recipe", advance: "target", guard: "target" };
 const CMPS = ["EQ", "NEQ", "LT", "LTE", "GT", "GTE"];
 const isId = (value) => typeof value === "string" && value.length > 0;
 
@@ -231,7 +231,7 @@ export function checkProgram(program) {
     if (e.op === "number" && Number.isInteger(e.value)) return;
     if (["stock", "needs", "space"].includes(e.op) && isId(e.item) && isId(e.at)) return;
     if (e.op === "ready" && isId(e.item)) return;
-    if (e.op === "basket") return;
+    if (["basket", "low", "danger"].includes(e.op)) return;
     if ((e.op === "place" || e.op === "item") && isId(e.value)) return;
     if (e.op === "setting" && e.slot in SETTINGS) return;
     if (e.op === "var" && isId(e.var)) return;

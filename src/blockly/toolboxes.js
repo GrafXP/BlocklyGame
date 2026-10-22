@@ -50,11 +50,16 @@ const USE = {
   robot_unload: (type) => can(type, "unload"),
   robot_supply: (type) => can(type, "supply"),
   supply_from: (type) => can(type, "supply"),
+  robot_advance: (type) => can(type, "advance"),
+  robot_guard: (type) => can(type, "guard"),
+  robot_repair: (type) => can(type, "repair"),
   building_make: (type) => can(type, "make") && recipes(type).some((r) => !RECIPES[r].builds && !RECIPES[r].assembles),
   building_build: (type) => can(type, "make") && recipes(type).some((r) => RECIPES[r].builds),
   building_assemble: (type) => can(type, "make") && recipes(type).some((r) => RECIPES[r].assembles),
   control_wait_steps: (type) => can(type, "wait"),
   sense_basket: (type) => can(type, "basket"),
+  sense_low: (type) => can(type, "shield"),
+  sense_danger: (type) => can(type, "shield"),
   sense_ready: (type) => can(type, "make") && recipes(type).some((r) => !RECIPES[r].builds && !RECIPES[r].assembles),
   ...Object.fromEntries(Object.keys(SETTING_BLOCKS).map((b) => [b, (type) => can(type, "settings")])),
 };
@@ -64,7 +69,16 @@ const GAME = [
   [
     "CAT_ROBOT",
     "robot",
-    [block("robot_go_to"), block("robot_pick_up"), block("robot_unload"), block("robot_supply", { inputs: { FROM: { block: { type: "supply_from" } } } }), block("supply_from")],
+    [
+      block("robot_go_to"),
+      block("robot_pick_up"),
+      block("robot_unload"),
+      block("robot_supply", { inputs: { FROM: { block: { type: "supply_from" } } } }),
+      block("supply_from"),
+      block("robot_advance"),
+      block("robot_guard"),
+      block("robot_repair"),
+    ],
   ],
   ["CAT_BUILDING", "building", [block("building_make"), block("building_build"), block("building_assemble")]],
   [
@@ -79,7 +93,7 @@ const GAME = [
       block("control_wait_until"),
     ],
   ],
-  ["CAT_SENSING", "sensing", [block("sense_stock"), block("sense_basket"), block("sense_needs"), block("sense_space"), block("sense_ready")]],
+  ["CAT_SENSING", "sensing", [block("sense_stock"), block("sense_basket"), block("sense_needs"), block("sense_space"), block("sense_ready"), block("sense_low"), block("sense_danger")]],
   [
     "CAT_VALUES",
     "values",
@@ -103,10 +117,11 @@ export const DYNAMIC = {
 // What a toolbox block's dropdowns of choices (choices.js) start at, and the
 // blocks and shadows in its inputs': the first thing each offers here. A Make
 // or Build is at the first thing the building makes or builds (of `builds`,
-// the blueprints of the sites that run the program, when given), for one
-// `type`; a place, an item or a team at the first `world` has, when it's
-// known: “supply” at a building, not at the grove.
-const BY_TYPE = new Set(["makes", "builds"]);
+// the blueprints of the sites that run the program, when given), and a new
+// robot at the kind it makes, for one `type`; a place, an item or a team at
+// the first `world` has, when it's known: “supply” at a building, not at the
+// grove.
+const BY_TYPE = new Set(["makes", "builds", "robots"]);
 function startingFields(b, { type, builds, world }) {
   const def = BLOCKS.find((d) => d.type === b.type);
   const fields = { ...b.fields };

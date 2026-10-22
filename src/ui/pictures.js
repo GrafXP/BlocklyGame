@@ -22,6 +22,13 @@ const SHAPES = {
   iron: `<path d="M3 17l3-7h12l3 7z"/><path d="M6 10l1.6 3.5h8.8L18 10" fill="none"/>`,
   // A new robot, for a goal that makes one.
   robot: `<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5" fill="none"/><circle cx="12" cy="4" r="1.2"/><path d="M9 13h.01M15 13h.01" fill="none" stroke-width="2.6"/>`,
+  // A guard, its shield and a pulse it sends, for a goal about guarding.
+  guard: `<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5" fill="none"/><circle cx="12" cy="4" r="1.2"/><path d="M8.5 12.5h7" fill="none" stroke-width="2.2"/><path d="M12 14.5l3 1.2v1.5c0 1.1-1.3 1.9-3 2.3-1.7-.4-3-1.2-3-2.3v-1.5z" fill="none" stroke-width="1.2"/>`,
+  shield: `<path d="M12 3l7.5 3v5.5c0 4.8-3.3 7.9-7.5 9.5-4.2-1.6-7.5-4.7-7.5-9.5V6z"/><path d="M12 7v10M8 11.5h8" fill="none"/>`,
+  pulse: `<circle cx="14" cy="12" r="5"/><path d="M2.5 12h4M4 8.5l3 1.5M4 15.5l3-1.5" fill="none"/>`,
+  // The rally flag, and the crossing at the bridge.
+  flag: `<path d="M6 21V3" fill="none"/><path d="M6.5 4h12l-3 4 3 4h-12z"/>`,
+  crossing: `<path d="M2 12h20v3H2z"/><path d="M5 15v4M19 15v4" fill="none"/><path d="M2 20.5q2.5-1.5 5 0t5 0 5 0 5 0" fill="none"/><path d="M12 3l4 3h-2.5v3h-3V6H8z"/>`,
   bridge: `<path d="M2 11h20v3H2z"/><path d="M4 14v4M20 14v4M4 18q8-6 16 0" fill="none"/><path d="M3 11V8M21 11V8M3 8h18" fill="none"/>`,
   workshop: `<path d="M3 20V11l9-6 9 6v9z"/><path d="M9 20v-5h6v5M16 7V4h2v4.5" fill="none"/>`,
   // The smelter: a furnace with its chimney and the glow of its mouth.
@@ -50,6 +57,11 @@ const COLOURS = {
   iron: ["#c3cdd8", "#4a5563"],
   smelter: ["#e7c9ad", "#7a3a26"],
   robot: ["#f4f1ea", "#475467"],
+  guard: ["#e3e7ee", "#24456b"],
+  shield: ["#8fd3ff", "#1c5c8a"],
+  pulse: ["#ffd84d", "#a2620a"],
+  flag: ["#ef6b5b", "#7f2a20"],
+  crossing: ["#a8713f", "#5c3a17"],
   bridge: ["#a8713f", "#5c3a17"],
   workshop: ["#f4f1ea", "#7a3a26"],
   grove: ["#5fae5a", "#2d6a2a"],
@@ -61,7 +73,7 @@ const COLOURS = {
 };
 
 // The picture for place `id`, when a goal is to get there.
-export const placePicture = (id) => (["grove", "camp", "depot", "workshop", "smelter"].includes(id) ? id : "place");
+export const placePicture = (id) => (["grove", "camp", "depot", "workshop", "smelter", "flag", "crossing"].includes(id) ? id : "place");
 
 // Picture `name` as SVG markup, `size` CSS pixels square; `there` false draws
 // its outline only.

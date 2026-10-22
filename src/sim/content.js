@@ -1,4 +1,4 @@
-import { SETTINGS, TYPES } from "./entities.js";
+import { SETTINGS, SIDES, TYPES } from "./entities.js";
 import { makeStore } from "./inventory.js";
 import { cellAt, inside } from "./terrain.js";
 
@@ -8,7 +8,8 @@ import { cellAt, inside } from "./terrain.js";
 // `add` command. Who runs what is the caller's to settle.
 //
 // A robot is { id, type, name, cell: [x, z], items?, role?, settings?,
-// program? }; a building { id, type, name, area, access: [[x, z], …], items?,
+// program?, side?, shield? }, the player's unless its side says, its shield
+// whole unless said (combat.js); a building { id, type, name, area, access: [[x, z], …], items?,
 // caps?, order?, program?, blueprint?, gap?, built? }; a deposit { id, type, name,
 // area, access, items, caps, regrow? }. `built` is for a construction site
 // whose bridge is already there.
@@ -38,7 +39,11 @@ export function makeThing(terrain, given, where = "content") {
   const runner = { action: null, pending: null, error: null, runtime: null };
   if (type.kind === "robot") {
     const settings = Object.fromEntries(Object.keys(SETTINGS).map((slot) => [slot, given.settings?.[slot] ?? null]));
-    return { ...base, role: given.role ?? null, settings, cell: cell(given.cell), store: makeStore({ items: given.items, total: type.basket }), ...runner };
+    const side = given.side ?? "player";
+    if (!SIDES.includes(side)) throw new Error(`${where}: ${given.id} is on no side "${side}"`);
+    const shield = given.shield ?? type.shield;
+    if (!(Number.isInteger(shield) && shield >= 0 && shield <= type.shield)) throw new Error(`${where}: ${given.id}'s shield can't be ${shield}`);
+    return { ...base, side, role: given.role ?? null, settings, cell: cell(given.cell), shield, store: makeStore({ items: given.items, total: type.basket }), ...runner };
   }
   const blueprint = given.blueprint ?? (given.gap ? "bridge" : null);
   return {

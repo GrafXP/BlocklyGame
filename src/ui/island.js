@@ -699,7 +699,7 @@ function islandPage(el, key, { mission: asked = null } = {}) {
   function editFor(id) {
     const e = peekWorld().entities.find((it) => it.id === id);
     let program = e?.runtime?.kind === "program" ? e.runtime.program : null;
-    if (e && !program && giving) program = newProgramFor(id);
+    if (e && !program && giving && e.side !== "opponent") program = newProgramFor(id);
     if (program) openPanel({ kind: "editor", program });
   }
 
@@ -775,7 +775,9 @@ function islandPage(el, key, { mission: asked = null } = {}) {
       snapshot = takeSnapshot(w, currentLibrary());
       resized = showTags(w, snapshot);
       overview.show(w, snapshot, selected, words);
-      flyout.show(w, snapshot, selected, words, { setup: (id) => setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w), make: giving });
+      // The opponent's robots are only to look at: no program to make, and nothing to set up.
+      const theirs = w.entities.find((e) => e.id === selected)?.side === "opponent";
+      flyout.show(w, snapshot, selected, words, { setup: (id) => (theirs ? "" : setup.html(id, ruled.sandbox ? [...offers, "stock"] : offers, w)), make: giving && !theirs });
       placeFlyout();
       placeCoach();
       panel?.view.show(w, snapshot, selected);

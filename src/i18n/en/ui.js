@@ -146,6 +146,10 @@ export default {
   // places; {step} of {steps}: how far its trip has got.
   "inspector.supply": "Supplies",
   "inspector.supplying": "{amount} from {from} to {to} · step {step} of {steps}",
+  // A robot's shield: how many of its segments it has left, of how many.
+  "inspector.shield": "Shield",
+  // A practice visitor: the opponent's robot, which follows its visit.
+  "inspector.opponent": "The opponent's robot. It follows its own visit, and you can't program it.",
   // How many there are of how many there's room for: "2 of 4".
   "inspector.of": "{have} of {cap}",
   // Opens the chosen robot or building's program in the editor.
@@ -446,6 +450,16 @@ export default {
   "goal.remembers": "{robot} remembers: {have} of {need}",
   // A building is to make new robots (helpers).
   "goal.assembled": "{place} makes a new helper: {have} of {need}",
+  // The same, for the workshop, which makes guards.
+  "goal.assembledGuard": "{place} makes a new guard: {have} of {need}",
+  // A guard's pulses that reach the opponent's robots.
+  "goal.hits": "{robot}'s pulses at visitors: {have} of {need}",
+  // Repairs a robot finishes at the camp.
+  "goal.repaired": "{robot} repaired at the camp: {have} of {need}",
+  // A robot is to get to {place}, with {need} pulses at visitors on its way.
+  "goal.reachedHits": "{robot} → {place}, with {need} pulses on the way",
+  // A robot is to get back to {place}, after a repair at the camp.
+  "goal.reachedRepairs": "{robot} → {place}, after a repair at the camp",
   // An order of several things to deliver to {place}, beside their pictures.
   "goal.order": "{place} · its order delivered: {have} of {need}",
   // Notes under a goal.
@@ -458,6 +472,8 @@ export default {
   "goal.steadyNote": "Keep it so for a while after {name} has finished.",
   "goal.steadyAlone": "Keep it so for a while.",
   "goal.remembersNote": "Counted when its job is done.",
+  // A robot the opponent mustn't hit with a pulse.
+  "goal.safe": "Keep {robot} safe: no pulse may hit it.",
   "goal.failed": "Not this time. Start again to try once more.",
 
   // The campaign, free play and the sandbox.
@@ -474,6 +490,8 @@ export default {
   "chapter.10": "Materials for Industry",
   "chapter.11": "From Ore to Iron",
   "chapter.12": "Keep the Factory Flowing",
+  "chapter.13": "Meet the Guards",
+  "chapter.14": "Back to Work Safely",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",
@@ -509,6 +527,14 @@ export default {
   // What it's doing, more exactly. {place} is a name; {amount} is a count of an
   // item (count.*), {amounts} a list of them.
   "action.move": "On the way to {place}",
+  // A few steps of the way, for Advance or Guard.
+  "action.toward": "A few steps toward {place}",
+  // {name}: the robot a pulse is for.
+  "action.fire": "Sending a pulse at {name}",
+  "action.watch": "Watching for opponents",
+  "action.repair": "Repairing its shield",
+  // Its shield was all gone: it starts up again at the camp.
+  "action.reboot": "Rebooting",
   "action.pickUp": "Picking up {amount}",
   "action.unload": "Unloading {amounts}",
   "action.make": "Making {amount}",
@@ -517,6 +543,7 @@ export default {
   "action.build.smelter": "Building the smelter",
   // {team}: the team the new robot is for, such as “Wood team”.
   "action.assemble": "Making a helper for {team}",
+  "action.assembleGuard": "Making a guard for {team}",
   "action.wait": {
     one: "Waiting {count} more step",
     other: "Waiting {count} more steps",
@@ -535,6 +562,12 @@ export default {
   "action.name.basket": "Look in the basket",
   // Reading its settings, which only a robot has.
   "action.name.settings": "Use its settings",
+  "action.name.advance": "Advance",
+  "action.name.guard": "Guard",
+  "action.name.home": "Go home",
+  "action.name.repair": "Repair",
+  // Looking at its shield, or for opponents, which only a robot does.
+  "action.name.shield": "Look at its shield",
 
   // Counts of items.
   "count.wood": {
@@ -612,6 +645,7 @@ export default {
   // {team}: a team's name, or an id, as written in the program.
   "error.team": "No such team: {team}",
   "error.source": "Supply can't take from the building it supplies: {target}",
+  "error.home": "There's no camp to go home to.",
   // Can't happen with programs made of blocks; a damaged program.
   "error.busy": "This program did too much in one step.",
 
@@ -684,6 +718,14 @@ export default {
   "entity.smelterSite": "Smelter site",
   "entity.smelterSiteN": "Smelter site {n}",
   "entity.mine": "Iron mine",
+  // A guard protects places; a visitor is the practice opponent's robot.
+  "entity.guard": "Guard {n}",
+  "entity.visitor": "Visitor {n}",
+  "entity.flag": "Flag",
+  // Where the bridge crosses the stream, at its west end.
+  "entity.crossing": "Crossing",
+  // The beach where the visitors land, and go back to.
+  "entity.landing": "Landing",
   // The starter programs' names, until the player gives them others.
   "programName.collector": "Wood collector",
   "programName.courier": "Plank courier",
@@ -708,6 +750,7 @@ export default {
   "role.woodTeam": "Wood team",
   "role.plankTeam": "Plank team",
   "role.stoneTeam": "Stone team",
+  "role.defenders": "Defenders",
 
   "notFound.title": "Not found",
   "notFound.text": "There's no such page.",

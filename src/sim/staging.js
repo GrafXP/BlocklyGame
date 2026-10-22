@@ -1,11 +1,13 @@
 import { startProgram } from "../programming/runtime.js";
 import { fitsSetting, programFor, roleOf, stop } from "./bindings.js";
+import { knockOut } from "./combat.js";
 import { insertById, makeThing } from "./content.js";
 import { ITEMS, SETTINGS, TYPES } from "./entities.js";
 import { count, makeStore, room, setCount } from "./inventory.js";
 import { walkable } from "./navigation.js";
 import { placedName } from "./placement.js";
 import { RECIPES } from "./recipes.js";
+import { script } from "./script.js";
 import { areaCells, cellAt, setKind } from "./terrain.js";
 import { thing } from "./things.js";
 
@@ -32,14 +34,19 @@ import { thing } from "./things.js";
 //     orders: { at: { item: n } }     what a building wants on its shelf, which
 //                                     Supply brings (supply.js); none otherwise
 //     limit: n                        the most robots the island may have (setup only)
-//     robots: { id: { at, basket } }  a robot at a place (or cell [x, z]), its basket exactly
+//     robots: { id: { at, basket, shield } }   a robot at a place (or cell [x, z]), its basket
+//                                     exactly, its shield's segments (whole unless said)
 //     settings: { id: { slot: v } }   a robot's settings
 //     defaultSettings: { id: { slot: v } }   the same, for slots nothing is chosen for yet
 //     teams: [{ id, name, program }]  the teams there are (a mission's setup only)
 //     defaults: [{ type, program }]   the programs every building of a type runs (setup only)
 //     roles: { robot: team }          robots on teams (setup only)
 //     run: { id: program }            programs given to one robot or building alone
-//     parked: [id, …]                 those whose program waits to be started }
+//     parked: [id, …]                 those whose program waits to be started
+//     scripts: { id: { steps, loop } }   robots that follow a script, a practice
+//                                     visitor's visit (script.js; setup only)
+//     rebooting: [id, …]              robots knocked out, rebooting at home from the
+//                                     start (combat.js; setup only) }
 //
 // Things are named by id; maps are applied in order of id, so a stage does the
 // same whatever order its keys were written in.
@@ -47,11 +54,13 @@ import { thing } from "./things.js";
 const entries = (map) => Object.entries(map ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
 // Stops everything under way: actions cancelled, their holds let go, waits and
-// errors forgotten, messages on their way or in an inbox gone (messages.js).
+// errors forgotten, messages on their way or in an inbox gone (messages.js),
+// and reboots too, as every robot starts with its shield whole (startAll).
 // Work that ended stays done.
 function stopAll(world) {
   for (const e of world.entities) {
     stop(world, e);
+    if (e.action?.type === "reboot") e.action = null;
     delete e.inbox;
   }
 }
@@ -148,12 +157,16 @@ export function stage(world, spec, things = []) {
     const store = storeOf(world, at);
     for (const [item, n] of entries(counts)) if (room(store, item) < n) setCount(store, item, count(store, item) - (n - room(store, item)));
   }
-  for (const [id, { at, basket }] of entries(spec.robots)) {
+  for (const [id, { at, basket, shield }] of entries(spec.robots)) {
     const r = robotOf(world, id);
     if (at !== undefined) placeRobot(world, r, at);
     if (basket !== undefined) {
       r.store.items = {};
       for (const [item, n] of entries(basket)) if (setCount(r.store, item, n) !== n) throw new Error(`stage: ${id}'s basket can't hold ${n} ${item}`);
+    }
+    if (shield !== undefined) {
+      if (!(Number.isInteger(shield) && shield >= 1 && shield <= TYPES[r.type].shield)) throw new Error(`stage: ${id}'s shield can't be ${shield}`);
+      r.shield = shield;
     }
   }
   for (const [id, settings] of entries(spec.settings)) setSettings(world, robotOf(world, id), settings, false);
@@ -161,17 +174,22 @@ export function stage(world, spec, things = []) {
 }
 
 // Everyone starts the program they run from its start: a parked one stays
-// parked. Every robot begins with an empty basket unless `baskets` (the stage's
-// robots) gives it one, with a program or without: nothing a mission didn't
-// give it is carried into it.
-function startAll(world, { parked = [], baskets = {} } = {}) {
+// parked; a robot with a script follows it. Every robot begins with an empty
+// basket and its shield whole unless `robots` (the stage's) gives it a basket
+// or a shield, with a program or without: nothing a mission didn't give it is
+// carried into it. A robot that's `rebooting` begins knocked out, at its home.
+function startAll(world, { parked = [], robots = {}, scripts = {}, rebooting = [] } = {}) {
   for (const e of world.entities) {
     const id = programFor(world, e);
     const program = id && world.programs.find((p) => p.id === id);
     if (id && !program) throw new Error(`stage: ${e.id} runs ${id}, which the world hasn't got`);
-    if (e.kind === "robot" && baskets[e.id]?.basket === undefined) e.store.items = {};
-    e.runtime = program ? startProgram(program, { parked: parked.includes(e.id) }) : null;
+    if (e.kind === "robot" && robots[e.id]?.basket === undefined) e.store.items = {};
+    if (e.kind === "robot" && robots[e.id]?.shield === undefined) e.shield = TYPES[e.type].shield;
+    const given = scripts[e.id];
+    if (given && (e.kind !== "robot" || id)) throw new Error(`stage: ${e.id} has a script and a program, or isn't a robot`);
+    e.runtime = given ? script(given.steps.map((step) => ({ ...step })), { loop: !!given.loop }) : program ? startProgram(program, { parked: parked.includes(e.id) }) : null;
   }
+  for (const id of rebooting) knockOut(world, robotOf(world, id), 0);
 }
 
 // Every building's and deposit's store as catalogue `things` starts it: a
@@ -215,7 +233,7 @@ export function enter(world, setup, { things = [], programs = world.programs, re
     e.own = program;
   }
   for (const d of world.defaults) if (!TYPES[d.type] || TYPES[d.type].kind === "node") throw new Error(`stage: a default for ${d.type}`);
-  startAll(world, { parked: setup.parked, baskets: setup.robots });
+  startAll(world, { parked: setup.parked, robots: setup.robots, scripts: setup.scripts, rebooting: setup.rebooting });
   world.tick = 0;
   world.stall = null;
   return world;

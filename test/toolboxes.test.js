@@ -43,6 +43,18 @@ test("a building's toolbox has Make only with a recipe that makes an item, and B
   assert.ok(blocksIn(camp).includes("control_wait_steps") && blocksIn(depot).includes("control_wait_steps"));
 });
 
+test("a guard's toolbox has Advance, Guard and Go Home and Repair, and its shield's conditions; nothing to carry or supply. A helper may go home to repair, and the workshop makes guards", () => {
+  const guard = toolboxFor(["guard"]);
+  assert.deepEqual(guard.contents.find((c) => c.name === "%{BKY_CAT_ROBOT}").contents.map((b) => b.type), ["robot_advance", "robot_guard", "robot_repair"]);
+  for (const type of ["sense_low", "sense_danger"]) assert.ok(blocksIn(guard).includes(type), type);
+  for (const type of ["robot_go_to", "robot_pick_up", "robot_supply", "sense_basket", "setting_item"]) assert.ok(!blocksIn(guard).includes(type), type);
+  const helper = blocksIn(toolboxFor(["helper"]));
+  assert.ok(helper.includes("robot_repair") && helper.includes("sense_danger") && !helper.includes("robot_guard"));
+  assert.ok(!blocksIn(toolboxFor(["camp"])).includes("sense_low"), "a building has no shield");
+  assert.deepEqual(blockIn(toolboxFor(["workshop"]), "building_assemble").fields, { ROBOT: "guard" });
+  assert.deepEqual(choicesFor("robots", { type: "camp" }), [["%{BKY_NEW_HELPER}", "helper"]]);
+});
+
 test("Ready to Make is for a building that makes items, at the first it makes; not for a robot, the camp or a depot", () => {
   const smelter = toolboxFor(["smelter"]);
   assert.deepEqual(blockIn(smelter, "sense_ready").fields, { ITEM: "iron" });
@@ -63,7 +75,7 @@ test("on an island, a toolbox's dropdowns start at what's there: Supply at a bui
     "the grove's wood, the station's water, and what the farm and the station make",
   );
   const camp = toolboxFor(["camp"], { world: missionStart(campaignMission("c2-m038")).world });
-  assert.deepEqual(blockIn(camp, "building_assemble").fields, { TEAM: "wood-team" });
+  assert.deepEqual(blockIn(camp, "building_assemble").fields, { ROBOT: "helper", TEAM: "wood-team" });
 });
 
 test("Memory and My blocks are filled as they're opened, offering what the play allows; messages are for everyone", () => {

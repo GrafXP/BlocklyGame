@@ -22,9 +22,12 @@ import { ITEMS, SETTINGS, TYPES, can } from "./entities.js";
 export const roleOf = (world, id) => world.roles.find((r) => r.id === id) ?? null;
 export const defaultFor = (world, type) => world.defaults.find((d) => d.type === type)?.program ?? null;
 
-// The program entity `entity` runs, by the order above, or null.
+// The program entity `entity` runs, by the order above, or null. The
+// opponent's robots are on no team of the player's and run no type's program:
+// only their own (SKIRMISH_PLAN.md §7, ownership).
 export function programFor(world, entity) {
   if (entity.own) return entity.own;
+  if (entity.side === "opponent") return null;
   const team = entity.role ? roleOf(world, entity.role)?.program : null;
   return team ?? defaultFor(world, entity.type);
 }
@@ -44,8 +47,10 @@ export function canRun(world, entity, id) {
 
 // Stops what `entity` is doing: its action is cancelled, its holds let go, and
 // whatever it waited for or failed at is forgotten. Work it finished stays done.
+// A robot rebooting goes on rebooting: a program given to it, or started
+// again, doesn't cut its recovery short (combat.js).
 export function stop(world, entity) {
-  cancel(world, entity);
+  if (entity.action?.type !== "reboot") cancel(world, entity);
   entity.pending = null;
   entity.error = null;
 }

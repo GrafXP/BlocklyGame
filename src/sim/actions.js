@@ -1,4 +1,5 @@
 import { reason } from "./codes.js";
+import { AREA, RANGE, REPAIR_TICKS, SEGMENT, WATCH_TICKS, foesNear, homeOf, nearPlace } from "./combat.js";
 import { insertById, makeThing } from "./content.js";
 import { ITEMS, can, typeOf } from "./entities.js";
 import { available, reserve, release, room, settle } from "./inventory.js";
@@ -20,15 +21,18 @@ import { thing, thingAt } from "./things.js";
 //
 // Action data is plain and serializable:
 //
-//   { type: "move", target, path: [cells], start, end, perCell, nav }
+//   { type: "move", target, path: [cells], start, end, perCell, nav, cells? }
 //   { type: "pickUp", from, item, start, end, holds }  from a deposit or a building
 //   { type: "unload", to, start, end, holds }
 //   { type: "make", recipe, role?, start, end, holds }  role: a new robot's team
 //   { type: "wait", start, end }
 //   { type: "send", to, message, start, end }      a message on its way (messages.js)
+//   { type: "fire" | "watch" | "repair" | "reboot", … }   a guard's, and a shield's (combat.js)
 //
 // A robot's position along a move is derived from `path`, `start` and `perCell`;
 // it only ever stands on one cell, entity.cell, which changes as each is reached.
+// A Guard's or Advance's move is a few cells of the way, `cells` of them at
+// most, however the way changes as it walks.
 
 const action = (type, now, ticks, data) => ({ type, ...data, start: now, end: now + Math.max(1, ticks) });
 
@@ -111,6 +115,44 @@ const STARTS = {
     return { action: action("wait", now, Math.trunc(steps) || 1, {}) };
   },
 
+  // Advance toward a place: a pulse at the nearest opponent in RANGE; else,
+  // there, a watch; else a few cells of the way (combat.js).
+  advance(world, robot, { target }, now) {
+    const place = thing(world, target);
+    if (!place?.access) return { error: reason("error.target", { target }) };
+    const [foe] = foesNear(world, robot, RANGE);
+    if (foe) return { action: action("fire", now, typeOf(robot).fireTicks, { at: foe.id }) };
+    return stepToward(world, robot, place, now);
+  },
+
+  // Guard a place: a pulse at the nearest opponent in RANGE that's near the
+  // place, within AREA of it; else, there, a watch; else a few cells of the way
+  // there. An opponent away from the place is let be: a guard doesn't chase.
+  guard(world, robot, { target }, now) {
+    const place = thing(world, target);
+    if (!place?.access) return { error: reason("error.target", { target }) };
+    const [foe] = foesNear(world, robot, RANGE, (f) => nearPlace(world, f, place, AREA));
+    if (foe) return { action: action("fire", now, typeOf(robot).fireTicks, { at: foe.id }) };
+    return stepToward(world, robot, place, now);
+  },
+
+  // The way home, the camp, the first half of Go Home and Repair; or a
+  // visitor's back to its landing.
+  home(world, robot, intent, now) {
+    const home = homeOf(world, robot);
+    if (!home) return { error: reason("error.home") };
+    return STARTS.goTo(world, robot, { target: home.id }, now);
+  },
+
+  // At home, the shield made whole: REPAIR_TICKS for each segment, and at
+  // least one's worth, for free.
+  repair(world, robot, intent, now) {
+    const home = homeOf(world, robot);
+    if (!home || !home.access.includes(robot.cell)) return { error: reason("error.notHere", { action: "repair" }) };
+    const missing = typeOf(robot).shield - robot.shield;
+    return { action: action("repair", now, Math.max(1, missing) * REPAIR_TICKS, {}) };
+  },
+
   // A message to robot or building `to`, there when the action ends, next
   // tick. A Send keeps a place in the recipient's inbox while it's on its way.
   send(world, entity, { message, to }, now) {
@@ -122,6 +164,16 @@ const STARTS = {
 };
 
 export const ACTIONS = Object.keys(STARTS);
+
+// A watch, at `place`; else up to SEGMENT cells of the way there.
+function stepToward(world, robot, place, now) {
+  if (place.access.includes(robot.cell)) return { action: action("watch", now, WATCH_TICKS, {}) };
+  const path = findPath(world, robot.cell, place.access);
+  if (!path) return { wait: reason("wait.route", { target: place.id }) };
+  const part = path.slice(0, SEGMENT + 1);
+  const { perCell } = typeOf(robot);
+  return { action: action("move", now, (part.length - 1) * perCell, { target: place.id, path: part, perCell, nav: world.nav, cells: SEGMENT }) };
+}
 
 // What `building` lacks to start recipe `r`: the reason it would wait, an
 // ingredient short or no room for the whole batch, or null when it's ready
@@ -138,10 +190,11 @@ export function shortOf(building, r) {
   return null;
 }
 
-// The robots counted against the island's limit: those there are, and those a
-// building is making.
+// The robots counted against the island's limit: the player's there are,
+// rebooting or not, and those a building is making. The opponent's visitors
+// aren't counted.
 export const robotsCounted = (world) =>
-  world.entities.filter((e) => e.kind === "robot").length + world.entities.filter((e) => e.action?.type === "make" && RECIPES[e.action.recipe].assembles).length;
+  world.entities.filter((e) => e.kind === "robot" && e.side === "player").length + world.entities.filter((e) => e.action?.type === "make" && RECIPES[e.action.recipe].assembles).length;
 
 // One `item` from `from` into the robot's basket.
 function take(world, robot, from, item, now, ticks) {
@@ -165,10 +218,15 @@ export function progress(world, entity, now) {
     if (walked > 0 && walked % a.perCell === 0) {
       entity.cell = a.path[walked / a.perCell];
       if (a.nav !== world.nav && entity.cell !== a.path[a.path.length - 1]) {
-        const path = findPath(world, entity.cell, thing(world, a.target).access);
+        let path = findPath(world, entity.cell, thing(world, a.target).access);
         if (!path) {
           entity.action = null;
           return { wait: reason("wait.route", { target: a.target }) };
+        }
+        // A few cells of the way: those it has left.
+        if (a.cells !== undefined) {
+          a.cells -= walked / a.perCell;
+          path = path.slice(0, a.cells + 1);
         }
         Object.assign(a, { path, start: now, end: now + Math.max(1, (path.length - 1) * a.perCell), nav: world.nav });
         return path.length === 1 ? "done" : "going";
@@ -182,14 +240,18 @@ export function progress(world, entity, now) {
 // or what else came of it: { became: true } when the entity has become another
 // thing, as a construction site becomes the building it was for: then its
 // program is over, and it needs the one its new type runs (bindings.js);
-// { born } when it has made robot `born`, which needs its team's program.
+// { born } when it has made robot `born`, which needs its team's program;
+// { rebooted: true } when a robot has rebooted, its program at its start
+// (combat.js). A repair, or a reboot, makes the robot's shield whole.
 export function finish(world, entity) {
   const a = entity.action;
   if (a.holds) settle(world, a.holds);
   if (a.type === "send") deliver(thing(world, a.to), { message: a.message, from: entity.id, sent: a.start });
   entity.action = null;
+  if (a.type === "repair" || a.type === "reboot") entity.shield = typeOf(entity).shield;
+  if (a.type === "reboot") return { rebooted: true };
   const r = a.type === "make" ? RECIPES[a.recipe] : null;
-  if (r?.assembles) return { born: assemble(world, entity, a.role) };
+  if (r?.assembles) return { born: assemble(world, entity, r.assembles, a.role) };
   if (!r?.builds) return null;
   if (r.builds === "bridge") {
     bridge(world, entity);
@@ -199,16 +261,20 @@ export function finish(world, entity) {
   return { became: true };
 }
 
-// A new helper, made by `building` for team `role`: Robo n, the first number
-// no robot has, at the building's first front cell no robot stands on (or its
-// first), with nothing chosen in its settings and an empty basket.
-function assemble(world, building, role) {
+// A new robot of type `type`, made by `building` for team `role`: a helper,
+// Robo n, or a guard, Guard n, the first number no robot of its kind has, at
+// the building's first front cell no robot stands on (or its first), the
+// player's, with its shield whole, nothing chosen in its settings and an empty
+// basket.
+const NEW_ROBOTS = { helper: { prefix: "r", key: "entity.robo" }, guard: { prefix: "g", key: "entity.guard" } };
+function assemble(world, building, type, role) {
+  const { prefix, key } = NEW_ROBOTS[type];
   let n = 1;
-  while (thing(world, `r${n}`)) n++;
+  while (thing(world, `${prefix}${n}`)) n++;
   const taken = new Set(world.entities.filter((e) => e.kind === "robot").map((e) => e.cell));
   const cell = building.access.find((c) => !taken.has(c)) ?? building.access[0];
   const { width } = world.terrain;
-  const robot = makeThing(world.terrain, { id: `r${n}`, type: "helper", name: { key: "entity.robo", params: { n } }, cell: [cell % width, Math.floor(cell / width)], role });
+  const robot = makeThing(world.terrain, { id: `${prefix}${n}`, type, name: { key, params: { n } }, cell: [cell % width, Math.floor(cell / width)], role });
   insertById(world.entities, robot);
   return robot;
 }

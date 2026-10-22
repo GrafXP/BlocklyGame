@@ -35,6 +35,7 @@ export const CODES = {
   "error.recipient": ["target"], // a message for `target`, which is no robot or building
   "error.team": ["team"], // a new robot for team `team`, which there isn't
   "error.source": ["target"], // a Supply that would take from `target`, the building it supplies
+  "error.home": [], // going home, with no camp on the island to go to (combat.js)
   "error.busy": ["block"], // a program did more in one tick than it may (never, compiled from blocks)
 
   // What the compiler finds wrong with a program (src/programming/compiler.js).

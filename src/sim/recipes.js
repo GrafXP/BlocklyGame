@@ -5,7 +5,8 @@
 // make it: the bridge makes its site's gap walkable, and a building's recipe
 // turns its site into the building (placement.js). A recipe that `assembles`
 // makes a robot: the building pays for it, and when the work is done a new
-// helper stands at its front, on the team the program chose (actions.js). A
+// robot of its kind, a helper or a guard, stands at its front, on the team the
+// program chose (actions.js). A
 // recipe that makes an item has that item's id; the quantities follow the
 // skirmish plan's prototype recipes (SKIRMISH_PLAN.md §3).
 export const RECIPES = {
@@ -18,6 +19,7 @@ export const RECIPES = {
   charcoal: { inputs: { wood: 2 }, outputs: { charcoal: 2 }, ticks: 40 },
   iron: { inputs: { ironOre: 2, charcoal: 1, water: 1 }, outputs: { iron: 2 }, ticks: 60 },
   helper: { inputs: { plank: 2, pack: 1 }, outputs: {}, ticks: 60, assembles: "helper" },
+  guard: { inputs: { kit: 1, iron: 1, pack: 1 }, outputs: {}, ticks: 80, assembles: "guard" },
   bridge: { inputs: { plank: 4 }, outputs: {}, ticks: 40, builds: "bridge" },
   workshop: { inputs: { plank: 4, stone: 2 }, outputs: {}, ticks: 60, builds: "workshop" },
   // The smelter is built as the workshop is, with stone blocks where the

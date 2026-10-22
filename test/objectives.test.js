@@ -142,6 +142,24 @@ test("a building that was to start only once it was ready fails if it waits to m
   assert.equal(goalProblem(goals[0]), null, "a made goal names its building: no `by`");
 });
 
+test("guards' goals: pulses landed, repairs finished, a place reached after either, and a robot kept safe from every pulse", () => {
+  for (const goal of [
+    { id: "a", type: "hits", by: "g1", count: 2 },
+    { id: "b", type: "repaired", robot: "g1" },
+    { id: "c", type: "reached", robot: "g1", at: "flag", hits: 2 },
+    { id: "d", type: "reached", robot: "g1", at: "crossing", repairs: 1 },
+    { id: "e", type: "delivered", to: "depot", by: "r1", count: 8, safe: "r1" },
+    { id: "f", type: "made", at: "smelter", item: "iron", count: 4, safe: "r1" },
+  ]) {
+    assert.equal(goalProblem(goal), null, goal.id);
+  }
+  assert.match(goalProblem({ id: "x", type: "reached", robot: "g1", at: "flag", hits: 0 }), /has hits 0/);
+  assert.match(goalProblem({ id: "x", type: "made", at: "smelter", item: "iron", count: 4, safe: true }), /keeps true safe/);
+  assert.match(goalProblem({ id: "x", type: "hits", by: "g1", count: 2, safe: "r1" }), /has safe/);
+  const mission = createMission({ id: "m", goals: [{ id: "c", type: "reached", robot: "g1", at: "post", hits: 1 }] });
+  assert.deepEqual(Object.keys(mission.tally).sort(), ["hits", "hurt", "made", "repairs", "together", "unloads", "waited"]);
+});
+
 test("an order counts each item's deliveries up to what it orders, together", () => {
   const w = world({
     entities: [bot("a", [3, 1], "p")],

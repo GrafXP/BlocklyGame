@@ -16,7 +16,14 @@ export const my = mine;
 export const unload = (id) => block("robot_unload", id);
 export const make = (id, item = "plank") => block("building_make", id, { fields: { ITEM: item } });
 export const build = (id, what = "bridge") => block("building_build", id, { fields: { BLUEPRINT: what } });
-export const assemble = (id, team) => block("building_assemble", id, { fields: { TEAM: team } });
+export const assemble = (id, team, robot = "helper") => block("building_assemble", id, { fields: { ROBOT: robot, TEAM: team } });
+// A guard's Advance and Guard, toward or at a place; Go Home and Repair; a low
+// shield, an opponent near.
+export const advance = (id, place) => act("robot_advance", id, place);
+export const guard = (id, place) => act("robot_guard", id, place);
+export const repair = (id) => block("robot_repair", id);
+export const low = (id) => block("sense_low", id);
+export const danger = (id) => block("sense_danger", id);
 // Supply building `to` from places `from`, each a “from” block `${id}-<place>`.
 export const supply = (id, to, ...from) =>
   block("robot_supply", id, { fields: { PLACE: to }, ...(from.length && { inputs: { FROM: input(...from.map((place) => block("supply_from", `${id}-${place}`, { fields: { PLACE: place } }))) } }) });

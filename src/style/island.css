@@ -990,6 +990,28 @@
   min-height: 20px;
 }
 
+/* A robot's shield (src/sim/combat.js): a segment for each it has when whole,
+   filled while it has it, an outline once it's gone, so the two differ by
+   shape as well as colour. */
+.details .shield-segments {
+  display: inline-flex;
+  gap: 3px;
+  margin-inline-end: 8px;
+  vertical-align: middle;
+}
+.details .shield-segments .segment {
+  width: 14px;
+  height: 10px;
+  border: 2px solid #1c5c8a;
+  border-radius: 3px;
+  background: #8fd3ff;
+}
+.details .shield-segments .segment.gone {
+  border-style: dashed;
+  border-color: #7d8896;
+  background: transparent;
+}
+
 .details .memory strong {
   font-variant-numeric: tabular-nums;
 }

@@ -91,8 +91,15 @@ export function writer(p) {
     unload: () => block("robot_unload", id("unload")),
     make: (item = "plank") => block("building_make", id("make"), { fields: { ITEM: item } }),
     build: (what = "bridge") => block("building_build", id("build"), { fields: { BLUEPRINT: what } }),
-    // A new robot for team `team`.
-    assemble: (team) => block("building_assemble", id("assemble"), { fields: { TEAM: team } }),
+    // A new robot, a helper or a guard, for team `team`.
+    assemble: (team, robot = "helper") => block("building_assemble", id("assemble"), { fields: { ROBOT: robot, TEAM: team } }),
+    // A guard's: Advance toward a place, Guard a place; any robot's Go Home and
+    // Repair; and its conditions, a low shield and an opponent near.
+    advance: (place) => act("robot_advance", id(`advance-${place}`), place),
+    guard: (place) => act("robot_guard", id(`guard-${place}`), place),
+    repair: () => block("robot_repair", id("repair")),
+    low: () => block("sense_low", id("low")),
+    danger: () => block("sense_danger", id("danger")),
     // Supply building `to` from the places `from`, in that order.
     supply: (to, ...from) =>
       block("robot_supply", id("supply"), {

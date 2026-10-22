@@ -200,12 +200,12 @@ test("the help offers a start; Starter program goes back to the start block alon
 test("the title page's mission map: stars for the missions done, the one the campaign is at to go on with, the rest locked; with ?dev every one opens on its own", async ({ page }) => {
   await seedCampaign(page, "c2-m005");
   await page.goto("/");
-  await expect(page.locator(".missions .chapter")).toHaveCount(12);
+  await expect(page.locator(".missions .chapter")).toHaveCount(14);
   await expect(page.locator(".missions .chapter-1 h3")).toHaveText("Chapter 1: Hello, Helper!4/5");
   await expect(page.locator(".missions .chapter li.done")).toHaveCount(4);
   await expect(page.locator(".missions .chapter li.done").first()).toContainText("Play again");
   await expect(page.locator(".missions .chapter li.current")).toHaveText(["5Camp Is ReadyYou're here"]);
-  await expect(page.locator(".missions .chapter li.later")).toHaveCount(55);
+  await expect(page.locator(".missions .chapter li.later")).toHaveCount(65);
   await expect(page.locator(".missions .chapter li.later a")).toHaveCount(0);
   await expect(page.locator(".dev-note")).toHaveCount(0);
   await expect(page.locator(".grown-ups")).not.toHaveAttribute("open");
@@ -217,7 +217,7 @@ test("the title page's mission map: stars for the missions done, the one the cam
   await expect(page.locator(".dev-note")).toBeVisible();
   await expect(page.locator(".grown-ups")).toHaveAttribute("open");
   await expect(page.locator(".missions .chapter li.later")).toHaveCount(0);
-  await expect(page.locator(".missions .chapter li.open")).toHaveCount(55);
+  await expect(page.locator(".missions .chapter li.open")).toHaveCount(65);
   await page.locator('.missions .chapter li[value="12"]').getByRole("link", { name: "Try it" }).click();
   await ready(page);
   await expect(page).toHaveURL(/\/replay\?mission=c2-m012&dev$/);

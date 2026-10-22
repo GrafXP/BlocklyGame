@@ -141,7 +141,7 @@ test("the site builds the workshop from four planks and two stone, and becomes i
   const started = traces.find((t) => t.started.some((s) => s.entity === "workshop")).tick;
   assert.equal(world.tick - started, RECIPES.workshop.ticks, "building takes the recipe's steps");
   assert.deepEqual(site.name, { key: "entity.workshop" });
-  assert.deepEqual(site.store, { items: {}, caps: { plank: 4, stone: 2, kit: 4 }, in: {}, out: {} });
+  assert.deepEqual(site.store, { items: {}, caps: { plank: 4, stone: 2, kit: 4, iron: 2, pack: 2 }, in: {}, out: {} });
   assert.equal("blueprint" in site, false);
   assert.equal(site.own, null);
   assert.equal(site.runtime.program, "kits", "the workshop's own type's program starts");

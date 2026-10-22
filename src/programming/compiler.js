@@ -52,6 +52,8 @@ import { nameText, readWorkspace } from "./adapter.js";
 //   { op: "space", block, item, at }                   room for more `item` at `at`
 //   { op: "ready", block, item }                       whether my building could make `item` now
 //   { op: "basket", block }                            how many items are in my basket
+//   { op: "low", block }                               whether my shield is low
+//   { op: "danger", block }                            whether an opponent is near me
 //   { op: "compare", block, cmp, a, b }                cmp: EQ NEQ LT LTE GT GTE, of two numbers
 //   { op: "place", block, value }                      a place: a thing's id
 //   { op: "item", block, value }                       an item
@@ -101,20 +103,28 @@ const options = (type, field) => fieldOf(type, field).options.map(([, value]) =>
 const fieldNumber = fieldOf;
 
 // The robot and building actions: the intent each block asks for, from its
-// fields and inputs. A field's value must be one its dropdown offers; a place
-// can be any id, checked against the world when there is one (context.places),
-// and so can a team, checked as the block runs. An input gives an expression
-// (`input`), put into the intent or its args below; a list of places, the
-// blocks of a statement input (`list`), goes into the intent as it is.
+// fields and inputs, or the intents, one after another: Go Home and Repair is
+// the walk home, then the repair, each an action of its own while the block is
+// the active one (src/sim/combat.js). A field's value must be one its dropdown
+// offers; a place can be any id, checked against the world when there is one
+// (context.places), and so can a team, checked as the block runs. An input
+// gives an expression (`input`), put into the intent or its args below; a list
+// of places, the blocks of a statement input (`list`), goes into the intent as
+// it is.
 const ACTIONS = {
   robot_go_to: ({ input }, node) => ({ type: "goTo", target: input(node, "PLACE", "place") }),
   robot_pick_up: ({ input }, node) => ({ type: "pickUp", item: input(node, "ITEM", "item") }),
   robot_unload: () => ({ type: "unload" }),
   // Supply a building, from the places in it, in their order (src/sim/supply.js).
   robot_supply: ({ field, list }, node) => ({ type: "supply", to: field.place(node, "PLACE"), from: list(node, "FROM", "supply_from") }),
+  // A guard's short actions, toward a place or at it (src/sim/actions.js).
+  robot_advance: ({ input }, node) => ({ type: "advance", target: input(node, "PLACE", "place") }),
+  robot_guard: ({ input }, node) => ({ type: "guard", target: input(node, "PLACE", "place") }),
+  robot_repair: () => [{ type: "home" }, { type: "repair" }],
   building_make: ({ field }, node) => ({ type: "make", recipe: field.choice(node, "ITEM") }),
   building_build: ({ field }, node) => ({ type: "make", recipe: field.choice(node, "BLUEPRINT") }),
-  building_assemble: ({ field }, node) => ({ type: "make", recipe: "helper", role: field.place(node, "TEAM", false) }),
+  // A new robot, a helper or a guard, for a team.
+  building_assemble: ({ field }, node) => ({ type: "make", recipe: field.choice(node, "ROBOT"), role: field.place(node, "TEAM", false) }),
   control_wait_steps: ({ field }, node) => {
     const { min, max } = fieldNumber("control_wait_steps", "STEPS");
     return { type: "wait", steps: field.whole(node, node.fields.STEPS, min, max) };
@@ -261,6 +271,14 @@ export function compile(source, context = {}) {
       case "sense_basket":
         need("basket", block);
         return { expr: { op: "basket", block }, type: "number" };
+      // A robot's own conditions: its shield low, an opponent near
+      // (src/sim/combat.js).
+      case "sense_low":
+        need("shield", block);
+        return { expr: { op: "low", block }, type: "boolean" };
+      case "sense_danger":
+        need("shield", block);
+        return { expr: { op: "danger", block }, type: "boolean" };
       // What a building's order still needs, and room for more (src/sim/supply.js).
       case "sense_needs":
         return { expr: { op: "needs", block, at: field.place(node, "PLACE"), item: field.choice(node, "ITEM") }, type: "boolean" };
@@ -327,20 +345,21 @@ export function compile(source, context = {}) {
           return null;
         });
       };
-      const asked = ACTIONS[node.type]({ field, input, list }, node);
-      need(asked.type, block);
-      const recipes = type?.can?.includes("make") ? type.recipes : null;
-      if (recipes && asked.type === "make" && asked.recipe && !recipes.includes(asked.recipe)) fail("program.cannot", { block, action: "make" });
-      // Values known now go into the intent; the rest are worked out as the
-      // block runs.
-      const intent = {};
-      const args = {};
-      for (const [key, v] of Object.entries(asked)) {
-        if (v === null || typeof v !== "object" || Array.isArray(v)) intent[key] = v;
-        else if (CONSTANT.has(v.op)) intent[key] = v.value;
-        else args[key] = v;
+      for (const asked of [ACTIONS[node.type]({ field, input, list }, node)].flat()) {
+        need(asked.type, block);
+        const recipes = type?.can?.includes("make") ? type.recipes : null;
+        if (recipes && asked.type === "make" && asked.recipe && !recipes.includes(asked.recipe)) fail("program.cannot", { block, action: "make" });
+        // Values known now go into the intent; the rest are worked out as the
+        // block runs.
+        const intent = {};
+        const args = {};
+        for (const [key, v] of Object.entries(asked)) {
+          if (v === null || typeof v !== "object" || Array.isArray(v)) intent[key] = v;
+          else if (CONSTANT.has(v.op)) intent[key] = v.value;
+          else args[key] = v;
+        }
+        emit({ op: "act", block, intent, ...(Object.keys(args).length && { args }) });
       }
-      emit({ op: "act", block, intent, ...(Object.keys(args).length && { args }) });
       return;
     }
     const body = (name) => {
