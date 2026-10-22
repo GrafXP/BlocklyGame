@@ -35,6 +35,13 @@ const MATERIALS = () => ({
   pack: material(0x6cc04a),
   bolt: material(0xf6d03c),
   crop: material(0x8fc94b),
+  block: material(0xd6cfc0),
+  charcoal: material(0x38383e),
+  ore: material(0x8c5a43),
+  iron: material(0xc3cbd5, { roughness: 0.45, metalness: 0.35 }),
+  // The fire in a kiln or a smelter, which glows while it works, and its smoke.
+  fire: material(0xff8a2a, { emissive: 0xff5a10, emissiveIntensity: 0.9 }),
+  smoke: material(0xd3d6da),
   scaffold: material(0xc28a52),
   water: material(0x3c8fd6, { roughness: 0.4 }),
   // Matt, so it's the same blue from every side the camera turns to.

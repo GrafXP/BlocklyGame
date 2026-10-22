@@ -1,6 +1,6 @@
 # BlocklyBots: campaign plan v2
 
-18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; phase 6 and chapter 9 of phase 7 (missions 31–45: water, energy and Supply) followed on 21 October 2026; the rest is proposed
+18 October 2026 · Ages 7–9 · Content specification. Reviewed against the engine on 18 October 2026 (see [Review and delivery phases](#review-and-delivery-phases)); delivery phases 1, 2 and 5, the v2 infrastructure, the foundation and construction (missions 01–30), are implemented, and v2 replaced v1 as the game's campaign the same day; phase 6 and chapters 9–12 of phase 7 (missions 31–60: water, energy, Supply and industry) followed on 21 October 2026; the rest is proposed
 
 This plan reworks the [40-mission campaign](campaign-plan.md) into a gradual route from a first instruction to the full economy and computer opponent in [SKIRMISH_PLAN.md](../SKIRMISH_PLAN.md). It proposes **105 main-path missions in twenty-one chapters, plus 15 optional lessons in three programming workshops**. This is a working itinerary, not a mission limit: split a lesson again whenever playtesting reveals two unfamiliar ideas competing for attention.
 
@@ -629,7 +629,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Stone blocks are processed goods, distinct from raw stone.
 - **Setup and support:** A prebuilt stonecutter holds two raw stone and has output room. Compare source and product icons without placing its Make action.
 - **Player task:** Write one stone-block production instruction and inspect the result.
-- **Success / observe:** Two stone become one stone block. “Which picture does the old kit recipe use?” Keep kits and basic workshop construction on raw stone.
+- **Success / observe:** Two stone become one stone block. “Which picture does the old kit recipe use?” Keep kits and basic workshop construction on raw stone. *As built (21 October 2026):* the stonecutter stands by the stone pit, across the stream; its Make offers stone blocks alone. The goal is one block made.
 
 #### 47. A Foundation for the Smelter
 
@@ -639,7 +639,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Advanced buildings use a familiar construction process with processed inputs.
 - **Setup and support:** Preplace a reachable site and stage the exact shared-registry bill at friendly stores. Prepare only the plank courier and Build program. The focus courier has no route. Render the finalized block quantity as item pictures before authoring this fixture.
 - **Player task:** Read the stone-block portion of the bill and program all its pickups, trips, and unloads within basket capacity.
-- **Success / observe:** The full bill is delivered and the smelter is built. “Does this site ask for stone, or stone blocks?” Its production stays parked until the iron lessons.
+- **Success / observe:** The full bill is delivered and the smelter is built. “Does this site ask for stone, or stone blocks?” Its production stays parked until the iron lessons. *As built (21 October 2026):* the smelter's bill is the workshop's with stone blocks where it takes raw stone: four planks and two stone blocks (`src/sim/recipes.js`). Its plot is in the south of the west bank; Robo 2 brings the planks. Raw stone from the stone pit finds no room at the site, and waits there. The goal is the smelter built.
 
 #### 48. Wood for the Kiln
 
@@ -649,7 +649,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Two wood become a batch of two charcoal at the kiln.
 - **Setup and support:** A prebuilt kiln contains the exact recipe inputs and output room. Show recipe and progress pictures; no fire-management system or extra fuel meter appears.
 - **Player task:** Write the one-batch charcoal program.
-- **Success / observe:** One batch produces two charcoal. “Which source can feed both the sawmill and the kiln?” No fire management or extra fuel meter is introduced.
+- **Success / observe:** One batch produces two charcoal. “Which source can feed both the sawmill and the kiln?” No fire management or extra fuel meter is introduced. *As built (21 October 2026):* the kiln stands south of the farm; the goal is two charcoal made.
 
 #### 49. Share the Wood
 
@@ -659,7 +659,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** One raw resource can serve two useful chains.
 - **Setup and support:** Two independent complete collector programs both deliver to the kiln. The sawmill and kiln have finite orders for two planks and two charcoal. Only one collector needs editing; the other is background support. Keep the wrong destination unmarked.
 - **Player task:** Trace the missing wood, repair the selected collector's destination, and verify both outputs.
-- **Success / observe:** At least two planks and two charcoal are produced from separate paid inputs. “Which building was missing its share?” Require no efficiency optimum or arithmetic split.
+- **Success / observe:** At least two planks and two charcoal are produced from separate paid inputs. “Which building was missing its share?” Require no efficiency optimum or arithmetic split. *As built (21 October 2026):* with one goal, it's the sawmill's two planks; the kiln's charcoal comes from Robo 2's wood either way. No orders are needed: each building's job is two planks or one batch of charcoal.
 
 #### 50. An Industrial Corner
 
@@ -669,7 +669,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Combine construction materials and fuel preparation.
 - **Setup and support:** Background gathering and production make the exact construction bill and two charcoal from raw sources. A valid site has its Build program. The selected helper's workspace is empty; show construction and first-fuel orders separately.
 - **Player task:** Author the whole construction-and-fuel delivery plan, using valid loads and waiting pickups as needed.
-- **Success / observe:** The smelter finishes and receives two newly made charcoal. “Which deliveries built it, and which will help it work?” Budget construction and fuel separately; do not use staged processed inputs in the reference solution.
+- **Success / observe:** The smelter finishes and receives two newly made charcoal. “Which deliveries built it, and which will help it work?” Budget construction and fuel separately; do not use staged processed inputs in the reference solution. *As built (21 October 2026):* the goal is two charcoal delivered to the smelter, which only the built smelter has room for: charcoal brought first waits at the site, and the bill behind it never comes. Robo 2 and Robo 3 gather six wood and four stone.
 
 ### Chapter 11 — From Ore to Iron
 
@@ -681,7 +681,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Ore is a raw collectible; iron bars will be its processed output.
 - **Setup and support:** One empty helper at camp, a reachable deposit, and a prebuilt smelter with production parked. Distinguish ore and bar icons.
 - **Player task:** Write the complete two-ore collection and delivery program.
-- **Success / observe:** Two iron ore reach the input store. “Is this ready to build a robot yet?” Leave production off for this delivery lesson.
+- **Success / observe:** Two iron ore reach the input store. “Is this ready to build a robot yet?” Leave production off for this delivery lesson. *As built (21 October 2026):* the iron mine is across the stream, south of the workshop, and grows its ore back slowly; iron bars aren't dug there, and picking them up stops the program.
 
 #### 52. The Smelter's Three Ingredients
 
@@ -691,7 +691,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** One iron batch needs two ore, one charcoal, and one water.
 - **Setup and support:** Visibly stage one complete iron recipe and room for two output items. Keep delivery programming outside this first recipe lesson.
 - **Player task:** Write the smelter's one-batch iron program and observe payment and output.
-- **Success / observe:** The complete input set is consumed once and two bars finish. “Point to every ingredient before Run.” Do not substitute charge packs for charcoal.
+- **Success / observe:** The complete input set is consumed once and two bars finish. “Point to every ingredient before Run.” Do not substitute charge packs for charcoal. *As built (21 October 2026):* the smelter's store holds three batches' ingredients and three batches' bars; the goal is two bars made.
 
 #### 53. Join the Three Routes
 
@@ -701,7 +701,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Practise supplying a three-input producer with known tools.
 - **Setup and support:** Stage charcoal and water at their source buildings; ore stays at its deposit. Give the smelter a finite two-batch background program and declared demand. The single supplier starts without a source list or program.
 - **Player task:** Choose all three sources and write the complete repeated Supply job, then trace each ingredient's deliveries.
-- **Success / observe:** Four ore, two charcoal, and two water arrive across valid loads and produce four bars. “Which route brought each picture?” Supplies must not require a four-item basket.
+- **Success / observe:** Four ore, two charcoal, and two water arrive across valid loads and produce four bars. “Which route brought each picture?” Supplies must not require a four-item basket. *As built (21 October 2026):* the smelter's order is one batch; each Supply brings one kind, the one the order is shortest of, so ore comes first. A supplier that may look only at the mine says what it can't find, and the island stalls; the helper's own trips do it too.
 
 #### 54. Follow the Missing Ingredient
 
@@ -711,7 +711,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Trace a shortage upstream to its cause.
 - **Setup and support:** Ore and water routes and building programs work. The kiln's collector has a complete faulty trip to the sawmill. The overview can show the material chain, but does not mark the block to change.
 - **Player task:** Inspect the kiln's input and collector's travel, repair the cause, and follow newly made charcoal through to iron.
-- **Success / observe:** New wood becomes charcoal, a completed delivery feeds the smelter, and an iron batch finishes. “Where did the first missing piece belong?” Changing the final Make block alone cannot solve the cause.
+- **Success / observe:** New wood becomes charcoal, a completed delivery feeds the smelter, and an iron batch finishes. “Where did the first missing piece belong?” Changing the final Make block alone cannot solve the cause. *As built (21 October 2026):* Robo 2 brings the ore and the water, and Robo 3 the charcoal, as background support; the kiln waits for wood, and the smelter for charcoal.
 
 #### 55. Our Iron Works
 
@@ -721,7 +721,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Build a small complete industrial chain without a new block.
 - **Setup and support:** Prebuild the required producers with empty processed stores. Background jobs supply kiln wood, produce water and charcoal, make two iron batches, and export completed bars. The selected supplier has no program or sources chosen.
 - **Player task:** Plan the three-source Supply job and run it until all four newly made bars arrive at the marked depot.
-- **Success / observe:** Four ore, two wood, and two water become four iron bars at a marked depot through two batches. “Follow one bar back to its sources.” Working buildings alone are not counted as completed deliveries.
+- **Success / observe:** Four ore, two wood, and two water become four iron bars at a marked depot through two batches. “Follow one bar back to its sources.” Working buildings alone are not counted as completed deliveries. *As built (21 October 2026):* the goal is four bars delivered to the depot. A Forever Supply fills the smelter's order once more while the second batch is made, so the mission's budget is six ore: an order is what the shelf wants, not what the job needs (rule 4's finite demand isn't built).
 
 ### Chapter 12 — Keep the Factory Flowing
 
@@ -733,7 +733,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Ready to Make checks all inputs and a full output batch's space.
 - **Setup and support:** Trials provide complete inputs and room, then missing water; a full output shelf is an optional variation. Explain Ready to Make as one true-or-false block; no If wrapper is placed.
 - **Player task:** Write the readiness condition and conditional production action, then test the same program in both trials.
-- **Success / observe:** The ready fixture completes a batch; the unready fixture finishes its check without attempting Make or spending ingredients. “Which picture says why it cannot start?” The real Make action still checks atomically; no new timed-wait block is needed.
+- **Success / observe:** The ready fixture completes a batch; the unready fixture finishes its check without attempting Make or spending ingredients. “Which picture says why it cannot start?” The real Make action still checks atomically; no new timed-wait block is needed. *As built (21 October 2026):* trials are gone: the smelter starts with its ore and charcoal, and Robo 2 brings the water as the mission runs. “ready to make [item]” is the building's own condition, offered to buildings that make things (`shortOf`, `src/sim/actions.js`). The goal is two bars made with the smelter never waiting to make (`noWait` on a `made` goal counts a building's waits for an ingredient or room): Make at once waits for the water and fails, and an If that looks once, before the water, makes nothing. Wait Until, or an If in a Forever, does it.
 
 #### 57. Batches Need Room
 
@@ -743,7 +743,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Stock targets must account for a recipe's batch size.
 - **Setup and support:** Trials start with zero or two bars, continuing inputs, and capacity above four. A background courier removes two once. Explain This Building as this smelter; no reserve loop or comparison value is supplied.
 - **Player task:** Build the complete repeated stock check and batch-production rule for a four-bar reserve.
-- **Success / observe:** Both trials reach four, replace the removed pair, and settle without starting an unnecessary batch. “How many appear each time?” Arbitrary odd starting stocks are excluded from this first batch lesson.
+- **Success / observe:** Both trials reach four, replace the removed pair, and settle without starting an unnecessary batch. “How many appear each time?” Arbitrary odd starting stocks are excluded from this first batch lesson. *As built (21 October 2026):* one start: two bars on the shelf and three batches' ingredients in store; Robo 2 takes two away once there are four. The goal is four kept for 80 steps, longer than a batch, after Robo 2 has finished (`steady`): making all the time ends at six, and so does making whenever ready. This Building isn't built; the smelter's own name is in the stock block's dropdown.
 
 #### 58. Water for Everyone
 
@@ -753,7 +753,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Several consumers share one useful resource.
 - **Setup and support:** Farm and fuel routes work independently. The selected courier has a complete faulty delivery to the farm instead of the smelter. Other ingredients are staged and well throughput is sufficient. Show stock evidence without marking the wrong block.
 - **Player task:** Find the wrongly served shelf and repair the selected route, then check all three completed cycles.
-- **Success / observe:** Each consumer completes one paid cycle after the repaired delivery. “Which shelf was still missing water?” Do not require library assignment, shared settings, or a scheduling language.
+- **Success / observe:** Each consumer completes one paid cycle after the repaired delivery. “Which shelf was still missing water?” Do not require library assignment, shared settings, or a scheduling language. *As built (21 October 2026):* the goal is the smelter's two bars; the farm and the fuel station get their buckets from Robo 2 and Robo 3, and the well draws three.
 
 #### 59. A Longer Delivery
 
@@ -763,7 +763,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** A small input buffer absorbs travel delay; a temporary wait is not automatically a bug.
 - **Setup and support:** Two announced route layouts share the same adequate sources and background production jobs. The water courier has no program; pictured input-target choices fit the stores. Other ingredients have working routes.
 - **Player task:** Choose a buffer target and write the water-supply program; run the same plan on both route layouts and explain normal travel waits.
-- **Success / observe:** Two batches finish in each layout without manual nudges; the child can point to waiting goods or incoming goods. “Is it missing, or still travelling?” Do not require uninterrupted production or guessed delays.
+- **Success / observe:** Two batches finish in each layout without manual nudges; the child can point to waiting goods or incoming goods. “Is it missing, or still travelling?” Do not require uninterrupted production or guessed delays. *As built (21 October 2026):* trials are gone, and so is the choice of a target, which has no block: the far source is the spring, west of the camp, and the smelter's order keeps two buckets, two batches' worth. Three batches need three buckets, more than a basket: one trip makes four bars, and the goal is six. A Forever Supply, a Forever round of trips, or trips while Needs says so, all do it.
 
 #### 60. A Balanced Factory
 
@@ -773,7 +773,7 @@ These adapt the original foundation around one editable worker. Missions 13–15
 - **Learn:** Plan a complete finished-goods order across familiar industry outputs.
 - **Setup and support:** Prebuild production with empty processed stocks and complete independent background input and production jobs. Leave the final courier unprogrammed. Mark each output source and compatible destination; no pickup route or loop is supplied.
 - **Player task:** Author the complete finished-goods order with valid loads, waiting for freshly produced items when necessary.
-- **Success / observe:** All requested goods are newly produced and delivered; no chain is permanently starved. “Which loads finished this order?” Unlock peaceful industry templates. Completing the order does not require assigning a group or changing multiple workers.
+- **Success / observe:** All requested goods are newly produced and delivered; no chain is permanently starved. “Which loads finished this order?” Unlock peaceful industry templates. Completing the order does not require assigning a group or changing multiple workers. *As built (21 October 2026):* the goal is the depot's order, four iron bars, two kits and two packs delivered (`order`, each item counted up to what's ordered); the depot has it as its order too, so a Forever Supply of the depot from the smelter, the workshop and the fuel station also does it. Robo 2 to Robo 5 and seven buildings make everything from raw resources. Peaceful industry templates aren't there yet, as First settlement templates aren't (mission 40).
 
 ### Chapter 13 — Meet the Guards
 
@@ -1498,7 +1498,7 @@ Use one shared recipe registry for the game, cards, goal checks, and budgets. Th
 | Improve shields | 2 gears + 2 circuits + 2 charge packs | Guards gain one maximum shield segment, once per side | 78 |
 | Camp fast repair | 1 charge pack | Accelerate one recovery; basic recovery remains free | 87 |
 
-Other construction bills follow these dependencies: additional sawmills use wood/raw stone; wells, farms, fuel stations, stonecutters, kilns, and workshops use planks/raw stone; smelters and forges use planks/stone blocks; electronics labs use planks/stone blocks/iron bars. Their exact quantities, stores, and footprints must be finalized in the shared registry before authoring missions 47, 50, or 102. A stonecutter cannot need stone blocks, a smelter cannot need iron, and a fuel station cannot need packs to build.
+Other construction bills follow these dependencies: additional sawmills use wood/raw stone; wells, farms, fuel stations, stonecutters, kilns, and workshops use planks/raw stone; smelters and forges use planks/stone blocks; electronics labs use planks/stone blocks/iron bars. Their exact quantities, stores, and footprints must be finalized in the shared registry before authoring missions 47, 50, or 102. *As built (21 October 2026):* the smelter's bill is four planks and two stone blocks, on a three-by-two plot. A stonecutter cannot need stone blocks, a smelter cannot need iron, and a fuel station cannot need packs to build.
 
 Illustrative budgets below cover the **production order with buildings already present**, unless construction is explicitly named. Wells supply the counted water through timed extraction. Food comes from farms in these examples; berry variants have a different water budget. These are authoring arithmetic, not child-facing worksheets.
 
@@ -1608,7 +1608,8 @@ Reviewed on 18 October 2026 against the engine as it stands (`src/sim`, `src/blo
 - Missions 01–25, 81–84, and workshops A01–A15 use only what exists: wood, raw stone, planks, kits, the bridge, the workshop and its placement; Go To, Pick Up, Unload, Make and Build; Repeat, Forever, If, Else and Wait Until; stock and comparisons; shared programs, teams, settings and own copies; variables, blocks of one's own, and messages.
 - Missions 26–30 also need a goal for a building finished on its construction site (today's `built` goal knows only bridges) and a placement-only goal for 26.
 - Missions 31–45 have theirs since 21 October 2026: water, food, charge packs and paid assembly within a robot limit; buildings' orders, Supply, Needs and Space.
-- Everything else needs engine work first, in the order of the skirmish plan's stages: Ready to Make, stone blocks, charcoal, iron and buildings with two recipes (46–60, 85); gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105).
+- Missions 46–60 have theirs since the same day: stone blocks, charcoal, iron ore and iron bars; the stonecutter, the kiln, the smelter and its bill, the iron mine; Ready to Make; a building's waits counted against `noWait`; and an order of several items as a goal.
+- Everything else needs engine work first, in the order of the skirmish plan's stages: buildings with two recipes and gold, the forge, the lab and improvements (71–80); sides, shields, combat, recovery and the computer opponent (61–70, 86–105). Mission 85 needs none.
 
 ### Corrections after playtesting
 
@@ -1650,7 +1651,7 @@ The first time a device opens v2, the v1 progress on it is credited through the 
 | 2 | Chapters 3–5 (11–25) | None | Implemented 18 October 2026; v2 replaced v1 the same day |
 | 5 | Chapter 6 (26–30) | Goals for a placed site and a finished building; catalogue buildings staged as construction sites; missions that offer the Build tool | Implemented 18 October 2026 |
 | 6 | Chapters 7–8 (31–40) | Water, food, packs; well, farm, fuel station, berries, spring; paid assembly with a supplied job | Implemented 21 October 2026 |
-| 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | Chapter 9 (41–45), with Supply, orders, Needs and Space, implemented 21 October 2026; 46–60 and 85 to come |
+| 7 | Chapters 9–12 (41–60) and 85 | Supply, targets and claims; Needs, Space, Ready to Make; stonecutter, kiln, smelter, iron | Chapters 9–12 (41–60), with Supply, orders, Needs, Space, Ready to Make, stone blocks, charcoal and iron, implemented 21 October 2026; 85 to come |
 | 8 | Chapters 15–16 (71–80) | Gold, forge, lab, improvements | |
 | 9 | Chapters 13–14 (61–70) | Sides, shields, Guard and Advance, repair and reboot, paid guards | |
 | 10 | Chapters 18–21 (86–105) | Population, the opponent, matches and presets, safe edits | |

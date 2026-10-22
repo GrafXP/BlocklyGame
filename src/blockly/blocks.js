@@ -45,6 +45,10 @@ export const PLACES = [
   ["%{BKY_PLACE_WELL}", "well"],
   ["%{BKY_PLACE_FARM}", "farm"],
   ["%{BKY_PLACE_STATION}", "station"],
+  ["%{BKY_PLACE_STONECUTTER}", "stonecutter"],
+  ["%{BKY_PLACE_KILN}", "kiln"],
+  ["%{BKY_PLACE_SMELTER}", "smelter"],
+  ["%{BKY_PLACE_MINE}", "mine"],
 ];
 // Every item (src/sim/entities.js, ITEMS), as dropdowns list them: what's
 // found, then what's made. On an island, a dropdown offers only those found or
@@ -54,15 +58,20 @@ export const ITEM_CHOICES = [
   ["%{BKY_ITEM_STONE}", "stone"],
   ["%{BKY_ITEM_WATER}", "water"],
   ["%{BKY_ITEM_FOOD}", "food"],
+  ["%{BKY_ITEM_IRONORE}", "ironOre"],
   ["%{BKY_ITEM_PLANK}", "plank"],
   ["%{BKY_ITEM_KIT}", "kit"],
   ["%{BKY_ITEM_PACK}", "pack"],
+  ["%{BKY_ITEM_BLOCK}", "block"],
+  ["%{BKY_ITEM_CHARCOAL}", "charcoal"],
+  ["%{BKY_ITEM_IRON}", "iron"],
 ];
 // What buildings make: each has a recipe of the same name (src/sim/recipes.js).
-export const MADE = ITEM_CHOICES.filter(([, item]) => ["plank", "kit", "water", "food", "pack"].includes(item));
+export const MADE = ITEM_CHOICES.filter(([, item]) => ["plank", "kit", "water", "food", "pack", "block", "charcoal", "iron"].includes(item));
 export const BLUEPRINTS = [
   ["%{BKY_BLUEPRINT_BRIDGE}", "bridge"],
   ["%{BKY_BLUEPRINT_WORKSHOP}", "workshop"],
+  ["%{BKY_BLUEPRINT_SMELTER}", "smelter"],
 ];
 // The messages there are (src/sim/messages.js, MESSAGES), in the same order.
 export const MESSAGE_CHOICES = [
@@ -87,7 +96,7 @@ export const RECIPIENTS = [
   ["%{BKY_ROBO_1}", "r1"],
   ["%{BKY_ROBO_2}", "r2"],
   ["%{BKY_ROBO_3}", "r3"],
-  ...PLACES.filter(([, id]) => !["grove", "quarry"].includes(id)),
+  ...PLACES.filter(([, id]) => !["grove", "quarry", "spring", "berries", "mine"].includes(id)),
 ];
 
 // The value block each action's input starts with, as its shadow: the input's
@@ -278,6 +287,17 @@ export const BLOCKS = [
     output: "Number",
     style: "sensing_blocks",
     tooltip: "%{BKY_SENSE_SPACE_TOOLTIP}",
+  },
+  // Whether the building running the program could make an item now: every
+  // ingredient there, and room for the whole batch (src/sim/actions.js,
+  // shortOf). A building's own condition, so it names no place.
+  {
+    type: "sense_ready",
+    message0: "%{BKY_SENSE_READY}",
+    args0: [{ type: "field_choice", name: "ITEM", options: MADE, choices: "makes" }],
+    output: "Boolean",
+    style: "sensing_blocks",
+    tooltip: "%{BKY_SENSE_READY_TOOLTIP}",
   },
   {
     type: "sense_basket",

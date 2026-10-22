@@ -120,6 +120,42 @@ test("a robot that was to set off only once things were ready fails if it waits 
   assert.equal(ready.mission.goals[0].failed, null);
 });
 
+test("a building that was to start only once it was ready fails if it waits to make", () => {
+  const goals = [{ id: "two", type: "made", at: "mill", item: "plank", count: 2, noWait: true }];
+  const making = (wood) => {
+    const w = createWorld({
+      id: "test",
+      version: 1,
+      terrain: FIELD,
+      entities: [depot, { ...mill({ wood }), program: "m" }],
+      nodes: [pile],
+      programs: [{ id: "m", source: program(repeat("r", 2, make("k"))) }],
+      mission: { id: "m", goals },
+    });
+    runUntil(w, (it) => it.mission.done !== null || it.mission.goals[0].failed !== null, 200);
+    return w;
+  };
+  const short = making(1);
+  assert.ok(short.mission.goals[0].failed, "the second plank waited for its wood");
+  assert.equal(short.mission.tally.waited.mill > 0, true);
+  assert.equal(making(2).mission.goals[0].failed, null);
+  assert.equal(goalProblem(goals[0]), null, "a made goal names its building: no `by`");
+});
+
+test("an order counts each item's deliveries up to what it orders, together", () => {
+  const w = world({
+    entities: [bot("a", [3, 1], "p")],
+    programs: { p: program(go("g", "mill"), repeat("t", 2, pickUp("k", "plank")), go("g2", "depot"), unload("u"), go("g3", "pile"), repeat("w", 2, pickUp("c")), go("g4", "depot"), unload("u2")) },
+    mission: { goals: [{ id: "order", type: "order", to: "depot", items: { plank: 1, wood: 2 } }] },
+  });
+  byId(w, "mill").store.items = { plank: 2 };
+  runUntil(w, (it) => it.mission.tally.unloads["depot|*|plank"]);
+  assert.deepEqual(goalProgress(w, goal(w, "order")), { have: 1, need: 3, done: false, failed: false }, "two planks count as the one ordered");
+  runUntil(w, (it) => it.mission.done !== null);
+  assert.deepEqual(goalProgress(w, goal(w, "order")).have, 3);
+  assert.match(goalProblem({ id: "a", type: "order", to: "depot", items: { plank: 0 } }), /has items/);
+});
+
 test("a steady goal holds a count for a while, once what it waits for has stopped", () => {
   const w = world({
     entities: [bot("a", [3, 1], "p")],

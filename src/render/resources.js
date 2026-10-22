@@ -3,9 +3,11 @@ import { createBoulder, createTree, mesh } from "./models.js";
 
 // Items you can see (PLAN.md §4): what every store holds, stacked on a pad
 // beside the building or deposit, as many as it has; and the deposits
-// themselves: the grove, the stone pit, the spring and the berry bushes. Water
-// stands in buckets, food is a round fruit, a charge pack a little battery. A store's items are its committed counts, so a paused
-// world shows exactly what it holds.
+// themselves: the grove, the stone pit, the spring, the berry bushes and the
+// iron mine. Water stands in buckets, food is a round fruit, a charge pack a
+// little battery; a stone block is cut square, unlike a stone, charcoal is a
+// dark lump, ore a rusty rock and an iron bar a shiny ingot. A store's items
+// are its committed counts, so a paused world shows exactly what it holds.
 
 // Each item's look, small enough to stack, and the room it takes, across, high
 // and deep.
@@ -17,6 +19,10 @@ const ITEMS = {
   water: { make: () => new THREE.CylinderGeometry(0.075, 0.06, 0.13, 8), material: "water", size: [0.17, 0.14, 0.17] },
   food: { make: () => new THREE.IcosahedronGeometry(0.075, 0), material: "berry", size: [0.16, 0.15, 0.16] },
   pack: { make: () => new THREE.BoxGeometry(0.1, 0.14, 0.07), material: "pack", size: [0.13, 0.15, 0.1] },
+  block: { make: () => new THREE.BoxGeometry(0.17, 0.11, 0.13), material: "block", size: [0.19, 0.12, 0.15] },
+  charcoal: { make: () => new THREE.DodecahedronGeometry(0.06, 0), material: "charcoal", size: [0.13, 0.11, 0.13] },
+  ironOre: { make: () => new THREE.DodecahedronGeometry(0.075, 0), material: "ore", size: [0.17, 0.14, 0.17] },
+  iron: { make: () => new THREE.BoxGeometry(0.22, 0.055, 0.08), material: "iron", size: [0.24, 0.06, 0.1] },
 };
 const geometries = new Map();
 export const itemGeometry = (item) => {
@@ -141,6 +147,36 @@ export function createBerries(m, { across, deep, caps }) {
   const stock = createStock(m, caps, { food: { x: 0, y: 0, z: deep / 2 - 0.2, w: across - 0.4, d: 0.35 } });
   group.add(stock.group);
   return { group, top: 1.1, update: (world, node) => stock.update(node.store.items) };
+}
+
+// The iron mine: a rocky hill with a dark way in, framed by timber, and the
+// ore dug out heaped at its front.
+export function createMine(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  [
+    [-0.2, -0.22, 0.85],
+    [0.3, -0.18, 0.65],
+  ].forEach(([fx, fz, s], i) => {
+    const rock = createBoulder(m, i * 2.1 + 0.4);
+    rock.position.set(fx * across, 0, fz * deep);
+    rock.scale.multiplyScalar(s);
+    group.add(rock);
+  });
+  const z = -0.05;
+  const door = mesh(new THREE.BoxGeometry(0.42, 0.5, 0.06), m.dark, { cast: false });
+  door.position.set(-0.05, 0.25, z);
+  const post = new THREE.BoxGeometry(0.07, 0.56, 0.07);
+  for (const x of [-0.29, 0.19]) {
+    const p = mesh(post, m.trunk);
+    p.position.set(x, 0.28, z + 0.03);
+    group.add(p);
+  }
+  const lintel = mesh(new THREE.BoxGeometry(0.6, 0.08, 0.09), m.trunk);
+  lintel.position.set(-0.05, 0.58, z + 0.03);
+  group.add(door, lintel);
+  const stock = createStock(m, caps, { ironOre: { x: 0, y: 0, z: deep / 2 - 0.25, w: across - 0.5, d: 0.45 } });
+  group.add(stock.group);
+  return { group, top: 1.2, update: (world, node) => stock.update(node.store.items) };
 }
 
 // The stone pit: boulders at its back, and its stones heaped at its front.

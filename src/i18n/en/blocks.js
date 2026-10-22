@@ -85,6 +85,10 @@ export default {
   SENSE_SPACE: "space for %1",
   SENSE_SPACE_AT: "at %1",
   SENSE_SPACE_TOOLTIP: "How many more of this the building has room for.",
+  // A condition, a building's own: whether it could make item %1 now. No
+  // picture.
+  SENSE_READY: "ready to make %1",
+  SENSE_READY_TOOLTIP: "True when every ingredient is here and the whole batch will fit. It doesn't start the work.",
 
   // A place or an item in an action's gap, chosen from a dropdown. No words of
   // their own besides the dropdown's.
@@ -114,13 +118,22 @@ export default {
   PLACE_WELL: "well",
   PLACE_FARM: "farm",
   PLACE_STATION: "fuel station",
+  PLACE_STONECUTTER: "stonecutter",
+  PLACE_KILN: "kiln",
+  PLACE_SMELTER: "smelter",
+  PLACE_MINE: "iron mine",
   ITEM_WOOD: "wood",
   ITEM_STONE: "stone",
   ITEM_WATER: "water",
   ITEM_FOOD: "food",
+  ITEM_IRONORE: "iron ore",
   ITEM_PLANK: "planks",
   ITEM_KIT: "kits",
   ITEM_PACK: "charge packs",
+  // A stone block is cut from stone, and isn't stone.
+  ITEM_BLOCK: "stone blocks",
+  ITEM_CHARCOAL: "charcoal",
+  ITEM_IRON: "iron bars",
   // Messages, shown in quotes on their own in a dropdown: “plank ready”.
   MESSAGE_PLANKREADY: "“plank ready”",
   MESSAGE_KITREADY: "“kit ready”",
@@ -140,4 +153,5 @@ export default {
   // What a construction site can build.
   BLUEPRINT_BRIDGE: "bridge",
   BLUEPRINT_WORKSHOP: "workshop",
+  BLUEPRINT_SMELTER: "smelter",
 };

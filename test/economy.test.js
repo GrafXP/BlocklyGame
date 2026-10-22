@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { evaluate } from "../src/programming/expressions.js";
 import { applyCommand } from "../src/sim/commands.js";
 import { stateHash } from "../src/sim/replay.js";
 import { SUPPLY_IDLE, needs } from "../src/sim/supply.js";
@@ -12,7 +13,8 @@ import { go, pickUp, program, unload } from "./programs.js";
 // SKIRMISH_PLAN.md §3, §4, §7): the well, the farm and the fuel station make
 // them by recipe; the camp pays planks and a pack for a new robot, within the
 // island's limit; and Supply brings what a building's order still needs, as an
-// ordinary courier would, never counting one item twice.
+// ordinary courier would, never counting one item twice. Then industry
+// (chapters 10–12): stone blocks, charcoal, iron ore and iron bars.
 
 // A field 12 by 5, x 1–10 and z 1–3 walkable: a farm and a well at its west, a
 // fuel station and the camp at its east, a spring in the middle.
@@ -199,4 +201,65 @@ test("a world in the middle of a Supply and of making a robot saves and loads ex
   run(copy, 80);
   assert.equal(stateHash(copy), stateHash(w));
   assert.ok(byId(w, "r2"));
+});
+
+// --- Industry (docs/campaign-planv2.md, chapters 10–12) ------------------------
+//
+// The stonecutter, the kiln and the smelter, in the field's middle row: the
+// smelter's batch takes all its ingredients at once; Ready to Make reads
+// whether one could start; the smelter is built of planks and stone blocks.
+
+const stonecutter = (extra) => building("stonecutter", "stonecutter", [3, 1], [3, 2], { stone: 4, block: 4 }, extra);
+const kiln = (extra) => building("kiln", "kiln", [5, 3], [5, 2], { wood: 4, charcoal: 4 }, extra);
+const smelter = (extra) => building("smelter", "smelter", [7, 1], [7, 2], { ironOre: 6, charcoal: 3, water: 3, iron: 6 }, extra);
+const mine = { id: "mine", type: "mine", name: "mine", area: { x: 9, z: 3, w: 1, d: 1 }, access: [[9, 2]], items: { ironOre: 2 }, caps: { ironOre: 2 } };
+
+test("the stonecutter cuts two stones into a stone block, the kiln burns two wood into two charcoal, and the smelter makes two iron bars from two ore, a charcoal and a water, taken at once", () => {
+  const w = world({
+    entities: [
+      stonecutter({ items: { stone: 2 }, ...scripted([{ type: "make", recipe: "block" }]) }),
+      kiln({ items: { wood: 2 }, ...scripted([{ type: "make", recipe: "charcoal" }]) }),
+      smelter({ items: { ironOre: 2, charcoal: 1, water: 1 }, ...scripted([{ type: "make", recipe: "iron" }, { type: "make", recipe: "iron" }]) }),
+    ],
+  });
+  run(w, 1);
+  assert.deepEqual(byId(w, "smelter").store.out, { ironOre: 2, charcoal: 1, water: 1 }, "every ingredient held at once");
+  assert.deepEqual(byId(w, "smelter").store.in, { iron: 2 }, "and room for the whole batch");
+  run(w, 60);
+  assert.deepEqual(byId(w, "stonecutter").store.items, { block: 1 });
+  assert.deepEqual(byId(w, "kiln").store.items, { charcoal: 2 });
+  assert.deepEqual(byId(w, "smelter").store.items, { iron: 2 });
+  assert.deepEqual(reasonOf(byId(w, "smelter")), { code: "wait.item", item: "ironOre", at: "smelter", need: 2, have: 0 }, "a second batch needs ore again");
+});
+
+test("ore is picked up at the iron mine, a basket space each; bars aren't", () => {
+  const w = world({ entities: [helper("r1", [9, 2], [{ type: "pickUp", item: "ironOre" }, { type: "pickUp", item: "iron" }])], nodes: [mine] });
+  run(w, 6);
+  assert.deepEqual(byId(w, "r1").store.items, { ironOre: 1 });
+  assert.deepEqual(byId(w, "r1").error, { code: "error.notHere", action: "pickUp" });
+});
+
+test("Ready to Make is true only with every ingredient there and room for the whole batch, and holds nothing; a building without the recipe can't ask", () => {
+  const w = world({ entities: [smelter({ items: { ironOre: 2, charcoal: 1 } }), kiln()] });
+  const s = byId(w, "smelter");
+  const ready = (e) => evaluate({ op: "ready", block: "r", item: "iron" }, e, w);
+  assert.equal(ready(s), false, "no water");
+  s.store.items.water = 1;
+  assert.equal(ready(s), true);
+  assert.deepEqual([s.store.in, s.store.out], [{}, {}], "it holds nothing");
+  s.store.items.iron = 5;
+  assert.equal(ready(s), false, "two more bars won't fit beside five");
+  assert.throws(() => ready(byId(w, "kiln")), (e) => e.problem?.code === "error.cannot");
+});
+
+test("the smelter's construction site takes planks and stone blocks, not stone, and becomes the smelter", () => {
+  const site = building("smelter", "site", [7, 1], [7, 2], { plank: 4, block: 2 }, { blueprint: "smelter", items: { plank: 4, block: 1 }, ...scripted([{ type: "make", recipe: "smelter" }]) });
+  const w = world({ entities: [site, helper("r1", [7, 2], [{ type: "unload" }], { items: { stone: 2 } })] });
+  run(w, 1);
+  assert.deepEqual(reasonOf(byId(w, "r1")), { code: "wait.space", item: "stone", at: "smelter", need: 2, free: 0 }, "no room for stone");
+  assert.deepEqual(reasonOf(byId(w, "smelter")), { code: "wait.item", item: "block", at: "smelter", need: 2, have: 1 });
+  byId(w, "smelter").store.items.block = 2;
+  runUntil(w, (it) => byId(it, "smelter").type === "smelter");
+  const built = byId(w, "smelter");
+  assert.deepEqual([built.store.items, built.store.caps, "blueprint" in built], [{}, { ironOre: 6, charcoal: 3, water: 3, iron: 6 }, false]);
 });

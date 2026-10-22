@@ -112,6 +112,7 @@ export function writer(p) {
     stock: (item, place) => block("sense_stock", id("stock"), { fields: { ITEM: item, PLACE: place } }),
     needs: (place, item) => block("sense_needs", id("needs"), { fields: { PLACE: place, ITEM: item } }),
     space: (item, place) => block("sense_space", id("space"), { fields: { ITEM: item, PLACE: place } }),
+    ready: (item) => block("sense_ready", id("ready"), { fields: { ITEM: item } }),
     compare: (a, op, b) => block("logic_compare", id("compare"), { fields: { OP: op }, inputs: { A: gap(a, 0), B: gap(b, 0) } }),
     mine: (slot) => block(`setting_${slot}`, id(slot)),
     // Memory: a variable of the program, Set, Change and Get.

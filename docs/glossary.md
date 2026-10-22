@@ -46,6 +46,16 @@ German uses the informal *du* and short imperatives on blocks, like Blockly's ow
 | supply … from … | versorge … von … | “versorge Ladestation”, with “von Bauernhof” inside. |
 | needs (a condition) | braucht | “Bauernhof braucht Wasser”. |
 | space for … at … | Platz für … bei … | “Platz für Wasser bei Bauernhof”. |
+| stone block | Steinblock, Steinblöcke | Cut from stone, and not „Stein“: kits still take „Steine“. |
+| charcoal | Holzkohle | Uncounted: “2 Holzkohle”. |
+| iron ore | Eisenerz | Uncounted: “2 Eisenerz”. Dug at the iron mine. |
+| iron bar | Eisenbarren | “2 Eisenbarren”. |
+| stonecutter | Steinsäge | It cuts stone into blocks: “stelle Steinblöcke her”. |
+| kiln (charcoal kiln) | Kohlenmeiler | It burns wood into charcoal. |
+| smelter | Schmelzofen | It makes iron bars from ore, charcoal and water. |
+| iron mine | Eisenmine | A deposit, like the stone pit. |
+| batch (what one Make makes) | Ladung | “Eine Ladung macht zwei Eisenbarren.” Also a basket's load. |
+| ready to make … (a condition) | bereit für … | “bereit für Eisenbarren”: every ingredient there, and room for the batch. |
 | tree, rock | Baum, Felsen | Not “Stein”, which is the item. |
 | marker (which entity is at which block) | Markierung | |
 | details (the inspector) | Einzelheiten | For screen readers. |

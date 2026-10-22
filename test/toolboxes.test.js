@@ -43,6 +43,13 @@ test("a building's toolbox has Make only with a recipe that makes an item, and B
   assert.ok(blocksIn(camp).includes("control_wait_steps") && blocksIn(depot).includes("control_wait_steps"));
 });
 
+test("Ready to Make is for a building that makes items, at the first it makes; not for a robot, the camp or a depot", () => {
+  const smelter = toolboxFor(["smelter"]);
+  assert.deepEqual(blockIn(smelter, "sense_ready").fields, { ITEM: "iron" });
+  assert.deepEqual(blockIn(smelter, "building_make").fields, { ITEM: "iron" });
+  for (const type of ["helper", "camp", "depot", "site"]) assert.ok(!blocksIn(toolboxFor([type])).includes("sense_ready"), type);
+});
+
 test("on an island, a toolbox's dropdowns start at what's there: Supply at a building, an item that's found or made, the camp's team", () => {
   const { world } = missionStart(campaignMission("c2-m041"));
   const robot = toolboxFor(["helper"], { world });
@@ -107,8 +114,10 @@ test("what a building can make or build is what it has recipes for", () => {
   assert.deepEqual(choicesFor("builds", { world, type: "site" }), [
     ["%{BKY_BLUEPRINT_BRIDGE}", "bridge"],
     ["%{BKY_BLUEPRINT_WORKSHOP}", "workshop"],
+    ["%{BKY_BLUEPRINT_SMELTER}", "smelter"],
   ]);
   assert.deepEqual(choicesFor("builds", { world, type: "site", builds: ["bridge"] }), [["%{BKY_BLUEPRINT_BRIDGE}", "bridge"]], "a site builds what its blueprint says");
+  assert.deepEqual(choicesFor("makes", { world, type: "smelter" }), [["%{BKY_ITEM_IRON}", "iron"]]);
   assert.deepEqual(choicesFor("makes", { world, type: "workshop" }), [["%{BKY_ITEM_KIT}", "kit"]]);
   assert.deepEqual(
     choicesFor("makes", { world, type: null }),
@@ -118,6 +127,9 @@ test("what a building can make or build is what it has recipes for", () => {
       ["%{BKY_ITEM_PLANK}", "plank"],
       ["%{BKY_ITEM_KIT}", "kit"],
       ["%{BKY_ITEM_PACK}", "pack"],
+      ["%{BKY_ITEM_BLOCK}", "block"],
+      ["%{BKY_ITEM_CHARCOAL}", "charcoal"],
+      ["%{BKY_ITEM_IRON}", "iron"],
     ],
     "for no one type: whatever any recipe makes",
   );

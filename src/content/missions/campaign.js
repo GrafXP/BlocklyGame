@@ -7,11 +7,14 @@ import { CHAPTER_6 } from "./chapter6.js";
 import { CHAPTER_7 } from "./chapter7.js";
 import { CHAPTER_8 } from "./chapter8.js";
 import { CHAPTER_9 } from "./chapter9.js";
+import { CHAPTER_10 } from "./chapter10.js";
+import { CHAPTER_11 } from "./chapter11.js";
+import { CHAPTER_12 } from "./chapter12.js";
 
 // The campaign (PLAN.md §9; docs/campaign-planv2.md): 105 missions in 21
 // chapters on the main path, and 15 lessons in three optional workshops, built
 // in delivery phases (“Review and delivery phases”); this is what's built so
-// far, the foundation, chapters 1–5. It took the first campaign's place on 18
+// far, chapters 1–12, missions 1–60. It took the first campaign's place on 18
 // October 2026, the first campaign's missions and saves let go. A mission is
 //
 //   { id, n, chapter, main, workspace, focus, requires?, setup, goals,
@@ -68,6 +71,9 @@ const CHAPTERS_BUILT = [
   [7, CHAPTER_7],
   [8, CHAPTER_8],
   [9, CHAPTER_9],
+  [10, CHAPTER_10],
+  [11, CHAPTER_11],
+  [12, CHAPTER_12],
 ];
 
 const ID = /^c2-(m|a)(\d+)$/;

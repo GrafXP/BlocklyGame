@@ -55,6 +55,7 @@ const USE = {
   building_assemble: (type) => can(type, "make") && recipes(type).some((r) => RECIPES[r].assembles),
   control_wait_steps: (type) => can(type, "wait"),
   sense_basket: (type) => can(type, "basket"),
+  sense_ready: (type) => can(type, "make") && recipes(type).some((r) => !RECIPES[r].builds && !RECIPES[r].assembles),
   ...Object.fromEntries(Object.keys(SETTING_BLOCKS).map((b) => [b, (type) => can(type, "settings")])),
 };
 
@@ -78,7 +79,7 @@ const GAME = [
       block("control_wait_until"),
     ],
   ],
-  ["CAT_SENSING", "sensing", [block("sense_stock"), block("sense_basket"), block("sense_needs"), block("sense_space")]],
+  ["CAT_SENSING", "sensing", [block("sense_stock"), block("sense_basket"), block("sense_needs"), block("sense_space"), block("sense_ready")]],
   [
     "CAT_VALUES",
     "values",

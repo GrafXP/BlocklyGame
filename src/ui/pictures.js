@@ -14,10 +14,18 @@ const SHAPES = {
   water: `<path d="M5 9h14l-1.7 11H6.7z"/><path d="M5.5 9q6.5-7 13 0" fill="none"/><path d="M7.5 12.5q2.3 1.5 4.5 0t4.5 0" fill="none"/>`,
   food: `<circle cx="12" cy="14" r="6.5"/><path d="M12 7.5c0-2 .9-3.4 2.8-4" fill="none"/><path d="M11.8 7.6c-2.2-1.6-4.6-.9-5.3 1 1.9.9 3.9.6 5.3-1z"/>`,
   pack: `<rect x="5.5" y="6" width="13" height="15" rx="2"/><path d="M9.5 6V3.5h5V6"/><path d="M13 9.5l-3 4.5h4l-3 4.5" fill="none"/>`,
+  // A stone block, cut square, with its joints; lumps of charcoal; a rock of
+  // ore with its specks of iron; an iron bar, an ingot.
+  block: `<rect x="3" y="7.5" width="18" height="10" rx="1"/><path d="M3 12.5h18M10 7.5v5M14 12.5v5" fill="none"/>`,
+  charcoal: `<path d="M3 18l2.5-5 4-1.5 2.5 2.5 4-2.5 3 1.5 2 5z"/><path d="M8 15l1.5 1.5M15 15l.5 2" fill="none"/>`,
+  ironOre: `<path d="M4 17l2.5-7 6-3 6.5 3 1 7z"/><path d="M9.5 12.5h.01M14.5 14.5h.01M13 10.5h.01" fill="none" stroke-width="2.6"/>`,
+  iron: `<path d="M3 17l3-7h12l3 7z"/><path d="M6 10l1.6 3.5h8.8L18 10" fill="none"/>`,
   // A new robot, for a goal that makes one.
   robot: `<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5" fill="none"/><circle cx="12" cy="4" r="1.2"/><path d="M9 13h.01M15 13h.01" fill="none" stroke-width="2.6"/>`,
   bridge: `<path d="M2 11h20v3H2z"/><path d="M4 14v4M20 14v4M4 18q8-6 16 0" fill="none"/><path d="M3 11V8M21 11V8M3 8h18" fill="none"/>`,
   workshop: `<path d="M3 20V11l9-6 9 6v9z"/><path d="M9 20v-5h6v5M16 7V4h2v4.5" fill="none"/>`,
+  // The smelter: a furnace with its chimney and the glow of its mouth.
+  smelter: `<path d="M3 20V10h12v10z"/><path d="M15 20v-5h6v5zM6 10V4h3.5v6" /><path d="M6.5 16.5q2.5-3 5 0" fill="none"/>`,
   // Places a robot goes to, and a basket for a trip.
   grove: `<path d="M12 3l6 8h-3l4 5H5l4-5H6z"/><path d="M12 16v5" fill="none"/>`,
   camp: `<path d="M12 4L3 20h18z"/><path d="M12 4v16M9 20l3-6 3 6" fill="none"/>`,
@@ -36,6 +44,11 @@ const COLOURS = {
   water: ["#6db5ea", "#1f5f99"],
   food: ["#e8594a", "#8a2318"],
   pack: ["#86d35f", "#2f6b1c"],
+  block: ["#d8d2c5", "#5e584d"],
+  charcoal: ["#55565c", "#18181b"],
+  ironOre: ["#b0826a", "#4f3022"],
+  iron: ["#c3cdd8", "#4a5563"],
+  smelter: ["#e7c9ad", "#7a3a26"],
   robot: ["#f4f1ea", "#475467"],
   bridge: ["#a8713f", "#5c3a17"],
   workshop: ["#f4f1ea", "#7a3a26"],
@@ -48,7 +61,7 @@ const COLOURS = {
 };
 
 // The picture for place `id`, when a goal is to get there.
-export const placePicture = (id) => (["grove", "camp", "depot", "workshop"].includes(id) ? id : "place");
+export const placePicture = (id) => (["grove", "camp", "depot", "workshop", "smelter"].includes(id) ? id : "place");
 
 // Picture `name` as SVG markup, `size` CSS pixels square; `there` false draws
 // its outline only.

@@ -13,8 +13,10 @@ import { areaCells, cellAt, groundWalkable, inside, kindOf } from "./terrain.js"
 // `caps` is the building's store once it's built. It's laid with its
 // footprint's north-west corner at cell (x, z), facing south, west, north or
 // east.
+// The smelter holds what three batches of iron take, and three batches' bars.
 export const BLUEPRINTS = {
   workshop: { size: [3, 2], caps: { plank: 4, stone: 2, kit: 4 } },
+  smelter: { size: [3, 2], caps: { ironOre: 6, charcoal: 3, water: 3, iron: 6 } },
 };
 
 // The ways a blueprint can face, in the order a quarter turn goes through them.

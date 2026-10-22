@@ -48,8 +48,12 @@ import { isAt, thing } from "./things.js";
 //   { type: "together", to, items, by?, count? }
 //        unloads into building `to` (by robot `by`) that held every kind of
 //        `items` at once, in one basket (mission 22)
+//   { type: "order", to, items: { item: n }, by? }
+//        an order of several items unloaded into building `to` (by robot `by`):
+//        at least n of each; counted as each item's deliveries up to its n
+//        (mission 60)
 //   { type: "trips", by, to?, count, exact? }  unloads robot `by` finished (with something in them)
-//   { type: "made", at, item, count, exact? }  items building `at` made
+//   { type: "made", at, item, count, exact?, noWait? }  items building `at` made
 //   { type: "assembled", at, count? }          robots building `at` made (missions 38–40)
 //   { type: "steady", at, item, count, ticks, after? }
 //        building `at` has kept exactly `count` of `item` for `ticks` ticks, once
@@ -66,7 +70,9 @@ import { isAt, thing } from "./things.js";
 // many fails it. So an exact goal is only for a job that ends: a Forever never
 // stops, and its goal would never be judged. `noWait` fails the goal if robot
 // `by` ever waits at a building for something to pick up, or for room to
-// unload: it was to set off only once things were ready (missions 19, 20, 44).
+// unload: it was to set off only once things were ready (missions 19, 20, 44);
+// on a `made` goal, if building `at` ever waits to make, for an ingredient or
+// room for the batch: it was to start only once it was ready (mission 56).
 
 // Each goal's measure: a number its count is about (1 or 0 for yes or no).
 const MEASURES = {
@@ -89,6 +95,7 @@ const MEASURES = {
         return to === g.to && by === (g.by ?? "*") && g.items.every((item) => kinds.split("+").includes(item));
       })
       .reduce((n, [, times]) => n + times, 0),
+  order: (world, g) => Object.entries(g.items).reduce((n, [item, want]) => n + Math.min(want, unloads(world, { ...g, item }).items), 0),
   trips: (world, g) => unloads(world, g).trips,
   made: (world, g) => world.mission.tally.made[`${g.at}|${g.item}`] ?? 0,
   assembled: (world, g) => world.mission.tally.made[`${g.at}|helper`] ?? 0,
@@ -113,18 +120,20 @@ const FIELDS = {
   holds: [["robot", "item"], ["count"]],
   delivered: [["to", "count"], ["item", "by", "load", "exact", "noWait"]],
   together: [["to", "items"], ["by", "count"]],
+  order: [["to", "items"], ["by"]],
   trips: [["by", "count"], ["to", "exact"]],
-  made: [["at", "item", "count"], ["exact"]],
+  made: [["at", "item", "count"], ["exact", "noWait"]],
   assembled: [["at"], ["count"]],
   steady: [["at", "item", "count", "ticks"], ["after"]],
   remembers: [["robot", "count"], []],
 };
 
+const isMap = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const ZERO = { items: 0, trips: 0, doubles: 0 };
 const unloads = (world, g) => world.mission.tally.unloads[`${g.to ?? "*"}|${g.by ?? "*"}|${g.item ?? "*"}`] ?? ZERO;
 
-// How many goal `goal` asks for.
-export const needOf = (goal) => goal.count ?? 1;
+// How many goal `goal` asks for: an order's items together.
+export const needOf = (goal) => goal.count ?? (goal.type === "order" ? Object.values(goal.items).reduce((a, b) => a + b, 0) : 1);
 
 // How far goal `goal` has got in `world`: { have, need, done, failed }.
 export function goalProgress(world, goal) {
@@ -141,8 +150,9 @@ export function goalProblem(goal) {
   for (const key of needs) if (goal[key] == null) return `goal ${goal.id} needs ${key}`;
   if ("count" in goal && !(Number.isInteger(goal.count) && goal.count >= (goal.exact ? 0 : 1))) return `goal ${goal.id} counts ${goal.count}`;
   if ("load" in goal && ![1, 2].includes(goal.load)) return `goal ${goal.id} has load ${goal.load}`;
-  if (goal.noWait && !goal.by) return `goal ${goal.id} has noWait without by`;
-  if ("items" in goal && !(Array.isArray(goal.items) && goal.items.length >= 2 && goal.items.every((i) => typeof i === "string" && i))) return `goal ${goal.id} has items ${JSON.stringify(goal.items)}`;
+  if (goal.noWait && !goal.by && goal.type !== "made") return `goal ${goal.id} has noWait without by`;
+  if (goal.type === "together" && !(Array.isArray(goal.items) && goal.items.length >= 2 && goal.items.every((i) => typeof i === "string" && i))) return `goal ${goal.id} has items ${JSON.stringify(goal.items)}`;
+  if (goal.type === "order" && !(isMap(goal.items) && Object.keys(goal.items).length >= 1 && Object.values(goal.items).every((n) => Number.isInteger(n) && n >= 1))) return `goal ${goal.id} has items ${JSON.stringify(goal.items)}`;
   if ("ticks" in goal && !(Number.isInteger(goal.ticks) && goal.ticks >= 1)) return `goal ${goal.id} has ticks ${goal.ticks}`;
   return null;
 }
@@ -194,7 +204,7 @@ function holds(world, goal, now) {
 
 function fails(world, goal) {
   if (goal.exact && MEASURES[goal.type](world, goal) > needOf(goal)) return true;
-  return !!goal.noWait && (world.mission.tally.waited[goal.by] ?? 0) > 0;
+  return !!goal.noWait && (world.mission.tally.waited[goal.by ?? goal.at] ?? 0) > 0;
 }
 
 // Checks the goals of `world`'s mission at the end of tick `now`. Returns the
@@ -261,7 +271,8 @@ export function recordWork(world, entity) {
 }
 
 // Robot `entity` waited this tick at `at` for something to pick up, or for room
-// to unload: counted at a building, not at a deposit growing back.
+// to unload, or building `entity` waited to make, for an ingredient or room for
+// its batch (at itself): counted at a building, not at a deposit growing back.
 export function recordWait(world, entity, at) {
   const tally = world.mission?.tally;
   if (tally && thing(world, at)?.kind === "building") tally.waited[entity.id] = (tally.waited[entity.id] ?? 0) + 1;

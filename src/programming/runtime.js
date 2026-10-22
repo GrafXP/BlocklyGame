@@ -230,6 +230,7 @@ export function checkProgram(program) {
     if (!isId(e?.block)) return fail(i, "an expression without a block");
     if (e.op === "number" && Number.isInteger(e.value)) return;
     if (["stock", "needs", "space"].includes(e.op) && isId(e.item) && isId(e.at)) return;
+    if (e.op === "ready" && isId(e.item)) return;
     if (e.op === "basket") return;
     if ((e.op === "place" || e.op === "item") && isId(e.value)) return;
     if (e.op === "setting" && e.slot in SETTINGS) return;

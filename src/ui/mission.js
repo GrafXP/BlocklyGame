@@ -99,6 +99,15 @@ function goalView(world, goal, size = 32) {
         ? t("goal.deliveredBy", { robot: nameOf(world, goal.by), place: nameOf(world, goal.to), have, need })
         : t("goal.delivered", { item, place: nameOf(world, goal.to), have, need });
       break;
+    case "order": {
+      // Each item's pictures, filled as its deliveries come.
+      const got = (name) => world.mission.tally.unloads[`${goal.to}|${goal.by ?? "*"}|${name}`]?.items ?? 0;
+      pictures = Object.entries(goal.items)
+        .map(([name, n]) => Array.from({ length: n }, (_, i) => picture(name, { there: done || i < got(name), size })).join(""))
+        .join("");
+      label = t("goal.order", { place: nameOf(world, goal.to), have, need });
+      break;
+    }
     case "together":
       pictures = goal.items.map((name) => picture(name, { there: done, size })).join("");
       label = goal.by
@@ -138,7 +147,7 @@ function goalView(world, goal, size = 32) {
   const notes = [];
   if (goal.exact) notes.push(t("goal.exact"));
   if (goal.load === 2) notes.push(t("goal.load"));
-  if (goal.noWait) notes.push(t("goal.noWait", { robot: nameOf(world, goal.by) }));
+  if (goal.noWait) notes.push(goal.type === "made" ? t("goal.noWaitMake", { name: nameOf(world, goal.at) }) : t("goal.noWait", { robot: nameOf(world, goal.by) }));
   if (goal.type === "steady") notes.push(goal.after ? t("goal.steadyNote", { name: nameOf(world, goal.after) }) : t("goal.steadyAlone"));
   if (goal.type === "remembers") notes.push(t("goal.remembersNote"));
   return { pictures, label, note: failed ? t("goal.failed") : notes.join(" "), done, failed };

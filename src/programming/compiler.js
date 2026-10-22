@@ -50,6 +50,7 @@ import { nameText, readWorkspace } from "./adapter.js";
 //   { op: "stock", block, item, at }                   how many of `item` thing `at` has
 //   { op: "needs", block, item, at }                   whether `at`'s order still needs `item`
 //   { op: "space", block, item, at }                   room for more `item` at `at`
+//   { op: "ready", block, item }                       whether my building could make `item` now
 //   { op: "basket", block }                            how many items are in my basket
 //   { op: "compare", block, cmp, a, b }                cmp: EQ NEQ LT LTE GT GTE, of two numbers
 //   { op: "place", block, value }                      a place: a thing's id
@@ -265,6 +266,11 @@ export function compile(source, context = {}) {
         return { expr: { op: "needs", block, at: field.place(node, "PLACE"), item: field.choice(node, "ITEM") }, type: "boolean" };
       case "sense_space":
         return { expr: { op: "space", block, at: field.place(node, "PLACE"), item: field.choice(node, "ITEM") }, type: "number" };
+      // Whether the building running the program has all a recipe needs, and
+      // room for its batch: only a building that makes things can ask.
+      case "sense_ready":
+        need("make", block);
+        return { expr: { op: "ready", block, item: field.choice(node, "ITEM") }, type: "boolean" };
       case "value_place":
         return { expr: { op: "place", block, value: field.place(node, "PLACE") }, type: "place" };
       case "value_item":

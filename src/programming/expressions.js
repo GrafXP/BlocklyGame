@@ -1,6 +1,8 @@
+import { shortOf } from "../sim/actions.js";
 import { reason } from "../sim/codes.js";
-import { can } from "../sim/entities.js";
+import { can, typeOf } from "../sim/entities.js";
 import { count, room } from "../sim/inventory.js";
+import { RECIPES } from "../sim/recipes.js";
 import { needs } from "../sim/supply.js";
 import { thing } from "../sim/things.js";
 
@@ -50,6 +52,13 @@ export function evaluate(expr, entity, world) {
       return needs(world, placeOf(expr, world), expr.item) > 0;
     case "space":
       return Math.max(0, room(placeOf(expr, world).store, expr.item));
+    // Whether this building could start the recipe now: every ingredient here,
+    // and room for the whole batch (actions.js, shortOf). It holds nothing:
+    // Make checks again as it starts.
+    case "ready": {
+      if (!typeOf(entity).recipes?.includes(expr.item)) throw new Fault(reason("error.cannot", { action: "make", block: expr.block }));
+      return shortOf(entity, RECIPES[expr.item]) === null;
+    }
     case "basket": {
       if (!can(entity, "basket")) throw new Fault(reason("error.cannot", { action: "basket", block: expr.block }));
       return Object.values(entity.store.items).reduce((a, b) => a + b, 0);

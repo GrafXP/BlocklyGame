@@ -3,7 +3,8 @@ import { mesh } from "./models.js";
 import { createStock, itemGeometry as itemShape } from "./resources.js";
 
 // The buildings (PLAN.md §4): camp, depot, sawmill, workshop, construction
-// site, well, farm and fuel station, each sized to its footprint, `across` by `deep` as it faces its front
+// site, well, farm, fuel station, stonecutter, kiln and smelter, each sized
+// to its footprint, `across` by `deep` as it faces its front
 // (+z, grid.js facing), with its store stacked on pads in front. Each is
 // { group, top, update(world, entity, t) }: `top` how high its label goes, and
 // update() shows the world at `t`, a tick and the fraction of the next. Only
@@ -60,14 +61,12 @@ function depot(m, { across, deep, caps }) {
   const sign = mesh(new THREE.BoxGeometry(0.6, 0.34, 0.06), m.accent);
   sign.position.set(across / 2 - 0.45, 1.15, -deep / 2 + 0.15);
   group.add(platform, post, sign);
-  const w = (across - 0.4) / 2;
+  // Two rows of three pads: wood, stone and planks at the back, kits, iron
+  // bars and charge packs at the front.
+  const w = (across - 0.4) / 3;
   const d = (deep - 0.4) / 2;
-  const stock = createStock(m, caps, {
-    wood: { x: -w / 2 - 0.05, y: 0.2, z: -d / 2 - 0.05, w, d },
-    stone: { x: w / 2 + 0.05, y: 0.2, z: -d / 2 - 0.05, w, d },
-    plank: { x: -w / 2 - 0.05, y: 0.2, z: d / 2 + 0.05, w, d },
-    kit: { x: w / 2 + 0.05, y: 0.2, z: d / 2 + 0.05, w, d },
-  });
+  const pad = (col, row) => ({ x: (col - 1) * (w + 0.05), y: 0.2, z: (row - 0.5) * (d + 0.1), w, d });
+  const stock = createStock(m, caps, { wood: pad(0, 0), stone: pad(1, 0), plank: pad(2, 0), kit: pad(0, 1), iron: pad(1, 1), pack: pad(2, 1) });
   group.add(stock.group);
   return { group, top: 1.5, update: (world, e) => stock.update(e.store.items) };
 }
@@ -143,9 +142,11 @@ function site(m, { across, deep, caps }) {
   flag.visible = false;
   group.add(scaffold, flag);
   // A bridge's site stacks its planks across the slab; a building's, its planks
-  // and its stone side by side.
-  const pads = caps.stone
-    ? { plank: { x: -across / 4, y: 0.12, z: 0.15, w: across / 2 - 0.35, d: deep - 0.8 }, stone: { x: across / 4, y: 0.12, z: 0.15, w: across / 2 - 0.35, d: deep - 0.8 } }
+  // and its other piece side by side: the workshop's stone, the smelter's
+  // stone blocks.
+  const other = Object.keys(caps).find((item) => item !== "plank");
+  const pads = other
+    ? { plank: { x: -across / 4, y: 0.12, z: 0.15, w: across / 2 - 0.35, d: deep - 0.8 }, [other]: { x: across / 4, y: 0.12, z: 0.15, w: across / 2 - 0.35, d: deep - 0.8 } }
     : { plank: { x: 0, y: 0.12, z: 0.15, w: across - 0.6, d: deep - 0.8 } };
   const stock = createStock(m, caps, pads);
   group.add(stock.group);
@@ -352,4 +353,130 @@ function station(m, { across, deep, caps }) {
   };
 }
 
-export const BUILDINGS = { camp, depot, sawmill, site, workshop, well, farm, station };
+// The stonecutter: a stone bench under a roof on two posts, with a saw that
+// turns while it cuts a block on the bench, and raw stone and its blocks in
+// front.
+function stonecutter(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  const z = -deep / 2 + 0.5;
+  const bench = mesh(new THREE.BoxGeometry(across - 0.5, 0.35, 0.55), m.stone, { receive: true });
+  bench.position.set(0, 0.175, z);
+  const post = new THREE.BoxGeometry(0.07, 1.0, 0.07);
+  const posts = [-(across / 2 - 0.15), across / 2 - 0.15].map((x) => {
+    const p = mesh(post, m.trunk);
+    p.position.set(x, 0.5, z - 0.3);
+    return p;
+  });
+  const roof = mesh(new THREE.BoxGeometry(across - 0.1, 0.06, 0.9), m.roofGrey);
+  roof.position.set(0, 1.02, z);
+  const blade = mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.04, 14), m.roofGrey);
+  blade.rotation.z = Math.PI / 2;
+  blade.position.set(-0.15, 0.5, z);
+  // The block being cut, on the bench while the work goes on.
+  const cutting = mesh(itemShape("block"), m.block);
+  cutting.position.set(0.25, 0.41, z);
+  cutting.visible = false;
+  group.add(bench, ...posts, roof, blade, cutting);
+  const stock = createStock(m, caps, {
+    stone: { x: -across / 4, y: 0, z: deep / 2 - 0.3, w: across / 2 - 0.2, d: 0.45 },
+    block: { x: across / 4, y: 0, z: deep / 2 - 0.3, w: across / 2 - 0.2, d: 0.45 },
+  });
+  group.add(stock.group);
+  return {
+    group,
+    top: 1.4,
+    update(world, e, t) {
+      const on = e.action?.type === "make";
+      if (on) blade.rotation.x = (t - e.action.start) * 0.9;
+      const moved = cutting.visible !== on;
+      cutting.visible = on;
+      return stock.update(e.store.items) || moved || on;
+    },
+  };
+}
+
+// The kiln: a mound of earth over the burning wood, whose mouth glows and
+// whose smoke rises while it makes charcoal, and its wood and charcoal in
+// front.
+function kiln(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  const z = -deep / 2 + 0.65;
+  const mound = mesh(new THREE.SphereGeometry(0.6, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), m.dirt, { receive: true });
+  mound.position.set(0, 0, z);
+  const mouth = mesh(new THREE.BoxGeometry(0.24, 0.18, 0.06), m.dark, { cast: false });
+  mouth.position.set(0, 0.1, z + 0.57);
+  const glow = mesh(new THREE.BoxGeometry(0.16, 0.11, 0.02), m.fire, { cast: false });
+  glow.position.set(0, 0.1, z + 0.6);
+  glow.visible = false;
+  const puffs = [0, 1, 2].map((i) => {
+    const puff = mesh(new THREE.IcosahedronGeometry(0.08 + i * 0.03, 0), m.smoke, { cast: false });
+    puff.visible = false;
+    return puff;
+  });
+  group.add(mound, mouth, glow, ...puffs);
+  const stock = createStock(m, caps, {
+    wood: { x: -across / 4, y: 0, z: deep / 2 - 0.25, w: across / 2 - 0.2, d: 0.4 },
+    charcoal: { x: across / 4, y: 0, z: deep / 2 - 0.25, w: across / 2 - 0.2, d: 0.4 },
+  });
+  group.add(stock.group);
+  return {
+    group,
+    top: 1.3,
+    update(world, e, t) {
+      const on = e.action?.type === "make";
+      const moved = glow.visible !== on;
+      glow.visible = on;
+      // Each puff rises from the top of the mound and starts again, by the clock.
+      puffs.forEach((puff, i) => {
+        puff.visible = on;
+        if (!on) return;
+        const k = ((t - e.action.start) * 0.04 + i / 3) % 1;
+        puff.position.set(0.08 * Math.sin(k * 6 + i), 0.55 + k * 0.8, z);
+      });
+      return stock.update(e.store.items) || moved || on;
+    },
+  };
+}
+
+// The smelter: a brick furnace under a stone top with a tall chimney, whose
+// mouth glows while it makes iron; its ore, charcoal and water wait in front,
+// and the bars it has made lie on a bench beside it.
+function smelter(m, { across, deep, caps }) {
+  const group = new THREE.Group();
+  const z = -deep / 2 + 0.5;
+  const x = -across / 2 + 0.8;
+  const furnace = mesh(new THREE.BoxGeometry(1.1, 0.85, 0.8), m.roof, { receive: true });
+  furnace.position.set(x, 0.425, z);
+  const top = mesh(new THREE.CylinderGeometry(0.3, 0.45, 0.35, 8), m.stone);
+  top.position.set(x, 1.02, z);
+  const chimney = mesh(new THREE.CylinderGeometry(0.1, 0.13, 0.7, 8), m.roofGrey);
+  chimney.position.set(x, 1.55, z);
+  const mouth = mesh(new THREE.BoxGeometry(0.36, 0.26, 0.04), m.dark, { cast: false });
+  mouth.position.set(x, 0.3, z + 0.41);
+  const glow = mesh(new THREE.BoxGeometry(0.28, 0.18, 0.02), m.fire, { cast: false });
+  glow.position.set(x, 0.3, z + 0.44);
+  glow.visible = false;
+  const bench = mesh(new THREE.BoxGeometry(0.9, 0.3, 0.5), m.wood);
+  bench.position.set(across / 2 - 0.65, 0.15, z);
+  group.add(furnace, top, chimney, mouth, glow, bench);
+  const third = (across - 0.3) / 3;
+  const stock = createStock(m, caps, {
+    ironOre: { x: -third, y: 0, z: deep / 2 - 0.3, w: third - 0.1, d: 0.45 },
+    charcoal: { x: 0, y: 0, z: deep / 2 - 0.3, w: third - 0.1, d: 0.45 },
+    water: { x: third, y: 0, z: deep / 2 - 0.3, w: third - 0.1, d: 0.45 },
+    iron: { x: across / 2 - 0.65, y: 0.3, z, w: 0.8, d: 0.4 },
+  });
+  group.add(stock.group);
+  return {
+    group,
+    top: 2.0,
+    update(world, e) {
+      const on = e.action?.type === "make";
+      const moved = glow.visible !== on;
+      glow.visible = on;
+      return stock.update(e.store.items) || moved;
+    },
+  };
+}
+
+export const BUILDINGS = { camp, depot, sawmill, site, workshop, well, farm, station, stonecutter, kiln, smelter };

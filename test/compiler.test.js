@@ -7,7 +7,7 @@ import { checkProgram } from "../src/programming/runtime.js";
 import { ISLAND_PROGRAMS } from "../src/content/programs.js";
 import { block, call, chain, changeVar, getVar, input, routine, setVar, withVariables, workspace } from "../src/content/build.js";
 import { CODES } from "../src/sim/codes.js";
-import { assemble, basket, compare, forever, go, make, my, needs, num, pickUp, program, repeat, space, start, stock, supply, unload, until, wait, when } from "./programs.js";
+import { assemble, basket, compare, forever, go, make, my, needs, num, pickUp, program, ready, repeat, space, start, stock, supply, unload, until, wait, when } from "./programs.js";
 
 // The compiler (PLAN.md §7, §12): Blockly's JSON in, the game's instructions
 // out, each visible one with the id of its block; and what can't work as
@@ -245,6 +245,16 @@ test("Supply compiles to its building and the places in it, in order; the camp m
   assert.deepEqual(checkProgram(camp), []);
   assert.deepEqual(codes(compile(program(assemble("a", "wood-team")), { type: "sawmill" }).errors), ["program.cannot a"], "a sawmill makes no robots");
   assert.deepEqual(codes(compile(program(make("m", "plank")), { type: "camp" }).errors), ["program.cannot m"], "and the camp no planks");
+});
+
+test("Ready to Make is a building's own condition: it names an item the building makes, and no place", () => {
+  const { program: p, errors } = compile(program(until("u", ready("r", "iron")), make("m", "iron")), { type: "smelter", places: ["smelter"] });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(p.code[0], { op: "until", block: "u", test: { op: "ready", block: "r", item: "iron" } });
+  assert.deepEqual(p.needs, ["make"]);
+  assert.deepEqual(checkProgram(p), []);
+  assert.deepEqual(codes(compile(program(until("u", ready("r", "iron"))), { type: "helper" }).errors), ["program.cannot r"], "a robot makes nothing");
+  assert.deepEqual(codes(compile(program(until("u", ready("r", "moon")))).errors), ["program.unsupported r"]);
 });
 
 test("blocks nested too deeply are an error, not a stack overflow", () => {

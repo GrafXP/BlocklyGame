@@ -7,7 +7,7 @@ import { cellAt, kindOf, setKind } from "../src/sim/terrain.js";
 import { FLOOR_Y, TOP, areaCentre, cellCentre, facing, headingOf, pointAt, sharedSpots } from "../src/render/grid.js";
 import { bridgeParts, terrainGeometry } from "../src/render/terrain.js";
 import { lookFrom, panDelta } from "../src/render/stage.js";
-import { createBerries, createGrove, createQuarry, createSpring, createStock, stackSlots } from "../src/render/resources.js";
+import { createBerries, createGrove, createMine, createQuarry, createSpring, createStock, stackSlots } from "../src/render/resources.js";
 import { BASE, THINGS } from "../src/content/missions/island.js";
 import { TYPES } from "../src/sim/entities.js";
 import { BUILDINGS } from "../src/render/buildings.js";
@@ -166,10 +166,10 @@ test("every building and deposit on the island and in the campaign has a model, 
     nodes: THINGS.filter((t) => TYPES[t.type].kind === "node"),
   });
   for (const t of [...campaign.entities, ...campaign.nodes]) t.store.items = Object.fromEntries(Object.keys(t.store.caps).map((item) => [item, 1]));
-  const MADE_OF = { log: "wood", stone: "stone", plank: "plank", kit: "kit", water: "water", berry: "food", pack: "pack" };
+  const MADE_OF = { log: "wood", stone: "stone", plank: "plank", kit: "kit", water: "water", berry: "food", pack: "pack", block: "block", charcoal: "charcoal", ore: "ironOre", iron: "iron" };
   for (const w of [world, campaign]) {
     for (const t of [...w.entities, ...w.nodes].filter((it) => it.area)) {
-      const make = BUILDINGS[t.type] ?? { grove: createGrove, quarry: createQuarry, spring: createSpring, berries: createBerries }[t.type];
+      const make = BUILDINGS[t.type] ?? { grove: createGrove, quarry: createQuarry, spring: createSpring, berries: createBerries, mine: createMine }[t.type];
       assert.ok(make, t.type);
       const { across, deep } = facing(w.terrain, t);
       const model = make(m, { across, deep, caps: t.store.caps });

@@ -65,7 +65,10 @@ export { reasonOf, statusOf } from "./status.js";
 // 9: water, food and charge packs, the well, the farm and the fuel station; the
 //    camp makes robots, within the island's robot limit; buildings' orders,
 //    Supply, and what a building needs and has room for.
-export const SIM_VERSION = 9;
+// 10: stone blocks, charcoal, iron ore and iron bars; the stonecutter, the
+//    kiln, the smelter and the iron mine; whether a building is ready to make
+//    something; a building's waits to make are counted.
+export const SIM_VERSION = 10;
 
 // Ticks in a second of play at 1× speed. Every duration is a whole number of
 // ticks, so this is part of the simulation (PLAN.md §1).
@@ -273,7 +276,8 @@ export function advanceWorld(world, commands = []) {
       const waiting = result.intent ?? intent;
       entity.pending = { intent: waiting, order: pending?.order ?? world.serial++, since: pending?.since ?? now, reason: result.wait, nav: world.nav };
       trace.waiting.push({ entity: entity.id, reason: result.wait });
-      if ((waiting.type === "pickUp" && result.wait.code === "wait.item") || (waiting.type === "unload" && result.wait.code === "wait.space")) recordWait(world, entity, result.wait.at);
+      const short = ["wait.item", "wait.space"].includes(result.wait.code);
+      if ((waiting.type === "pickUp" && result.wait.code === "wait.item") || (waiting.type === "unload" && result.wait.code === "wait.space") || (waiting.type === "make" && short)) recordWait(world, entity, result.wait.at);
     } else {
       entity.pending = null;
       delete entity.supply;

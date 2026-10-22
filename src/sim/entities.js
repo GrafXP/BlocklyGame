@@ -8,13 +8,16 @@
 // Kinds:
 // - robot: walks the grid and carries a basket.
 // - building: stores items and makes things; has a program, like a robot.
-// - node: a resource deposit (a grove, a stone pit, a spring, berry bushes); no
-//   program.
+// - node: a resource deposit (a grove, a stone pit, a spring, berry bushes, an
+//   iron mine); no program.
 //
 // A charge pack ("pack") is the energy a new robot is made with; robots need
-// none to move (docs/campaign-planv2.md, chapter 8).
+// none to move (docs/campaign-planv2.md, chapter 8). A stone block ("block") is
+// cut from raw stone, and isn't stone: kits and the workshop keep taking raw
+// stone. Iron ore ("ironOre") is dug at the mine and smelted into iron bars
+// ("iron") with charcoal and water (chapters 10–12).
 
-export const ITEMS = ["wood", "stone", "plank", "kit", "water", "food", "pack"];
+export const ITEMS = ["wood", "stone", "plank", "kit", "water", "food", "pack", "block", "charcoal", "ironOre", "iron"];
 
 // A robot's settings (PLAN.md §5): named slots its program reads with blocks
 // such as “my destination”, so robots sharing one program can each do a
@@ -38,17 +41,23 @@ export const TYPES = {
   sawmill: { kind: "building", can: ["make", "wait", "send"], recipes: ["plank"] },
   // A construction site builds the one thing its blueprint says: a bridge over
   // its gap, or the building it stands for (recipes.js, placement.js).
-  site: { kind: "building", can: ["make", "wait", "send"], recipes: ["bridge", "workshop"] },
+  site: { kind: "building", can: ["make", "wait", "send"], recipes: ["bridge", "workshop", "smelter"] },
   workshop: { kind: "building", can: ["make", "wait", "send"], recipes: ["kit"] },
   // The well draws water, from nothing, over time; the farm grows food from
   // water; the fuel station makes charge packs from food and water.
   well: { kind: "building", can: ["make", "wait", "send"], recipes: ["water"] },
   farm: { kind: "building", can: ["make", "wait", "send"], recipes: ["food"] },
   station: { kind: "building", can: ["make", "wait", "send"], recipes: ["pack"] },
+  // Industry: the stonecutter cuts raw stone into blocks, the kiln burns wood
+  // into charcoal, and the smelter makes iron bars from ore, charcoal and water.
+  stonecutter: { kind: "building", can: ["make", "wait", "send"], recipes: ["block"] },
+  kiln: { kind: "building", can: ["make", "wait", "send"], recipes: ["charcoal"] },
+  smelter: { kind: "building", can: ["make", "wait", "send"], recipes: ["iron"] },
   grove: { kind: "node", yields: "wood" },
   quarry: { kind: "node", yields: "stone" },
   spring: { kind: "node", yields: "water" },
   berries: { kind: "node", yields: "food" },
+  mine: { kind: "node", yields: "ironOre" },
 };
 
 export const typeOf = (thing) => TYPES[thing.type];

@@ -311,6 +311,10 @@ export default {
   "item.water": "Water",
   "item.food": "Food",
   "item.pack": "Charge packs",
+  "item.block": "Stone blocks",
+  "item.charcoal": "Charcoal",
+  "item.ironOre": "Iron ore",
+  "item.iron": "Iron bars",
   // The messages robots and buildings send each other, as said in a sentence
   // (in quotes, as the blocks show them: MESSAGE_* in blocks.js).
   "message.plankReady": "plank ready",
@@ -442,10 +446,15 @@ export default {
   "goal.remembers": "{robot} remembers: {have} of {need}",
   // A building is to make new robots (helpers).
   "goal.assembled": "{place} makes a new helper: {have} of {need}",
+  // An order of several things to deliver to {place}, beside their pictures.
+  "goal.order": "{place} · its order delivered: {have} of {need}",
   // Notes under a goal.
   "goal.exact": "Exactly this many, then the job stops.",
   "goal.load": "Two at a time, in full baskets.",
   "goal.noWait": "{robot} sets off only when everything is ready.",
+  // The same, for a building that makes things: {name} starts each batch only
+  // when it has everything for it.
+  "goal.noWaitMake": "{name} starts only when it's ready.",
   "goal.steadyNote": "Keep it so for a while after {name} has finished.",
   "goal.steadyAlone": "Keep it so for a while.",
   "goal.remembersNote": "Counted when its job is done.",
@@ -462,6 +471,9 @@ export default {
   "chapter.7": "Water Makes Things Grow",
   "chapter.8": "Energy for More Helpers",
   "chapter.9": "Supply What Is Needed",
+  "chapter.10": "Materials for Industry",
+  "chapter.11": "From Ore to Iron",
+  "chapter.12": "Keep the Factory Flowing",
   "free.title": "Free play",
   "sandbox.title": "Sandbox",
   "sandbox.addRobot": "Add a robot",
@@ -502,6 +514,7 @@ export default {
   "action.make": "Making {amount}",
   "action.build.bridge": "Building the bridge",
   "action.build.workshop": "Building the workshop",
+  "action.build.smelter": "Building the smelter",
   // {team}: the team the new robot is for, such as “Wood team”.
   "action.assemble": "Making a helper for {team}",
   "action.wait": {
@@ -551,6 +564,22 @@ export default {
   "count.pack": {
     one: "{count} charge pack",
     other: "{count} charge packs",
+  },
+  "count.block": {
+    one: "{count} stone block",
+    other: "{count} stone blocks",
+  },
+  "count.charcoal": {
+    one: "{count} charcoal",
+    other: "{count} charcoal",
+  },
+  "count.ironOre": {
+    one: "{count} iron ore",
+    other: "{count} iron ore",
+  },
+  "count.iron": {
+    one: "{count} iron bar",
+    other: "{count} iron bars",
   },
 
   // Why something waits (src/sim/codes.js). {have} and {free} are numbers of the
@@ -648,6 +677,13 @@ export default {
   "entity.well": "Well",
   "entity.farm": "Farm",
   "entity.station": "Fuel station",
+  "entity.stonecutter": "Stonecutter",
+  "entity.kiln": "Kiln",
+  "entity.smelter": "Smelter",
+  "entity.smelterN": "Smelter {n}",
+  "entity.smelterSite": "Smelter site",
+  "entity.smelterSiteN": "Smelter site {n}",
+  "entity.mine": "Iron mine",
   // The starter programs' names, until the player gives them others.
   "programName.collector": "Wood collector",
   "programName.courier": "Plank courier",

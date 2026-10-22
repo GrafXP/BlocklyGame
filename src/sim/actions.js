@@ -83,14 +83,8 @@ const STARTS = {
     const wrong = r?.builds && (building.blueprint !== r.builds || building.built);
     if (!r || !typeOf(building).recipes?.includes(recipe) || wrong) return { error: reason("error.cannot", { action: "make" }) };
     if (r.assembles && !world.roles.some((t) => t.id === role)) return { error: reason("error.team", { team: role ?? "" }) };
-    for (const [item, need] of Object.entries(r.inputs)) {
-      const have = available(building.store, item);
-      if (have < need) return { wait: reason("wait.item", { item, at: building.id, need, have }) };
-    }
-    for (const [item, need] of Object.entries(r.outputs)) {
-      const free = room(building.store, item);
-      if (free < need) return { wait: reason("wait.space", { item, at: building.id, need, free: Math.max(0, free) }) };
-    }
+    const short = shortOf(building, r);
+    if (short) return { wait: short };
     if (r.assembles && world.limit !== null && robotsCounted(world) >= world.limit) return { wait: reason("wait.limit", { limit: world.limit }) };
     const holds = [
       ...Object.entries(r.inputs).map(([item, n]) => reserve(world, building.id, "out", item, n)),
@@ -128,6 +122,21 @@ const STARTS = {
 };
 
 export const ACTIONS = Object.keys(STARTS);
+
+// What `building` lacks to start recipe `r`: the reason it would wait, an
+// ingredient short or no room for the whole batch, or null when it's ready
+// (the Ready to Make condition reads this too: src/programming/expressions.js).
+export function shortOf(building, r) {
+  for (const [item, need] of Object.entries(r.inputs)) {
+    const have = available(building.store, item);
+    if (have < need) return reason("wait.item", { item, at: building.id, need, have });
+  }
+  for (const [item, need] of Object.entries(r.outputs)) {
+    const free = room(building.store, item);
+    if (free < need) return reason("wait.space", { item, at: building.id, need, free: Math.max(0, free) });
+  }
+  return null;
+}
 
 // The robots counted against the island's limit: those there are, and those a
 // building is making.
